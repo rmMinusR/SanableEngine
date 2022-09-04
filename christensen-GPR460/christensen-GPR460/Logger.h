@@ -11,16 +11,7 @@ class Logger
 
 #pragma region Helpers
 private:
-	template<typename Tout>
-	static void logTimestamp(Tout& out)
-	{
-		//Algorithm from https://stackoverflow.com/a/58607142
-		time_t utcTime = std::time(nullptr);
-		struct tm localTime;
-		localtime_s(&localTime, &utcTime);
-		auto formatted = std::put_time(&localTime, "%H:%M:%S");
-		out << formatted;
-	}
+	static void logTimestamp(std::ostream& out);
 
 	template<typename T>
 	static void _logVarArgs(std::ostream& out, const T& t) { out << t; }
@@ -60,7 +51,7 @@ public:
 	static void log(const LevelInfo& level, const Ts&... ts)
 	{
 		SetConsoleTextAttribute(GetStdHandle(level.sysHandleID), level.color); //Set color to red
-		logTimestamp(level.out);
+		logTimestamp(*level.out);
 		*level.out << std::setw(NAME_WIDTH) << " [" << level.header << "] ";
 		_logVarArgs(*level.out, ts...);
 		*level.out << std::endl;
