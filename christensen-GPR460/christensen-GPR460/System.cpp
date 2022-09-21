@@ -10,7 +10,9 @@
 gpr460::System::System()
 {
 	isAlive = false;
+
 	consolePsuedofile = nullptr;
+	logFile = nullptr;
 }
 
 gpr460::System::~System()
@@ -44,6 +46,13 @@ void gpr460::System::Shutdown()
 	fclose(consolePsuedofile);
 	consolePsuedofile = nullptr;
 
+	if (logFile)
+	{
+		SetEndOfFile(logFile);
+		CloseHandle(logFile);
+		logFile = nullptr;
+	}
+
 	_CrtDumpMemoryLeaks();
 }
 
@@ -54,5 +63,23 @@ void gpr460::System::ShowError(const gpr460::string& message)
 
 void gpr460::System::LogToErrorFile(const gpr460::string& message)
 {
-	//TODO IMPL
+	//Lazy init logfile
+	if (!logFile)
+	{
+		//TODO does this need FILE_FLAG_NO_BUFFERING or FILE_FLAG_WRITE_THROUGH?
+		logFile = CreateFile(logFileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+
+		if (!logFile || (GetLastError() != 0 && GetLastError() != ERROR_ALREADY_EXISTS)) ShowError(TEXT("Failed to create error file (code %i)"), GetLastError());
+	}
+
+	DWORD nWritten;
+	if (!WriteFile(logFile, message.c_str(), message.length(), &nWritten, NULL))
+	{
+		ShowError(TEXT("Error code %i while logging to file"), GetLastError());
+	}
+
+	if (nWritten < message.length())
+	{
+		ShowError(TEXT("Tried to write %u characters to error file, but only wrote %u"), message.length(), nWritten);
+	}
 }

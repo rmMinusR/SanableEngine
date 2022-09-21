@@ -11,7 +11,10 @@ namespace gpr460
 	{
 	private:
 		bool isAlive;
+
 		FILE* consolePsuedofile;
+		HANDLE logFile;
+		const string logFileName = TEXT("GameErrors.txt");
 
 	public:
 		System();
@@ -24,6 +27,15 @@ namespace gpr460
 		void ShowError(const gpr460::string& message);
 		void LogToErrorFile(const gpr460::string& message);
 
+		template<typename... Ts>
+		void ShowError(const gpr460::string& format, const Ts&... args)
+		{
+			constexpr size_t bufferSize = 256;
+			wchar_t buffer[bufferSize];
+			int nValid = swprintf_s(buffer, bufferSize, format.c_str(), args...);
+
+			ShowError(gpr460::string(buffer, nValid));
+		}
 	};
 
 }
