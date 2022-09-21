@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Windows.h>
+
 #include "Aliases.hpp"
 
 namespace gpr460
@@ -9,6 +11,7 @@ namespace gpr460
 	{
 	private:
 		bool isAlive;
+		FILE* consolePsuedofile;
 
 	public:
 		System();

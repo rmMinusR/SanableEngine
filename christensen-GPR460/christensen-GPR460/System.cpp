@@ -1,15 +1,16 @@
 #include "System.hpp"
 
+#include <cassert>
+
+//Memory leak tracing
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
 
-#include <cassert>
-#include <Windows.h>
-
 gpr460::System::System()
 {
 	isAlive = false;
+	consolePsuedofile = nullptr;
 }
 
 gpr460::System::~System()
@@ -27,13 +28,21 @@ void gpr460::System::Init()
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
 #endif
-
+	
+	//Create console and redirect
+	if (!AllocConsole()) ShowError(TEXT("Failed to allocate console"));
+	freopen_s(&consolePsuedofile, "CONOUT$", "w", stdout);
+	if (!consolePsuedofile) ShowError(TEXT("Failed to redirect console output"));
 }
 
 void gpr460::System::Shutdown()
 {
 	assert(isAlive);
 	isAlive = false;
+
+	//Close console redirection
+	fclose(consolePsuedofile);
+	consolePsuedofile = nullptr;
 
 	_CrtDumpMemoryLeaks();
 }
