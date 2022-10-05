@@ -13,7 +13,7 @@ echo ======Building project======
 echo:
 
 cd /D %~dp0\christensen-GPR460
-mkdir ..\build\html\index
-call em++ -Iinclude src\main.cpp -sUSE_SDL=2 -o ..\build\html\index.html
+mkdir ..\builds\web
+call em++ -Iinclude src\main.cpp -sUSE_SDL=2 -o ..\builds\web\index.html
 
 pause

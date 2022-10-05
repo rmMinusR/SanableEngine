@@ -36,7 +36,7 @@ jobs:
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
 
-#    - name: Upload build
-#      uses: actions/upload-artifact@v3.1.0
-#      with:
-#        path: 
+    - name: Upload build
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: christensen-GPR460/builds/${{env.BUILD_PLATFORM}}/${{env.BUILD_CONFIGURATION}}

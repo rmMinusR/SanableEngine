@@ -3,8 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# Emscripten output directory
-christensen-GPR460/build
+# Build output directory
+christensen-GPR460/builds
 
 # User-specific files
 *.rsuser

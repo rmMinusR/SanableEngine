@@ -26,4 +26,4 @@ jobs:
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
-        path: christensen-GPR460/build/html/
+        path: christensen-GPR460/builds/web/

@@ -60,7 +60,7 @@ void run_main_loop() {
 #endif
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_CreateWindowAndRenderer(300, 300, 0, &window, &renderer);
