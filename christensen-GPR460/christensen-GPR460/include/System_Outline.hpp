@@ -1,31 +1,25 @@
 #pragma once
 
-#include <Windows.h>
-
 #include "Aliases.hpp"
 
 namespace gpr460
 {
 
-	class System
+	class System_Outline
 	{
-	private:
+	protected:
 		bool isAlive;
 
-		FILE* consolePsuedofile;
-		HANDLE logFile;
-		const string logFileName = TEXT("GameErrors.txt");
-
 	public:
-		System();
-		~System();
+		System_Outline() = default;
+		virtual ~System_Outline() = default;
 
-		void Init();
-		void Shutdown();
+		virtual void Init() = 0;
+		virtual void Shutdown() = 0;
 
 		//TODO these should be combined
-		void ShowError(const gpr460::string& message);
-		void LogToErrorFile(const gpr460::string& message);
+		virtual void ShowError(const gpr460::string& message) = 0;
+		virtual void LogToErrorFile(const gpr460::string& message) = 0;
 
 		template<typename... Ts>
 		void ShowError(const gpr460::string& format, const Ts&... args)
@@ -37,7 +31,4 @@ namespace gpr460
 			ShowError(gpr460::string(buffer, nValid));
 		}
 	};
-
 }
-
-

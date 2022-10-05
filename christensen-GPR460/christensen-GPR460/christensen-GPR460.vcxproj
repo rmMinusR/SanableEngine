@@ -21,12 +21,16 @@
   <ItemGroup>
     <ClInclude Include="include\Aliases.hpp" />
     <ClInclude Include="include\Logger.hpp" />
-    <ClInclude Include="include\System.hpp" />
+    <ClInclude Include="include\System_Emscripten.hpp" />
+    <ClInclude Include="include\System_Outline.hpp" />
+    <ClInclude Include="include\System_Win32.hpp" />
+    <ClInclude Include="src\System.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\System_Emscripten.cpp" />
+    <ClCompile Include="src\System_Win32.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

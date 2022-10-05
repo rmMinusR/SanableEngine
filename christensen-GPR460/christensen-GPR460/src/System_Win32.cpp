@@ -1,4 +1,4 @@
-#include "System.hpp"
+#include "System_Win32.hpp"
 
 #include <cassert>
 
@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-gpr460::System::System()
+gpr460::System_Win32::System_Win32()
 {
 	isAlive = false;
 
@@ -15,12 +15,12 @@ gpr460::System::System()
 	logFile = nullptr;
 }
 
-gpr460::System::~System()
+gpr460::System_Win32::~System_Win32()
 {
 	assert(!isAlive);
 }
 
-void gpr460::System::Init()
+void gpr460::System_Win32::Init()
 {
 	assert(!isAlive);
 	isAlive = true;
@@ -37,7 +37,7 @@ void gpr460::System::Init()
 	if (!consolePsuedofile) ShowError(TEXT("Failed to redirect console output"));
 }
 
-void gpr460::System::Shutdown()
+void gpr460::System_Win32::Shutdown()
 {
 	assert(isAlive);
 	isAlive = false;
@@ -56,12 +56,12 @@ void gpr460::System::Shutdown()
 	_CrtDumpMemoryLeaks();
 }
 
-void gpr460::System::ShowError(const gpr460::string& message)
+void gpr460::System_Win32::ShowError(const gpr460::string& message)
 {
 	MessageBox(NULL, message.c_str(), TEXT("Error"), MB_OK | MB_ICONSTOP);
 }
 
-void gpr460::System::LogToErrorFile(const gpr460::string& message)
+void gpr460::System_Win32::LogToErrorFile(const gpr460::string& message)
 {
 	//Lazy init logfile
 	if (!logFile)
