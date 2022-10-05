@@ -18,6 +18,16 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Aliases.hpp" />
+    <ClInclude Include="include\Logger.hpp" />
+    <ClInclude Include="include\System.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Logger.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\System.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -70,13 +80,26 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -86,7 +109,15 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
+      <Message>Copy .lib-&gt;.dll dependencies</Message>
     </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)..\embuild.bat</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Building to Emscripten (WASM)</Message>
+      <Outputs>$(ProjectDir)..\build\html\index.wasm;%(Outputs)</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -96,7 +127,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -108,7 +140,15 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
+      <Message>Copy .lib-&gt;.dll dependencies</Message>
     </PostBuildEvent>
+    <CustomBuildStep>
+      <Command>$(ProjectDir)..\embuild.bat</Command>
+    </CustomBuildStep>
+    <CustomBuildStep>
+      <Message>Building to Emscripten (WASM)</Message>
+      <Outputs>$(ProjectDir)..\build\html\index.wasm;%(Outputs)</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -116,7 +156,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -126,7 +167,13 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
+      <Message>Copy .lib-&gt;.dll dependencies</Message>
     </PostBuildEvent>
+    <CustomBuildStep>
+      <Message>Building to Emscripten (WASM)</Message>
+      <Command>$(ProjectDir)..\embuild.bat</Command>
+      <Outputs>$(ProjectDir)..\build\html\index.wasm;%(Outputs)</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -136,7 +183,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -148,23 +196,14 @@
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
+      <Message>Copy .lib-&gt;.dll dependencies</Message>
     </PostBuildEvent>
+    <CustomBuildStep>
+      <Message>Building to Emscripten (WASM)</Message>
+      <Command>$(ProjectDir)..\embuild.bat</Command>
+      <Outputs>$(ProjectDir)..\build\html\index.wasm;%(Outputs)</Outputs>
+    </CustomBuildStep>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Logger.cpp">
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">${ProjectDir}\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">${ProjectDir}\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ClCompile>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="System.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Logger.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Aliases.hpp" />
-    <ClInclude Include="System.hpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

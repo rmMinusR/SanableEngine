@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include "Logger.hpp"
 
 inline Logger::LevelInfo::LevelInfo(DWORD sysHandleID, std::ostream& out, std::string header, WORD color)
 {
