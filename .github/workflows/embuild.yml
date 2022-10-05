@@ -1,0 +1,29 @@
+name: Build (Emscripten)
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Setup Emscripten toolchain
+      uses: mymindstorm/setup-emsdk@v11
+      with:
+        version: tot
+
+    - name: Build (Emscripten)
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: christensen-GPR460/embuild.bat
+
+    - name: Upload build
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: christensen-GPR460/build/html/
