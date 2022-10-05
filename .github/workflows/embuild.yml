@@ -14,16 +14,23 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Setup Emscripten toolchain
+    - name: Setup Emscripten
       uses: mymindstorm/setup-emsdk@v11
       with:
         version: tot
+    
+    #- name: Configure Emscripten
+    #  working-directory: ${{env.GITHUB_WORKSPACE}}
+    #  run: emcc --generate-config
 
-    - name: Build (Emscripten)
+    - name: Build
       working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: christensen-GPR460/embuild.bat
+      run: |
+        mkdir christensen-GPR460\builds\web
+        em++ -Ichristensen-GPR460\christensen-GPR460\include christensen-GPR460\christensen-GPR460\src\main.cpp -sUSE_SDL=2 -o christensen-GPR460\builds\web\index.html
 
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
         path: christensen-GPR460/builds/web/
+        name: Build-Emscripten
