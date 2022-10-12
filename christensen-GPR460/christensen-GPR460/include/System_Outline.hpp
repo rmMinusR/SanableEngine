@@ -8,7 +8,7 @@ namespace gpr460
 	class System_Outline
 	{
 	protected:
-		bool isAlive;
+		bool isAlive = false;
 
 	public:
 		System_Outline() = default;
