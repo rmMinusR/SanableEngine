@@ -20,17 +20,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Aliases.hpp" />
+    <ClInclude Include="include\GameObject.hpp" />
     <ClInclude Include="include\Logger.hpp" />
+    <ClInclude Include="include\RectangleRenderer.hpp" />
     <ClInclude Include="include\System_Emscripten.hpp" />
     <ClInclude Include="include\System_Outline.hpp" />
     <ClInclude Include="include\System_Win32.hpp" />
+    <ClInclude Include="include\Transform.hpp" />
     <ClInclude Include="src\System.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\RectangleRenderer.cpp" />
     <ClCompile Include="src\System_Emscripten.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
+    <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
