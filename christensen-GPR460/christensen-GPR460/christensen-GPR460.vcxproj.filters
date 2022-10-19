@@ -51,6 +51,12 @@
     <ClInclude Include="include\ColliderColorChanger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\MemoryManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MemoryPoolForked.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -87,6 +93,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\System_Outline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MemoryManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MemoryPoolForked.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

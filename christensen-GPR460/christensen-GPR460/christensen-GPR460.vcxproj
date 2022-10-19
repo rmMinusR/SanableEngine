@@ -24,6 +24,8 @@
     <ClInclude Include="include\Component.hpp" />
     <ClInclude Include="include\EngineCore.hpp" />
     <ClInclude Include="include\GameObject.hpp" />
+    <ClInclude Include="include\MemoryManager.hpp" />
+    <ClInclude Include="include\MemoryPoolForked.hpp" />
     <ClInclude Include="include\PlayerController.hpp" />
     <ClInclude Include="include\RectangleCollider.hpp" />
     <ClInclude Include="include\RectangleRenderer.hpp" />
@@ -39,6 +41,8 @@
     <ClCompile Include="src\EngineCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\MemoryManager.cpp" />
+    <ClCompile Include="src\MemoryPoolForked.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\RectangleCollider.cpp" />
     <ClCompile Include="src\RectangleRenderer.cpp" />
@@ -60,13 +64,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -79,7 +83,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -184,7 +188,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
