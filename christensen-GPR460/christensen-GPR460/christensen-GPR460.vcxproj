@@ -42,6 +42,7 @@
     <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\RectangleCollider.cpp" />
     <ClCompile Include="src\RectangleRenderer.cpp" />
+    <ClCompile Include="src\System_Outline.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>

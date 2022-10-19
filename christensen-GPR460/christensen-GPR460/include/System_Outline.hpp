@@ -2,6 +2,8 @@
 
 #include "Aliases.hpp"
 
+class EngineCore;
+
 namespace gpr460
 {
 
@@ -9,12 +11,14 @@ namespace gpr460
 	{
 	protected:
 		bool isAlive = false;
+		EngineCore* engine;
 
 	public:
 		System_Outline() = default;
 		virtual ~System_Outline() = default;
 
-		virtual void Init() = 0;
+		virtual void Init(EngineCore*);
+		virtual void DoMainLoop() = 0;
 		virtual void Shutdown() = 0;
 
 		//TODO these should be combined

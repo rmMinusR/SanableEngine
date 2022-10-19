@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
+#include "EngineCore.hpp"
+
 gpr460::System_Win32::System_Win32()
 {
 	consolePsuedofile = nullptr;
@@ -20,8 +22,10 @@ gpr460::System_Win32::~System_Win32()
 	assert(!isAlive);
 }
 
-void gpr460::System_Win32::Init()
+void gpr460::System_Win32::Init(EngineCore* engine)
 {
+	System_Outline::Init(engine);
+
 	assert(!isAlive);
 	isAlive = true;
 
@@ -36,6 +40,18 @@ void gpr460::System_Win32::Init()
 	if (!AllocConsole()) ShowError(L"Failed to allocate console: Code %i", GetLastError());
 	freopen_s(&consolePsuedofile, "CONOUT$", "w", stdout);
 	if (!consolePsuedofile) ShowError(L"Failed to redirect console output");
+}
+
+void gpr460::System_Win32::DoMainLoop()
+{
+	while (!engine->quit)
+	{
+		Uint32 now = GetTicks();
+		if (now - engine->frameStart >= 16)
+		{
+			engine->frameStep(engine);
+		}
+	}
 }
 
 void gpr460::System_Win32::Shutdown()

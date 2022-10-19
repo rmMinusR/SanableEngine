@@ -30,7 +30,8 @@ namespace gpr460
 		System_Win32();
 		~System_Win32();
 
-		void Init() override;
+		void Init(EngineCore*) override;
+		void DoMainLoop() override;
 		void Shutdown() override;
 
 		void ShowError(const gpr460::string& message) override;

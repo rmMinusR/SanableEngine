@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+#include "EngineCore.hpp"
+
 gpr460::System_Emscripten::System_Emscripten()
 {
 }
@@ -13,10 +15,17 @@ gpr460::System_Emscripten::~System_Emscripten()
 	assert(!isAlive);
 }
 
-void gpr460::System_Emscripten::Init()
+void gpr460::System_Emscripten::Init(EngineCore* engine)
 {
+	System_Outline::Init(engine);
+
 	assert(!isAlive);
 	isAlive = true;
+}
+
+void gpr460::System_Emscripten::DoMainLoop()
+{
+	emscripten_set_main_loop_arg(EngineCore::frameStep, engine, 0, true);
 }
 
 void gpr460::System_Emscripten::Shutdown()

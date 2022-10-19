@@ -35,6 +35,9 @@ public:
 
     GameObject* addGameObject();
 
+    void doMainLoop();
+    static void frameStep(void* arg);
+
     void tick();
     void draw();
 };

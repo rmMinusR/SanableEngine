@@ -15,7 +15,8 @@ namespace gpr460
 		System_Emscripten();
 		~System_Emscripten();
 
-		void Init() override;
+		void Init(EngineCore*) override;
+		void DoMainLoop() override;
 		void Shutdown() override;
 
 		void ShowError(const gpr460::string& message) override;

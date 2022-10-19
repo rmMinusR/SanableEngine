@@ -52,7 +52,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     assert(!isAlive);
     isAlive = true;
 
-    system.Init();
+    system.Init(this);
 
     quit = false;
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
@@ -85,6 +85,19 @@ GameObject* EngineCore::addGameObject()
     GameObject* o = DBG_NEW GameObject();
     objects.push_back(o);
     return o;
+}
+
+void EngineCore::doMainLoop()
+{
+    system.DoMainLoop();
+}
+
+void EngineCore::frameStep(void* arg)
+{
+    EngineCore* engine = (EngineCore*)arg;
+
+    engine->tick();
+    engine->draw();
 }
 
 void EngineCore::tick()

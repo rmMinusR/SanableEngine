@@ -7,8 +7,6 @@
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 
-void frameStep(void* arg);
-void runMainLoop(EngineCore* engine);
 void userInit(EngineCore* engine);
 
 int main(int argc, char* argv[])
@@ -21,7 +19,7 @@ int main(int argc, char* argv[])
     engine.init("SDL2 Test", WIDTH, HEIGHT, userInit);
 
     //Loop
-    runMainLoop(&engine);
+    engine.doMainLoop();
 
     //Shutdown
     engine.shutdown();
@@ -47,28 +45,4 @@ void userInit(EngineCore* engine)
     player->CreateCollider(10, 10);
     player->CreateRenderer(10, 10, SDL_Color{ 255, 0, 0, 255 });
     player->CreateColliderColorChanger(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
-}
-
-void frameStep(void* arg)
-{
-    EngineCore* engine = (EngineCore*)arg;
-    
-    engine->tick();
-    engine->draw();
-}
-
-void runMainLoop(EngineCore* engine)
-{
-#ifdef __EMSCRIPTEN__
-    emscripten_set_main_loop_arg(frameStep, engine, 0, true);
-#else
-    while (!engine->quit)
-    {
-        Uint32 now = GetTicks();
-        if (now - engine->frameStart >= 16)
-        {
-            frameStep(engine);
-        }
-    }
-#endif
 }
