@@ -1,22 +1,38 @@
 #pragma once
 
+#include <vector>
 #include <SDL.h>
 
 #include "System.hpp"
 
-struct EngineState
+Uint32 GetTicks();
+
+class GameObject;
+
+class EngineCore
 {
+private:
     SDL_Window* window = nullptr;
+    gpr460::System system;
+
+    std::vector<GameObject*> objects; //FIXME change this to an array or a pooling structure
+
+    void processEvents();
+
+public:
     SDL_Renderer* renderer = nullptr;
-    gpr460::System* system = nullptr;
     Uint32 frameStart = 0;
     bool quit = false;
     int frame = 0;
 
-    EngineState() = default;
+    EngineCore();
+    ~EngineCore();
+
+    void init(char const* windowName, int windowWidth, int windowHeight);
+    void shutdown();
+
+    void tick();
+    void draw();
 };
 
-extern EngineState engine;
-
-void frameStep(void* arg);
-Uint32 GetTicks();
+extern EngineCore engine; //FIXME singleton bad

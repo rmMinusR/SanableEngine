@@ -53,21 +53,21 @@ GameObject::~GameObject()
 RectangleRenderer* GameObject::CreateRenderer(float w, float h, SDL_Color color)
 {
 	assert(renderer == nullptr);
-	renderer = new RectangleRenderer(*this, w, h, color);
+	renderer = DBG_NEW RectangleRenderer(*this, w, h, color);
 	return renderer;
 }
 
 RectangleCollider* GameObject::CreateCollider(float w, float h)
 {
 	assert(collider == nullptr);
-	collider = new RectangleCollider(*this, w, h);
+	collider = DBG_NEW RectangleCollider(*this, w, h);
 	return collider;
 }
 
 PlayerController* GameObject::CreatePlayerController()
 {
 	assert(player == nullptr);
-	player = new PlayerController(*this);
+	player = DBG_NEW PlayerController(*this);
 	return player;
 }
 

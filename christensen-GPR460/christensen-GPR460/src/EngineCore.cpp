@@ -2,24 +2,21 @@
 
 #include <iostream>
 
-EngineState engine;
+#include "GameObject.hpp"
 
-void frameStep(void* arg)
+EngineCore engine;
+
+Uint32 GetTicks()
 {
-    EngineState* engine = (EngineState*)arg;
+    return SDL_GetTicks();
+}
+
+void EngineCore::processEvents()
+{
     SDL_Event event;
-
-    Uint32 now = GetTicks();
-    
-    engine->frame++;
-    engine->frameStart = now;
-
     while (SDL_PollEvent(&event))
     {
-        if (event.type == SDL_QUIT)
-        {
-            engine->quit = true;
-        }
+        if (event.type == SDL_QUIT) quit = true;
 
         if (event.type == SDL_KEYDOWN)
         {
@@ -30,31 +27,62 @@ void frameStep(void* arg)
 
                 // TODO: Add calls to ErrorMessage and LogToErrorFile here
             }
-            if (event.key.keysym.sym == SDLK_ESCAPE)
-            {
-                engine->quit = true;
-            }
+            if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
         }
     }
-
-    int x = (SDL_sinf(engine->frame / 100.0f) * 100.0f) + 200;
-
-    SDL_Rect r = {
-        x,
-        100,
-        50,
-        50
-    };
-
-    SDL_SetRenderDrawColor(engine->renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
-    SDL_RenderClear(engine->renderer);
-    SDL_SetRenderDrawColor(engine->renderer, 255, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderFillRect(engine->renderer, &r);
-    SDL_RenderPresent(engine->renderer);
 }
 
-Uint32 GetTicks()
+EngineCore::EngineCore()
 {
-    return SDL_GetTicks();
+}
+
+EngineCore::~EngineCore()
+{
+}
+
+void EngineCore::tick()
+{
+    frame++;
+    frameStart = GetTicks();
+
+    processEvents();
+
+    for (GameObject* o : objects) o->Update();
+}
+
+void EngineCore::init(char const* windowName, int windowWidth, int windowHeight)
+{
+    system.Init();
+
+    quit = false;
+    window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    frame = 0;
+    frameStart = GetTicks();
+}
+
+void EngineCore::draw()
+{
+    //Clear screen
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
+
+    //Draw objects
+    for (GameObject* o : objects) o->Render();
+
+    SDL_RenderPresent(renderer);
+}
+
+void EngineCore::shutdown()
+{
+    for (GameObject* o : objects) delete o;
+    objects.clear();
+
+    SDL_DestroyRenderer(renderer);
+    renderer = nullptr;
+
+    SDL_DestroyWindow(window);
+    window = nullptr;
+
+    system.Shutdown();
 }
