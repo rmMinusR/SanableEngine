@@ -1,12 +1,15 @@
 #pragma once
 
+#include "Vector3.inl"
+
 class Transform
 {
 private:
-	float x, y, z;
+	Vector3<float> position;
 
 public:
 	Transform();
+	Transform(Vector3<float> position);
 	Transform(float x, float y, float z);
 	~Transform();
 
@@ -20,4 +23,11 @@ public:
 	inline void setX(float v) { x = v; }
 	inline void setY(float v) { y = v; }
 	inline void setZ(float v) { z = v; }
+
+	inline void set(float x, float y, float z)
+	{
+		this->x = x;
+		this->y = y;
+		this->z = z;
+	}
 };

@@ -4,11 +4,14 @@ Transform::Transform() : Transform(0, 0, 0)
 {
 }
 
-Transform::Transform(float x, float y, float z)
+Transform::Transform(Vector3<float> position) :
+	position(position)
 {
-	this->x = x;
-	this->y = y;
-	this->z = z;
+}
+
+Transform::Transform(float x, float y, float z) :
+	position(x, y, z)
+{
 }
 
 Transform::~Transform()
