@@ -8,7 +8,6 @@ struct EngineState
 {
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
-    SDL_PixelFormat const* renderPixelFormat = nullptr;
     gpr460::System* system = nullptr;
     Uint32 frameStart = 0;
     bool quit = false;

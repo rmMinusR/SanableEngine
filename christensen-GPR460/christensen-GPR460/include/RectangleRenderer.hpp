@@ -3,7 +3,9 @@
 #include "Component.hpp"
 #include <SDL_pixels.h>
 
-class RectangleRenderer : public Component
+class RectangleRenderer :
+	public Component,
+	public IRenderable
 {
 private:
 	float w, h;
@@ -12,4 +14,6 @@ private:
 public:
 	RectangleRenderer(GameObject& owner, float w, float h, SDL_Color color);
 	~RectangleRenderer();
+
+	void Render() override;
 };

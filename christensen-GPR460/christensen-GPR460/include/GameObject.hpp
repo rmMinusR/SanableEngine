@@ -22,6 +22,7 @@ public:
     ColliderColorChanger* CreateColliderColorChanger();
 
     virtual void Update();
+    virtual void Render();
 
 protected:
     Transform transform;
@@ -33,4 +34,3 @@ protected:
 public:
     inline Transform* getTransform() { return &transform; }
 };
- 

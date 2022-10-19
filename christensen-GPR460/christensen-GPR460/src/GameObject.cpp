@@ -75,3 +75,8 @@ void GameObject::Update()
 {
 	if (player) player->Update();
 }
+
+void GameObject::Render()
+{
+	if (renderer) renderer->Render();
+}

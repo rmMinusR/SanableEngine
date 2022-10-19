@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     engine.quit = false;
     engine.window = SDL_CreateWindow("SDL2 Test", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN);
     engine.renderer = SDL_CreateRenderer(engine.window, -1, SDL_RENDERER_ACCELERATED);
-    engine.renderPixelFormat = SDL_AllocFormat(SDL_GetWindowPixelFormat(engine.window));
     engine.frame = 0;
     engine.frameStart = GetTicks();
     engine.system = &system;
