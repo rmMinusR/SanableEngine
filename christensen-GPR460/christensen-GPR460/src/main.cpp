@@ -56,6 +56,9 @@ void frameStep(void* arg)
 
 void runMainLoop(EngineCore* engine)
 {
+#ifdef __EMSCRIPTEN__
+    emscripten_set_main_loop_arg(frameStep, engine, 0, true);
+#else
     while (!engine->quit)
     {
         Uint32 now = GetTicks();
@@ -64,4 +67,5 @@ void runMainLoop(EngineCore* engine)
             frameStep(engine);
         }
     }
+#endif
 }

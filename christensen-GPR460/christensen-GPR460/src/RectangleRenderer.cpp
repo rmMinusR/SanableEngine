@@ -20,10 +20,10 @@ void RectangleRenderer::Render()
 	Vector3<float> pos = gameObject->getTransform()->getPosition();
 
 	SDL_Rect r = {
-		pos.getX(),
-		pos.getY(),
-		w,
-		h
+		(int) pos.getX(),
+		(int) pos.getY(),
+		(int) w,
+		(int) h
 	};
 
 	SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, color.a);
