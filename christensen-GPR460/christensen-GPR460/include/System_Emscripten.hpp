@@ -1,10 +1,9 @@
 #pragma once
 
-#ifdef _WIN32
-#include "../../emsdk/upstream/emscripten/cache/sysroot/include/emscripten.h"
-#else
+#ifndef _WIN32
+//#include "../../emsdk/upstream/emscripten/cache/sysroot/include/emscripten.h"
+
 #include <emscripten.h>
-#endif
 
 #include "System_Outline.hpp"
 
@@ -35,3 +34,5 @@ namespace gpr460
 	};
 
 }
+
+#endif _WIN32

@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef _WIN32
+
 #include "System_Outline.hpp"
 
 #include <Windows.h>
@@ -43,4 +45,4 @@ namespace gpr460
 
 }
 
-
+#endif _WIN32

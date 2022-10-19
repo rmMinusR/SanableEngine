@@ -1,4 +1,7 @@
 #include "System_Emscripten.hpp"
+
+#ifndef _WIN32
+
 #include <cassert>
 
 gpr460::System_Emscripten::System_Emscripten()
@@ -49,3 +52,5 @@ void gpr460::System_Emscripten::LogToErrorFile(const gpr460::string& message)
 	//	console.log($0);
 	//}, message);
 }
+
+#endif _WIN32
