@@ -78,6 +78,13 @@ void EngineCore::shutdown()
     system.Shutdown();
 }
 
+GameObject* EngineCore::addGameObject()
+{
+    GameObject* o = DBG_NEW GameObject();
+    objects.push_back(o);
+    return o;
+}
+
 void EngineCore::tick()
 {
     assert(isAlive);

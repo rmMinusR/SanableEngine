@@ -32,6 +32,8 @@ public:
     void init(char const* windowName, int windowWidth, int windowHeight);
     void shutdown();
 
+    GameObject* addGameObject();
+
     void tick();
     void draw();
 };
