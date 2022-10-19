@@ -10,4 +10,6 @@ private:
 public:
 	RectangleCollider(GameObject& owner, float w, float h);
 	~RectangleCollider();
+
+	bool CheckCollision(RectangleCollider const* other) const;
 };
