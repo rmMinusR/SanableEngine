@@ -29,7 +29,8 @@ public:
     EngineCore();
     ~EngineCore();
 
-    void init(char const* windowName, int windowWidth, int windowHeight);
+    typedef void (*UserInitFunc)(EngineCore*);
+    void init(char const* windowName, int windowWidth, int windowHeight, UserInitFunc userInitCallback);
     void shutdown();
 
     GameObject* addGameObject();
