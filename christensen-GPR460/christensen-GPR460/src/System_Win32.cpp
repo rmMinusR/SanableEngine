@@ -27,8 +27,9 @@ void gpr460::System_Win32::Init()
 
 	//Log memory leaks
 #ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+//	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_DEBUG);
+	_CrtMemCheckpoint(&checkpoint);
 #endif
 	
 	//Create console and redirect
@@ -53,7 +54,8 @@ void gpr460::System_Win32::Shutdown()
 		logFile = nullptr;
 	}
 
-	_CrtDumpMemoryLeaks();
+	//_CrtDumpMemoryLeaks();
+	_CrtMemDumpAllObjectsSince(&checkpoint);
 }
 
 void gpr460::System_Win32::ShowError(const gpr460::string& message)

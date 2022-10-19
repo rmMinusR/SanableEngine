@@ -22,6 +22,10 @@ namespace gpr460
 		HANDLE logFile;
 		const string logFileName = TEXT("GameErrors.txt");
 
+#ifdef _DEBUG
+		_CrtMemState checkpoint;
+#endif
+
 	public:
 		System_Win32();
 		~System_Win32();
