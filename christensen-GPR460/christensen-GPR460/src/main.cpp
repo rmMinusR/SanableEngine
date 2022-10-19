@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     player->CreatePlayerController();
     player->CreateCollider(10, 10);
     player->CreateRenderer(10, 10, SDL_Color{ 255, 0, 0, 255 });
-    player->CreateColliderColorChanger();
+    player->CreateColliderColorChanger(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
 
     //Loop
     runMainLoop(&engine);

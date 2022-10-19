@@ -19,16 +19,21 @@ public:
     RectangleRenderer* CreateRenderer(float w, float h, SDL_Color color);
     RectangleCollider* CreateCollider(float w, float h);
     PlayerController* CreatePlayerController();
-    ColliderColorChanger* CreateColliderColorChanger();
+    ColliderColorChanger* CreateColliderColorChanger(SDL_Color normalColor, SDL_Color overlapColor);
 
     virtual void Update();
     virtual void Render();
 
+    inline RectangleRenderer*    GetRenderer            () { return renderer    ; }
+    inline RectangleCollider*    GetCollider            () { return collider    ; }
+    inline PlayerController*     GetPlayerController    () { return player      ; }
+    inline ColliderColorChanger* GetColliderColorChanger() { return colorChanger; }
+
 protected:
     Transform transform;
-    RectangleRenderer* renderer;
-    RectangleCollider* collider;
-    PlayerController* player;
+    RectangleRenderer*    renderer;
+    RectangleCollider*    collider;
+    PlayerController*     player;
     ColliderColorChanger* colorChanger;
 
 public:

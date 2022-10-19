@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Aliases.hpp" />
+    <ClInclude Include="include\ColliderColorChanger.hpp" />
     <ClInclude Include="include\Component.hpp" />
     <ClInclude Include="include\EngineCore.hpp" />
     <ClInclude Include="include\GameObject.hpp" />
@@ -32,6 +33,7 @@
     <ClInclude Include="include\Transform.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ColliderColorChanger.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\emscripten\System_Emscripten.cpp" />
     <ClCompile Include="src\EngineCore.cpp" />

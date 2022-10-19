@@ -16,4 +16,6 @@ public:
 	~RectangleRenderer();
 
 	void Render() override;
+
+	inline void SetColor(SDL_Color newColor) { color = newColor; }
 };

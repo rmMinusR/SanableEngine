@@ -9,6 +9,7 @@
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
 #include "PlayerController.hpp"
+#include "ColliderColorChanger.hpp"
 
 GameObject::GameObject() : GameObject(Transform(0, 0, 0))
 {
@@ -71,9 +72,17 @@ PlayerController* GameObject::CreatePlayerController()
 	return player;
 }
 
+ColliderColorChanger* GameObject::CreateColliderColorChanger(SDL_Color normalColor, SDL_Color overlapColor)
+{
+	assert(colorChanger == nullptr);
+	colorChanger = DBG_NEW ColliderColorChanger(*this, normalColor, overlapColor);
+	return colorChanger;
+}
+
 void GameObject::Update()
 {
 	if (player) player->Update();
+	if (colorChanger) colorChanger->Update();
 }
 
 void GameObject::Render()
