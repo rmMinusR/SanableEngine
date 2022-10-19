@@ -23,6 +23,7 @@
     <ClInclude Include="include\Component.hpp" />
     <ClInclude Include="include\EngineCore.hpp" />
     <ClInclude Include="include\GameObject.hpp" />
+    <ClInclude Include="include\PlayerController.hpp" />
     <ClInclude Include="include\RectangleCollider.hpp" />
     <ClInclude Include="include\RectangleRenderer.hpp" />
     <ClInclude Include="include\System_Emscripten.hpp" />
@@ -36,10 +37,14 @@
     <ClCompile Include="src\EngineCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\RectangleCollider.cpp" />
     <ClCompile Include="src\RectangleRenderer.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Vector3.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

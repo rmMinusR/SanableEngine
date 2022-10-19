@@ -21,11 +21,16 @@ public:
     PlayerController* CreatePlayerController();
     ColliderColorChanger* CreateColliderColorChanger();
 
+    virtual void Update();
+
 protected:
     Transform transform;
     RectangleRenderer* renderer;
     RectangleCollider* collider;
-    PlayerController*  player;
+    PlayerController* player;
     ColliderColorChanger* colorChanger;
+
+public:
+    inline Transform* getTransform() { return &transform; }
 };
  

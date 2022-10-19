@@ -17,17 +17,7 @@ public:
 	Transform(Transform&& mov) = default; //Don't block passing through ctors
 
 	//Getters and setters
-	inline float getX() const { return x; }
-	inline float getY() const { return y; }
-	inline float getZ() const { return z; }
-	inline void setX(float v) { x = v; }
-	inline void setY(float v) { y = v; }
-	inline void setZ(float v) { z = v; }
-
-	inline void set(float x, float y, float z)
-	{
-		this->x = x;
-		this->y = y;
-		this->z = z;
-	}
+	inline Vector3<float> getPosition() { return position; }
+	inline void setPosition(Vector3<float> v) { position = v; }
+	inline void setPosition(float x, float y, float z) { position.set(x, y, z); }
 };

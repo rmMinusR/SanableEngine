@@ -8,6 +8,7 @@
 #include "EngineCore.hpp"
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
+#include "PlayerController.hpp"
 
 GameObject::GameObject() : GameObject(Transform(0, 0, 0))
 {
@@ -61,4 +62,16 @@ RectangleCollider* GameObject::CreateCollider(float w, float h)
 	assert(collider == nullptr);
 	collider = new RectangleCollider(*this, w, h);
 	return collider;
+}
+
+PlayerController* GameObject::CreatePlayerController()
+{
+	assert(player == nullptr);
+	player = new PlayerController(*this);
+	return player;
+}
+
+void GameObject::Update()
+{
+	if (player) player->Update();
 }

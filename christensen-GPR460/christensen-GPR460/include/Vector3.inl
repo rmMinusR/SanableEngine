@@ -56,6 +56,14 @@ public:
 
     T* ptr(){return _v;}                                // return reference to array (use with caution)
 
+    //Getters and setters
+    inline float getX() const { return _v[0]; }
+	inline float getY() const { return _v[1]; }
+	inline float getZ() const { return _v[2]; }
+	inline void setX(float s) { _v[0] = s; }
+    inline void setY(float s) { _v[1] = s; }
+    inline void setZ(float s) { _v[2] = s; }
+
 private:
     T _v[3];
 };

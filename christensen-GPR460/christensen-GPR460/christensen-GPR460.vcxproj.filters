@@ -45,6 +45,9 @@
     <ClInclude Include="include\EngineCore.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\PlayerController.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -74,5 +77,13 @@
     <ClCompile Include="src\emscripten\System_Emscripten.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlayerController.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\Vector3.inl">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
