@@ -12,6 +12,7 @@ class GameObject;
 class EngineCore
 {
 private:
+    bool isAlive;
     SDL_Window* window = nullptr;
     gpr460::System system;
 

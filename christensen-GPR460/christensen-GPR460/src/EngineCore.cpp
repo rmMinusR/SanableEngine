@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "GameObject.hpp"
+#include <cassert>
 
 EngineCore engine;
 
@@ -13,6 +14,8 @@ Uint32 GetTicks()
 
 void EngineCore::processEvents()
 {
+    assert(isAlive);
+
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -32,26 +35,23 @@ void EngineCore::processEvents()
     }
 }
 
-EngineCore::EngineCore()
+EngineCore::EngineCore() :
+    isAlive(false),
+    window(nullptr),
+    renderer(nullptr)
 {
 }
 
 EngineCore::~EngineCore()
 {
-}
-
-void EngineCore::tick()
-{
-    frame++;
-    frameStart = GetTicks();
-
-    processEvents();
-
-    for (GameObject* o : objects) o->Update();
+    assert(!isAlive);
 }
 
 void EngineCore::init(char const* windowName, int windowWidth, int windowHeight)
 {
+    assert(!isAlive);
+    isAlive = true;
+
     system.Init();
 
     quit = false;
@@ -61,20 +61,11 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight)
     frameStart = GetTicks();
 }
 
-void EngineCore::draw()
-{
-    //Clear screen
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
-
-    //Draw objects
-    for (GameObject* o : objects) o->Render();
-
-    SDL_RenderPresent(renderer);
-}
-
 void EngineCore::shutdown()
 {
+    assert(isAlive);
+    isAlive = false;
+
     for (GameObject* o : objects) delete o;
     objects.clear();
 
@@ -85,4 +76,30 @@ void EngineCore::shutdown()
     window = nullptr;
 
     system.Shutdown();
+}
+
+void EngineCore::tick()
+{
+    assert(isAlive);
+
+    frame++;
+    frameStart = GetTicks();
+
+    processEvents();
+
+    for (GameObject* o : objects) o->Update();
+}
+
+void EngineCore::draw()
+{
+    assert(isAlive);
+
+    //Clear screen
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(renderer);
+
+    //Draw objects
+    for (GameObject* o : objects) o->Render();
+
+    SDL_RenderPresent(renderer);
 }
