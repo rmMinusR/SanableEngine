@@ -14,10 +14,10 @@ public:
 	Transform(Transform&& mov) = default; //Don't block passing through ctors
 
 	//Getters and setters
-	float getX() inline const { return x; }
-	float getX() inline const { return y; }
-	float getX() inline const { return z; }
-	void setX(float v) inline { x = v; }
-	void setY(float v) inline { y = v; }
-	void setZ(float v) inline { z = v; }
+	inline float getX() const { return x; }
+	inline float getY() const { return y; }
+	inline float getZ() const { return z; }
+	inline void setX(float v) { x = v; }
+	inline void setY(float v) { y = v; }
+	inline void setZ(float v) { z = v; }
 };

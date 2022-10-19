@@ -20,22 +20,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Aliases.hpp" />
+    <ClInclude Include="include\Component.hpp" />
+    <ClInclude Include="include\EngineCore.hpp" />
     <ClInclude Include="include\GameObject.hpp" />
-    <ClInclude Include="include\Logger.hpp" />
+    <ClInclude Include="include\RectangleCollider.hpp" />
     <ClInclude Include="include\RectangleRenderer.hpp" />
     <ClInclude Include="include\System_Emscripten.hpp" />
     <ClInclude Include="include\System_Outline.hpp" />
     <ClInclude Include="include\System_Win32.hpp" />
     <ClInclude Include="include\Transform.hpp" />
-    <ClInclude Include="src\System.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Component.cpp" />
+    <ClCompile Include="src\EngineCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
-    <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\RectangleCollider.cpp" />
     <ClCompile Include="src\RectangleRenderer.cpp" />
-    <ClCompile Include="src\System_Emscripten.cpp" />
-    <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -62,7 +63,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -173,7 +174,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(ProjectDir)\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

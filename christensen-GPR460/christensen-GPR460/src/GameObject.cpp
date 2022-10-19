@@ -3,6 +3,12 @@
 #include <utility>
 #include <cassert>
 
+#include <SDL_render.h>
+
+#include "EngineCore.hpp"
+#include "RectangleCollider.hpp"
+#include "RectangleRenderer.hpp"
+
 GameObject::GameObject() : GameObject(Transform(0, 0, 0))
 {
 }
@@ -43,16 +49,16 @@ GameObject::~GameObject()
 	}
 }
 
-RectangleRenderer* GameObject::CreateRenderer(float w, float h)
+RectangleRenderer* GameObject::CreateRenderer(float w, float h, SDL_Color color)
 {
 	assert(renderer == nullptr);
-	renderer = new RectangleRenderer(w, h);
+	renderer = new RectangleRenderer(*this, w, h, color);
 	return renderer;
 }
 
 RectangleCollider* GameObject::CreateCollider(float w, float h)
 {
 	assert(collider == nullptr);
-	collider = new RectangleCollider(w, h);
+	collider = new RectangleCollider(*this, w, h);
 	return collider;
 }

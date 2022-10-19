@@ -6,12 +6,18 @@
 
 struct EngineState
 {
-    SDL_Renderer* renderer;
-    gpr460::System* system;
-    Uint32 frameStart;
-    bool quit;
-    int frame;
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    SDL_PixelFormat const* renderPixelFormat = nullptr;
+    gpr460::System* system = nullptr;
+    Uint32 frameStart = 0;
+    bool quit = false;
+    int frame = 0;
+
+    EngineState() = default;
 };
+
+extern EngineState engine;
 
 void frameStep(void* arg);
 Uint32 GetTicks();

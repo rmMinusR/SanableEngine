@@ -1,5 +1,7 @@
 #pragma once
 
+#include <SDL_pixels.h> //SDL_Color
+
 #include "Transform.hpp"
 
 class RectangleRenderer;
@@ -14,7 +16,7 @@ public:
     GameObject(Transform&& initialTransform);
     ~GameObject();
 
-    RectangleRenderer* CreateRenderer(float w, float h);
+    RectangleRenderer* CreateRenderer(float w, float h, SDL_Color color);
     RectangleCollider* CreateCollider(float w, float h);
     PlayerController* CreatePlayerController();
     ColliderColorChanger* CreateColliderColorChanger();

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+EngineState engine;
+
 void frameStep(void* arg)
 {
     EngineState* engine = (EngineState*)arg;
