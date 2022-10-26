@@ -47,12 +47,13 @@ public:
 		freeRaw(obj, sizeof(TObj));
 	}
 
+	bool contains(void* ptr) const;
+	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
+
 private:
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };
 	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; };
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
-
-	bool contains(void* ptr) const;
 
 	void* mMemory;
 	void* mHighestValidAddress;
@@ -61,6 +62,5 @@ private:
 	size_t mObjectSize;
 	std::vector<void*> mFreeList;
 
-	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 	void createFreeList();
 };

@@ -27,7 +27,6 @@
     <ClInclude Include="include\RawMemoryPool.hpp" />
     <ClInclude Include="include\MemoryPoolCommon.hpp" />
     <ClInclude Include="include\MemoryPoolPagedResizing.hpp" />
-    <ClInclude Include="include\MemoryPoolFixedSize.hpp" />
     <ClInclude Include="include\PlayerController.hpp" />
     <ClInclude Include="include\RectangleCollider.hpp" />
     <ClInclude Include="include\RectangleRenderer.hpp" />
@@ -47,7 +46,6 @@
     <ClCompile Include="src\MemoryPoolCommon.cpp" />
     <ClCompile Include="src\RawMemoryPool.cpp" />
     <ClCompile Include="src\MemoryPoolPagedResizing.cpp" />
-    <ClCompile Include="src\MemoryPoolFixedSize.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\RectangleCollider.cpp" />
     <ClCompile Include="src\RectangleRenderer.cpp" />

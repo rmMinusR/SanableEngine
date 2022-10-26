@@ -53,8 +53,8 @@ void MemoryPoolPagedResizing::init()
 	isAlive = true;
 
 	for (int i = 0; i < POOL_STARTING_COUNT; ++i) {
-		std::vector<MemoryPoolFixedSize*>& v = poolGroups.emplace(size_t(1 << i), std::vector<MemoryPoolFixedSize*>()).first->second;
-		v.push_back(new MemoryPoolFixedSize(POOL_OBJ_COUNT, 1 << i));
+		std::vector<RawMemoryPool*>& v = poolGroups.emplace(size_t(1 << i), std::vector<RawMemoryPool*>()).first->second;
+		v.push_back(new RawMemoryPool(POOL_OBJ_COUNT, 1 << i));
 	}
 	
 	alignWasted = 0;
@@ -65,8 +65,8 @@ void MemoryPoolPagedResizing::cleanup()
 	assert(isAlive);
 	isAlive = false;
 
-	for (std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
-		for(const MemoryPoolFixedSize* pool : group.second) delete pool;
+	for (std::pair<const size_t, std::vector<RawMemoryPool*>>& group : poolGroups) {
+		for(const RawMemoryPool* pool : group.second) delete pool;
 	}
 	
 	poolGroups.clear();
@@ -77,8 +77,8 @@ void MemoryPoolPagedResizing::reset()
 {
 	assert(isAlive);
 
-	for (std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
-		for (MemoryPoolFixedSize* pool : group.second) pool->reset();
+	for (std::pair<const size_t, std::vector<RawMemoryPool*>>& group : poolGroups) {
+		for (RawMemoryPool* pool : group.second) pool->reset();
 	}
 	alignWasted = 0;
 }
@@ -88,7 +88,7 @@ size_t MemoryPoolPagedResizing::getTotalCapacity() const
 	assert(isAlive);
 
 	size_t total = 0;
-	for (const std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
+	for (const std::pair<const size_t, std::vector<RawMemoryPool*>>& group : poolGroups) {
 		//for (const MemoryPoolForked* pool : group.second) total += group.first * POOL_OBJ_COUNT;
 		total += group.second.size() * group.first * POOL_OBJ_COUNT;
 	}
@@ -100,8 +100,8 @@ size_t MemoryPoolPagedResizing::getTotalAllocated() const
 	assert(isAlive);
 
 	size_t total = 0;
-	for (const std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
-		for (const MemoryPoolFixedSize* pool : group.second) total += pool->getMaxObjectSize() * pool->getNumAllocatedObjects();
+	for (const std::pair<const size_t, std::vector<RawMemoryPool*>>& group : poolGroups) {
+		for (const RawMemoryPool* pool : group.second) total += pool->getMaxObjectSize() * pool->getNumAllocatedObjects();
 	}
 	return total;
 }
@@ -122,16 +122,16 @@ void* MemoryPoolPagedResizing::allocate(const size_t& size)
     size_t fs = fitSize(size);
 
     auto groupIt = poolGroups.find(fs);
-	std::vector<MemoryPoolFixedSize*>& group = (groupIt != poolGroups.end())          //Search for the appropriate memory pool group
+	std::vector<RawMemoryPool*>& group = (groupIt != poolGroups.end())          //Search for the appropriate memory pool group
         ? groupIt->second                                                         //If a matching group exists, use it
-        : (poolGroups.emplace(fs, std::vector<MemoryPoolFixedSize*>()).first->second); //Only create if no appropriate group found
+        : (poolGroups.emplace(fs, std::vector<RawMemoryPool*>()).first->second); //Only create if no appropriate group found
 
 	//Loop through pools until we find one that can hold our object.
 	int poolID = 0;
 	void* obj = nullptr;
 	do {
 		if (group.size() < poolID + 1) {
-			obj = group.emplace_back(new MemoryPoolFixedSize(POOL_OBJ_COUNT, fs))->allocate(); //No pool exists that can hold our object? Create one.
+			obj = group.emplace_back(new RawMemoryPool(POOL_OBJ_COUNT, fs))->allocate(); //No pool exists that can hold our object? Create one.
 			break;
 		}
 		obj = group[poolID]->allocate();
@@ -152,8 +152,8 @@ void MemoryPoolPagedResizing::deallocate(void* obj, size_t size)
     assert(it != poolGroups.end());
     
 	//Search for the pool that contains this object
-	MemoryPoolFixedSize* ownerPool = nullptr;
-	for (MemoryPoolFixedSize* pool : it->second) {
+	RawMemoryPool* ownerPool = nullptr;
+	for (RawMemoryPool* pool : it->second) {
 		if (pool->contains(obj)) {
 			ownerPool = pool;
 			break;

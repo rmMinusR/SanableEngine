@@ -5,33 +5,25 @@
 
 #pragma region Destructor template magick
 
-namespace HelperWrappers {
-    template<typename TObj, bool has_destructor>
-    struct optional_destructor {
-        static void call(TObj* obj);
-
-    private:
-        optional_destructor() = delete;
-    };
-
-    template<typename TObj>
-    struct optional_destructor<TObj, true> {
-        static void call(TObj* obj) {
-            //Dtor present, call it
-            obj->~TObj();
-        }
-    };
-
-    template<typename TObj>
-    struct optional_destructor<TObj, false> {
-        static void call(TObj* obj) {
-            //No dtor present, nothing to do
-        }
-    };
-}
+template<typename TObj, bool has_destructor = std::is_destructible<TObj>::value>
+struct optional_destructor {
+    optional_destructor() = delete;
+};
 
 template<typename TObj>
-using optional_destructor = HelperWrappers::optional_destructor<TObj, std::is_destructible<TObj>::value>;
+struct optional_destructor<TObj, true> {
+    static void call(TObj* obj) {
+        //Dtor present, call it
+        obj->~TObj();
+    }
+};
+
+template<typename TObj>
+struct optional_destructor<TObj, false> {
+    static void call(TObj* obj) {
+        //No dtor present, nothing to do
+    }
+};
 
 #pragma endregion
 

@@ -54,9 +54,6 @@
     <ClInclude Include="include\MemoryPoolPagedResizing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\MemoryPoolFixedSize.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\RawMemoryPool.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -105,9 +102,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MemoryPoolPagedResizing.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\MemoryPoolFixedSize.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\RawMemoryPool.cpp">

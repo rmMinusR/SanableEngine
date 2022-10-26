@@ -7,14 +7,14 @@
 #include <cassert>
 #include <ostream>
 
-#include "MemoryPoolFixedSize.hpp"
+#include "RawMemoryPool.hpp"
 
 class MemoryPoolPagedResizing
 {
 private:
     static constexpr size_t POOL_OBJ_COUNT = 16;
     static constexpr size_t POOL_STARTING_COUNT = 0;
-    std::map<size_t, std::vector<MemoryPoolFixedSize*>> poolGroups;
+    std::map<size_t, std::vector<RawMemoryPool*>> poolGroups;
     
     static constexpr size_t fitSize(size_t raw); //For choosing which pool objects go into
     static constexpr size_t calcWaste(size_t raw);
