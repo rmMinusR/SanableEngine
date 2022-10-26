@@ -7,54 +7,54 @@
 /// From https://github.com/jpmec/vector3
 /// Slight modifications by Robert Christensen
 ///
-template<class T>
+template<class TObj>
 class Vector3
 {
 public:
     Vector3();
-    Vector3(const T x, const T y, const T z);
-    Vector3(const Vector3<T>& v);
+    Vector3(const TObj x, const TObj y, const TObj z);
+    Vector3(const Vector3<TObj>& v);
 
     // utility operations
-    Vector3<T>& zero();
-    Vector3<T>& set(const T x, const T y, const T z);
-    Vector3<T>& normalize();
+    Vector3<TObj>& zero();
+    Vector3<TObj>& set(const TObj x, const TObj y, const TObj z);
+    Vector3<TObj>& normalize();
 
     // math operations
-    const T norm() const;
-    const T sum() const;
-    const T dot(const Vector3<T>&) const;
-    const Vector3<T> cross(const Vector3<T>&) const;
-    const Vector3<T> abs() const;
+    const TObj norm() const;
+    const TObj sum() const;
+    const TObj dot(const Vector3<TObj>&) const;
+    const Vector3<TObj> cross(const Vector3<TObj>&) const;
+    const Vector3<TObj> abs() const;
 
     // operators
-    Vector3<T>& operator= (const Vector3<T>& v);        // assignment
+    Vector3<TObj>& operator= (const Vector3<TObj>& v);        // assignment
 
-    const T operator[] (const int i) const;             // indexing
-    T& operator[] (const int i);                        // indexing
+    const TObj operator[] (const int i) const;             // indexing
+    TObj& operator[] (const int i);                        // indexing
 
-    const Vector3<T> operator-();                       // unary negate
+    const Vector3<TObj> operator-();                       // unary negate
 
-    Vector3<T>& operator+=(const T s);                  // scalar addition
-    Vector3<T>& operator-=(const T s);                  // scalar subtraction
-    Vector3<T>& operator*=(const T s);                  // scalar multiplication
-    Vector3<T>& operator/=(const T s);                  // scalar division
+    Vector3<TObj>& operator+=(const TObj s);                  // scalar addition
+    Vector3<TObj>& operator-=(const TObj s);                  // scalar subtraction
+    Vector3<TObj>& operator*=(const TObj s);                  // scalar multiplication
+    Vector3<TObj>& operator/=(const TObj s);                  // scalar division
 
-    Vector3<T>& operator+=(const Vector3<T>& v);        // vector addition
-    Vector3<T>& operator-=(const Vector3<T>& v);        // vector subtraction
-    Vector3<T>& operator*=(const Vector3<T>& v);        // element-wise multiplication
-    Vector3<T>& operator/=(const Vector3<T>& v);        // element-wise division
+    Vector3<TObj>& operator+=(const Vector3<TObj>& v);        // vector addition
+    Vector3<TObj>& operator-=(const Vector3<TObj>& v);        // vector subtraction
+    Vector3<TObj>& operator*=(const Vector3<TObj>& v);        // element-wise multiplication
+    Vector3<TObj>& operator/=(const Vector3<TObj>& v);        // element-wise division
 
-    const Vector3<T> operator < (const T s);            // compare each element with s, return vector of 1 or 0 based on test
-    const Vector3<T> operator > (const T s);
+    const Vector3<TObj> operator < (const TObj s);            // compare each element with s, return vector of 1 or 0 based on test
+    const Vector3<TObj> operator > (const TObj s);
 
-    const Vector3<T> operator < (const Vector3<T>& v);  // element-wise less than comparion, return vector of 1 or 0 based on test
-    const Vector3<T> operator > (const Vector3<T>& v);  // element-wise greater than comparion, return vector of 1 or 0 based on test
+    const Vector3<TObj> operator < (const Vector3<TObj>& v);  // element-wise less than comparion, return vector of 1 or 0 based on test
+    const Vector3<TObj> operator > (const Vector3<TObj>& v);  // element-wise greater than comparion, return vector of 1 or 0 based on test
 
-    bool operator == (const Vector3<T>& v);             // test vector for equality
-    bool operator != (const Vector3<T>& v);             // test vector for inequality
+    bool operator == (const Vector3<TObj>& v);             // test vector for equality
+    bool operator != (const Vector3<TObj>& v);             // test vector for inequality
 
-    T* ptr(){return _v;}                                // return reference to array (use with caution)
+    TObj* ptr(){return _v;}                                // return reference to array (use with caution)
 
     //Getters and setters
     inline float getX() const { return _v[0]; }
@@ -65,7 +65,7 @@ public:
     inline void setZ(float s) { _v[2] = s; }
 
 private:
-    T _v[3];
+    TObj _v[3];
 };
 
 
@@ -89,8 +89,8 @@ inline const Vector3<T> operator^ (const Vector3<T>& v1, const Vector3<T>& v2); 
 //
 
 
-template <class T>
-Vector3<T>::Vector3()
+template <class TObj>
+Vector3<TObj>::Vector3()
 {
     _v[0] = 0.0;
     _v[1] = 0.0;
@@ -98,8 +98,8 @@ Vector3<T>::Vector3()
 }
 
 
-template <class T>
-Vector3<T>::Vector3(const Vector3<T>& v)
+template <class TObj>
+Vector3<TObj>::Vector3(const Vector3<TObj>& v)
 {
     _v[0] = v[0];
     _v[1] = v[1];
@@ -107,8 +107,8 @@ Vector3<T>::Vector3(const Vector3<T>& v)
 }
 
 
-template <class T>
-Vector3<T>::Vector3(const T x, const T y, const T z)
+template <class TObj>
+Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
 {
     _v[0] = x;
     _v[1] = y;
@@ -116,8 +116,8 @@ Vector3<T>::Vector3(const T x, const T y, const T z)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::zero()
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::zero()
 {
     _v[0] = 0.0;
     _v[1] = 0.0;
@@ -126,8 +126,8 @@ Vector3<T>& Vector3<T>::zero()
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::set(const T x, const T y, const T z)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::set(const TObj x, const TObj y, const TObj z)
 {
     _v[0] = x;
     _v[1] = y;
@@ -136,45 +136,45 @@ Vector3<T>& Vector3<T>::set(const T x, const T y, const T z)
 }
 
 
-template <class T>
-inline const T Vector3<T>::operator [] (const int i) const
+template <class TObj>
+inline const TObj Vector3<TObj>::operator [] (const int i) const
 {
     return _v[i];
 }
 
 
-template <class T>
-T& Vector3<T>::operator [] (const int i)
+template <class TObj>
+TObj& Vector3<TObj>::operator [] (const int i)
 {
     return _v[i];
 }
 
 
-template <class T>
-inline const Vector3<T> Vector3<T>::abs() const
+template <class TObj>
+inline const Vector3<TObj> Vector3<TObj>::abs() const
 {
-    return Vector3<T>(std::abs(_v[0]), std::abs(_v[1]), std::abs(_v[2]));
+    return Vector3<TObj>(std::abs(_v[0]), std::abs(_v[1]), std::abs(_v[2]));
 }
 
 
-template <class T>
-inline const T Vector3<T>::sum() const
+template <class TObj>
+inline const TObj Vector3<TObj>::sum() const
 {
     return _v[0] + _v[1] + _v[2];
 }
 
 
-template <class T>
-inline const T Vector3<T>::dot(const Vector3<T>& v) const
+template <class TObj>
+inline const TObj Vector3<TObj>::dot(const Vector3<TObj>& v) const
 {
     return _v[0]*v[0] + _v[1]*v[1] + _v[2]*v[2];
 }
 
 
-template <class T>
-inline const Vector3<T> Vector3<T>::cross(const Vector3<T>& v) const
+template <class TObj>
+inline const Vector3<TObj> Vector3<TObj>::cross(const Vector3<TObj>& v) const
 {
-    return Vector3<T>(
+    return Vector3<TObj>(
       (_v[1] * v[2]) - (_v[2] * v[1]),
       (_v[2] * v[0]) - (_v[0] * v[2]),
       (_v[0] * v[1]) - (_v[1] * v[0])
@@ -182,17 +182,17 @@ inline const Vector3<T> Vector3<T>::cross(const Vector3<T>& v) const
 }
 
 
-template <class T>
-inline const T Vector3<T>::norm() const
+template <class TObj>
+inline const TObj Vector3<TObj>::norm() const
 {
-    return (T) sqrt(dot(*this)); // cast to type
+    return (TObj) sqrt(dot(*this)); // cast to type
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::normalize()
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::normalize()
 {
-    T n = norm();
+    TObj n = norm();
     if(n){
       _v[0]/=n;
       _v[1]/=n;
@@ -202,8 +202,8 @@ Vector3<T>& Vector3<T>::normalize()
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator= (const Vector3<T>& v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator= (const Vector3<TObj>& v)
 {
     _v[0] = v[0];
     _v[1] = v[1];
@@ -212,8 +212,8 @@ Vector3<T>& Vector3<T>::operator= (const Vector3<T>& v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator += (const Vector3<T>& v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator += (const Vector3<TObj>& v)
 {
     _v[0] += v[0];
     _v[1] += v[1];
@@ -222,8 +222,8 @@ Vector3<T>& Vector3<T>::operator += (const Vector3<T>& v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator += (T v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator += (TObj v)
 {
     _v[0] += v;
     _v[1] += v;
@@ -232,8 +232,8 @@ Vector3<T>& Vector3<T>::operator += (T v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator -= (const Vector3<T>& v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator -= (const Vector3<TObj>& v)
 {
     _v[0] -= v[0];
     _v[1] -= v[1];
@@ -242,8 +242,8 @@ Vector3<T>& Vector3<T>::operator -= (const Vector3<T>& v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator -= (T v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator -= (TObj v)
 {
     _v[0] -= v;
     _v[1] -= v;
@@ -252,8 +252,8 @@ Vector3<T>& Vector3<T>::operator -= (T v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator *= (T v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator *= (TObj v)
 {
     _v[0] *= v;
     _v[1] *= v;
@@ -262,8 +262,8 @@ Vector3<T>& Vector3<T>::operator *= (T v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator *= (const Vector3<T>& v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator *= (const Vector3<TObj>& v)
 {
     _v[0] *= v[0];
     _v[1] *= v[1];
@@ -272,8 +272,8 @@ Vector3<T>& Vector3<T>::operator *= (const Vector3<T>& v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator /= (T v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator /= (TObj v)
 {
     _v[0] /= v;
     _v[1] /= v;
@@ -282,8 +282,8 @@ Vector3<T>& Vector3<T>::operator /= (T v)
 }
 
 
-template <class T>
-Vector3<T>& Vector3<T>::operator /= (const Vector3<T>& v)
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator /= (const Vector3<TObj>& v)
 {
     _v[0] /= v[0];
     _v[1] /= v[1];
@@ -292,43 +292,43 @@ Vector3<T>& Vector3<T>::operator /= (const Vector3<T>& v)
 }
 
 
-template<class T>
-inline const Vector3<T> Vector3<T>::operator < (const T s)
+template<class TObj>
+inline const Vector3<TObj> Vector3<TObj>::operator < (const TObj s)
 {
-    return Vector3<T>(_v[0]<s, _v[1]<s, _v[2]<s);
+    return Vector3<TObj>(_v[0]<s, _v[1]<s, _v[2]<s);
 }
 
 
-template<class T>
-inline const Vector3<T> Vector3<T>::operator > (const T s)
+template<class TObj>
+inline const Vector3<TObj> Vector3<TObj>::operator > (const TObj s)
 {
-    return Vector3<T>(_v[0]>s, _v[1]>s, _v[2]>s);
+    return Vector3<TObj>(_v[0]>s, _v[1]>s, _v[2]>s);
 }
 
 
-template<class T>
-inline const Vector3<T> Vector3<T>::operator < (const Vector3<T>& v)
+template<class TObj>
+inline const Vector3<TObj> Vector3<TObj>::operator < (const Vector3<TObj>& v)
 {
-    return Vector3<T>(_v[0]<v[0], _v[1]<v[1], _v[2]<v[2]);
+    return Vector3<TObj>(_v[0]<v[0], _v[1]<v[1], _v[2]<v[2]);
 }
 
 
-template<class T>
-inline const Vector3<T> Vector3<T>::operator > (const Vector3<T>& v)
+template<class TObj>
+inline const Vector3<TObj> Vector3<TObj>::operator > (const Vector3<TObj>& v)
 {
-    return Vector3<T>(_v[0]>v[0], _v[1]>v[1], _v[2]>v[2]);
+    return Vector3<TObj>(_v[0]>v[0], _v[1]>v[1], _v[2]>v[2]);
 }
 
 
-template<class T>
-inline const Vector3<T> Vector3<T>::operator - ()
+template<class TObj>
+inline const Vector3<TObj> Vector3<TObj>::operator - ()
 {
-    return Vector3<T>(-_v[0], -_v[1], -_v[2]);
+    return Vector3<TObj>(-_v[0], -_v[1], -_v[2]);
 }
 
 
-template <class T>
-inline bool Vector3<T>::operator == (const Vector3<T>& v)
+template <class TObj>
+inline bool Vector3<TObj>::operator == (const Vector3<TObj>& v)
 {
     return    _v[0] == v[0]
            && _v[1] == v[1]
@@ -336,8 +336,8 @@ inline bool Vector3<T>::operator == (const Vector3<T>& v)
 }
 
 
-template <class T>
-inline bool Vector3<T>::operator != (const Vector3<T>& v)
+template <class TObj>
+inline bool Vector3<TObj>::operator != (const Vector3<TObj>& v)
 {
     return    _v[0] != v[0]
            || _v[1] != v[1]
@@ -346,71 +346,71 @@ inline bool Vector3<T>::operator != (const Vector3<T>& v)
 
 
 
-template<class T>
-inline const Vector3<T> operator && (const Vector3<T>& v1, const Vector3<T>& v2)
+template<class TObj>
+inline const Vector3<TObj> operator && (const Vector3<TObj>& v1, const Vector3<TObj>& v2)
 {
-    return Vector3<T>(v1[0]&&v2[0], v1[1]&&v2[1], v1[2]&&v2[2]);
+    return Vector3<TObj>(v1[0]&&v2[0], v1[1]&&v2[1], v1[2]&&v2[2]);
 }
 
 
-template<class T>
-inline const Vector3<T> operator || (const Vector3<T>& v1, const Vector3<T>& v2)
+template<class TObj>
+inline const Vector3<TObj> operator || (const Vector3<TObj>& v1, const Vector3<TObj>& v2)
 {
-    return Vector3<T>(v1[0]||v2[0], v1[1]||v2[1], v1[2]||v2[2]);
+    return Vector3<TObj>(v1[0]||v2[0], v1[1]||v2[1], v1[2]||v2[2]);
 }
 
 
-template <class T>
-inline const Vector3<T> operator + (const Vector3<T>& v, const T& s)
+template <class TObj>
+inline const Vector3<TObj> operator + (const Vector3<TObj>& v, const TObj& s)
 {
-    return Vector3<T>(v) += s;
+    return Vector3<TObj>(v) += s;
 }
 
 
-template <class T>
-inline const Vector3<T> operator - (const Vector3<T>& v, const T& s)
+template <class TObj>
+inline const Vector3<TObj> operator - (const Vector3<TObj>& v, const TObj& s)
 {
-    return Vector3<T>(v) -= s;
+    return Vector3<TObj>(v) -= s;
 }
 
 
-template <class T>
-inline const Vector3<T> operator * (const Vector3<T>& v, const T& s)
+template <class TObj>
+inline const Vector3<TObj> operator * (const Vector3<TObj>& v, const TObj& s)
 {
-    return Vector3<T>(v) *= s;
+    return Vector3<TObj>(v) *= s;
 }
 
 
-template <class T>
-inline const Vector3<T> operator / (const Vector3<T>& v, const T& s)
+template <class TObj>
+inline const Vector3<TObj> operator / (const Vector3<TObj>& v, const TObj& s)
 {
-    return Vector3<T>(v) /= s;
+    return Vector3<TObj>(v) /= s;
 }
 
 
-template <class T>
-inline const Vector3<T> operator + (const Vector3<T>& v1, const Vector3<T>& v2)
+template <class TObj>
+inline const Vector3<TObj> operator + (const Vector3<TObj>& v1, const Vector3<TObj>& v2)
 {
-    return Vector3<T>(v1) += v2;
+    return Vector3<TObj>(v1) += v2;
 }
 
 
-template <class T>
-inline const Vector3<T> operator - (const Vector3<T>& v1, const Vector3<T>& v2)
+template <class TObj>
+inline const Vector3<TObj> operator - (const Vector3<TObj>& v1, const Vector3<TObj>& v2)
 {
-    return Vector3<T>(v1) -= v2;
+    return Vector3<TObj>(v1) -= v2;
 }
 
 
-template <class T>
-inline const T operator * (const Vector3<T>& v1, const Vector3<T>& v2)
+template <class TObj>
+inline const TObj operator * (const Vector3<TObj>& v1, const Vector3<TObj>& v2)
 {
     return v1.dot(v2);
 }
 
 
-template <class T>
-inline const Vector3<T> operator ^ (const Vector3<T>& v1, const Vector3<T>& v2)
+template <class TObj>
+inline const Vector3<TObj> operator ^ (const Vector3<TObj>& v1, const Vector3<TObj>& v2)
 {
     return v1.cross(v2);
 }

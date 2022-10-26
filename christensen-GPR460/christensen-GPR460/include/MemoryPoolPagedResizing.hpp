@@ -5,50 +5,16 @@
 #include <vector>
 #include <map>
 #include <cassert>
-#include <type_traits>
 #include <ostream>
 
-#include "MemoryPoolForked.hpp"
+#include "MemoryPoolFixedSize.hpp"
 
-#pragma region Template magick
-
-namespace HelperWrappers {
-    template<typename T, bool has_destructor>
-    struct if_destructor_present {
-        static void call(T* obj);
-
-    private:
-        if_destructor_present() = delete;
-    };
-
-    template<typename T>
-    struct if_destructor_present<T, true> {
-        static void call(T* obj) {
-            //Dtor present, call it
-            obj->~T();
-        }
-    };
-
-    template<typename T>
-    struct if_destructor_present<T, false> {
-        static void call(T* obj) {
-            //No dtor present, nothing to do
-        }
-    };
-}
-
-template<typename T>
-using if_destructor_present = HelperWrappers::if_destructor_present<T, std::is_destructible<T>::value>;
-
-#pragma endregion
-
-
-class MemoryManager
+class MemoryPoolPagedResizing
 {
 private:
     static constexpr size_t POOL_OBJ_COUNT = 16;
     static constexpr size_t POOL_STARTING_COUNT = 0;
-    std::map<size_t, std::vector<MemoryPoolForked*>> poolGroups;
+    std::map<size_t, std::vector<MemoryPoolFixedSize*>> poolGroups;
     
     static constexpr size_t fitSize(size_t raw); //For choosing which pool objects go into
     static constexpr size_t calcWaste(size_t raw);
@@ -58,12 +24,12 @@ private:
     bool isAlive;
 
 public:
-    MemoryManager();
-    ~MemoryManager();
+    MemoryPoolPagedResizing();
+    ~MemoryPoolPagedResizing();
 
     //Idiotproofing against myself
-    MemoryManager(const MemoryManager&) = delete;
-    MemoryManager(MemoryManager&&) = default;
+    MemoryPoolPagedResizing(const MemoryPoolPagedResizing&) = delete;
+    MemoryPoolPagedResizing(MemoryPoolPagedResizing&&) = default;
 
     void init();
     void cleanup();
@@ -100,7 +66,7 @@ public:
     template<typename TObj>
     void free(TObj* obj) {
         //Manual dtor call since we didn't call delete/memfree
-        if_destructor_present<TObj>::call(obj);
+        optional_destructor<TObj>::call(obj);
 
         deallocate(obj, sizeof(TObj));
     }

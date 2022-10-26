@@ -24,8 +24,10 @@
     <ClInclude Include="include\Component.hpp" />
     <ClInclude Include="include\EngineCore.hpp" />
     <ClInclude Include="include\GameObject.hpp" />
-    <ClInclude Include="include\MemoryManager.hpp" />
-    <ClInclude Include="include\MemoryPoolForked.hpp" />
+    <ClInclude Include="include\RawMemoryPool.hpp" />
+    <ClInclude Include="include\MemoryPoolCommon.hpp" />
+    <ClInclude Include="include\MemoryPoolPagedResizing.hpp" />
+    <ClInclude Include="include\MemoryPoolFixedSize.hpp" />
     <ClInclude Include="include\PlayerController.hpp" />
     <ClInclude Include="include\RectangleCollider.hpp" />
     <ClInclude Include="include\RectangleRenderer.hpp" />
@@ -33,6 +35,7 @@
     <ClInclude Include="include\System_Outline.hpp" />
     <ClInclude Include="include\System_Win32.hpp" />
     <ClInclude Include="include\Transform.hpp" />
+    <ClInclude Include="include\TypedMemoryPool.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ColliderColorChanger.cpp" />
@@ -41,14 +44,17 @@
     <ClCompile Include="src\EngineCore.cpp" />
     <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\MemoryManager.cpp" />
-    <ClCompile Include="src\MemoryPoolForked.cpp" />
+    <ClCompile Include="src\MemoryPoolCommon.cpp" />
+    <ClCompile Include="src\RawMemoryPool.cpp" />
+    <ClCompile Include="src\MemoryPoolPagedResizing.cpp" />
+    <ClCompile Include="src\MemoryPoolFixedSize.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />
     <ClCompile Include="src\RectangleCollider.cpp" />
     <ClCompile Include="src\RectangleRenderer.cpp" />
     <ClCompile Include="src\System_Outline.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
+    <ClCompile Include="src\TypedMemoryPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Vector3.inl" />

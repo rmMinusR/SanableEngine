@@ -51,10 +51,19 @@
     <ClInclude Include="include\ColliderColorChanger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\MemoryManager.hpp">
+    <ClInclude Include="include\MemoryPoolPagedResizing.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\MemoryPoolForked.hpp">
+    <ClInclude Include="include\MemoryPoolFixedSize.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RawMemoryPool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TypedMemoryPool.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MemoryPoolCommon.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -95,10 +104,19 @@
     <ClCompile Include="src\System_Outline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MemoryManager.cpp">
+    <ClCompile Include="src\MemoryPoolPagedResizing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MemoryPoolForked.cpp">
+    <ClCompile Include="src\MemoryPoolFixedSize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RawMemoryPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TypedMemoryPool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MemoryPoolCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

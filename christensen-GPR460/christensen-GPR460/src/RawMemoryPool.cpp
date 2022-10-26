@@ -1,4 +1,4 @@
-#include "MemoryPoolForked.hpp"
+#include "RawMemoryPool.hpp"
 
 #include <cstdlib>
 #include <assert.h>
@@ -6,44 +6,7 @@
 
 using namespace std;
 
-#pragma region From original MemoryPool by Dean Lawson
-
-//got this algorithm from: http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
-int isPowerOfTwo(unsigned int x)
-{
-	return ((x != 0) && !(x & (x - 1)));
-}
-
-unsigned int getClosestPowerOf2LargerThan(unsigned int num)
-{
-	static uint32_t powersOf2[32];
-	static bool arrayInitted = false;
-
-	//init an array containing all the powers of 2 
-	//(as it is static this should only run the first time this function is called)
-	if (!arrayInitted)
-	{
-		for (uint32_t i = 0; i < 32; i++)
-		{
-			powersOf2[i] = 1 << i;
-		}
-	}
-
-	//find the 1st power of 2 which is bigger than or equal to num
-	for (uint32_t i = 0; i < 32; i++)
-	{
-		if ( powersOf2[i] >= num )
-			return powersOf2[i];
-	}
-
-	//failsafe
-	return 0;
-	
-}
-
-#pragma endregion
-
-MemoryPoolForked::MemoryPoolForked(size_t maxNumObjects, size_t objectSize)
+RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
 {
 	//make objectSize a power of 2 - used for padding
 	objectSize = getClosestPowerOf2LargerThan(objectSize);
@@ -69,13 +32,13 @@ MemoryPoolForked::MemoryPoolForked(size_t maxNumObjects, size_t objectSize)
 	createFreeList();
 }
 
-MemoryPoolForked::~MemoryPoolForked()
+RawMemoryPool::~RawMemoryPool()
 {
-	free(mMemory);
+	freeRaw(mMemory);
 	mFreeList.clear();
 }
 
-void MemoryPoolForked::reset()
+void RawMemoryPool::reset()
 {
 	//clear the free list
 	mFreeList.clear();
@@ -85,7 +48,7 @@ void MemoryPoolForked::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void* MemoryPoolForked::allocateObject()
+void* RawMemoryPool::allocateRaw()
 {
 	if (mNumAllocatedObjects >= mMaxNumObjects)
 	{
@@ -106,7 +69,7 @@ void* MemoryPoolForked::allocateObject()
 	}
 }
 
-void MemoryPoolForked::freeObject(void* ptr)
+void RawMemoryPool::freeRaw(void* ptr)
 {
 	//make sure that the address passed in is actually one managed by this pool
 	if (contains(ptr))
@@ -123,12 +86,12 @@ void MemoryPoolForked::freeObject(void* ptr)
 	}
 }
 
-bool MemoryPoolForked::contains(void* ptr) const
+bool RawMemoryPool::contains(void* ptr) const
 {
 	return (ptr >= mMemory && ptr <= mHighestValidAddress);
 }
 
-void MemoryPoolForked::createFreeList()
+void RawMemoryPool::createFreeList()
 {
 	for (size_t i = 0; i < mMaxNumObjects; i++)
 	{

@@ -1,4 +1,4 @@
-#include "MemoryManager.hpp"
+#include "MemoryPoolPagedResizing.hpp"
 
 #include <cmath>
 #include <cassert>
@@ -9,7 +9,7 @@ constexpr int64_t ipow(int64_t base, int exp, int64_t result = 1) {
 	return exp < 1 ? result : ipow(base * base, exp / 2, (exp % 2) ? result * base : result);
 }
 
-constexpr size_t MemoryManager::fitSize(size_t raw)
+constexpr size_t MemoryPoolPagedResizing::fitSize(size_t raw)
 {
 	if (!std::is_constant_evaluated())
 	{
@@ -29,12 +29,12 @@ constexpr size_t MemoryManager::fitSize(size_t raw)
 	//return sizeof(T);
 }
 
-constexpr size_t MemoryManager::calcWaste(size_t raw)
+constexpr size_t MemoryPoolPagedResizing::calcWaste(size_t raw)
 {
 	return fitSize(raw) - raw;
 }
 
-MemoryManager::MemoryManager() :
+MemoryPoolPagedResizing::MemoryPoolPagedResizing() :
 	poolGroups(),
 	alignWasted(0),
 	isAlive(false)
@@ -42,71 +42,71 @@ MemoryManager::MemoryManager() :
 
 }
 
-MemoryManager::~MemoryManager()
+MemoryPoolPagedResizing::~MemoryPoolPagedResizing()
 {
 	assert(!isAlive);
 }
 
-void MemoryManager::init()
+void MemoryPoolPagedResizing::init()
 {
 	assert(!isAlive);
 	isAlive = true;
 
 	for (int i = 0; i < POOL_STARTING_COUNT; ++i) {
-		std::vector<MemoryPoolForked*>& v = poolGroups.emplace(size_t(1 << i), std::vector<MemoryPoolForked*>()).first->second;
-		v.push_back(new MemoryPoolForked(POOL_OBJ_COUNT, 1 << i));
+		std::vector<MemoryPoolFixedSize*>& v = poolGroups.emplace(size_t(1 << i), std::vector<MemoryPoolFixedSize*>()).first->second;
+		v.push_back(new MemoryPoolFixedSize(POOL_OBJ_COUNT, 1 << i));
 	}
 	
 	alignWasted = 0;
 }
 
-void MemoryManager::cleanup()
+void MemoryPoolPagedResizing::cleanup()
 {
 	assert(isAlive);
 	isAlive = false;
 
-	for (std::pair<const size_t, std::vector<MemoryPoolForked*>>& group : poolGroups) {
-		for(const MemoryPoolForked* pool : group.second) delete pool;
+	for (std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
+		for(const MemoryPoolFixedSize* pool : group.second) delete pool;
 	}
 	
 	poolGroups.clear();
 	alignWasted = 0;
 }
 
-void MemoryManager::reset()
+void MemoryPoolPagedResizing::reset()
 {
 	assert(isAlive);
 
-	for (std::pair<const size_t, std::vector<MemoryPoolForked*>>& group : poolGroups) {
-		for (MemoryPoolForked* pool : group.second) pool->reset();
+	for (std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
+		for (MemoryPoolFixedSize* pool : group.second) pool->reset();
 	}
 	alignWasted = 0;
 }
 
-size_t MemoryManager::getTotalCapacity() const
+size_t MemoryPoolPagedResizing::getTotalCapacity() const
 {
 	assert(isAlive);
 
 	size_t total = 0;
-	for (const std::pair<const size_t, std::vector<MemoryPoolForked*>>& group : poolGroups) {
+	for (const std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
 		//for (const MemoryPoolForked* pool : group.second) total += group.first * POOL_OBJ_COUNT;
 		total += group.second.size() * group.first * POOL_OBJ_COUNT;
 	}
 	return total;
 }
 
-size_t MemoryManager::getTotalAllocated() const
+size_t MemoryPoolPagedResizing::getTotalAllocated() const
 {
 	assert(isAlive);
 
 	size_t total = 0;
-	for (const std::pair<const size_t, std::vector<MemoryPoolForked*>>& group : poolGroups) {
-		for (const MemoryPoolForked* pool : group.second) total += pool->getMaxObjectSize() * pool->getNumAllocatedObjects();
+	for (const std::pair<const size_t, std::vector<MemoryPoolFixedSize*>>& group : poolGroups) {
+		for (const MemoryPoolFixedSize* pool : group.second) total += pool->getMaxObjectSize() * pool->getNumAllocatedObjects();
 	}
 	return total;
 }
 
-size_t MemoryManager::getTotalWaste() const
+size_t MemoryPoolPagedResizing::getTotalWaste() const
 {
 	assert(isAlive);
 
@@ -115,26 +115,26 @@ size_t MemoryManager::getTotalWaste() const
 	return alignWasted;
 }
 
-void* MemoryManager::allocate(const size_t& size)
+void* MemoryPoolPagedResizing::allocate(const size_t& size)
 {
     //"Get or create" idiom. Basically a null-coalesced construction.
 	//pools[...] ?? (pools[...] = new MemoryPoolForked(...))
     size_t fs = fitSize(size);
 
     auto groupIt = poolGroups.find(fs);
-	std::vector<MemoryPoolForked*>& group = (groupIt != poolGroups.end())          //Search for the appropriate memory pool group
+	std::vector<MemoryPoolFixedSize*>& group = (groupIt != poolGroups.end())          //Search for the appropriate memory pool group
         ? groupIt->second                                                         //If a matching group exists, use it
-        : (poolGroups.emplace(fs, std::vector<MemoryPoolForked*>()).first->second); //Only create if no appropriate group found
+        : (poolGroups.emplace(fs, std::vector<MemoryPoolFixedSize*>()).first->second); //Only create if no appropriate group found
 
 	//Loop through pools until we find one that can hold our object.
 	int poolID = 0;
 	void* obj = nullptr;
 	do {
 		if (group.size() < poolID + 1) {
-			obj = group.emplace_back(new MemoryPoolForked(POOL_OBJ_COUNT, fs))->allocateObject(); //No pool exists that can hold our object? Create one.
+			obj = group.emplace_back(new MemoryPoolFixedSize(POOL_OBJ_COUNT, fs))->allocate(); //No pool exists that can hold our object? Create one.
 			break;
 		}
-		obj = group[poolID]->allocateObject();
+		obj = group[poolID]->allocate();
 		++poolID;
 	} while (!obj);
 
@@ -143,7 +143,7 @@ void* MemoryManager::allocate(const size_t& size)
     return obj;
 }
 
-void MemoryManager::deallocate(void* obj, size_t size)
+void MemoryPoolPagedResizing::deallocate(void* obj, size_t size)
 {
 	assert(obj);
 	if(obj) alignWasted -= fitSize(size) - size;
@@ -152,8 +152,8 @@ void MemoryManager::deallocate(void* obj, size_t size)
     assert(it != poolGroups.end());
     
 	//Search for the pool that contains this object
-	MemoryPoolForked* ownerPool = nullptr;
-	for (MemoryPoolForked* pool : it->second) {
+	MemoryPoolFixedSize* ownerPool = nullptr;
+	for (MemoryPoolFixedSize* pool : it->second) {
 		if (pool->contains(obj)) {
 			ownerPool = pool;
 			break;
@@ -161,10 +161,10 @@ void MemoryManager::deallocate(void* obj, size_t size)
 	}
 
 	assert(ownerPool);
-	ownerPool->freeObject(obj);
+	ownerPool->free(obj);
 }
 
-void MemoryManager::debugReport(std::ostream& out) const
+void MemoryPoolPagedResizing::debugReport(std::ostream& out) const
 {
 	size_t waste = getTotalWaste();
 	float wastePercent = waste > 0 ? (float(waste) / getTotalAllocated() * 100) : 0;
