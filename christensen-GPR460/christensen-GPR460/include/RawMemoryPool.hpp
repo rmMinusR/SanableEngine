@@ -44,16 +44,16 @@ public:
 		//Manual dtor call since we didn't call delete/memfree
 		optional_destructor<TObj>::call(obj);
 
-		freeRaw(obj, sizeof(TObj));
+		freeRaw(obj);
 	}
 
 	bool contains(void* ptr) const;
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
-private:
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };
 	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; };
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
+private:
 
 	void* mMemory;
 	void* mHighestValidAddress;

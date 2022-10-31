@@ -11,7 +11,11 @@ constexpr int64_t ipow(int64_t base, int exp, int64_t result = 1) {
 
 constexpr size_t MemoryPoolPagedResizing::fitSize(size_t raw)
 {
+#if __cplusplus >= 202002L
 	if (!std::is_constant_evaluated())
+#else
+	if (false)
+#endif
 	{
 		return 1 << (unsigned long)ceil(log2(raw));
 	}
@@ -131,10 +135,10 @@ void* MemoryPoolPagedResizing::allocate(const size_t& size)
 	void* obj = nullptr;
 	do {
 		if (group.size() < poolID + 1) {
-			obj = group.emplace_back(new RawMemoryPool(POOL_OBJ_COUNT, fs))->allocate(); //No pool exists that can hold our object? Create one.
+			obj = group.emplace_back(new RawMemoryPool(POOL_OBJ_COUNT, fs))->allocateRaw(); //No pool exists that can hold our object? Create one.
 			break;
 		}
-		obj = group[poolID]->allocate();
+		obj = group[poolID]->allocateRaw();
 		++poolID;
 	} while (!obj);
 

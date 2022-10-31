@@ -1,5 +1,7 @@
 #include "MemoryPoolCommon.hpp"
 
+#include <cstdint>
+
 #pragma region From original MemoryPool by Dean Lawson
 
 //got this algorithm from: http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
