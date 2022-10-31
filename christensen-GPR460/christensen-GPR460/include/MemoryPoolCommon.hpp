@@ -40,8 +40,8 @@ public:
 
 	PooledResource(PooledResource&& mov)
 	{
-		data = std::move(mov.data);
-		pool = std::move(mov.pool);
+		data = mov.data;
+		pool = mov.pool;
 
 		//Ensure we don't accidentally free by destroying the old guard object
 		mov.data = nullptr;
