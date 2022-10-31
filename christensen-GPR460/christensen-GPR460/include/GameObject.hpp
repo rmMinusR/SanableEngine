@@ -2,40 +2,42 @@
 
 #include <SDL_pixels.h> //SDL_Color
 
+#include <vector>
+#include <cassert>
+
+#include "System.hpp"
 #include "Transform.hpp"
 
-class RectangleRenderer;
-class RectangleCollider;
-class PlayerController;
-class ColliderColorChanger;
+class Component;
 
 class GameObject
 {
+protected:
+    Transform transform;
+    std::vector<Component*> components;
+
 public:
     GameObject();
     GameObject(Transform&& initialTransform);
     ~GameObject();
 
-    RectangleRenderer* CreateRenderer(float w, float h, SDL_Color color);
-    RectangleCollider* CreateCollider(float w, float h);
-    PlayerController* CreatePlayerController();
-    ColliderColorChanger* CreateColliderColorChanger(SDL_Color normalColor, SDL_Color overlapColor);
-
-    virtual void Update();
-    virtual void Render();
-
-    inline RectangleRenderer*    GetRenderer            () { return renderer    ; }
-    inline RectangleCollider*    GetCollider            () { return collider    ; }
-    inline PlayerController*     GetPlayerController    () { return player      ; }
-    inline ColliderColorChanger* GetColliderColorChanger() { return colorChanger; }
-
-protected:
-    Transform transform;
-    RectangleRenderer*    renderer;
-    RectangleCollider*    collider;
-    PlayerController*     player;
-    ColliderColorChanger* colorChanger;
-
-public:
     inline Transform* getTransform() { return &transform; }
+
+    template<typename T, typename... TCtorArgs>
+    inline T* CreateComponent(const TCtorArgs&... ctorArgs)
+    {
+        T* component;
+        assert((component = GetComponent<T>()) == nullptr);
+        component = DBG_NEW T(*this, ctorArgs...);
+        components.push_back(component);
+        return component;
+    }
+
+    template<typename T>
+    inline T* GetComponent()
+    {
+        T* out = nullptr;
+        for (Component* c : components) if (out = dynamic_cast<T*>(c)) return out;
+        return nullptr;
+    }
 };

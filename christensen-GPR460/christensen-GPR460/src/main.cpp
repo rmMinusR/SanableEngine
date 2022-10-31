@@ -7,6 +7,11 @@
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 
+#include "RectangleRenderer.hpp"
+#include "RectangleCollider.hpp"
+#include "ColliderColorChanger.hpp"
+#include "PlayerController.hpp"
+
 void userInit(EngineCore* engine);
 
 int main(int argc, char* argv[])
@@ -32,17 +37,17 @@ void userInit(EngineCore* engine)
 {
     GameObject* staticObj = engine->addGameObject();
     staticObj->getTransform()->setPosition(Vector3<float>(100, 150, 0));
-    staticObj->CreateRenderer(510, 120, SDL_Color{ 0, 127, 0, 255 });
+    staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
 
     GameObject* obstacle = engine->addGameObject();
     obstacle->getTransform()->setPosition(Vector3<float>(200, 200, 0));
-    obstacle->CreateCollider(50, 50);
-    obstacle->CreateRenderer(50, 50, SDL_Color{ 127, 63, 0, 255 });
+    obstacle->CreateComponent<RectangleCollider>(50, 50);
+    obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
 
     GameObject* player = engine->addGameObject();
     player->getTransform()->setPosition(Vector3<float>(50, 50, 0));
-    player->CreatePlayerController();
-    player->CreateCollider(10, 10);
-    player->CreateRenderer(10, 10, SDL_Color{ 255, 0, 0, 255 });
-    player->CreateColliderColorChanger(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
+    player->CreateComponent<PlayerController>();
+    player->CreateComponent<RectangleCollider>(10, 10);
+    player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
+    player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
 }

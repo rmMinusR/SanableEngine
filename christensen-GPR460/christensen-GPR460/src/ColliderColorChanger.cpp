@@ -7,8 +7,12 @@
 ColliderColorChanger::ColliderColorChanger(GameObject& owner, SDL_Color normalColor, SDL_Color overlapColor) :
 	Component(owner),
 	normalColor(normalColor),
-	overlapColor(overlapColor)
+	overlapColor(overlapColor),
+	collider(owner.GetComponent<RectangleCollider>()),
+	renderer(owner.GetComponent<RectangleRenderer>())
 {
+	assert(collider);
+	assert(renderer);
 }
 
 ColliderColorChanger::~ColliderColorChanger()
@@ -17,5 +21,5 @@ ColliderColorChanger::~ColliderColorChanger()
 
 void ColliderColorChanger::Update()
 {
-	gameObject->GetRenderer()->SetColor(gameObject->GetCollider()->CheckCollisionAny() ? overlapColor : normalColor);
+	renderer->SetColor(collider->CheckCollisionAny() ? overlapColor : normalColor);
 }
