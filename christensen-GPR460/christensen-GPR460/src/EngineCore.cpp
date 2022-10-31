@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include "GameObject.hpp"
+#include "Component.hpp"
 #include <cassert>
 
 EngineCore engine;
@@ -109,7 +110,7 @@ void EngineCore::tick()
 
     processEvents();
 
-    for (GameObject* o : objects) o->Update();
+    updateList.memberCall(&IUpdatable::Update);
 }
 
 void EngineCore::draw()
@@ -121,7 +122,7 @@ void EngineCore::draw()
     SDL_RenderClear(renderer);
 
     //Draw objects
-    for (GameObject* o : objects) o->Render();
+    renderList.memberCall(&IRenderable::Render);
 
     SDL_RenderPresent(renderer);
 }

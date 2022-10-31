@@ -2,7 +2,9 @@
 
 #include "Component.hpp"
 
-class PlayerController : public Component
+class PlayerController :
+	public Component,
+	public IUpdatable
 {
 private:
 	static constexpr float SPEED = 1;
@@ -10,5 +12,5 @@ private:
 public:
 	PlayerController(GameObject& owner);
 
-	void Update(); //Should this take delta tiem?
+	void Update() override; //Should this take delta tiem?
 };

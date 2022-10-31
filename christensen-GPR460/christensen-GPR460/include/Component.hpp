@@ -15,14 +15,24 @@ public:
 
 //Interfaces
 
+class EngineCore;
+
 class IUpdatable
 {
-public:
+protected:
+	IUpdatable();
+	virtual ~IUpdatable();
 	virtual void Update() = 0;
+
+	friend class EngineCore;
 };
 
 class IRenderable
 {
-public:
+protected:
+	IRenderable();
+	virtual ~IRenderable();
 	virtual void Render() = 0;
+
+	friend class EngineCore;
 };

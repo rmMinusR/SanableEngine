@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Aliases.hpp" />
+    <ClInclude Include="include\CallBatcher.inl" />
     <ClInclude Include="include\ColliderColorChanger.hpp" />
     <ClInclude Include="include\Component.hpp" />
     <ClInclude Include="include\EngineCore.hpp" />

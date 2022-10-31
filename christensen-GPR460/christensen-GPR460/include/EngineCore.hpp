@@ -4,10 +4,14 @@
 #include <SDL.h>
 
 #include "System.hpp"
+#include "CallBatcher.inl"
 
 Uint32 GetTicks();
 
 class GameObject;
+
+class IUpdatable;
+class IRenderable;
 
 class EngineCore
 {
@@ -16,7 +20,10 @@ private:
     SDL_Window* window = nullptr;
     gpr460::System system;
 
-    std::vector<GameObject*> objects; //FIXME change this to an array or a pooling structure
+    std::vector<GameObject*> objects;
+
+    CallBatcher<IUpdatable > updateList;
+    CallBatcher<IRenderable> renderList;
 
     void processEvents();
 
@@ -40,6 +47,9 @@ public:
 
     void tick();
     void draw();
+
+    CallBatcher<IUpdatable >* getUpdatables () { return &updateList; }
+    CallBatcher<IRenderable>* getRenderables() { return &renderList; }
 };
 
 extern EngineCore engine; //FIXME singleton bad
