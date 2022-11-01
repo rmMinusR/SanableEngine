@@ -5,8 +5,9 @@
 
 #include "System.hpp"
 #include "EngineCore.hpp"
-#include "GameObject.hpp"
+#include "MemoryManager.hpp"
 
+#include "GameObject.hpp"
 #include "RectangleRenderer.hpp"
 #include "RectangleCollider.hpp"
 #include "ColliderColorChanger.hpp"

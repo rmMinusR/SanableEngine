@@ -10,17 +10,15 @@
 #include "PlayerController.hpp"
 #include "ColliderColorChanger.hpp"
 
-GameObject::GameObject() : GameObject(Transform(0, 0, 0))
-{
-}
-
-GameObject::GameObject(Transform&& initialTransform) :
-	transform(std::move(initialTransform))
+GameObject::GameObject() :
+	transform(0, 0, 0)
 {
 }
 
 GameObject::~GameObject()
 {
-	for (Component* c : components) delete c;
+	//for (Component* c : components) delete c;
+	//for (Component* c : components) MemoryManager::destroy(c);
+	//FIXME no way to cleanly free! (unless we introduce wrapper objects...)
 	components.clear();
 }

@@ -54,6 +54,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     isAlive = true;
 
     system.Init(this);
+    MemoryManager::init();
 
     quit = false;
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
@@ -69,7 +70,8 @@ void EngineCore::shutdown()
     assert(isAlive);
     isAlive = false;
 
-    for (GameObject* o : objects) delete o;
+    for (GameObject* o : objects) MemoryManager::destroy(o);
+    //for (GameObject* o : objects) delete o;
     objects.clear();
 
     SDL_DestroyRenderer(renderer);
@@ -78,12 +80,13 @@ void EngineCore::shutdown()
     SDL_DestroyWindow(window);
     window = nullptr;
 
+    MemoryManager::cleanup();
     system.Shutdown();
 }
 
 GameObject* EngineCore::addGameObject()
 {
-    GameObject* o = DBG_NEW GameObject();
+    GameObject* o = MemoryManager::create<GameObject>();
     objects.push_back(o);
     return o;
 }

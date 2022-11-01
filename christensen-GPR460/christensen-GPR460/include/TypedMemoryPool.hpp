@@ -34,7 +34,7 @@ public:
 	//Allocates memory and creates an object. RECOMMENDED because it has decent
 	//type safety and data safety.
 	template<typename... TCtorArgs>
-	TObj* emplace(const TCtorArgs&... ctorArgs) {
+	TObj* emplace(TCtorArgs... ctorArgs) {
 		assert(sizeof(TObj) <= mObjectSize);
 		TObj* pObj = reinterpret_cast<TObj*>(allocateRaw());
 		assert(pObj);
@@ -55,7 +55,7 @@ protected:
 	{
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
-			TObj* toFree = ((uint8_t*)mMemory) + (i * mObjectSize);
+			TObj* toFree = reinterpret_cast<TObj*>( ((uint8_t*)mMemory) + (i * mObjectSize) );
 			if (std::find(mFreeList.cbegin(), mFreeList.cend(), toFree) != mFreeList.cend()) free(toFree);
 		}
 	}

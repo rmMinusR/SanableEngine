@@ -17,9 +17,9 @@ private:
 
 public:
 	template<typename TObj, typename... TCtorArgs>
-	static TObj* create(const TCtorArgs&... ctorArgs)
+	static TObj* create(TCtorArgs... ctorArgs)
 	{
-		return PoolInstance<TObj>::pool.emplace(ctorArgs);
+		return PoolInstance<TObj>::pool.emplace(ctorArgs...);
 	}
 
 	template<typename TObj>

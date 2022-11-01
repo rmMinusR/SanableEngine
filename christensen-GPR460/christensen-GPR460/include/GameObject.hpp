@@ -7,6 +7,7 @@
 
 #include "System.hpp"
 #include "Transform.hpp"
+#include "MemoryManager.hpp"
 
 class Component;
 
@@ -18,7 +19,6 @@ protected:
 
 public:
     GameObject();
-    GameObject(Transform&& initialTransform);
     ~GameObject();
 
     inline Transform* getTransform() { return &transform; }
@@ -28,7 +28,8 @@ public:
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = DBG_NEW T(*this, ctorArgs...);
+        component = MemoryManager::create<T>(*this, ctorArgs...);
+        //component = DBG_NEW T(*this, ctorArgs...);
         components.push_back(component);
         return component;
     }

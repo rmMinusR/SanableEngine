@@ -9,5 +9,9 @@ SafeDisposable::SafeDisposable()
 
 SafeDisposable::~SafeDisposable()
 {
-	SafeDisposable::all.erase(std::find(SafeDisposable::all.cbegin(), SafeDisposable::all.cend(), this));
+	if (SafeDisposable::all.size() != 0) //Awful special case for atexit cleanup
+	{
+		auto it = std::remove(SafeDisposable::all.begin(), SafeDisposable::all.end(), this);
+		SafeDisposable::all.erase(it);
+	}
 }
