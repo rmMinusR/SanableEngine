@@ -27,34 +27,14 @@ public:
 	//it doesn't call destructor.
 	void freeRaw(void* obj);
 
-	//Allocates memory and creates an object. RECOMMENDED because it has decent
-	//type safety and data safety.
-	template<typename TObj, typename... TCtorArgs>
-	TObj* emplace(const TCtorArgs&... ctorArgs) {
-		assert(sizeof(TObj) <= mObjectSize);
-		TObj* pObj = reinterpret_cast<TObj*>(allocateRaw());
-		assert(pObj);
-		//Construct object
-		new (pObj) TObj(ctorArgs...);
-		return pObj;
-	}
-
-	template<typename TObj>
-	void free(TObj* obj) {
-		//Manual dtor call since we didn't call delete/memfree
-		optional_destructor<TObj>::call(obj);
-
-		freeRaw(obj);
-	}
-
 	bool contains(void* ptr) const;
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };
 	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; };
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
-private:
 
+protected:
 	void* mMemory;
 	void* mHighestValidAddress;
 	size_t mMaxNumObjects;
