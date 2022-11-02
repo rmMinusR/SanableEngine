@@ -3,7 +3,7 @@
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 
-RectangleRenderer::RectangleRenderer(GameObject& owner, float w, float h, SDL_Color color) :
+RectangleRenderer::RectangleRenderer(GameObject* owner, float w, float h, SDL_Color color) :
 	Component(owner),
 	w(w),
 	h(h),

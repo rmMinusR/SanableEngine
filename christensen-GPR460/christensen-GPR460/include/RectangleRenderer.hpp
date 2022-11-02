@@ -12,7 +12,7 @@ private:
 	SDL_Color color;
 
 public:
-	RectangleRenderer(GameObject& owner, float w, float h, SDL_Color color);
+	RectangleRenderer(GameObject* owner, float w, float h, SDL_Color color);
 	~RectangleRenderer();
 
 	void Render() override;

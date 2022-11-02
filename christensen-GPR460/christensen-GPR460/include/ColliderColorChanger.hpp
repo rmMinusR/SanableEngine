@@ -19,7 +19,7 @@ private:
 	RectangleRenderer* renderer;
 
 public:
-	ColliderColorChanger(GameObject& owner, SDL_Color normalColor, SDL_Color overlapColor);
+	ColliderColorChanger(GameObject* owner, SDL_Color normalColor, SDL_Color overlapColor);
 	~ColliderColorChanger();
 
 	void Update() override;

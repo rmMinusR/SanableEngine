@@ -8,7 +8,7 @@ protected:
 	GameObject *const gameObject;
 
 public:
-	Component(GameObject& owner);
+	Component(GameObject* owner);
 	virtual ~Component();
 };
 

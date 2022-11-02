@@ -4,7 +4,7 @@
 
 #include <SDL_keyboard.h>
 
-PlayerController::PlayerController(GameObject& owner) :
+PlayerController::PlayerController(GameObject* owner) :
 	Component(owner)
 {
 }

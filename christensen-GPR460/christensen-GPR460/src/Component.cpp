@@ -1,11 +1,14 @@
 #include "Component.hpp"
 
+#include <cassert>
+
 #include "GameObject.hpp"
 #include "EngineCore.hpp"
 
-Component::Component(GameObject& owner) :
-	gameObject(&owner)
+Component::Component(GameObject* owner) :
+	gameObject(owner)
 {
+	assert(owner);
 }
 
 Component::~Component()

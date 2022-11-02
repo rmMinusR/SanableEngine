@@ -5,7 +5,7 @@
 
 std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
 
-RectangleCollider::RectangleCollider(GameObject& owner, float w, float h) :
+RectangleCollider::RectangleCollider(GameObject* owner, float w, float h) :
 	Component(owner),
 	w(w),
 	h(h)

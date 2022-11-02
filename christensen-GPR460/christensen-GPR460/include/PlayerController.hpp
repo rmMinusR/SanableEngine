@@ -10,7 +10,7 @@ private:
 	static constexpr float SPEED = 1;
 
 public:
-	PlayerController(GameObject& owner);
+	PlayerController(GameObject* owner);
 
 	void Update() override; //Should this take delta tiem?
 };
