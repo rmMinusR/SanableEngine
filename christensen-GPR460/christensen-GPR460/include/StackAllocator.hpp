@@ -38,5 +38,5 @@ public:
     };
 
     Checkpoint markCheckpoint();
-    void restoreCheckpoint(Checkpoint* c);
+    void restoreCheckpoint(const Checkpoint& c);
 };

@@ -20,8 +20,8 @@ StackAllocator::Checkpoint StackAllocator::markCheckpoint()
     return c;
 }
 
-void StackAllocator::restoreCheckpoint(Checkpoint* c)
+void StackAllocator::restoreCheckpoint(const Checkpoint& c)
 {
-    assert(head >= c->head);
-    head = c->head;
+    assert(head >= c.head);
+    head = c.head;
 }

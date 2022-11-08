@@ -62,6 +62,8 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     frame = 0;
     frameStart = GetTicks();
 
+    frameAllocator = new StackAllocator(frameAllocatorSize);
+
     if (userInitCallback) (*userInitCallback)(this);
 }
 
@@ -73,6 +75,8 @@ void EngineCore::shutdown()
     for (GameObject* o : objects) MemoryManager::destroy(o);
     //for (GameObject* o : objects) delete o;
     objects.clear();
+
+    delete frameAllocator;
 
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
@@ -100,8 +104,12 @@ void EngineCore::frameStep(void* arg)
 {
     EngineCore* engine = (EngineCore*)arg;
 
+    StackAllocator::Checkpoint checkpoint = engine->frameAllocator->markCheckpoint();
+
     engine->tick();
     engine->draw();
+
+    engine->frameAllocator->restoreCheckpoint(checkpoint);
 }
 
 void EngineCore::tick()

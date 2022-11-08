@@ -5,6 +5,7 @@
 
 #include "System.hpp"
 #include "CallBatcher.inl"
+#include "StackAllocator.hpp"
 
 Uint32 GetTicks();
 
@@ -19,6 +20,9 @@ private:
     bool isAlive;
     SDL_Window* window = nullptr;
     gpr460::System system;
+
+    StackAllocator* frameAllocator;
+    constexpr static size_t frameAllocatorSize = 1024;
 
     std::vector<GameObject*> objects;
 
@@ -48,6 +52,7 @@ public:
     void tick();
     void draw();
 
+    StackAllocator* getFrameAllocator() { return frameAllocator; }
     CallBatcher<IUpdatable >* getUpdatables () { return &updateList; }
     CallBatcher<IRenderable>* getRenderables() { return &renderList; }
 };
