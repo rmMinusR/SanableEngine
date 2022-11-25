@@ -1,16 +1,23 @@
 #include "RectangleCollider.hpp"
 
+#include <SerializationRegistryEntry.hpp>
+#include <SerializedObject.hpp>
+
 #include "Vector3.inl"
 #include "GameObject.hpp"
 
 std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
 
-RectangleCollider::RectangleCollider(GameObject* owner, float w, float h) :
-	Component(owner),
-	w(w),
-	h(h)
+RectangleCollider::RectangleCollider(GameObject* owner) :
+	Component(owner)
 {
 	RectangleCollider::REGISTRY.push_back(this);
+}
+
+void RectangleCollider::init(float w, float h)
+{
+	this->w = w;
+	this->h = h;
 }
 
 RectangleCollider::~RectangleCollider()
@@ -46,4 +53,23 @@ bool RectangleCollider::CheckCollisionAny() const
 {
 	for (RectangleCollider* i : RectangleCollider::REGISTRY) if (i != this && CheckCollision(i)) return true;
 	return false;
+}
+
+const SerializationRegistryEntry RectangleCollider::SERIALIZATION_REGISTRY_ENTRY = AUTO_Component_SerializationRegistryEntry(RectangleCollider);
+
+SerializationRegistryEntry const* RectangleCollider::getRegistryEntry() const
+{
+	return &SERIALIZATION_REGISTRY_ENTRY;
+}
+
+void RectangleCollider::binarySerializeMembers(std::ostream& out) const
+{
+	binWriteRaw(w, out);
+	binWriteRaw(h, out);
+}
+
+void RectangleCollider::binaryDeserializeMembers(std::istream& in)
+{
+	binReadRaw(w, in);
+	binReadRaw(h, in);
 }

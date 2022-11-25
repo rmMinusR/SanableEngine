@@ -1,10 +1,10 @@
 #include "RectangleRenderer.hpp"
 
-#include "EngineCore.hpp"
-#include "GameObject.hpp"
-
 #include <SerializationRegistryEntry.hpp>
 #include <SerializedObject.hpp>
+
+#include "EngineCore.hpp"
+#include "GameObject.hpp"
 
 RectangleRenderer::RectangleRenderer(GameObject* owner) :
 	Component(owner)
@@ -37,11 +37,7 @@ void RectangleRenderer::Render()
 	SDL_RenderFillRect(engine.renderer, &r);
 }
 
-const SerializationRegistryEntry RectangleRenderer::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(RectangleRenderer, {
-	RectangleRenderer* c = MemoryManager::create<RectangleRenderer>(nullptr);
-	c->binaryDeserializeMembers(in);
-	c->bindGameObject();
-});
+const SerializationRegistryEntry RectangleRenderer::SERIALIZATION_REGISTRY_ENTRY = AUTO_Component_SerializationRegistryEntry(RectangleRenderer);
 
 SerializationRegistryEntry const* RectangleRenderer::getRegistryEntry() const
 {
@@ -50,10 +46,14 @@ SerializationRegistryEntry const* RectangleRenderer::getRegistryEntry() const
 
 void RectangleRenderer::binarySerializeMembers(std::ostream& out) const
 {
-	
+	binWriteRaw(w, out);
+	binWriteRaw(h, out);
+	binWriteRaw(color, out);
 }
 
 void RectangleRenderer::binaryDeserializeMembers(std::istream& in)
 {
-	
+	binReadRaw(w, in);
+	binReadRaw(h, in);
+	binReadRaw(color, in);
 }

@@ -17,7 +17,7 @@ public:
 	virtual ~Component();
 
 	inline GameObject* getGameObject() const { return gameObject; }
-	void bindGameObject(); //Called in deserialization after members
+	virtual void bindGameObject(); //Called in deserialization after members
 };
 
 
@@ -44,3 +44,11 @@ protected:
 
 	friend class EngineCore;
 };
+
+
+//Serializable
+#define AUTO_Component_SerializationRegistryEntry(T) AUTO_SerializationRegistryEntry(T, {  \
+    T* c = MemoryManager::create<T>(nullptr);											   \
+	c->binaryDeserializeMembers(in);													   \
+	c->bindGameObject();																   \
+})

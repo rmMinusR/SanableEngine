@@ -17,10 +17,11 @@ private:
 
 	RectangleCollider* collider;
 	RectangleRenderer* renderer;
-
+	
 public:
-	ColliderColorChanger(GameObject* owner, SDL_Color normalColor, SDL_Color overlapColor);
-	~ColliderColorChanger();
+	ColliderColorChanger(GameObject* owner);
+	void init(SDL_Color normalColor, SDL_Color overlapColor);
+	virtual void bindGameObject() override;
 
 	void Update() override;
 

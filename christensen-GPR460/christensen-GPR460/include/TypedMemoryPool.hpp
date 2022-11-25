@@ -6,13 +6,11 @@ class MemoryManager;
 
 class SafeDisposable
 {
-	static std::vector<SafeDisposable*> all;
-
 public:
 	static void disposeAll();
 
-	inline static std::vector<SafeDisposable*>::iterator all_begin() { return all.begin(); }
-	inline static std::vector<SafeDisposable*>::iterator all_end  () { return all.end  (); }
+	static std::vector<SafeDisposable*>::iterator all_begin();
+	static std::vector<SafeDisposable*>::iterator all_end  ();
 
 protected:
 	SafeDisposable();

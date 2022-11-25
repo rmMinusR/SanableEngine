@@ -1,22 +1,32 @@
 #include "TypedMemoryPool.hpp"
 
-std::vector<SafeDisposable*> SafeDisposable::all;
+std::vector<SafeDisposable*> allSafeDisposables = std::vector<SafeDisposable*>(8);
 
 void SafeDisposable::disposeAll()
 {
-	for (SafeDisposable* f : all) f->disposeContents();
+	for (SafeDisposable* f : allSafeDisposables) f->disposeContents();
 }
 
 SafeDisposable::SafeDisposable()
 {
-	SafeDisposable::all.push_back(this);
+	allSafeDisposables.push_back(this);
 }
 
 SafeDisposable::~SafeDisposable()
 {
-	if (SafeDisposable::all.size() != 0) //Awful special case for atexit cleanup
+	if (allSafeDisposables.size() != 0) //Awful special case for atexit cleanup
 	{
-		auto it = std::remove(SafeDisposable::all.begin(), SafeDisposable::all.end(), this);
-		SafeDisposable::all.erase(it);
+		auto it = std::remove(allSafeDisposables.begin(), allSafeDisposables.end(), this);
+		allSafeDisposables.erase(it);
 	}
+}
+
+std::vector<SafeDisposable*>::iterator SafeDisposable::all_begin()
+{
+	return allSafeDisposables.begin();
+}
+
+std::vector<SafeDisposable*>::iterator SafeDisposable::all_end()
+{
+	return allSafeDisposables.end();
 }

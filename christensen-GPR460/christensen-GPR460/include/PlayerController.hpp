@@ -11,7 +11,8 @@ private:
 
 public:
 	PlayerController(GameObject* owner);
-
+	void init();
+	
 	void Update() override; //Should this take delta time?
 
 protected:

@@ -6,9 +6,9 @@
 #include "EngineCore.hpp"
 
 Component::Component(GameObject* owner) :
-	gameObject(owner)
+	gameObject(owner),
+	gameObjectID(owner ? owner->getID() : 0)
 {
-	assert(owner);
 }
 
 Component::~Component()

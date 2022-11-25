@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Component.hpp"
 #include <SDL_pixels.h>
+
+#include "Component.hpp"
+
+class GameObject;
 
 class RectangleRenderer :
 	public Component,

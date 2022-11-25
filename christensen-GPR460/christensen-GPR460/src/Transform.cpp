@@ -37,12 +37,9 @@ SerializationRegistryEntry const* Transform::getRegistryEntry() const
 
 void Transform::binarySerializeMembers(std::ostream& out) const
 {
-	num_t x = position.getX();
-	num_t y = position.getY();
-	num_t z = position.getZ();
-	out.write(reinterpret_cast<char*>(&x), sizeof(num_t));
-	out.write(reinterpret_cast<char*>(&y), sizeof(num_t));
-	out.write(reinterpret_cast<char*>(&z), sizeof(num_t));
+	binWriteRaw(position.getX(), out);
+	binWriteRaw(position.getY(), out);
+	binWriteRaw(position.getZ(), out);
 }
 
 void Transform::binaryDeserializeMembers(std::istream& in)
@@ -50,8 +47,8 @@ void Transform::binaryDeserializeMembers(std::istream& in)
 	num_t x;
 	num_t y;
 	num_t z;
-	in.read(reinterpret_cast<char*>(&x), sizeof(num_t));
-	in.read(reinterpret_cast<char*>(&y), sizeof(num_t));
-	in.read(reinterpret_cast<char*>(&z), sizeof(num_t));
+	binReadRaw(x, in);
+	binReadRaw(y, in);
+	binReadRaw(z, in);
 	position.set(x, y, z);
 }

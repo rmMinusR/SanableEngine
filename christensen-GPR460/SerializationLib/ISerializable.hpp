@@ -28,4 +28,19 @@ protected:
 	virtual void binaryDeserializeMembers(std::istream& in) = 0;
 
 	friend struct SerializedObject;
+
+	//Helper funcs
+	template<typename T>
+	void binWriteRaw(const T& val, std::ostream& out) const {
+		static_assert(!std::is_pointer_v<T>);
+
+		out.write(reinterpret_cast<char const*>(&val), sizeof(T));
+	}
+
+	template<typename T>
+	void binReadRaw(T& val, std::istream& in) const {
+		static_assert(!std::is_pointer_v<T>);
+
+		in.read(reinterpret_cast<char*>(&val), sizeof(T));
+	}
 };

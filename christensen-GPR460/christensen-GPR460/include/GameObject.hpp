@@ -33,12 +33,13 @@ public:
     inline void setTransform(const Transform& cpy) { transform = cpy; }
 
     template<typename T, typename... TCtorArgs>
-    inline T* CreateComponent(const TCtorArgs&... ctorArgs)
+    inline T* CreateComponent(const TCtorArgs&... initArgs)
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = MemoryManager::create<T>(this, ctorArgs...);
-        //component = DBG_NEW T(*this, ctorArgs...);
+        component = MemoryManager::create<T>(this);
+        component->init(initArgs...);
+        component->bindGameObject();
         components.push_back(component);
         return component;
     }

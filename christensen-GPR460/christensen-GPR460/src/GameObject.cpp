@@ -60,7 +60,7 @@ void GameObject::binarySerializeMembers(std::ostream& out) const
 	SerializedObject transformSerializer;
 	if (!transformSerializer.serialize(&transform, out)) assert(false);
 
-	out.write(reinterpret_cast<char const*>(&id), sizeof(object_id_t));
+	binWriteRaw(id, out);
 
 	for (Component* c : components)
 	{
@@ -75,7 +75,7 @@ void GameObject::binaryDeserializeMembers(std::istream& in)
 	components.clear();
 
 	object_id_t tmp_id;
-	in.read(reinterpret_cast<char*>(&tmp_id), sizeof(object_id_t));
+	binReadRaw(tmp_id, in);
 	assert(!engine.getGameObject(tmp_id)); //Make sure we don't end up with duplicate objects with same ID
 	id = tmp_id;
 
