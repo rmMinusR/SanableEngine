@@ -3,14 +3,12 @@
 #include <vector>
 #include <string>
 
-#include <Trackable.h>
-
 #include "SerializationDefines.hpp"
 
 class ISerializable;
 struct SerializationRegistryEntry;
 
-class SerializationRegistry : public Trackable
+class SerializationRegistry
 {
 private:
 	static SerializationRegistry* INSTANCE;

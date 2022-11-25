@@ -2,12 +2,10 @@
 
 #include <string>
 
-#include <Trackable.h>
-
 class ISerializable;
 struct SerializationRegistryEntry;
 
-struct SerializedObject : public Trackable
+struct SerializedObject
 {
 public:
 	SerializedObject();
