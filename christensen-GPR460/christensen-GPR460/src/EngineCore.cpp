@@ -70,7 +70,7 @@ void EngineCore::shutdown()
     assert(isAlive);
     isAlive = false;
 
-    for (GameObject* o : objects) MemoryManager::destroy(o);
+    for (GameObject* o : objects) MemoryManager::destroy_narrow(o);
     objects.clear();
 
     SDL_DestroyRenderer(renderer);
@@ -108,7 +108,7 @@ void EngineCore::destroy(GameObject* obj)
     auto it = std::find(objects.begin(), objects.end(), obj);
     assert(it != objects.end());
     objects.erase(it);
-    MemoryManager::destroy(obj);
+    MemoryManager::destroy_narrow(obj);
 }
 
 void EngineCore::doMainLoop()

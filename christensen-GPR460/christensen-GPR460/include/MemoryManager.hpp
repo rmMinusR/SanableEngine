@@ -22,10 +22,12 @@ public:
 		return PoolInstance<TObj>::pool.emplace(ctorArgs...);
 	}
 
+	static void destroy_wide(void* obj); //Destroy an object by searching all memory pools and choosing the right one
+
 	template<typename TObj>
-	static void destroy(TObj* obj)
+	static void destroy_narrow(TObj* obj) //If we already know the type, jump to the pool and destroy
 	{
-		PoolInstance<TObj>::pool.free(obj);
+		PoolInstance<TObj>::pool.freeSafe(obj);
 	}
 
 	static void init();

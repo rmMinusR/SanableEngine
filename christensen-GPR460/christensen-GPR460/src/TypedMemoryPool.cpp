@@ -2,6 +2,11 @@
 
 std::vector<SafeDisposable*> SafeDisposable::all;
 
+void SafeDisposable::disposeAll()
+{
+	for (SafeDisposable* f : all) f->disposeContents();
+}
+
 SafeDisposable::SafeDisposable()
 {
 	SafeDisposable::all.push_back(this);

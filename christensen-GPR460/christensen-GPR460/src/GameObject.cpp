@@ -37,9 +37,7 @@ GameObject::GameObject(object_id_t id) :
 
 GameObject::~GameObject()
 {
-	//for (Component* c : components) delete c;
-	//for (Component* c : components) MemoryManager::destroy(c);
-	//FIXME no way to cleanly free! (unless we introduce wrapper objects...)
+	for (Component* c : components) MemoryManager::destroy_wide(c);
 	components.clear();
 }
 
@@ -70,7 +68,7 @@ void GameObject::binarySerializeMembers(std::ostream& out) const
 
 void GameObject::binaryDeserializeMembers(std::istream& in)
 {
-	clear();
+	for (Component* c : components) MemoryManager::destroy_narrow(c);
 
 	while (!in.eof())
 	{

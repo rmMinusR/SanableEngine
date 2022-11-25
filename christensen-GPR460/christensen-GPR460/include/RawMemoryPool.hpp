@@ -27,6 +27,8 @@ public:
 	//it doesn't call destructor.
 	void freeRaw(void* obj);
 
+	virtual void freeSafe(void* obj) = 0; //OVERRIDE THIS if you want to call dtor!
+
 	bool contains(void* ptr) const;
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 

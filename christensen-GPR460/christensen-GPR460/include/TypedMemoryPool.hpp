@@ -9,10 +9,10 @@ class SafeDisposable
 	static std::vector<SafeDisposable*> all;
 
 public:
-	static void disposeAll()
-	{
-		for (SafeDisposable* f : all) f->disposeContents();
-	}
+	static void disposeAll();
+
+	inline static std::vector<SafeDisposable*>::iterator all_begin() { return all.begin(); }
+	inline static std::vector<SafeDisposable*>::iterator all_end  () { return all.end  (); }
 
 protected:
 	SafeDisposable();
@@ -43,9 +43,10 @@ public:
 		return pObj;
 	}
 
-	void free(TObj* obj) {
+	virtual void freeSafe(void* obj) override
+	{
 		//Manual dtor call since we didn't call delete/memfree
-		optional_destructor<TObj>::call(obj);
+		optional_destructor<TObj>::call(reinterpret_cast<TObj*>(obj));
 
 		freeRaw(obj);
 	}
