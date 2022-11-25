@@ -1,20 +1,25 @@
 #include "MemoryManager.hpp"
 
 #include "GameObject.hpp"
+#include "EngineCore.hpp"
 
 void MemoryManager::destroy_wide(void* obj)
 {
-	for (auto it = SafeDisposable::all_begin(); it != SafeDisposable::all_end(); ++it)
-	{
-		RawMemoryPool* pool = dynamic_cast<RawMemoryPool*>(*it);
-		if (pool && pool->contains(obj))
+	if (!engine.quit) {
+
+		for (int i = 0; i < allSafeDisposablesCount; ++i)
 		{
-			pool->freeSafe(obj);
-			return;
+			RawMemoryPool* pool = dynamic_cast<RawMemoryPool*>(allSafeDisposables[i]);
+			if (pool && pool->contains(obj))
+			{
+				pool->freeSafe(obj);
+				return;
+			}
 		}
+
+		assert(false);
 	}
 
-	assert(false);
 }
 
 void MemoryManager::init()

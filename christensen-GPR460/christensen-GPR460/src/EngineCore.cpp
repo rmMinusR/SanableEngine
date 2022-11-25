@@ -52,11 +52,11 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
 {
     assert(!isAlive);
     isAlive = true;
+    quit = false;
 
     system.Init(this);
     MemoryManager::init();
 
-    quit = false;
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     frame = 0;

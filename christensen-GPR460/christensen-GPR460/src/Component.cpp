@@ -6,7 +6,7 @@
 #include "EngineCore.hpp"
 
 Component::Component(GameObject* owner) :
-	gameObject(owner),
+	gameObject(nullptr),
 	gameObjectID(owner ? owner->getID() : 0)
 {
 }

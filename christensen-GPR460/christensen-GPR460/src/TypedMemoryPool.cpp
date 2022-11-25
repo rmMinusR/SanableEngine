@@ -1,32 +1,40 @@
 #include "TypedMemoryPool.hpp"
 
-std::vector<SafeDisposable*> allSafeDisposables = std::vector<SafeDisposable*>(8);
+//std::vector<SafeDisposable*> allSafeDisposables = mkAllVec();
+
+ //Awful fix to work around bad allocation in pre-main() context
+SafeDisposable** mkAllArr() {
+	SafeDisposable** d = new SafeDisposable * [allSafeDisposablesCount];
+	memset(d, 0, sizeof(SafeDisposable*) * allSafeDisposablesCount);
+	return d;
+}
+SafeDisposable** allSafeDisposables = nullptr;
 
 void SafeDisposable::disposeAll()
 {
-	for (SafeDisposable* f : allSafeDisposables) f->disposeContents();
+	if (allSafeDisposables) {
+		for (int i = 0; i < allSafeDisposablesCount; ++i) if(allSafeDisposables[i]) allSafeDisposables[i]->disposeContents();
+		allSafeDisposables = nullptr;
+	}
 }
 
 SafeDisposable::SafeDisposable()
 {
-	allSafeDisposables.push_back(this);
+	if (!allSafeDisposables) allSafeDisposables = mkAllArr();
+
+	for (int i = 0; i < allSafeDisposablesCount; ++i) {
+		if (!allSafeDisposables[i]) {
+			allSafeDisposables[i] = this;
+			return;
+		}
+	}
+	
+	assert(false);
 }
 
 SafeDisposable::~SafeDisposable()
 {
-	if (allSafeDisposables.size() != 0) //Awful special case for atexit cleanup
-	{
-		auto it = std::remove(allSafeDisposables.begin(), allSafeDisposables.end(), this);
-		allSafeDisposables.erase(it);
+	if (allSafeDisposables) {
+		for (int i = 0; i < allSafeDisposablesCount; ++i) if (allSafeDisposables[i] == this) allSafeDisposables[i] = nullptr;
 	}
-}
-
-std::vector<SafeDisposable*>::iterator SafeDisposable::all_begin()
-{
-	return allSafeDisposables.begin();
-}
-
-std::vector<SafeDisposable*>::iterator SafeDisposable::all_end()
-{
-	return allSafeDisposables.end();
 }

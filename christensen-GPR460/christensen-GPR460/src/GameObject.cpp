@@ -19,7 +19,7 @@ object_id_t GameObject::genID()
 	object_id_t id;
 	do {
 		id = (object_id_t)rand();
-	} while (!engine.getGameObject(id));
+	} while (engine.getGameObject(id));
 
 	return id;
 }
