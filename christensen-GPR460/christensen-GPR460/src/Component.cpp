@@ -13,7 +13,13 @@ Component::Component(GameObject* owner) :
 
 Component::~Component()
 {
-	//TODO ensure gameObject knows to remove this
+}
+
+void Component::bindGameObject()
+{
+	assert(gameObject == nullptr);
+
+	gameObject = engine.getGameObject(gameObjectID);
 }
 
 IUpdatable::IUpdatable()

@@ -6,12 +6,16 @@
 #include <SerializationRegistryEntry.hpp>
 #include <SerializedObject.hpp>
 
-RectangleRenderer::RectangleRenderer(GameObject* owner, float w, float h, SDL_Color color) :
-	Component(owner),
-	w(w),
-	h(h),
-	color(color)
+RectangleRenderer::RectangleRenderer(GameObject* owner) :
+	Component(owner)
 {
+}
+
+void RectangleRenderer::init(float w, float h, SDL_Color color)
+{
+	this->w = w;
+	this->h = h;
+	this->color = color;
 }
 
 RectangleRenderer::~RectangleRenderer()
@@ -20,7 +24,7 @@ RectangleRenderer::~RectangleRenderer()
 
 void RectangleRenderer::Render()
 {
-	Vector3<float> pos = gameObject->getTransform()->getPosition();
+	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 
 	SDL_Rect r = {
 		(int) pos.getX(),
@@ -33,7 +37,11 @@ void RectangleRenderer::Render()
 	SDL_RenderFillRect(engine.renderer, &r);
 }
 
-const SerializationRegistryEntry RectangleRenderer::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(RectangleRenderer, nullptr, /* nothing to set */, val->getGameObject()->RemoveComponent(val));
+const SerializationRegistryEntry RectangleRenderer::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(RectangleRenderer, {
+	RectangleRenderer* c = MemoryManager::create<RectangleRenderer>(nullptr);
+	c->binaryDeserializeMembers(in);
+	c->bindGameObject();
+});
 
 SerializationRegistryEntry const* RectangleRenderer::getRegistryEntry() const
 {

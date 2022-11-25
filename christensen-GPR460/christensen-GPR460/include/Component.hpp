@@ -1,19 +1,23 @@
 #pragma once
 
+#include "Aliases.hpp"
+
 #include <ISerializable.hpp>
 
 class GameObject;
 
 class Component : public ISerializable
 {
-protected:
-	GameObject* const gameObject;
+private:
+	GameObject* gameObject;
+	object_id_t gameObjectID;
 
 public:
 	Component(GameObject* owner);
 	virtual ~Component();
 
 	inline GameObject* getGameObject() const { return gameObject; }
+	void bindGameObject(); //Called in deserialization after members
 };
 
 
