@@ -1,8 +1,10 @@
 #pragma once
 
+#include <ISerializable.hpp>
+
 class GameObject;
 
-class Component
+class Component : public ISerializable
 {
 protected:
 	GameObject *const gameObject;

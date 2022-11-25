@@ -1,19 +1,53 @@
 #include "Transform.hpp"
 
+#include <SerializationRegistryEntry.hpp>
+#include <SerializedObject.hpp>
+
+#include "EngineCore.hpp"
+
 Transform::Transform() : Transform(0, 0, 0)
 {
 }
 
-Transform::Transform(Vector3<float> position) :
+Transform::Transform(Vector3<num_t> position) :
 	position(position)
 {
 }
 
-Transform::Transform(float x, float y, float z) :
+Transform::Transform(num_t x, num_t y, num_t z) :
 	position(x, y, z)
 {
 }
 
 Transform::~Transform()
 {
+}
+
+Transform transformDeserializerHelper;
+const SerializationRegistryEntry Transform::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(Transform, &transformDeserializerHelper, engine.getGameObject(val->ownerID).setTransform(*val), /*nothing to do*/);
+
+SerializationRegistryEntry const* Transform::getRegistryEntry() const
+{
+	return &SERIALIZATION_REGISTRY_ENTRY;
+}
+
+void Transform::binarySerializeMembers(std::ostream& out) const
+{
+	num_t x = position.getX();
+	num_t y = position.getY();
+	num_t z = position.getZ();
+	out.write(reinterpret_cast<char*>(&x), sizeof(num_t));
+	out.write(reinterpret_cast<char*>(&y), sizeof(num_t));
+	out.write(reinterpret_cast<char*>(&z), sizeof(num_t));
+}
+
+void Transform::binaryDeserializeMembers(std::istream& in)
+{
+	num_t x;
+	num_t y;
+	num_t z;
+	in.read(reinterpret_cast<char*>(&x), sizeof(num_t));
+	in.read(reinterpret_cast<char*>(&y), sizeof(num_t));
+	in.read(reinterpret_cast<char*>(&z), sizeof(num_t));
+	position.set(x, y, z);
 }

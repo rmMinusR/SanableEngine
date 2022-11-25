@@ -71,7 +71,6 @@ void EngineCore::shutdown()
     isAlive = false;
 
     for (GameObject* o : objects) MemoryManager::destroy(o);
-    //for (GameObject* o : objects) delete o;
     objects.clear();
 
     SDL_DestroyRenderer(renderer);
@@ -89,6 +88,27 @@ GameObject* EngineCore::addGameObject()
     GameObject* o = MemoryManager::create<GameObject>();
     objects.push_back(o);
     return o;
+}
+
+GameObject* EngineCore::addGameObject(object_id_t id)
+{
+    GameObject* o = MemoryManager::create<GameObject>(id);
+    objects.push_back(o);
+    return o;
+}
+
+GameObject* EngineCore::getGameObject(object_id_t id)
+{
+    for (GameObject* o : objects) if (o->getID() == id) return o;
+    return nullptr;
+}
+
+void EngineCore::destroy(GameObject* obj)
+{
+    auto it = std::find(objects.begin(), objects.end(), obj);
+    assert(it != objects.end());
+    objects.erase(it);
+    MemoryManager::destroy(obj);
 }
 
 void EngineCore::doMainLoop()

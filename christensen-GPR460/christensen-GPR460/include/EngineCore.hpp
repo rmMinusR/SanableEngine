@@ -41,6 +41,14 @@ public:
     void shutdown();
 
     GameObject* addGameObject();
+    GameObject* addGameObject(object_id_t id);
+    GameObject* getGameObject(object_id_t id);
+    inline GameObject* getOrAddGameObject(object_id_t id)
+    {
+        GameObject* o = getGameObject(id);
+        if (!o) o = addGameObject(id);
+    }
+    void destroy(GameObject* obj);
 
     void doMainLoop();
     static void frameStep(void* arg);
