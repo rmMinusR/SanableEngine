@@ -69,10 +69,18 @@ void GameObject::binarySerializeMembers(std::ostream& out) const
 void GameObject::binaryDeserializeMembers(std::istream& in)
 {
 	for (Component* c : components) MemoryManager::destroy_narrow(c);
+	components.clear();
 
-	while (!in.eof())
+	char componentCountBytes[componentCountHeaderSize];
+	in.read(componentCountBytes, componentCountHeaderSize);
+	size_t componentCount = 0;
+	memcpy(&componentCount, componentCountBytes, min(sizeof(size_t), componentCountHeaderSize));
+
+	for (int i = 0; i < componentCount; ++i)
 	{
 		SerializedObject deserializer;
 		if (deserializer.parse(in)) deserializer.deserializeAndInject();
 	}
+
+	assert(componentCount == components.size());
 }

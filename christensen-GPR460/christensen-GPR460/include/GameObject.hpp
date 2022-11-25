@@ -24,12 +24,13 @@ protected:
 public:
     static object_id_t genID();
     inline object_id_t getID() const { return id; }
-
+    
     GameObject();
     GameObject(object_id_t id);
     ~GameObject();
 
     inline Transform* getTransform() { return &transform; }
+    inline void setTransform(const Transform& cpy) { transform = cpy; }
 
     template<typename T, typename... TCtorArgs>
     inline T* CreateComponent(const TCtorArgs&... ctorArgs)

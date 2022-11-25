@@ -4,6 +4,7 @@
 #include <SerializedObject.hpp>
 
 #include "EngineCore.hpp"
+#include "GameObject.hpp"
 
 Transform::Transform() : Transform(0, 0, 0)
 {
@@ -24,7 +25,7 @@ Transform::~Transform()
 }
 
 Transform transformDeserializerHelper;
-const SerializationRegistryEntry Transform::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(Transform, &transformDeserializerHelper, engine.getGameObject(val->ownerID).setTransform(*val), /*nothing to do*/);
+const SerializationRegistryEntry Transform::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(Transform, &transformDeserializerHelper, engine.getOrAddGameObject(val->ownerID)->setTransform(*val), /*nothing to do*/);
 
 SerializationRegistryEntry const* Transform::getRegistryEntry() const
 {

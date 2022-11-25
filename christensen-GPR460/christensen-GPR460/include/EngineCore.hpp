@@ -47,6 +47,7 @@ public:
     {
         GameObject* o = getGameObject(id);
         if (!o) o = addGameObject(id);
+        return o;
     }
     void destroy(GameObject* obj);
 
