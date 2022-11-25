@@ -7,11 +7,13 @@ class GameObject;
 class Component : public ISerializable
 {
 protected:
-	GameObject *const gameObject;
+	GameObject* const gameObject;
 
 public:
 	Component(GameObject* owner);
 	virtual ~Component();
+
+	inline GameObject* getGameObject() const { return gameObject; }
 };
 
 

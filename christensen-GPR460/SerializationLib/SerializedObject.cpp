@@ -10,31 +10,20 @@
 #include "SerializationRegistryEntry.hpp"
 
 SerializedObject::SerializedObject() :
-	typeEntry(nullptr),
-	isGood(false)
+	typeEntry(nullptr)
 {
 }
 
-bool SerializedObject::serialize(ISerializable const* toSerialize)
+bool SerializedObject::serialize(ISerializable const* toSerialize, std::ostream& out)
 {
-	isGood = false;
-
 	//Retrieve type entry
 	typeEntry = toSerialize->getRegistryEntry();
 	assert(typeEntry);
 
-	std::ostringstream out(std::ios::binary);
-	/*if (isBinary)*/ toSerialize->binarySerializeMembers(out);
+	std::ostringstream memberOut(std::ios::binary);
+	/*if (isBinary)*/ toSerialize->binarySerializeMembers(memberOut);
 	//else          toSerialize->prettySerialize(out);
-	serializedMemberData = out.str();
-
-	isGood = true;
-	return true;
-}
-
-void SerializedObject::write(std::ostream& out) const
-{
-	assert(isGood);
+	std::string serializedMemberData = memberOut.str();
 
 	//Write type ID string
 	out.write(reinterpret_cast<char const*>(&typeEntry->binaryID), sizeof(binary_id_t));
@@ -43,59 +32,36 @@ void SerializedObject::write(std::ostream& out) const
 	size_t memberSize = serializedMemberData.length();
 	out.write(reinterpret_cast<char*>(&memberSize), sizeof(size_t));
 
-	//std::cout << typeEntry->prettyID << " wrote " << memberSize << "bytes of members (+" << (sizeof(binary_id_t) + sizeof(size_t)) << " overhead)" << std::endl;
-
 	//Write members
-	out << serializedMemberData;
+	out.write(serializedMemberData.c_str(), serializedMemberData.size());
+
+	return true;
 }
 
 bool SerializedObject::parse(std::istream& line)
 {
 	//Read type
 	binary_id_t typeBinaryID = 0;
-	line.read(reinterpret_cast<char*>(&typeBinaryID), sizeof(binary_id_t)); //Is this write legal? Do we need to offset in the other direction?
-	if (typeBinaryID == 0) {
-		return false;
-		//assert(typeBinaryID != 0);
-	}
+	line.read(reinterpret_cast<char*>(&typeBinaryID), sizeof(binary_id_t));
 
 	//Lookup type in serialization registry
 	typeEntry = SerializationRegistry::getInstance()->getEntry(typeBinaryID);
 
 	//Read size
-	size_t memberSize = UINT_MAX;
+	size_t memberSize = 0;
 	line.read(reinterpret_cast<char*>(&memberSize), sizeof(size_t));
-	assert(memberSize != UINT_MAX);
+	assert(memberSize != 0);
 
-	//std::cout << typeEntry->prettyID << " parsed " << memberSize << " bytes of members (+" << (sizeof(binary_id_t) + sizeof(size_t)) << " overhead)" << std::endl;
+	if (typeEntry == nullptr) return false;
 
 	//The rest is data
-	serializedMemberData.resize(memberSize, (char)0xCC);
+	std::string serializedMemberData;
+	serializedMemberData.resize(memberSize, (char)0);
 	line.read(&serializedMemberData[0], memberSize);
 
-	isGood = typeEntry != nullptr;
-	return isGood;
-}
-
-bool SerializedObject::deserializeAndInject()
-{
-	assert(isGood);
-
-	//std::cout << "Deserializing and injecting " << typeEntry->prettyID << std::endl;
-
-	//Instantiate
-	ISerializable* deserialized = typeEntry->ctor();
-
-	//Deserialize
+	//Build
 	std::istringstream data(serializedMemberData);
-	/*if (isBinary)*/ deserialized->binaryDeserializeMembers(data);
-	//else          deserialized->prettyDeserialize(data);
-
-	//Dispatch
-	typeEntry->inject(deserialized);
-
-	//Delete
-	typeEntry->dtor(deserialized);
+	typeEntry->build(data);
 
 	return true;
 }

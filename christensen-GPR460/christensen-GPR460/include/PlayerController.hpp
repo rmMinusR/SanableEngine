@@ -12,5 +12,12 @@ private:
 public:
 	PlayerController(GameObject* owner);
 
-	void Update() override; //Should this take delta tiem?
+	void Update() override; //Should this take delta time?
+
+protected:
+	//Serialization stuff
+	static const SerializationRegistryEntry SERIALIZATION_REGISTRY_ENTRY;
+	SerializationRegistryEntry const* getRegistryEntry() const override;
+	void binarySerializeMembers(std::ostream& out) const override;
+	void binaryDeserializeMembers(std::istream& in) override;
 };

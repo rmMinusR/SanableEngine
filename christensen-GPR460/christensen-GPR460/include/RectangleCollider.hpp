@@ -18,4 +18,11 @@ public:
 	bool CheckCollision(RectangleCollider const* other) const;
 
 	bool CheckCollisionAny() const;
+
+protected:
+	//Serialization stuff
+	static const SerializationRegistryEntry SERIALIZATION_REGISTRY_ENTRY;
+	SerializationRegistryEntry const* getRegistryEntry() const override;
+	void binarySerializeMembers(std::ostream& out) const override;
+	void binaryDeserializeMembers(std::istream& in) override;
 };

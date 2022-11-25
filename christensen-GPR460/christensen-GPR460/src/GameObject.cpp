@@ -41,7 +41,14 @@ GameObject::~GameObject()
 	components.clear();
 }
 
-const SerializationRegistryEntry GameObject::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(GameObject, engine.addGameObject(), /* nothing to set */, engine.destroy(val));
+const SerializationRegistryEntry GameObject::SERIALIZATION_REGISTRY_ENTRY = AUTO_SerializationRegistryEntry(GameObject, engine.addGameObject()->binaryDeserializeMembers(in));
+
+void GameObject::RemoveComponent(Component* c)
+{
+	auto it = std::find(components.begin(), components.end(), c);
+	MemoryManager::destroy_wide(*it);
+	components.erase(it);
+}
 
 SerializationRegistryEntry const* GameObject::getRegistryEntry() const
 {
@@ -51,18 +58,14 @@ SerializationRegistryEntry const* GameObject::getRegistryEntry() const
 void GameObject::binarySerializeMembers(std::ostream& out) const
 {
 	SerializedObject transformSerializer;
-	if (transformSerializer.serialize(&transform)) transformSerializer.write(out);
+	if (!transformSerializer.serialize(&transform, out)) assert(false);
 
-	size_t componentCount = components.size();
-	char componentCountBytes[componentCountHeaderSize];
-	memset(componentCountBytes, 0, componentCountHeaderSize);
-	memcpy(componentCountBytes, &componentCount, min(sizeof(size_t), componentCountHeaderSize));
-	out.write(componentCountBytes, componentCountHeaderSize);
+	out.write(reinterpret_cast<char const*>(&id), sizeof(object_id_t));
 
 	for (Component* c : components)
 	{
 		SerializedObject serializer;
-		if (serializer.serialize(c)) serializer.write(out);
+		if (!serializer.serialize(c, out)) assert(false);
 	}
 }
 
@@ -71,16 +74,14 @@ void GameObject::binaryDeserializeMembers(std::istream& in)
 	for (Component* c : components) MemoryManager::destroy_narrow(c);
 	components.clear();
 
-	char componentCountBytes[componentCountHeaderSize];
-	in.read(componentCountBytes, componentCountHeaderSize);
-	size_t componentCount = 0;
-	memcpy(&componentCount, componentCountBytes, min(sizeof(size_t), componentCountHeaderSize));
+	object_id_t tmp_id;
+	in.read(reinterpret_cast<char*>(&tmp_id), sizeof(object_id_t));
+	assert(!engine.getGameObject(tmp_id)); //Make sure we don't end up with duplicate objects with same ID
+	id = tmp_id;
 
-	for (int i = 0; i < componentCount; ++i)
+	while (!in.eof())
 	{
 		SerializedObject deserializer;
-		if (deserializer.parse(in)) deserializer.deserializeAndInject();
+		if (!deserializer.parse(in)) assert(false);
 	}
-
-	assert(componentCount == components.size());
 }

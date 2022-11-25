@@ -51,9 +51,9 @@ public:
         return nullptr;
     }
 
-protected:
-    static constexpr size_t componentCountHeaderSize = 2;
+    void RemoveComponent(Component* c);
 
+protected:
     //Serialization stuff
     static const SerializationRegistryEntry SERIALIZATION_REGISTRY_ENTRY;
     SerializationRegistryEntry const* getRegistryEntry() const override;

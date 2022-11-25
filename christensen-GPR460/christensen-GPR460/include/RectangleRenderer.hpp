@@ -18,4 +18,11 @@ public:
 	void Render() override;
 
 	inline void SetColor(SDL_Color newColor) { color = newColor; }
+
+protected:
+	//Serialization stuff
+	static const SerializationRegistryEntry SERIALIZATION_REGISTRY_ENTRY;
+	SerializationRegistryEntry const* getRegistryEntry() const override;
+	void binarySerializeMembers(std::ostream& out) const override;
+	void binaryDeserializeMembers(std::istream& in) override;
 };
