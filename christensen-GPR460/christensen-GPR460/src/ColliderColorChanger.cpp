@@ -45,12 +45,16 @@ SerializationRegistryEntry const* ColliderColorChanger::getRegistryEntry() const
 
 void ColliderColorChanger::binarySerializeMembers(std::ostream& out) const
 {
+	Component::binarySerializeMembers(out);
+
 	binWriteRaw(normalColor, out);
 	binWriteRaw(overlapColor, out);
 }
 
 void ColliderColorChanger::binaryDeserializeMembers(std::istream& in)
 {
+	Component::binaryDeserializeMembers(in);
+
 	binReadRaw(normalColor, in);
 	binReadRaw(overlapColor, in);
 }

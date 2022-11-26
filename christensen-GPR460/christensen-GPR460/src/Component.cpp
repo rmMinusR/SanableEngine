@@ -20,6 +20,17 @@ void Component::bindGameObject()
 	assert(gameObject == nullptr);
 
 	gameObject = engine.getGameObject(gameObjectID);
+	gameObject->AddOwnedComponent(this);
+}
+
+void Component::binarySerializeMembers(std::ostream& out) const
+{
+	binWriteRaw(gameObjectID, out);
+}
+
+void Component::binaryDeserializeMembers(std::istream& in)
+{
+	binReadRaw(gameObjectID, in);
 }
 
 IUpdatable::IUpdatable()

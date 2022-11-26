@@ -15,6 +15,8 @@ private:
 	Vector3<num_t> position;
 	object_id_t ownerID;
 
+	friend class GameObject;
+
 public:
 	Transform();
 	Transform(Vector3<num_t> position);
@@ -22,7 +24,7 @@ public:
 	~Transform();
 
 	//Getters and setters
-	inline Vector3<num_t> getPosition() { return position; }
+	inline Vector3<num_t> getPosition() const { return position; }
 	inline void setPosition(Vector3<num_t> v) { position = v; }
 	inline void setPosition(num_t x, num_t y, num_t z) { position.set(x, y, z); }
 

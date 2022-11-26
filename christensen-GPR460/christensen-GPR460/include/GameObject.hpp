@@ -21,6 +21,9 @@ protected:
     std::vector<Component*> components;
     object_id_t id;
 
+    friend class Component;
+    void AddOwnedComponent(Component* c);
+
 public:
     static object_id_t genID();
     inline object_id_t getID() const { return id; }
@@ -30,7 +33,9 @@ public:
     ~GameObject();
 
     inline Transform* getTransform() { return &transform; }
-    inline void setTransform(const Transform& cpy) { transform = cpy; }
+    inline void setTransform(const Transform& cpy) {
+        transform.setPosition(cpy.getPosition());
+    }
 
     template<typename T, typename... TCtorArgs>
     inline T* CreateComponent(const TCtorArgs&... initArgs)
@@ -39,8 +44,7 @@ public:
         assert((component = GetComponent<T>()) == nullptr);
         component = MemoryManager::create<T>(this);
         component->init(initArgs...);
-        component->bindGameObject();
-        components.push_back(component);
+        component->bindGameObject(); //Chain calls AddOwnedComponent
         return component;
     }
 

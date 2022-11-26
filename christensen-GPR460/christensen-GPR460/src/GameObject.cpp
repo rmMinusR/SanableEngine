@@ -14,6 +14,13 @@
 #include "PlayerController.hpp"
 #include "ColliderColorChanger.hpp"
 
+void GameObject::AddOwnedComponent(Component* c)
+{
+	assert(c->getGameObject() == this);
+	assert(std::find(components.begin(), components.end(), c) == components.end());
+	components.push_back(c);
+}
+
 object_id_t GameObject::genID()
 {
 	object_id_t id;
@@ -29,10 +36,11 @@ GameObject::GameObject() : GameObject(genID())
 }
 
 GameObject::GameObject(object_id_t id) :
-	transform(0, 0, 0),
+	transform(),
 	id(id)
 {
 	assert(!engine.getGameObject(id));
+	transform.ownerID = id;
 }
 
 GameObject::~GameObject()
@@ -57,10 +65,10 @@ SerializationRegistryEntry const* GameObject::getRegistryEntry() const
 
 void GameObject::binarySerializeMembers(std::ostream& out) const
 {
+	binWriteRaw(id, out);
+
 	SerializedObject transformSerializer;
 	if (!transformSerializer.serialize(&transform, out)) assert(false);
-
-	binWriteRaw(id, out);
 
 	for (Component* c : components)
 	{
@@ -79,9 +87,12 @@ void GameObject::binaryDeserializeMembers(std::istream& in)
 	assert(!engine.getGameObject(tmp_id)); //Make sure we don't end up with duplicate objects with same ID
 	id = tmp_id;
 
+	SerializedObject transformSerializer;
+	if (!transformSerializer.parse(in)) assert(false);
+
 	while (!in.eof())
 	{
 		SerializedObject deserializer;
-		if (!deserializer.parse(in)) assert(false);
+		deserializer.parse(in);
 	}
 }

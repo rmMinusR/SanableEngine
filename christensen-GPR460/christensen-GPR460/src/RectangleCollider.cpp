@@ -64,12 +64,16 @@ SerializationRegistryEntry const* RectangleCollider::getRegistryEntry() const
 
 void RectangleCollider::binarySerializeMembers(std::ostream& out) const
 {
+	Component::binarySerializeMembers(out);
+
 	binWriteRaw(w, out);
 	binWriteRaw(h, out);
 }
 
 void RectangleCollider::binaryDeserializeMembers(std::istream& in)
 {
+	Component::binaryDeserializeMembers(in);
+
 	binReadRaw(w, in);
 	binReadRaw(h, in);
 }

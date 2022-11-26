@@ -42,9 +42,10 @@ SerializationRegistryEntry const* PlayerController::getRegistryEntry() const
 
 void PlayerController::binarySerializeMembers(std::ostream& out) const
 {
-	binWriteRaw(0, out); //Dummy val just to make serialization engine realize we're a real object
+	Component::binarySerializeMembers(out);
 }
 
 void PlayerController::binaryDeserializeMembers(std::istream& in)
 {
+	Component::binaryDeserializeMembers(in);
 }

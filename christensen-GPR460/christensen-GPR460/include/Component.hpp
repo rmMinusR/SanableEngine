@@ -18,6 +18,10 @@ public:
 
 	inline GameObject* getGameObject() const { return gameObject; }
 	virtual void bindGameObject(); //Called in deserialization after members
+
+protected:
+	virtual void binarySerializeMembers(std::ostream& out) const override;
+	virtual void binaryDeserializeMembers(std::istream& in) override;
 };
 
 

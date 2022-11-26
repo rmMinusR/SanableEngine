@@ -1,10 +1,13 @@
 #include "EngineCore.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <cassert>
+
+#include <SerializedObject.hpp>
 
 #include "GameObject.hpp"
 #include "Component.hpp"
-#include <cassert>
 
 EngineCore engine;
 
@@ -32,6 +35,34 @@ void EngineCore::processEvents()
                 // TODO: Add calls to ErrorMessage and LogToErrorFile here
             }
             if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
+
+            //Save level to file
+            if (event.key.keysym.sym == SDLK_s)
+            {
+                std::ofstream fout("level.dat", std::ios::binary);
+                for (GameObject* o : objects)
+                {
+                    SerializedObject so;
+                    so.serialize(o, fout);
+                }
+                fout.close();
+            }
+
+            //Load level from file
+            if (event.key.keysym.sym == SDLK_l)
+            {
+                //First clean up level
+                while (objects.size() > 0) destroy(objects[objects.size()-1]);
+
+                //Then load
+                std::ifstream fin("level.dat", std::ios::binary);
+                while (!fin.eof())
+                {
+                    SerializedObject so;
+                    so.parse(fin);
+                }
+                fin.close();
+            }
         }
     }
 }

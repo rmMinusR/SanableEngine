@@ -37,6 +37,8 @@ SerializationRegistryEntry const* Transform::getRegistryEntry() const
 
 void Transform::binarySerializeMembers(std::ostream& out) const
 {
+	binWriteRaw(ownerID, out);
+
 	binWriteRaw(position.getX(), out);
 	binWriteRaw(position.getY(), out);
 	binWriteRaw(position.getZ(), out);
@@ -44,6 +46,8 @@ void Transform::binarySerializeMembers(std::ostream& out) const
 
 void Transform::binaryDeserializeMembers(std::istream& in)
 {
+	binReadRaw(ownerID, in);
+
 	num_t x;
 	num_t y;
 	num_t z;

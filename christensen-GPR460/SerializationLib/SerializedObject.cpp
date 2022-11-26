@@ -14,6 +14,14 @@ SerializedObject::SerializedObject() :
 {
 }
 
+void debugHex(char const* buf, size_t len) {
+	for (int i = 0; i < len; ++i) {
+		uint8_t byte = buf[i];
+		const char* hex = "0123456789ABCDEF";
+		std::cout << hex[byte >> 4] << hex[byte & 0xf] << ' ';
+	}
+}
+
 bool SerializedObject::serialize(ISerializable const* toSerialize, std::ostream& out)
 {
 	//Retrieve type entry
@@ -35,6 +43,14 @@ bool SerializedObject::serialize(ISerializable const* toSerialize, std::ostream&
 	//Write members
 	out.write(serializedMemberData.c_str(), serializedMemberData.size());
 
+	std::cout << typeEntry->prettyID << "[ type=";
+	debugHex(reinterpret_cast<char const*>(&typeEntry->binaryID), sizeof(binary_id_t));
+	std::cout << "size=";
+	debugHex(reinterpret_cast<char const*>(&memberSize), sizeof(size_t));
+	std::cout << "] ";
+	debugHex(serializedMemberData.c_str(), serializedMemberData.size());
+	std::cout << std::endl;
+
 	return true;
 }
 
@@ -50,9 +66,8 @@ bool SerializedObject::parse(std::istream& line)
 	//Read size
 	size_t memberSize = 0;
 	line.read(reinterpret_cast<char*>(&memberSize), sizeof(size_t));
-	assert(memberSize != 0);
 
-	if (typeEntry == nullptr) return false;
+	if (typeEntry == nullptr || memberSize == 0) return false;
 
 	//The rest is data
 	std::string serializedMemberData;

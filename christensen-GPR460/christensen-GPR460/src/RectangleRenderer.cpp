@@ -46,6 +46,8 @@ SerializationRegistryEntry const* RectangleRenderer::getRegistryEntry() const
 
 void RectangleRenderer::binarySerializeMembers(std::ostream& out) const
 {
+	Component::binarySerializeMembers(out);
+
 	binWriteRaw(w, out);
 	binWriteRaw(h, out);
 	binWriteRaw(color, out);
@@ -53,6 +55,8 @@ void RectangleRenderer::binarySerializeMembers(std::ostream& out) const
 
 void RectangleRenderer::binaryDeserializeMembers(std::istream& in)
 {
+	Component::binaryDeserializeMembers(in);
+
 	binReadRaw(w, in);
 	binReadRaw(h, in);
 	binReadRaw(color, in);
