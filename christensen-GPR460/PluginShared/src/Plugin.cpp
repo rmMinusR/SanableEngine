@@ -4,12 +4,7 @@
 
 #include "PluginCore.h"
 
-bool Plugin::isLoaded()
-{
-	return GetModuleFileName(dll, NULL, 0) && status == Status::LoadComplete;
-}
-
-Plugin::Plugin(const std::filesystem::path& path) :
+__stdcall Plugin::Plugin(const std::filesystem::path& path) :
 	path(path),
 	dll((HMODULE)INVALID_HANDLE_VALUE),
 	status(Status::NotLoaded)
@@ -18,7 +13,7 @@ Plugin::Plugin(const std::filesystem::path& path) :
 
 Plugin::~Plugin()
 {
-	assert(!isLoaded());
+	assert(!_dllGood() && status == Status::NotLoaded);
 }
 
 void Plugin::loadDLL()
@@ -38,6 +33,7 @@ void Plugin::registerContents()
 	assert(_dllGood());
 	
 	fp_registerPlugin registerFunc = (fp_registerPlugin) GetProcAddress(dll, "registerPlugin");
+	assert(registerFunc);
 	registerFunc(this);
 
 	status = Status::Registered;
@@ -51,6 +47,6 @@ void Plugin::unloadDLL()
 	BOOL success = FreeLibrary(dll);
 	assert(success);
 
-	dll = HMODULE();
+	dll = (HMODULE)INVALID_HANDLE_VALUE;
 	status = Status::NotLoaded;
 }

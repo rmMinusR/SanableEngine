@@ -13,7 +13,7 @@ private:
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder, EngineCore* engine);
 	void load(const std::wstring& dllPath);
-	//void unloadAll();
+	void unloadAll();
 
 	PluginManager();
 	~PluginManager();

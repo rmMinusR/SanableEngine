@@ -1,26 +1,27 @@
+#include <iostream>
+
 #include "PluginCore.h"
+#include "Plugin.h"
 
-extern "C" bool __declspec(dllexport) __stdcall registerPlugin(Plugin* context, EngineCore* engine)
+PLUGIN_API(bool) registerPlugin(Plugin* context, EngineCore* engine)
 {
+    std::cout << "registerPlugin() called" << std::endl;
     return true;
 }
 
-extern "C" bool __declspec(dllexport) __stdcall initialize()
+PLUGIN_API(bool) initialize()
 {
+    std::cout << "initialize() called" << std::endl;
     return true;
 }
 
-extern "C" bool __declspec(dllexport) __stdcall loadContent()
+PLUGIN_API(void) cleanup()
 {
-    return true;
+    std::cout << "cleanup() called" << std::endl;
 }
 
-extern "C" void __declspec(dllexport) __stdcall cleanup()
+PLUGIN_API(int) testExport()
 {
-    
-}
-
-extern "C" int __declspec(dllexport) __stdcall testExport()
-{
+    std::cout << "testExport() called" << std::endl;
     return 42;
 }

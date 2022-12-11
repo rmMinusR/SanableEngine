@@ -34,8 +34,6 @@ public:
 	//char const* const* dependencies;
 	//unsigned int dependencyCount;
 
-	bool isLoaded();
-
 	Plugin(const std::filesystem::path& path);
 	~Plugin();
 

@@ -72,6 +72,8 @@ void EngineCore::shutdown()
     assert(isAlive);
     isAlive = false;
 
+    pluginManager.unloadAll();
+
     for (GameObject* o : objects) MemoryManager::destroy(o);
     //for (GameObject* o : objects) delete o;
     objects.clear();

@@ -28,8 +28,9 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder, Engi
 		batch.push_back(p); //Defer registerContents call
 	}
 
-	//Load contents of each
 	for (Plugin* p : batch) p->registerContents();
+
+	//TODO onEnable
 }
 
 void PluginManager::load(const std::wstring& dllPath)
@@ -37,4 +38,12 @@ void PluginManager::load(const std::wstring& dllPath)
 	Plugin* p = &plugins.emplace_back(dllPath);
 	p->loadDLL();
 	p->registerContents();
+}
+
+void PluginManager::unloadAll()
+{
+	//TODO onDisable
+
+	for (Plugin& p : plugins) p.unloadDLL();
+	plugins.clear();
 }
