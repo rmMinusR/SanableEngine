@@ -18,7 +18,7 @@ Plugin::~Plugin()
 
 void Plugin::loadDLL()
 {
-	assert(status < Status::DllLoaded);
+	assert(status == Status::NotLoaded);
 	assert(!_dllGood());
 
 	dll = LoadLibrary(path.c_str());
@@ -27,21 +27,47 @@ void Plugin::loadDLL()
 	status = Status::DllLoaded;
 }
 
-void Plugin::registerContents()
+void Plugin::plugin_preInit(EngineCore* engine)
 {
-	assert(status < Status::Registered);
+	assert(status == Status::DllLoaded);
 	assert(_dllGood());
 	
-	fp_registerPlugin registerFunc = (fp_registerPlugin) GetProcAddress(dll, "registerPlugin");
-	assert(registerFunc);
-	registerFunc(this);
+	fp_plugin_preInit func = (fp_plugin_preInit)GetProcAddress(dll, "plugin_preInit");
+	assert(func);
+	bool success = func(this, engine);
+	assert(success);
+
+	status = Status::Registered;
+}
+
+void Plugin::init()
+{
+	assert(status == Status::Registered);
+	assert(_dllGood());
+
+	fp_plugin_init func = (fp_plugin_init)GetProcAddress(dll, "plugin_init");
+	assert(func);
+	bool success = func();
+	assert(success);
+
+	status = Status::Hooked;
+}
+
+void Plugin::plugin_cleanup()
+{
+	assert(status == Status::Hooked);
+	assert(_dllGood());
+
+	fp_plugin_cleanup func = (fp_plugin_cleanup)GetProcAddress(dll, "plugin_cleanup");
+	assert(func);
+	func();
 
 	status = Status::Registered;
 }
 
 void Plugin::unloadDLL()
 {
-	assert(status >= Status::DllLoaded);
+	assert(status == Status::DllLoaded || status == Status::Registered);
 	assert(_dllGood());
 
 	BOOL success = FreeLibrary(dll);

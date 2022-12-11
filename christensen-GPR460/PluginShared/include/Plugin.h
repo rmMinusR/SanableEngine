@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 
+class EngineCore;
 class PluginManager;
 
 struct Plugin
@@ -17,11 +18,11 @@ public:
 	{
 		NotLoaded = 0,
 
-		DllLoaded,
-		Registered,
-		ContentLoaded,
+		DllLoaded, //DLL is loaded but no functions have been called
+		Registered, //Plugin has been registered with the dependency tree
+		Hooked, //Plugin has registered to hooks and callbacks
 
-		LoadComplete = ContentLoaded
+		LoadComplete = Hooked
 	} status;
 
 	HMODULE dll;
@@ -45,7 +46,8 @@ private:
 	inline bool _dllGood() { return dll != INVALID_HANDLE_VALUE; }
 
 	void loadDLL();
-	void registerContents();
-
+	void plugin_preInit(EngineCore* engine);
+	void init();
+	void plugin_cleanup();
 	void unloadDLL();
 };
