@@ -21,5 +21,5 @@ private:
 	friend class EngineCore;
 
 public:
-	//Plugin* getPlugin(const std::wstring& name);
+	//Plugin const* getPlugin(const std::wstring& name);
 };

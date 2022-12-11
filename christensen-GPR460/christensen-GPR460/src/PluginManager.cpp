@@ -28,7 +28,7 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder, Engi
 		batch.push_back(p); //Defer plugin_preInit call
 	}
 
-	for (Plugin* p : batch) p->plugin_preInit(engine);
+	for (Plugin* p : batch) p->preInit(engine);
 
 	//TODO dependency tree
 	for (Plugin* p : batch) p->init();
@@ -38,13 +38,13 @@ void PluginManager::load(const std::wstring& dllPath, EngineCore* engine)
 {
 	Plugin* p = &plugins.emplace_back(dllPath);
 	p->loadDLL();
-	p->plugin_preInit(engine);
+	p->preInit(engine);
 }
 
 void PluginManager::unloadAll()
 {
 	//TODO dependency tree
-	for (Plugin& p : plugins) p.plugin_cleanup();
+	for (Plugin& p : plugins) p.cleanup();
 
 	for (Plugin& p : plugins) p.unloadDLL();
 	plugins.clear();

@@ -1,8 +1,12 @@
 #include "System_Emscripten.hpp"
 
-#ifndef _WIN32
+#ifdef __EMSCRIPTEN__
 
+#include <dirent.h>
+
+#include <iostream>
 #include <cassert>
+#include <sstream>
 
 #include "EngineCore.hpp"
 
@@ -62,4 +66,49 @@ void gpr460::System_Emscripten::LogToErrorFile(const gpr460::string& message)
 	//}, message);
 }
 
-#endif _WIN32
+std::vector<std::filesystem::path> gpr460::System_Emscripten::ListPlugins(std::filesystem::path path) const
+{
+	std::vector<std::filesystem::path> contents;
+
+	std::cout << "Reading plugins directory...\n";
+
+	//*
+	std::error_code err;
+	auto it = std::filesystem::directory_iterator(path, err);
+	if (err) std::cout << "ERROR reading plugins directory: code " << err.value() << ": " << err.message() << "\n";
+	
+	std::ostringstream joiner;
+	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
+	{
+		std::cout << "Found " << entry.string() << "\n";
+		joiner << entry.filename().string() << ".so"; //Build DLL name
+		contents.push_back(entry / joiner.str());
+		joiner.clear();
+	}
+	// */
+
+	/*
+	std::ostringstream joiner;
+	struct dirent *dir;
+	DIR *d = opendir(path.c_str());
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+		{
+			std::cout << "Found " << dir->d_name << "\n";
+			if (dir->d_name[0] != '.')
+			{
+				joiner << dir->d_name << ".so"; //Build DLL name
+				contents.push_back(path / dir->d_name / joiner.str());
+				joiner.clear();
+			}
+		}
+		closedir(d);
+	}
+	else std::cout << "ERROR: Could not read plugins directory\n";
+	// */
+
+	return contents;
+}
+
+#endif __EMSCRIPTEN__
