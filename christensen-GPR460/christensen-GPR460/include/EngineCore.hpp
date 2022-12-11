@@ -5,6 +5,7 @@
 
 #include "System.hpp"
 #include "CallBatcher.inl"
+#include "PluginManager.hpp"
 
 Uint32 GetTicks();
 
@@ -19,6 +20,7 @@ private:
     bool isAlive;
     SDL_Window* window = nullptr;
     gpr460::System system;
+    PluginManager pluginManager;
 
     std::vector<GameObject*> objects;
 
@@ -50,6 +52,7 @@ public:
 
     CallBatcher<IUpdatable >* getUpdatables () { return &updateList; }
     CallBatcher<IRenderable>* getRenderables() { return &renderList; }
+    gpr460::System* getSystem() { return &system; }
 };
 
 extern EngineCore engine; //FIXME singleton bad

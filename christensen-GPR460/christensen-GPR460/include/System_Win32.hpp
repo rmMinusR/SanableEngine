@@ -46,6 +46,8 @@ namespace gpr460
 
 			ShowError(gpr460::string(buffer, nValid));
 		}
+
+		std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
 	};
 
 }

@@ -2,6 +2,9 @@
 
 #include "Aliases.hpp"
 
+#include <vector>
+#include <filesystem>
+
 class EngineCore;
 
 namespace gpr460
@@ -13,13 +16,17 @@ namespace gpr460
 		bool isAlive = false;
 		EngineCore* engine;
 
-	public:
-		System_Outline() = default;
-		virtual ~System_Outline() = default;
+		friend class EngineCore;
 
 		virtual void Init(EngineCore*);
 		virtual void DoMainLoop() = 0;
 		virtual void Shutdown() = 0;
+
+		virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const = 0;
+
+	public:
+		System_Outline() = default;
+		virtual ~System_Outline() = default;
 
 		//TODO these should be combined
 		virtual void ShowError(const gpr460::string& message) = 0;

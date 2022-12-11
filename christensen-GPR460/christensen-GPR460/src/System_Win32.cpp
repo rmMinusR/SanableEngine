@@ -2,12 +2,13 @@
 
 #ifdef _WIN32
 
-#include <cassert>
-
 //Memory leak tracing
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+
+#include <cassert>
+#include <sstream>
 
 #include "EngineCore.hpp"
 
@@ -100,6 +101,21 @@ void gpr460::System_Win32::LogToErrorFile(const gpr460::string& message)
 	{
 		ShowError(L"Tried to write %u characters to error file, but only wrote %u", message.length(), nWritten);
 	}
+}
+
+std::vector<std::filesystem::path> gpr460::System_Win32::ListPlugins(std::filesystem::path path) const
+{
+	std::vector<std::filesystem::path> contents;
+
+	std::ostringstream joiner;
+	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
+	{
+		joiner << entry.filename().string() << ".dll"; //Build DLL name
+		contents.push_back(entry / joiner.str());
+		joiner.clear();
+	}
+
+	return contents;
 }
 
 #endif _WIN32

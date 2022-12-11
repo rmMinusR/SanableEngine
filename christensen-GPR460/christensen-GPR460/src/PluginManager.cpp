@@ -2,6 +2,9 @@
 
 #include <sstream>
 #include <cassert>
+#include <filesystem>
+
+#include "EngineCore.hpp"
 
 PluginManager::PluginManager()
 {
@@ -12,33 +15,13 @@ PluginManager::~PluginManager()
 	assert(plugins.size() == 0);
 }
 
-void PluginManager::discoverAll(const std::wstring& pluginsFolderPath)
+void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder, EngineCore* engine)
 {
-	std::wostringstream joiner;
+	std::ostringstream joiner;
 
-	//Discover contents
-	std::vector<std::wstring> contents;
-	WIN32_FIND_DATA it;
-	HANDLE hFind = FindFirstFile(pluginsFolderPath.c_str(), &it);
-	do
-	{
-		if (it.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			//joiner << pluginsFolderPath << L'\\';
-			joiner << it.cFileName << L'\\';
-			joiner << it.cFileName << L".dll";
-
-			contents.push_back(joiner.str());
-			joiner.clear();
-		}
-	}
-	while (FindNextFile(hFind, &it));
-	bool cleanupSuccess = FindClose(hFind);
-	assert(cleanupSuccess);
-
-	//Create a wrapper and load the DLL of each
+	//Discover, create a wrapper and load the DLL of each
 	std::vector<Plugin*> batch;
-	for (const std::wstring& dllPath : contents)
+	for (const std::filesystem::path& dllPath : engine->getSystem()->ListPlugins(pluginsFolder))
 	{
 		Plugin* p = &plugins.emplace_back(dllPath);
 		p->loadDLL();

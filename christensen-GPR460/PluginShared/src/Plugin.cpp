@@ -9,9 +9,9 @@ bool Plugin::isLoaded()
 	return GetModuleFileName(dll, NULL, 0) && status == Status::LoadComplete;
 }
 
-Plugin::Plugin(const std::wstring& path) :
+Plugin::Plugin(const std::filesystem::path& path) :
 	path(path),
-	dll(),
+	dll((HMODULE)INVALID_HANDLE_VALUE),
 	status(Status::NotLoaded)
 {
 }
@@ -24,9 +24,10 @@ Plugin::~Plugin()
 void Plugin::loadDLL()
 {
 	assert(status < Status::DllLoaded);
-	assert(!GetModuleFileName(dll, NULL, 0));
+	assert(!_dllGood());
 
 	dll = LoadLibrary(path.c_str());
+	assert(dll != INVALID_HANDLE_VALUE);
 
 	status = Status::DllLoaded;
 }
@@ -34,7 +35,7 @@ void Plugin::loadDLL()
 void Plugin::registerContents()
 {
 	assert(status < Status::Registered);
-	assert(GetModuleFileName(dll, NULL, 0));
+	assert(_dllGood());
 	
 	fp_registerPlugin registerFunc = (fp_registerPlugin) GetProcAddress(dll, "registerPlugin");
 	registerFunc(this);
@@ -44,8 +45,8 @@ void Plugin::registerContents()
 
 void Plugin::unloadDLL()
 {
-	assert(GetModuleFileName(dll, NULL, 0));
 	assert(status >= Status::DllLoaded);
+	assert(_dllGood());
 
 	BOOL success = FreeLibrary(dll);
 	assert(success);

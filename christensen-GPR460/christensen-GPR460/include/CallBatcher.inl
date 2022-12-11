@@ -28,7 +28,7 @@ public:
 
 	void add(TObj* obj)
 	{
-		int insertIndex = 0;
+		size_t insertIndex = 0;
 		while (insertIndex < objects.size() && getSortID(obj) > getSortID(objects[insertIndex])) insertIndex++;
 		objects.insert(objects.begin()+insertIndex, obj);
 	}

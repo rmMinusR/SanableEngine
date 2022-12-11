@@ -11,7 +11,7 @@ class PluginManager
 private:
 	std::vector<Plugin> plugins;
 	
-	void discoverAll(const std::wstring& pluginsFolderPath);
+	void discoverAll(const std::filesystem::path& pluginsFolder, EngineCore* engine);
 	void load(const std::wstring& dllPath);
 	//void unloadAll();
 

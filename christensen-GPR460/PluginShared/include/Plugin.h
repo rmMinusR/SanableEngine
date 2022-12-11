@@ -4,6 +4,7 @@
 #include <Windows.h>
 
 #include <functional>
+#include <filesystem>
 #include <vector>
 #include <string>
 
@@ -35,13 +36,15 @@ public:
 
 	bool isLoaded();
 
-	Plugin(const std::wstring& path);
+	Plugin(const std::filesystem::path& path);
 	~Plugin();
 
 private:
 	friend class PluginManager;
 
-	std::wstring path;
+	std::filesystem::path path;
+
+	inline bool _dllGood() { return dll != INVALID_HANDLE_VALUE; }
 
 	void loadDLL();
 	void registerContents();
