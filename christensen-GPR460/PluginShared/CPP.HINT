@@ -1,2 +1,0 @@
-#define MULTILANG_C(contents) extern "C" { contents }
-#define MULTILANG_C(contents)
