@@ -5,8 +5,10 @@
 
 #include <SDL.h>
 #include "EngineCore.hpp"
+#include "System_Switcher.hpp"
 
 void vendorInit(EngineCore* engine);
+gpr460::System* systemFactory();
 
 int main(int argc, char* argv[])
 {
@@ -16,7 +18,7 @@ int main(int argc, char* argv[])
     //Init
     SDL_Init(SDL_INIT_VIDEO);
     EngineCore engine;
-    engine.init("SDL2 Test", WIDTH, HEIGHT, vendorInit);
+    engine.init("SDL2 Test", WIDTH, HEIGHT, systemFactory, vendorInit);
 
     //Loop
     engine.doMainLoop();
@@ -31,6 +33,11 @@ int main(int argc, char* argv[])
 #endif
 
     return 0;
+}
+
+gpr460::System* systemFactory()
+{
+    return new gpr460::System_Impl();
 }
 
 void vendorInit(EngineCore* engine)

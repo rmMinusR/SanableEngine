@@ -7,7 +7,7 @@
 
 #include "GameObject.hpp"
 #include "Component.hpp"
-#include "System_Switcher.hpp"
+#include "System.hpp"
 
 uint32_t GetTicks()
 {
@@ -105,12 +105,12 @@ EngineCore::~EngineCore()
     assert(!isAlive);
 }
 
-void EngineCore::init(char const* windowName, int windowWidth, int windowHeight, UserInitFunc userInitCallback)
+void EngineCore::init(char const* windowName, int windowWidth, int windowHeight, SystemFactoryFunc createSystem, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
 
-    system = new gpr460::System_Impl();
+    system = createSystem();
     system->Init(this);
     memoryManager.init();
 

@@ -22,38 +22,16 @@
     <ClInclude Include="private\System_Emscripten.hpp" />
     <ClInclude Include="private\System_Switcher.hpp" />
     <ClInclude Include="private\System_Win32.hpp" />
-    <ClInclude Include="public\Aliases.hpp" />
-    <ClInclude Include="public\Component.hpp" />
-    <ClInclude Include="public\EngineCore.hpp" />
-    <ClInclude Include="public\GameObject.hpp" />
-    <ClInclude Include="public\MemoryManager.hpp" />
-    <ClInclude Include="public\MemoryPoolCommon.hpp" />
-    <ClInclude Include="public\Plugin.hpp" />
-    <ClInclude Include="public\PluginCore.hpp" />
-    <ClInclude Include="public\PluginManager.hpp" />
-    <ClInclude Include="public\RawMemoryPool.hpp" />
-    <ClInclude Include="public\System.hpp" />
-    <ClInclude Include="public\Transform.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Component.cpp" />
-    <ClCompile Include="src\emscripten\System_Emscripten.cpp" />
-    <ClCompile Include="src\EngineCore.cpp" />
-    <ClCompile Include="src\GameObject.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\MemoryManager.cpp" />
-    <ClCompile Include="src\MemoryPoolCommon.cpp" />
-    <ClCompile Include="src\Plugin.cpp" />
-    <ClCompile Include="src\PluginManager.cpp" />
-    <ClCompile Include="src\RawMemoryPool.cpp" />
-    <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\System_Emscripten.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
-    <ClCompile Include="src\Transform.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="public\CallBatcher.inl" />
-    <None Include="public\TypedMemoryPool.inl" />
-    <None Include="public\Vector3.inl" />
+    <ProjectReference Include="..\PublicShared\PublicShared.vcxproj">
+      <Project>{7ea6e748-a864-44d0-b35b-61bf4db00806}</Project>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

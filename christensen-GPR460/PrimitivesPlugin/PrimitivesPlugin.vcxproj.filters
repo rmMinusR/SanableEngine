@@ -26,10 +26,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\RectangleCollider.hpp">
+    <ClInclude Include="public\RectangleCollider.hpp">
       <Filter>Public Headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\RectangleRenderer.hpp">
+    <ClInclude Include="public\RectangleRenderer.hpp">
       <Filter>Public Headers</Filter>
     </ClInclude>
   </ItemGroup>

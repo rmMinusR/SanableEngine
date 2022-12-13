@@ -54,7 +54,8 @@ public:
     ~EngineCore();
 
     typedef void (*UserInitFunc)(EngineCore*);
-    void init(char const* windowName, int windowWidth, int windowHeight, UserInitFunc userInitCallback);
+    typedef gpr460::System* (*SystemFactoryFunc)();
+    void init(char const* windowName, int windowWidth, int windowHeight, SystemFactoryFunc createSystem, UserInitFunc userInitCallback);
     void shutdown();
 
     GameObject* addGameObject();

@@ -19,9 +19,3 @@ PLUGIN_API(void) plugin_cleanup()
 {
     std::cout << "PrimitivesPlugin: plugin_cleanup() called" << std::endl;
 }
-
-PLUGIN_API(int) testExport()
-{
-    std::cout << "PrimitivesPlugin: testExport() called" << std::endl;
-    return 42;
-}
