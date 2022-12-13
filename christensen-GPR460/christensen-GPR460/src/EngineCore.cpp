@@ -32,6 +32,13 @@ void EngineCore::processEvents()
                 // TODO: Add calls to ErrorMessage and LogToErrorFile here
             }
             if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
+            if (event.key.keysym.sym == SDLK_F5) {
+                std::cout << "Hot Reload Started";
+                pluginManager.unloadAll();
+                //FIXME fix vtable ptrs
+                pluginManager.discoverAll(system.GetBaseDir()/"plugins", this);
+                std::cout << "Hot Reload Complete";
+            }
         }
     }
 }

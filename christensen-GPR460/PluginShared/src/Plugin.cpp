@@ -111,8 +111,8 @@ void Plugin::unloadDLL()
 	dll = (HMODULE)INVALID_HANDLE_VALUE;
 #endif
 #ifdef __EMSCRIPTEN__
-	int success = dlclose(dll);
-	assert(success);
+	int failure = dlclose(dll);
+	assert(!failure);
 	dll = nullptr;
 #endif
 
