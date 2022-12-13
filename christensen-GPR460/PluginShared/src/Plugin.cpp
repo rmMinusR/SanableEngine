@@ -1,12 +1,12 @@
-#include "Plugin.h"
-
-#include <cassert>
-
-#include "PluginCore.h"
+#include "Plugin.hpp"
 
 #if __EMSCRIPTEN__
 #include <dlfcn.h>
 #endif
+
+#include <cassert>
+
+#include "PluginCore.hpp"
 
 __stdcall Plugin::Plugin(const std::filesystem::path& path) :
 	path(path),

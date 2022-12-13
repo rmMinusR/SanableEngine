@@ -15,10 +15,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\PluginCore.h">
+    <ClInclude Include="include\Plugin.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Plugin.h">
+    <ClInclude Include="include\PluginCore.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

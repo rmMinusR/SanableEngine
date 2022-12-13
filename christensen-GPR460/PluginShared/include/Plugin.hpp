@@ -41,7 +41,7 @@ public:
 	//char const* const* dependencies;
 	//unsigned int dependencyCount;
 
-	Plugin(const std::filesystem::path& path);
+	__stdcall Plugin(const std::filesystem::path& path);
 	~Plugin();
 
 	void* getSymbol(const char* name) const;

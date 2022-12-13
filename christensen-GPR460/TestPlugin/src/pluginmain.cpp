@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "PluginCore.h"
-#include "Plugin.h"
+#include "PluginCore.hpp"
+#include "Plugin.hpp"
 
 PLUGIN_API(bool) plugin_preInit(Plugin* context, EngineCore* engine)
 {

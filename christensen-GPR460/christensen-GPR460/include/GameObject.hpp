@@ -35,7 +35,7 @@ public:
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
         component = MemoryManager::create<T>(ctorArgs...);
-        EngineCore::getInstance()->componentAddBuffer.emplace(component, this);
+        EngineCore::getInstance()->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }
 

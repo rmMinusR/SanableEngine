@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <unordered_map>
 #include <SDL.h>
 
 #include "System.hpp"
@@ -36,7 +35,7 @@ private:
     void applyConcurrencyBuffers();
     std::vector<GameObject*> objectAddBuffer;
     std::vector<GameObject*> objectDelBuffer;
-    std::unordered_map<Component*, GameObject*> componentAddBuffer;
+    std::vector<std::pair<Component*, GameObject*>> componentAddBuffer;
     std::vector<Component*> componentDelBuffer;
 
     CallBatcher<IUpdatable > updateList;

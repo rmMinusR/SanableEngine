@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "Plugin.h"
+#include "Plugin.hpp"
 
 class EngineCore;
 
