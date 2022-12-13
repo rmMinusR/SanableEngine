@@ -9,13 +9,14 @@ class EngineCore;
 class PluginManager
 {
 private:
-	std::vector<Plugin> plugins;
+	EngineCore* const engine;
+	std::vector<Plugin*> plugins;
 	
-	void discoverAll(const std::filesystem::path& pluginsFolder, EngineCore* engine);
-	void load(const std::wstring& dllPath, EngineCore* engine);
+	void discoverAll(const std::filesystem::path& pluginsFolder);
+	void load(const std::wstring& dllPath);
 	void unloadAll();
 
-	PluginManager();
+	PluginManager(EngineCore* engine);
 	~PluginManager();
 
 	friend class EngineCore;

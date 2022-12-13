@@ -77,13 +77,12 @@ std::vector<std::filesystem::path> gpr460::System_Emscripten::ListPlugins(std::f
 	auto it = std::filesystem::directory_iterator(path, err);
 	if (err) std::cout << "ERROR reading plugins directory: code " << err.value() << ": " << err.message() << "\n";
 	
-	std::ostringstream joiner;
 	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
 	{
+		std::ostringstream joiner;
 		std::cout << "Found " << entry.string() << "\n";
 		joiner << entry.filename().string() << ".so"; //Build DLL name
 		contents.push_back(entry / joiner.str());
-		joiner.clear();
 	}
 	// */
 

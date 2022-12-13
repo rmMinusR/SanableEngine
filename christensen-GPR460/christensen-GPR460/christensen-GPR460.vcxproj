@@ -21,8 +21,6 @@
   <ItemGroup>
     <ClInclude Include="include\ColliderColorChanger.hpp" />
     <ClInclude Include="include\PlayerController.hpp" />
-    <ClInclude Include="include\RectangleCollider.hpp" />
-    <ClInclude Include="include\RectangleRenderer.hpp" />
     <ClInclude Include="include\System_Switcher.hpp" />
     <ClInclude Include="include\System_Emscripten.hpp" />
     <ClInclude Include="include\System_Win32.hpp" />
@@ -36,6 +34,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MemoryManager.cpp" />
     <ClCompile Include="src\MemoryPoolCommon.cpp" />
+    <ClCompile Include="src\Plugin.cpp" />
     <ClCompile Include="src\PluginManager.cpp" />
     <ClCompile Include="src\RawMemoryPool.cpp" />
     <ClCompile Include="src\PlayerController.cpp" />

@@ -63,7 +63,7 @@ void EngineCore::reloadPlugins()
     pluginManager.unloadAll();
 
     std::cout << "Loading plugins...\n";
-    pluginManager.discoverAll(system.GetBaseDir() / "plugins", this);
+    pluginManager.discoverAll(system.GetBaseDir()/"plugins");
 
     std::cout << "Refreshing pointers...\n";
     refreshCallBatchers();
@@ -92,7 +92,8 @@ void EngineCore::refreshCallBatchers()
 EngineCore::EngineCore() :
     isAlive(false),
     window(nullptr),
-    renderer(nullptr)
+    renderer(nullptr),
+    pluginManager(this)
 {
 }
 
@@ -115,7 +116,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     frame = 0;
     frameStart = GetTicks();
 
-    pluginManager.discoverAll(system.GetBaseDir()/"plugins", this);
+    pluginManager.discoverAll(system.GetBaseDir()/"plugins");
 
     if (userInitCallback) (*userInitCallback)(this);
 }

@@ -8,21 +8,27 @@
 
 #include "PluginCore.hpp"
 
-__stdcall Plugin::Plugin(const std::filesystem::path& path) :
+__thiscall Plugin::Plugin(const std::filesystem::path& path) :
 	path(path),
 	status(Status::NotLoaded)
 {
-#ifdef _WIN32
-	dll = (HMODULE)INVALID_HANDLE_VALUE;
-#endif
-#ifdef __EMSCRIPTEN__
-	dll = nullptr;
-#endif
+	dll = InvalidLibHandle;
 }
 
 Plugin::~Plugin()
 {
 	assert(!_dllGood() && status == Status::NotLoaded);
+}
+
+Plugin::Plugin(Plugin&& mov) noexcept
+{
+	path   = mov.path;
+	dll    = mov.dll;
+	status = mov.status;
+
+	mov.path.clear();
+	mov.dll = InvalidLibHandle;
+	mov.status = Status::NotLoaded;
 }
 
 void* Plugin::getSymbol(const char* name) const
@@ -38,12 +44,7 @@ void* Plugin::getSymbol(const char* name) const
 
 bool Plugin::_dllGood() const
 {
-#ifdef _WIN32
-	return dll != INVALID_HANDLE_VALUE;
-#endif
-#ifdef __EMSCRIPTEN__
-	return dll;
-#endif
+	return dll != InvalidLibHandle;
 }
 
 void Plugin::loadDLL()
@@ -108,13 +109,12 @@ void Plugin::unloadDLL()
 #ifdef _WIN32
 	BOOL success = FreeLibrary(dll);
 	assert(success);
-	dll = (HMODULE)INVALID_HANDLE_VALUE;
 #endif
 #ifdef __EMSCRIPTEN__
 	int failure = dlclose(dll);
 	assert(!failure);
-	dll = nullptr;
 #endif
 
+	dll = InvalidLibHandle;
 	status = Status::NotLoaded;
 }

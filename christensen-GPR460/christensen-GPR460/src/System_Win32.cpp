@@ -110,12 +110,11 @@ std::vector<std::filesystem::path> gpr460::System_Win32::ListPlugins(std::filesy
 {
 	std::vector<std::filesystem::path> contents;
 
-	std::ostringstream joiner;
 	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
 	{
+		std::ostringstream joiner;
 		joiner << entry.filename().string() << ".dll"; //Build DLL name
 		contents.push_back(entry / joiner.str());
-		joiner.clear();
 	}
 
 	return contents;

@@ -4,11 +4,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 typedef HMODULE LibHandle;
+#define InvalidLibHandle ((HMODULE)INVALID_HANDLE_VALUE)
 #endif
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 typedef void* LibHandle;
+#define InvalidLibHandle (nullptr)
 #endif
 
 #include <functional>
@@ -41,8 +43,11 @@ public:
 	//char const* const* dependencies;
 	//unsigned int dependencyCount;
 
-	__stdcall Plugin(const std::filesystem::path& path);
+	__thiscall Plugin(const std::filesystem::path& path);
 	~Plugin();
+
+	Plugin(const Plugin& cpy) = delete;
+	__thiscall Plugin(Plugin&& mov) noexcept;
 
 	void* getSymbol(const char* name) const;
 
