@@ -166,11 +166,26 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Aliases.hpp" />
+    <ClInclude Include="include\Component.hpp" />
+    <ClInclude Include="include\EngineCore.hpp" />
+    <ClInclude Include="include\GameObject.hpp" />
+    <ClInclude Include="include\MemoryManager.hpp" />
+    <ClInclude Include="include\MemoryPoolCommon.hpp" />
     <ClInclude Include="include\PluginCore.hpp" />
     <ClInclude Include="include\Plugin.hpp" />
+    <ClInclude Include="include\PluginManager.hpp" />
+    <ClInclude Include="include\RawMemoryPool.hpp" />
+    <ClInclude Include="include\System.hpp" />
+    <ClInclude Include="include\Transform.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Plugin.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="include\CallBatcher.inl" />
+    <None Include="include\TypedMemoryPool.inl" />
+    <None Include="include\Vector3.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

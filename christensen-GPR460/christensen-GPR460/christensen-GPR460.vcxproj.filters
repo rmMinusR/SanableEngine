@@ -21,22 +21,10 @@
     <ClInclude Include="include\System_Emscripten.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\GameObject.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\RectangleRenderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\Transform.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\RectangleCollider.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Component.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\EngineCore.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\PlayerController.hpp">
@@ -45,31 +33,7 @@
     <ClInclude Include="include\ColliderColorChanger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\RawMemoryPool.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MemoryPoolCommon.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\CallBatcher.inl">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\MemoryManager.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Aliases.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\PluginManager.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\TypedMemoryPool.inl">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\System_Switcher.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\System.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -122,10 +86,5 @@
     <ClCompile Include="src\System.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="include\Vector3.inl">
-      <Filter>Header Files</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -19,25 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Aliases.hpp" />
-    <ClInclude Include="include\CallBatcher.inl" />
     <ClInclude Include="include\ColliderColorChanger.hpp" />
-    <ClInclude Include="include\Component.hpp" />
-    <ClInclude Include="include\EngineCore.hpp" />
-    <ClInclude Include="include\GameObject.hpp" />
-    <ClInclude Include="include\MemoryManager.hpp" />
-    <ClInclude Include="include\PluginManager.hpp" />
-    <ClInclude Include="include\RawMemoryPool.hpp" />
-    <ClInclude Include="include\MemoryPoolCommon.hpp" />
     <ClInclude Include="include\PlayerController.hpp" />
     <ClInclude Include="include\RectangleCollider.hpp" />
     <ClInclude Include="include\RectangleRenderer.hpp" />
     <ClInclude Include="include\System_Switcher.hpp" />
     <ClInclude Include="include\System_Emscripten.hpp" />
-    <ClInclude Include="include\System.hpp" />
     <ClInclude Include="include\System_Win32.hpp" />
-    <ClInclude Include="include\Transform.hpp" />
-    <ClInclude Include="include\TypedMemoryPool.inl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ColliderColorChanger.cpp" />
@@ -56,9 +44,6 @@
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="include\Vector3.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
