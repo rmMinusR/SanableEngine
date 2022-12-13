@@ -35,8 +35,7 @@ public:
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
         component = MemoryManager::create<T>(ctorArgs...);
-        //component = DBG_NEW T(*this, ctorArgs...);
-        components.push_back(component);
+        EngineCore::getInstance()->componentAddBuffer.emplace(component, this);
         return component;
     }
 

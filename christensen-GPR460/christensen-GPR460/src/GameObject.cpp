@@ -13,13 +13,15 @@
 void GameObject::BindComponent(Component* c)
 {
 	assert(c->gameObject == nullptr || c->gameObject == this);
+	assert(std::find(components.cbegin(), components.cend(), c) == components.cend());
+	components.push_back(c);
 	c->BindToGameObject(this);
 
 	IUpdatable* u = dynamic_cast<IUpdatable*>(c);
-	if (u) engine.updateList.add(u);
+	if (u) EngineCore::getInstance()->updateList.add(u);
 
 	IRenderable* r = dynamic_cast<IRenderable*>(c);
-	if (r) engine.renderList.add(r);
+	if (r) EngineCore::getInstance()->renderList.add(r);
 }
 
 void GameObject::InvokeStart()
@@ -34,8 +36,9 @@ GameObject::GameObject() :
 
 GameObject::~GameObject()
 {
-	//for (Component* c : components) delete c;
-	//for (Component* c : components) MemoryManager::destroy(c);
-	//FIXME no way to cleanly free! (unless we introduce wrapper objects...)
-	components.clear();
+	if (components.size() != 0)
+	{
+		for (Component* c : components) MemoryManager::destroy(c);
+		components.clear();
+	}
 }

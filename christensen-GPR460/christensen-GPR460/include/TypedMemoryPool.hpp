@@ -6,12 +6,13 @@ class MemoryManager;
 
 class SafeDisposable
 {
-	static std::vector<SafeDisposable*> all;
+	static std::vector<SafeDisposable*>* _all;
+	static std::vector<SafeDisposable*>& all();
 
 public:
 	static void disposeAll()
 	{
-		for (SafeDisposable* f : all) f->disposeContents();
+		for (SafeDisposable* f : all()) f->disposeContents();
 	}
 
 protected:

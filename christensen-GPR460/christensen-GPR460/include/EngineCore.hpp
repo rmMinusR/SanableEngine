@@ -18,6 +18,14 @@ class IRenderable;
 
 class EngineCore
 {
+    //FIXME singleton bad
+private:
+    static EngineCore* engine;
+public:
+    static void initInstance();
+    inline static EngineCore* getInstance() { return EngineCore::engine; }
+    static void cleanupInstance();
+
 private:
     bool isAlive;
     SDL_Window* window = nullptr;
@@ -28,7 +36,7 @@ private:
     void applyConcurrencyBuffers();
     std::vector<GameObject*> objectAddBuffer;
     std::vector<GameObject*> objectDelBuffer;
-    std::unordered_map<GameObject*, Component*> componentAddBuffer;
+    std::unordered_map<Component*, GameObject*> componentAddBuffer;
     std::vector<Component*> componentDelBuffer;
 
     CallBatcher<IUpdatable > updateList;
@@ -66,5 +74,3 @@ public:
 
     gpr460::System* getSystem() { return &system; }
 };
-
-extern EngineCore engine; //FIXME singleton bad

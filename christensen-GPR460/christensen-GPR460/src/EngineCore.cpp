@@ -6,7 +6,20 @@
 #include "Component.hpp"
 #include <cassert>
 
-EngineCore engine;
+EngineCore* EngineCore::engine;
+
+void EngineCore::initInstance()
+{
+    assert(!EngineCore::engine);
+    EngineCore::engine = new EngineCore();
+}
+
+void EngineCore::cleanupInstance()
+{
+    assert(EngineCore::engine);
+    delete EngineCore::engine;
+    EngineCore::engine = nullptr;
+}
 
 Uint32 GetTicks()
 {
@@ -18,8 +31,6 @@ void EngineCore::applyConcurrencyBuffers()
     for (Component* c : componentDelBuffer) destroyImmediate(c);
     componentDelBuffer.clear();
 
-    for (auto i : componentAddBuffer) i.first->BindComponent(i.second);
-    componentAddBuffer.clear();
 
     for (GameObject* go : objectDelBuffer) destroyImmediate(go);
     objectDelBuffer.clear();
@@ -30,6 +41,10 @@ void EngineCore::applyConcurrencyBuffers()
         go->InvokeStart();
     }
     objectAddBuffer.clear();
+
+    for (auto i : componentAddBuffer) i.second->BindComponent(i.first);
+    for (auto i : componentAddBuffer) i.first->onStart();
+    componentAddBuffer.clear();
 }
 
 void EngineCore::processEvents()

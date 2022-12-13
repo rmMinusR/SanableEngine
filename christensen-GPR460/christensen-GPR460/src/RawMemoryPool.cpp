@@ -34,7 +34,7 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
 
 RawMemoryPool::~RawMemoryPool()
 {
-	freeRaw(mMemory);
+	::free(mMemory);
 	mFreeList.clear();
 }
 

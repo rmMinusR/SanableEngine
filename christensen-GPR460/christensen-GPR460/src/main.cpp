@@ -22,15 +22,17 @@ int main(int argc, char* argv[])
 
     //Init
     SDL_Init(SDL_INIT_VIDEO);
-    engine.init("SDL2 Test", WIDTH, HEIGHT, userInit);
+    EngineCore::initInstance();
+    EngineCore::getInstance()->init("SDL2 Test", WIDTH, HEIGHT, userInit);
 
     //Loop
-    engine.doMainLoop();
+    EngineCore::getInstance()->doMainLoop();
 
     //Shutdown
-    engine.shutdown();
+    EngineCore::getInstance()->shutdown();
     SDL_Quit();
 
+    EngineCore::cleanupInstance();
     return 0;
 }
 
