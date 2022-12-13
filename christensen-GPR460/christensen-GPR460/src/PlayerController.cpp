@@ -4,14 +4,14 @@
 
 #include <SDL_keyboard.h>
 
-PlayerController::PlayerController(GameObject* owner) :
-	Component(owner)
+PlayerController::PlayerController() :
+	Component()
 {
 }
 
 void PlayerController::Update()
 {
-	Vector3<float> position = gameObject->getTransform()->getPosition();
+	Vector3<float> position = getGameObject()->getTransform()->getPosition();
 	
 	int sz;
 	Uint8 const * keys = SDL_GetKeyboardState(&sz); //Managed by SDL, do not free
@@ -22,5 +22,5 @@ void PlayerController::Update()
 	if (keys[SDL_SCANCODE_UP   ]) position += Vector3<float>(0, -SPEED, 0);
 	if (keys[SDL_SCANCODE_DOWN ]) position += Vector3<float>(0,  SPEED, 0);
 
-	gameObject->getTransform()->setPosition(position);
+	getGameObject()->getTransform()->setPosition(position);
 }

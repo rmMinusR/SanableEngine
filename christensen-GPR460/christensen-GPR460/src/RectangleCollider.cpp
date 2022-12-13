@@ -5,8 +5,8 @@
 
 std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
 
-RectangleCollider::RectangleCollider(GameObject* owner, float w, float h) :
-	Component(owner),
+RectangleCollider::RectangleCollider(float w, float h) :
+	Component(),
 	w(w),
 	h(h)
 {
@@ -20,8 +20,8 @@ RectangleCollider::~RectangleCollider()
 
 bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 {
-	Vector3<float> aMin =        gameObject->getTransform()->getPosition();
-	Vector3<float> bMin = other->gameObject->getTransform()->getPosition();
+	Vector3<float> aMin =        getGameObject()->getTransform()->getPosition();
+	Vector3<float> bMin = other->getGameObject()->getTransform()->getPosition();
 	Vector3<float> aMax = aMin + Vector3<float>(       w,        h, 0);
 	Vector3<float> bMax = bMin + Vector3<float>(other->w, other->h, 0);
 

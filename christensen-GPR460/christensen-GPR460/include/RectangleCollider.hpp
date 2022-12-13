@@ -12,7 +12,7 @@ private:
 	static std::vector<RectangleCollider*> REGISTRY; //FIXME remove reliance on std library
 
 public:
-	RectangleCollider(GameObject* owner, float w, float h);
+	RectangleCollider(float w, float h);
 	~RectangleCollider();
 
 	bool CheckCollision(RectangleCollider const* other) const;

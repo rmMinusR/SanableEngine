@@ -3,8 +3,8 @@
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 
-RectangleRenderer::RectangleRenderer(GameObject* owner, float w, float h, SDL_Color color) :
-	Component(owner),
+RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
+	Component(),
 	w(w),
 	h(h),
 	color(color)
@@ -17,7 +17,7 @@ RectangleRenderer::~RectangleRenderer()
 
 void RectangleRenderer::Render()
 {
-	Vector3<float> pos = gameObject->getTransform()->getPosition();
+	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 
 	SDL_Rect r = {
 		(int) pos.getX(),

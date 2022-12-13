@@ -5,11 +5,17 @@ class GameObject;
 class Component
 {
 protected:
-	GameObject *const gameObject;
+	GameObject* gameObject;
+
+	virtual void BindToGameObject(GameObject* obj);
+	friend class GameObject;
 
 public:
-	Component(GameObject* owner);
+	Component();
 	virtual ~Component();
+
+	inline GameObject* getGameObject() const { return gameObject; }
+	virtual void onStart();
 };
 
 
@@ -20,19 +26,13 @@ class EngineCore;
 class IUpdatable
 {
 protected:
-	IUpdatable();
-	virtual ~IUpdatable();
 	virtual void Update() = 0;
-
 	friend class EngineCore;
 };
 
 class IRenderable
 {
 protected:
-	IRenderable();
-	virtual ~IRenderable();
 	virtual void Render() = 0;
-
 	friend class EngineCore;
 };

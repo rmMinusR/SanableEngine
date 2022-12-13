@@ -1,16 +1,18 @@
 #pragma once
 
+#include "Aliases.hpp"
+
 template<typename TObj>
 class CallBatcher
 {
 private:
 	std::vector<TObj*> objects;
 
-	typedef void* sortID_t; //We don't know the type of a vtable ptr
+	typedef vtable_ptr sortID_t;
 	static inline sortID_t getSortID(TObj* obj)
 	{
 		//VC++ puts the vtable ptr at the very start of the object's memory
-		return *reinterpret_cast<sortID_t*>(obj);
+		return *reinterpret_cast<vtable_ptr*>(obj);
 	}
 
 public:
@@ -36,5 +38,10 @@ public:
 	void remove(TObj* obj)
 	{
 		objects.erase(std::find(objects.begin(), objects.end(), obj));
+	}
+
+	void clear()
+	{
+		objects.clear();
 	}
 };

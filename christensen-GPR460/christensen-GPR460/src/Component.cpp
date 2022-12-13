@@ -5,10 +5,15 @@
 #include "GameObject.hpp"
 #include "EngineCore.hpp"
 
-Component::Component(GameObject* owner) :
-	gameObject(owner)
+void Component::BindToGameObject(GameObject* obj)
 {
-	assert(owner);
+	assert(gameObject == nullptr);
+	gameObject = obj;
+}
+
+Component::Component() :
+	gameObject(nullptr)
+{
 }
 
 Component::~Component()
@@ -16,22 +21,6 @@ Component::~Component()
 	//TODO ensure gameObject knows to remove this
 }
 
-IUpdatable::IUpdatable()
+void Component::onStart()
 {
-	engine.getUpdatables()->add(this);
-}
-
-IUpdatable::~IUpdatable()
-{
-	engine.getUpdatables()->remove(this);
-}
-
-IRenderable::IRenderable()
-{
-	engine.getRenderables()->add(this);
-}
-
-IRenderable::~IRenderable()
-{
-	engine.getRenderables()->remove(this);
 }

@@ -4,15 +4,24 @@
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
 
-ColliderColorChanger::ColliderColorChanger(GameObject* owner, SDL_Color normalColor, SDL_Color overlapColor) :
-	Component(owner),
-	normalColor(normalColor),
-	overlapColor(overlapColor),
-	collider(owner->GetComponent<RectangleCollider>()),
-	renderer(owner->GetComponent<RectangleRenderer>())
+void ColliderColorChanger::BindToGameObject(GameObject* obj)
 {
+	Component::BindToGameObject(obj);
+
+	collider = obj->GetComponent<RectangleCollider>();
+	renderer = obj->GetComponent<RectangleRenderer>();
+
 	assert(collider);
 	assert(renderer);
+}
+
+ColliderColorChanger::ColliderColorChanger(SDL_Color normalColor, SDL_Color overlapColor) :
+	Component(),
+	normalColor(normalColor),
+	overlapColor(overlapColor),
+	collider(nullptr),
+	renderer(nullptr)
+{
 }
 
 ColliderColorChanger::~ColliderColorChanger()

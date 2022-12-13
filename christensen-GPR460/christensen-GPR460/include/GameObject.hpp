@@ -10,12 +10,18 @@
 #include "MemoryManager.hpp"
 
 class Component;
+class EngineCore;
 
 class GameObject
 {
 protected:
     Transform transform;
+
     std::vector<Component*> components;
+    friend class EngineCore;
+
+    void BindComponent(Component* c);
+    void InvokeStart();
 
 public:
     GameObject();
@@ -28,7 +34,7 @@ public:
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = MemoryManager::create<T>(this, ctorArgs...);
+        component = MemoryManager::create<T>(ctorArgs...);
         //component = DBG_NEW T(*this, ctorArgs...);
         components.push_back(component);
         return component;

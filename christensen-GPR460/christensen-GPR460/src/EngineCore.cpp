@@ -13,6 +13,25 @@ Uint32 GetTicks()
     return SDL_GetTicks();
 }
 
+void EngineCore::applyConcurrencyBuffers()
+{
+    for (Component* c : componentDelBuffer) destroyImmediate(c);
+    componentDelBuffer.clear();
+
+    for (auto i : componentAddBuffer) i.first->BindComponent(i.second);
+    componentAddBuffer.clear();
+
+    for (GameObject* go : objectDelBuffer) destroyImmediate(go);
+    objectDelBuffer.clear();
+
+    for (GameObject* go : objectAddBuffer)
+    {
+        objects.push_back(go);
+        go->InvokeStart();
+    }
+    objectAddBuffer.clear();
+}
+
 void EngineCore::processEvents()
 {
     assert(isAlive);
@@ -32,13 +51,41 @@ void EngineCore::processEvents()
                 // TODO: Add calls to ErrorMessage and LogToErrorFile here
             }
             if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
-            if (event.key.keysym.sym == SDLK_F5) {
-                std::cout << "Hot Reload Started";
-                pluginManager.unloadAll();
-                //FIXME fix vtable ptrs
-                pluginManager.discoverAll(system.GetBaseDir()/"plugins", this);
-                std::cout << "Hot Reload Complete";
-            }
+            if (event.key.keysym.sym == SDLK_F5) reloadPlugins();
+        }
+    }
+}
+
+void EngineCore::reloadPlugins()
+{
+    std::cout << "Hot Reload Started\n";
+
+    std::cout << "Unloading plugins...\n";
+    pluginManager.unloadAll();
+
+    std::cout << "Loading plugins...\n";
+    pluginManager.discoverAll(system.GetBaseDir() / "plugins", this);
+
+    std::cout << "Refreshing pointers...\n";
+    refreshCallBatchers();
+
+    std::cout << "Hot Reload Complete\n";
+}
+
+void EngineCore::refreshCallBatchers()
+{
+    updateList.clear();
+    renderList.clear();
+
+    for (GameObject* go : objects)
+    {
+        for (Component* c : go->components)
+        {
+            IUpdatable* u = dynamic_cast<IUpdatable*>(c);
+            if (u) updateList.add(u);
+
+            IRenderable* r = dynamic_cast<IRenderable*>(c);
+            if (r) renderList.add(r);
         }
     }
 }
@@ -98,8 +145,29 @@ void EngineCore::shutdown()
 GameObject* EngineCore::addGameObject()
 {
     GameObject* o = MemoryManager::create<GameObject>();
-    objects.push_back(o);
+    objectAddBuffer.push_back(o);
     return o;
+}
+
+void EngineCore::destroy(GameObject* go)
+{
+    objectDelBuffer.push_back(go);
+}
+
+void EngineCore::destroyImmediate(GameObject* go)
+{
+    assert(std::find(objects.cbegin(), objects.cend(), go) != objects.cend());
+    objects.erase(std::find(objects.begin(), objects.end(), go));
+    MemoryManager::destroy(go);
+}
+
+void EngineCore::destroyImmediate(Component* c)
+{
+    assert(std::find(objects.cbegin(), objects.cend(), c->getGameObject()) != objects.cend());
+    auto& l = c->getGameObject()->components;
+    assert(std::find(l.cbegin(), l.cend(), c) != l.cend());
+    l.erase(std::find(l.begin(), l.end(), c));
+    MemoryManager::destroy(c);
 }
 
 void EngineCore::doMainLoop()
@@ -123,6 +191,8 @@ void EngineCore::tick()
     frameStart = GetTicks();
 
     processEvents();
+
+    applyConcurrencyBuffers();
 
     updateList.memberCall(&IUpdatable::Update);
 }

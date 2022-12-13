@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include <SDL.h>
 
 #include "System.hpp"
@@ -10,6 +11,7 @@
 Uint32 GetTicks();
 
 class GameObject;
+class Component;
 
 class IUpdatable;
 class IRenderable;
@@ -23,11 +25,20 @@ private:
     PluginManager pluginManager;
 
     std::vector<GameObject*> objects;
+    void applyConcurrencyBuffers();
+    std::vector<GameObject*> objectAddBuffer;
+    std::vector<GameObject*> objectDelBuffer;
+    std::unordered_map<GameObject*, Component*> componentAddBuffer;
+    std::vector<Component*> componentDelBuffer;
 
     CallBatcher<IUpdatable > updateList;
     CallBatcher<IRenderable> renderList;
+    friend class GameObject;
 
     void processEvents();
+
+    void reloadPlugins();
+    void refreshCallBatchers();
 
 public:
     SDL_Renderer* renderer = nullptr;
@@ -43,6 +54,9 @@ public:
     void shutdown();
 
     GameObject* addGameObject();
+    void destroy(GameObject* go);
+    void destroyImmediate(GameObject* go);
+    void destroyImmediate(Component* c);
 
     void doMainLoop();
     static void frameStep(void* arg);
@@ -50,8 +64,6 @@ public:
     void tick();
     void draw();
 
-    CallBatcher<IUpdatable >* getUpdatables () { return &updateList; }
-    CallBatcher<IRenderable>* getRenderables() { return &renderList; }
     gpr460::System* getSystem() { return &system; }
 };
 
