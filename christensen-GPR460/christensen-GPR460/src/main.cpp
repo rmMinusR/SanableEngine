@@ -22,17 +22,21 @@ int main(int argc, char* argv[])
 
     //Init
     SDL_Init(SDL_INIT_VIDEO);
-    EngineCore::initInstance();
-    EngineCore::getInstance()->init("SDL2 Test", WIDTH, HEIGHT, userInit);
+    EngineCore engine;
+    engine.init("SDL2 Test", WIDTH, HEIGHT, userInit);
 
     //Loop
-    EngineCore::getInstance()->doMainLoop();
+    engine.doMainLoop();
 
     //Shutdown
-    EngineCore::getInstance()->shutdown();
+    engine.shutdown();
     SDL_Quit();
 
-    EngineCore::cleanupInstance();
+    //Pause so we can read console
+#if _WIN32
+    system("pause");
+#endif
+
     return 0;
 }
 

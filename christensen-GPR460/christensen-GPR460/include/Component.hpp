@@ -1,6 +1,9 @@
 #pragma once
 
+#include "GameObject.hpp"
+
 class GameObject;
+class EngineCore;
 
 class Component
 {
@@ -9,6 +12,8 @@ protected:
 
 	virtual void BindToGameObject(GameObject* obj);
 	friend class GameObject;
+
+	inline EngineCore* getEngine() { return gameObject->engine; }
 
 public:
 	Component();

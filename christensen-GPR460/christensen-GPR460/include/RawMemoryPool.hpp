@@ -16,16 +16,13 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
 
-	//Allocates raw memory. NOT RECOMMENDED because we can't find the size of
-	//a void pointer, meaning this must be tracked separately for us to find
-	//the right memory pool within reasonable time.
-	void* allocateRaw();
+	//Allocates raw memory.
+	//Should almost always be wrapped by children, since it does no initialization.
+	void* allocate();
 
-	//Deallocates raw memory. NOT RECOMMENDED because we can't find the size of
-	//a void pointer, meaning this must be tracked separately for us to find
-	//the right memory pool within reasonable time. Also not recommended because
-	//it doesn't call destructor.
-	void freeRaw(void* obj);
+	//Deallocates raw memory.
+	//Children that deal with types should override this to add destructor logic.
+	virtual void release(void* obj);
 
 	bool contains(void* ptr) const;
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects

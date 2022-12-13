@@ -4,10 +4,11 @@
 
 void MemoryManager::init()
 {
-	//Pool instances are created by abusing static. Nothing to do here.
+	//Nothing to do here
 }
 
 void MemoryManager::cleanup()
 {
-	SafeDisposable::disposeAll();
+	for (RawMemoryPool* p : pools) delete p;
+	pools.clear();
 }

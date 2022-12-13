@@ -45,13 +45,16 @@ void gpr460::System_Win32::Init(EngineCore* engine)
 
 void gpr460::System_Win32::DoMainLoop()
 {
-	while (!engine->quit)
+	while (true)
 	{
 		Uint32 now = GetTicks();
 		if (now - engine->frameStart >= 16)
 		{
 			engine->frameStep(engine);
 		}
+
+		if (engine->quit)
+			break;
 	}
 }
 

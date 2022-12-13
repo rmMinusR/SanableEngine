@@ -8,6 +8,7 @@
 #include "System.hpp"
 #include "Transform.hpp"
 #include "MemoryManager.hpp"
+#include "EngineCore.hpp"
 
 class Component;
 class EngineCore;
@@ -19,12 +20,15 @@ protected:
 
     std::vector<Component*> components;
     friend class EngineCore;
+    friend class Component;
+
+    EngineCore* const engine;
 
     void BindComponent(Component* c);
     void InvokeStart();
 
 public:
-    GameObject();
+    GameObject(EngineCore* engine);
     ~GameObject();
 
     inline Transform* getTransform() { return &transform; }
@@ -34,8 +38,8 @@ public:
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = MemoryManager::create<T>(ctorArgs...);
-        EngineCore::getInstance()->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
+        component = engine->getMemoryManager()->create<T>(ctorArgs...);
+        engine->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }
 

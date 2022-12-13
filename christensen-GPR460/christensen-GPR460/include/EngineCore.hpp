@@ -6,6 +6,7 @@
 #include "System.hpp"
 #include "CallBatcher.inl"
 #include "PluginManager.hpp"
+#include "MemoryManager.hpp"
 
 Uint32 GetTicks();
 
@@ -17,19 +18,12 @@ class IRenderable;
 
 class EngineCore
 {
-    //FIXME singleton bad
-private:
-    static EngineCore* engine;
-public:
-    static void initInstance();
-    inline static EngineCore* getInstance() { return EngineCore::engine; }
-    static void cleanupInstance();
-
 private:
     bool isAlive;
     SDL_Window* window = nullptr;
     gpr460::System system;
     PluginManager pluginManager;
+    MemoryManager memoryManager;
 
     std::vector<GameObject*> objects;
     void applyConcurrencyBuffers();
@@ -72,4 +66,5 @@ public:
     void draw();
 
     gpr460::System* getSystem() { return &system; }
+    MemoryManager* getMemoryManager() { return &memoryManager; }
 };

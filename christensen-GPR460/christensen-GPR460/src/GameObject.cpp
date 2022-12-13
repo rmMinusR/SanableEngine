@@ -18,10 +18,10 @@ void GameObject::BindComponent(Component* c)
 	c->BindToGameObject(this);
 
 	IUpdatable* u = dynamic_cast<IUpdatable*>(c);
-	if (u) EngineCore::getInstance()->updateList.add(u);
+	if (u) engine->updateList.add(u);
 
 	IRenderable* r = dynamic_cast<IRenderable*>(c);
-	if (r) EngineCore::getInstance()->renderList.add(r);
+	if (r) engine->renderList.add(r);
 }
 
 void GameObject::InvokeStart()
@@ -29,8 +29,9 @@ void GameObject::InvokeStart()
 	for (Component* c : components) c->onStart();
 }
 
-GameObject::GameObject() :
-	transform(0, 0, 0)
+GameObject::GameObject(EngineCore* engine) :
+	transform(0, 0, 0),
+	engine(engine)
 {
 }
 
@@ -38,7 +39,7 @@ GameObject::~GameObject()
 {
 	if (components.size() != 0)
 	{
-		for (Component* c : components) MemoryManager::destroy(c);
+		for (Component* c : components) engine->getMemoryManager()->destroy(c);
 		components.clear();
 	}
 }

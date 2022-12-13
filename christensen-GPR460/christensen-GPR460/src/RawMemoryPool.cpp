@@ -48,7 +48,7 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void* RawMemoryPool::allocateRaw()
+void* RawMemoryPool::allocate()
 {
 	if (mNumAllocatedObjects >= mMaxNumObjects)
 	{
@@ -69,7 +69,7 @@ void* RawMemoryPool::allocateRaw()
 	}
 }
 
-void RawMemoryPool::freeRaw(void* ptr)
+void RawMemoryPool::release(void* ptr)
 {
 	//make sure that the address passed in is actually one managed by this pool
 	if (contains(ptr))

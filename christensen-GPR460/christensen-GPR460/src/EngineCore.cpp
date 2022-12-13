@@ -6,21 +6,6 @@
 #include "Component.hpp"
 #include <cassert>
 
-EngineCore* EngineCore::engine;
-
-void EngineCore::initInstance()
-{
-    assert(!EngineCore::engine);
-    EngineCore::engine = new EngineCore();
-}
-
-void EngineCore::cleanupInstance()
-{
-    assert(EngineCore::engine);
-    delete EngineCore::engine;
-    EngineCore::engine = nullptr;
-}
-
 Uint32 GetTicks()
 {
     return SDL_GetTicks();
@@ -30,7 +15,6 @@ void EngineCore::applyConcurrencyBuffers()
 {
     for (Component* c : componentDelBuffer) destroyImmediate(c);
     componentDelBuffer.clear();
-
 
     for (GameObject* go : objectDelBuffer) destroyImmediate(go);
     objectDelBuffer.clear();
@@ -123,7 +107,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     isAlive = true;
 
     system.Init(this);
-    MemoryManager::init();
+    memoryManager.init();
 
     quit = false;
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
@@ -143,8 +127,7 @@ void EngineCore::shutdown()
 
     pluginManager.unloadAll();
 
-    for (GameObject* o : objects) MemoryManager::destroy(o);
-    //for (GameObject* o : objects) delete o;
+    for (GameObject* o : objects) memoryManager.destroy(o);
     objects.clear();
 
     SDL_DestroyRenderer(renderer);
@@ -153,13 +136,13 @@ void EngineCore::shutdown()
     SDL_DestroyWindow(window);
     window = nullptr;
 
-    MemoryManager::cleanup();
+    memoryManager.cleanup();
     system.Shutdown();
 }
 
 GameObject* EngineCore::addGameObject()
 {
-    GameObject* o = MemoryManager::create<GameObject>();
+    GameObject* o = memoryManager.create<GameObject>(this);
     objectAddBuffer.push_back(o);
     return o;
 }
@@ -173,7 +156,7 @@ void EngineCore::destroyImmediate(GameObject* go)
 {
     assert(std::find(objects.cbegin(), objects.cend(), go) != objects.cend());
     objects.erase(std::find(objects.begin(), objects.end(), go));
-    MemoryManager::destroy(go);
+    memoryManager.destroy(go);
 }
 
 void EngineCore::destroyImmediate(Component* c)
@@ -182,7 +165,7 @@ void EngineCore::destroyImmediate(Component* c)
     auto& l = c->getGameObject()->components;
     assert(std::find(l.cbegin(), l.cend(), c) != l.cend());
     l.erase(std::find(l.begin(), l.end(), c));
-    MemoryManager::destroy(c);
+    memoryManager.destroy(c);
 }
 
 void EngineCore::doMainLoop()

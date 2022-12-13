@@ -55,7 +55,6 @@
     <ClCompile Include="src\System_Outline.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
-    <ClCompile Include="src\TypedMemoryPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="include\Vector3.inl" />

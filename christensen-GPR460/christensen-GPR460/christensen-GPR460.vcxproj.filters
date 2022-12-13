@@ -110,9 +110,6 @@
     <ClCompile Include="src\RawMemoryPool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\TypedMemoryPool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\MemoryPoolCommon.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

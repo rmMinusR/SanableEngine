@@ -35,7 +35,7 @@ class PooledResource
 {
 public:
 	~PooledResource() {
-		pool->free(this);
+		pool->release(this);
 	}
 
 	PooledResource(PooledResource&& mov)
