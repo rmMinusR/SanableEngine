@@ -3,9 +3,7 @@
 #include <emscripten.h>
 #endif
 
-#include "System.hpp"
 #include "EngineCore.hpp"
-#include "MemoryManager.hpp"
 
 #include "GameObject.hpp"
 #include "RectangleRenderer.hpp"

@@ -2,7 +2,7 @@
 
 #ifdef _WIN32
 
-#include "System_Outline.hpp"
+#include "System.hpp"
 
 #include <Windows.h>
 
@@ -15,7 +15,7 @@
 namespace gpr460
 {
 
-	class System_Win32 : System_Outline
+	class System_Win32 : public System
 	{
 	private:
 		FILE* consolePsuedofile;
@@ -36,16 +36,6 @@ namespace gpr460
 
 		void ShowError(const gpr460::string& message) override;
 		void LogToErrorFile(const gpr460::string& message) override;
-
-		template<typename... Ts>
-		void ShowError(const gpr460::string& format, const Ts&... args)
-		{
-			constexpr size_t bufferSize = 256;
-			wchar_t buffer[bufferSize];
-			int nValid = swprintf_s(buffer, bufferSize, format.c_str(), args...);
-
-			ShowError(gpr460::string(buffer, nValid));
-		}
 
 		std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
 		std::filesystem::path GetBaseDir() const override;

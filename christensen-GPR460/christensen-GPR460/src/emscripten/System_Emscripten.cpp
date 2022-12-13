@@ -21,7 +21,7 @@ gpr460::System_Emscripten::~System_Emscripten()
 
 void gpr460::System_Emscripten::Init(EngineCore* engine)
 {
-	System_Outline::Init(engine);
+	System::Init(engine);
 
 	assert(!isAlive);
 	isAlive = true;

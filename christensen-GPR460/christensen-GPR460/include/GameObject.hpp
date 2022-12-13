@@ -5,7 +5,6 @@
 #include <vector>
 #include <cassert>
 
-#include "System.hpp"
 #include "Transform.hpp"
 #include "MemoryManager.hpp"
 #include "EngineCore.hpp"

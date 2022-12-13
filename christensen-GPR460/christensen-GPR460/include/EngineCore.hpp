@@ -3,7 +3,7 @@
 #include <vector>
 #include <SDL.h>
 
-#include "System.hpp"
+#include "System_Switcher.hpp"
 #include "CallBatcher.inl"
 #include "PluginManager.hpp"
 #include "MemoryManager.hpp"
@@ -21,7 +21,7 @@ class EngineCore
 private:
     bool isAlive;
     SDL_Window* window = nullptr;
-    gpr460::System system;
+    gpr460::System_Impl system;
     PluginManager pluginManager;
     MemoryManager memoryManager;
 

@@ -25,7 +25,7 @@ gpr460::System_Win32::~System_Win32()
 
 void gpr460::System_Win32::Init(EngineCore* engine)
 {
-	System_Outline::Init(engine);
+	System::Init(engine);
 
 	assert(!isAlive);
 	isAlive = true;
@@ -38,7 +38,7 @@ void gpr460::System_Win32::Init(EngineCore* engine)
 #endif
 	
 	//Create console and redirect
-	if (!AllocConsole()) ShowError(L"Failed to allocate console: Code %i", GetLastError());
+	if (!AllocConsole()) System::ShowError(L"Failed to allocate console: Code %i", GetLastError());
 	freopen_s(&consolePsuedofile, "CONOUT$", "w", stdout);
 	if (!consolePsuedofile) ShowError(L"Failed to redirect console output");
 }
@@ -91,18 +91,18 @@ void gpr460::System_Win32::LogToErrorFile(const gpr460::string& message)
 		//TODO does this need FILE_FLAG_NO_BUFFERING or FILE_FLAG_WRITE_THROUGH?
 		logFile = CreateFileW(logFileName.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
-		if (!logFile || (GetLastError() != 0 && GetLastError() != ERROR_ALREADY_EXISTS)) ShowError(L"Failed to create error file (code %i)", GetLastError());
+		if (!logFile || (GetLastError() != 0 && GetLastError() != ERROR_ALREADY_EXISTS)) System::ShowError(L"Failed to create error file (code %i)", GetLastError());
 	}
 
 	DWORD nWritten;
 	if (!WriteFile(logFile, message.c_str(), message.length(), &nWritten, NULL))
 	{
-		ShowError(L"Error code %i while logging to file", GetLastError());
+		System::ShowError(L"Error code %i while logging to file", GetLastError());
 	}
 
 	if (nWritten < message.length())
 	{
-		ShowError(L"Tried to write %u characters to error file, but only wrote %u", message.length(), nWritten);
+		System::ShowError(L"Tried to write %u characters to error file, but only wrote %u", message.length(), nWritten);
 	}
 }
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "TypedMemoryPool.hpp"
+#include "TypedMemoryPool.inl"
 
 class GameObject;
 class EngineCore;
