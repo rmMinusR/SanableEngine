@@ -3,6 +3,9 @@
 #include "Vector3.inl"
 #include "GameObject.hpp"
 
+#undef min
+#undef max
+
 std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
 
 RectangleCollider::RectangleCollider(float w, float h) :
@@ -26,15 +29,15 @@ bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 	Vector3<float> bMax = bMin + Vector3<float>(other->w, other->h, 0);
 
 	Vector3<float> overlapMinCorner(
-		SDL_max(aMin.getX(), bMin.getX()),
-		SDL_max(aMin.getY(), bMin.getY()),
-		SDL_max(aMin.getZ(), bMin.getZ())
+		std::max(aMin.getX(), bMin.getX()),
+		std::max(aMin.getY(), bMin.getY()),
+		std::max(aMin.getZ(), bMin.getZ())
 	);
 
 	Vector3<float> overlapMaxCorner(
-		SDL_min(aMax.getX(), bMax.getX()),
-		SDL_min(aMax.getY(), bMax.getY()),
-		SDL_min(aMax.getZ(), bMax.getZ())
+		std::min(aMax.getX(), bMax.getX()),
+		std::min(aMax.getY(), bMax.getY()),
+		std::min(aMax.getZ(), bMax.getZ())
 	);
 
 	return overlapMinCorner.getX() <= overlapMaxCorner.getX()

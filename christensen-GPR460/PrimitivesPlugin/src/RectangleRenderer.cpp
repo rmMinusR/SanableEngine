@@ -1,5 +1,8 @@
 #include "RectangleRenderer.hpp"
 
+#include <SDL_rect.h>
+#include <SDL_render.h>
+
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 

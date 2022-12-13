@@ -1,7 +1,5 @@
 #pragma once
 
-#include <SDL_pixels.h> //SDL_Color
-
 #include <vector>
 #include <cassert>
 

@@ -1,14 +1,10 @@
 #include "GameObject.hpp"
 
 #include <utility>
-
-#include <SDL_render.h>
+#include <cassert>
 
 #include "EngineCore.hpp"
-#include "RectangleCollider.hpp"
-#include "RectangleRenderer.hpp"
-#include "PlayerController.hpp"
-#include "ColliderColorChanger.hpp"
+#include "Component.hpp"
 
 void GameObject::BindComponent(Component* c)
 {

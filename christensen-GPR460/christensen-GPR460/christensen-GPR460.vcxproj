@@ -19,14 +19,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\ColliderColorChanger.hpp" />
-    <ClInclude Include="include\PlayerController.hpp" />
-    <ClInclude Include="include\System_Switcher.hpp" />
-    <ClInclude Include="include\System_Emscripten.hpp" />
-    <ClInclude Include="include\System_Win32.hpp" />
+    <ClInclude Include="private\System_Emscripten.hpp" />
+    <ClInclude Include="private\System_Switcher.hpp" />
+    <ClInclude Include="private\System_Win32.hpp" />
+    <ClInclude Include="public\Aliases.hpp" />
+    <ClInclude Include="public\Component.hpp" />
+    <ClInclude Include="public\EngineCore.hpp" />
+    <ClInclude Include="public\GameObject.hpp" />
+    <ClInclude Include="public\MemoryManager.hpp" />
+    <ClInclude Include="public\MemoryPoolCommon.hpp" />
+    <ClInclude Include="public\Plugin.hpp" />
+    <ClInclude Include="public\PluginCore.hpp" />
+    <ClInclude Include="public\PluginManager.hpp" />
+    <ClInclude Include="public\RawMemoryPool.hpp" />
+    <ClInclude Include="public\System.hpp" />
+    <ClInclude Include="public\Transform.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ColliderColorChanger.cpp" />
     <ClCompile Include="src\Component.cpp" />
     <ClCompile Include="src\emscripten\System_Emscripten.cpp" />
     <ClCompile Include="src\EngineCore.cpp" />
@@ -37,12 +46,14 @@
     <ClCompile Include="src\Plugin.cpp" />
     <ClCompile Include="src\PluginManager.cpp" />
     <ClCompile Include="src\RawMemoryPool.cpp" />
-    <ClCompile Include="src\PlayerController.cpp" />
-    <ClCompile Include="src\RectangleCollider.cpp" />
-    <ClCompile Include="src\RectangleRenderer.cpp" />
     <ClCompile Include="src\System.cpp" />
     <ClCompile Include="src\System_Win32.cpp" />
     <ClCompile Include="src\Transform.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\CallBatcher.inl" />
+    <None Include="public\TypedMemoryPool.inl" />
+    <None Include="public\Vector3.inl" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -101,19 +112,23 @@
     <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
     <OutDir>$(SolutionDir)\builds\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <PublicIncludeDirectories>$(ProjectDir)\public</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
     <OutDir>$(SolutionDir)\builds\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <PublicIncludeDirectories>$(ProjectDir)\public</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
     <OutDir>$(SolutionDir)\builds\$(Platform)\$(Configuration)\</OutDir>
+    <PublicIncludeDirectories>$(ProjectDir)\public</PublicIncludeDirectories>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <CustomBuildAfterTargets>Compile</CustomBuildAfterTargets>
     <OutDir>$(SolutionDir)\builds\$(Platform)\$(Configuration)\</OutDir>
+    <PublicIncludeDirectories>$(ProjectDir)\public</PublicIncludeDirectories>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -121,14 +136,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\PluginShared\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\public;$(ProjectDir)\private;$(SolutionDir)\..\emsdk\upstream\emscripten\system\include;$(SolutionDir)\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)\PluginShared\$(Platform)\$(Configuration)\;$(ProjectDir)..\SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PluginShared.lib;SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
@@ -150,7 +165,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\PluginShared\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\public;$(ProjectDir)\private;$(SolutionDir)\..\emsdk\upstream\emscripten\system\include;$(SolutionDir)\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -158,8 +173,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)\PluginShared\$(Platform)\$(Configuration)\;$(ProjectDir)..\SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PluginShared.lib;SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\SDL2\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
@@ -179,14 +194,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\PluginShared\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\public;$(ProjectDir)\private;$(SolutionDir)\..\emsdk\upstream\emscripten\system\include;$(SolutionDir)\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)\PluginShared\$(Platform)\$(Configuration)\;$(ProjectDir)..\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PluginShared.lib;SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
@@ -206,7 +221,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\include;$(SolutionDir)\PluginShared\include;$(ProjectDir)\..\..\emsdk\upstream\emscripten\system\include;$(ProjectDir)\..\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\public;$(ProjectDir)\private;$(SolutionDir)\..\emsdk\upstream\emscripten\system\include;$(SolutionDir)\SDL2\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -214,8 +229,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration)\;$(SolutionDir)\PluginShared\$(Platform)\$(Configuration)\;$(ProjectDir)..\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PluginShared.lib;SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\SDL2\lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>

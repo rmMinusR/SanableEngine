@@ -1,14 +1,15 @@
 #pragma once
 
 #include <vector>
-#include <SDL.h>
 
-#include "System_Switcher.hpp"
 #include "CallBatcher.inl"
 #include "PluginManager.hpp"
 #include "MemoryManager.hpp"
 
-Uint32 GetTicks();
+uint32_t GetTicks();
+
+struct SDL_Window;
+struct SDL_Renderer;
 
 class GameObject;
 class Component;
@@ -16,12 +17,14 @@ class Component;
 class IUpdatable;
 class IRenderable;
 
+namespace gpr460 { class System; }
+
 class EngineCore
 {
 private:
     bool isAlive;
     SDL_Window* window = nullptr;
-    gpr460::System_Impl system;
+    gpr460::System* system;
     PluginManager pluginManager;
     MemoryManager memoryManager;
 
@@ -43,7 +46,7 @@ private:
 
 public:
     SDL_Renderer* renderer = nullptr;
-    Uint32 frameStart = 0;
+    uint32_t frameStart = 0;
     bool quit = false;
     int frame = 0;
 
@@ -65,6 +68,6 @@ public:
     void tick();
     void draw();
 
-    gpr460::System* getSystem() { return &system; }
+    gpr460::System* getSystem() { return system; }
     MemoryManager* getMemoryManager() { return &memoryManager; }
 };

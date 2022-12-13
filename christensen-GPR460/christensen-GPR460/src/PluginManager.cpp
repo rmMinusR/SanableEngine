@@ -5,6 +5,7 @@
 #include <filesystem>
 
 #include "EngineCore.hpp"
+#include "System.hpp"
 
 PluginManager::PluginManager(EngineCore* engine) :
 	engine(engine)

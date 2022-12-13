@@ -1,12 +1,15 @@
 #include "EngineCore.hpp"
 
+#include <SDL.h>
+
+#include <cassert>
 #include <iostream>
 
 #include "GameObject.hpp"
 #include "Component.hpp"
-#include <cassert>
+#include "System_Switcher.hpp"
 
-Uint32 GetTicks()
+uint32_t GetTicks()
 {
     return SDL_GetTicks();
 }
@@ -63,7 +66,7 @@ void EngineCore::reloadPlugins()
     pluginManager.unloadAll();
 
     std::cout << "Loading plugins...\n";
-    pluginManager.discoverAll(system.GetBaseDir()/"plugins");
+    pluginManager.discoverAll(system->GetBaseDir()/"plugins");
 
     std::cout << "Refreshing pointers...\n";
     refreshCallBatchers();
@@ -107,7 +110,8 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     assert(!isAlive);
     isAlive = true;
 
-    system.Init(this);
+    system = new gpr460::System_Impl();
+    system->Init(this);
     memoryManager.init();
 
     quit = false;
@@ -116,7 +120,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     frame = 0;
     frameStart = GetTicks();
 
-    pluginManager.discoverAll(system.GetBaseDir()/"plugins");
+    pluginManager.discoverAll(system->GetBaseDir()/"plugins");
 
     if (userInitCallback) (*userInitCallback)(this);
 }
@@ -138,7 +142,8 @@ void EngineCore::shutdown()
     window = nullptr;
 
     memoryManager.cleanup();
-    system.Shutdown();
+    system->Shutdown();
+    delete system;
 }
 
 GameObject* EngineCore::addGameObject()
@@ -171,7 +176,7 @@ void EngineCore::destroyImmediate(Component* c)
 
 void EngineCore::doMainLoop()
 {
-    system.DoMainLoop();
+    system->DoMainLoop();
 }
 
 void EngineCore::frameStep(void* arg)

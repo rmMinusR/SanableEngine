@@ -5,30 +5,63 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Private Headers">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Public Headers">
+      <UniqueIdentifier>{b6def8fd-c2ea-4f30-aa41-54ed0407f716}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\System_Win32.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="public\GameObject.hpp">
+      <Filter>Public Headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\System_Emscripten.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="public\MemoryManager.hpp">
+      <Filter>Public Headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\PlayerController.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="public\MemoryPoolCommon.hpp">
+      <Filter>Public Headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\ColliderColorChanger.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="public\Plugin.hpp">
+      <Filter>Public Headers</Filter>
     </ClInclude>
-    <ClInclude Include="include\System_Switcher.hpp">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="public\PluginCore.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\PluginManager.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\RawMemoryPool.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\System.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\Transform.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\Aliases.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\Component.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="public\EngineCore.hpp">
+      <Filter>Public Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="private\System_Emscripten.hpp">
+      <Filter>Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="private\System_Switcher.hpp">
+      <Filter>Private Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="private\System_Win32.hpp">
+      <Filter>Private Headers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -38,13 +71,7 @@
     <ClCompile Include="src\GameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\RectangleRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Transform.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RectangleCollider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Component.cpp">
@@ -57,12 +84,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\emscripten\System_Emscripten.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PlayerController.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ColliderColorChanger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\RawMemoryPool.cpp">
@@ -83,5 +104,16 @@
     <ClCompile Include="src\Plugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="public\TypedMemoryPool.inl">
+      <Filter>Public Headers</Filter>
+    </None>
+    <None Include="public\Vector3.inl">
+      <Filter>Public Headers</Filter>
+    </None>
+    <None Include="public\CallBatcher.inl">
+      <Filter>Public Headers</Filter>
+    </None>
   </ItemGroup>
 </Project>
