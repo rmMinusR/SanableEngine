@@ -111,4 +111,9 @@ std::vector<std::filesystem::path> gpr460::System_Emscripten::ListPlugins(std::f
 	return contents;
 }
 
+std::filesystem::path gpr460::System_Win32::GetBaseDir() const
+{
+	return "/"; //FIXME?
+}
+
 #endif __EMSCRIPTEN__

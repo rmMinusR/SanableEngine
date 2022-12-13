@@ -62,7 +62,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     frame = 0;
     frameStart = GetTicks();
 
-    pluginManager.discoverAll(std::filesystem::current_path()/"plugins", this);
+    pluginManager.discoverAll(system.GetBaseDir()/"plugins", this);
 
     if (userInitCallback) (*userInitCallback)(this);
 }

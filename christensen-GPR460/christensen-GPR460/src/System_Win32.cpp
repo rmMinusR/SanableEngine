@@ -118,4 +118,27 @@ std::vector<std::filesystem::path> gpr460::System_Win32::ListPlugins(std::filesy
 	return contents;
 }
 
+std::filesystem::path gpr460::System_Win32::GetBaseDir() const
+{
+	//Get host assembly
+	constexpr size_t bufSz = 1024;
+	wchar_t buf[bufSz];
+	memset(buf, 0, sizeof(wchar_t)*bufSz);
+	DWORD written = GetModuleFileName(NULL, buf, bufSz);
+	assert(written != bufSz);
+
+	//Search for last backslash
+	long found;
+	for (found = (long)written; found >= 0; --found)
+	{
+		if (buf[found] == L'\\') break;
+	}
+	assert(found != -1);
+
+	//Substring
+	buf[found] = L'\0';
+
+	return std::wstring(buf);
+}
+
 #endif _WIN32
