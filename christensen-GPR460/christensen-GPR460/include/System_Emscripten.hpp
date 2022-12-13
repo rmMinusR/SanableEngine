@@ -31,6 +31,8 @@ namespace gpr460
 
 			ShowError(gpr460::string(buffer, nValid));
 		}
+
+		std::filesystem::path GetBaseDir() const override;
 	};
 
 }

@@ -39,7 +39,7 @@ void EngineCore::processEvents()
             //Save level to file
             if (event.key.keysym.sym == SDLK_s)
             {
-                std::ofstream fout("level.dat", std::ios::binary);
+                std::ofstream fout(system.GetBaseDir()/"level.dat", std::ios::binary);
                 for (GameObject* o : objects)
                 {
                     SerializedObject so;
@@ -55,7 +55,7 @@ void EngineCore::processEvents()
                 while (objects.size() > 0) destroy(objects[objects.size()-1]);
 
                 //Then load
-                std::ifstream fin("level.dat", std::ios::binary);
+                std::ifstream fin(system.GetBaseDir()/"level.dat", std::ios::binary);
                 while (!fin.eof())
                 {
                     SerializedObject so;

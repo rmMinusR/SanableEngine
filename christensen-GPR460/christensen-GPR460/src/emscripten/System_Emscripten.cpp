@@ -62,4 +62,9 @@ void gpr460::System_Emscripten::LogToErrorFile(const gpr460::string& message)
 	//}, message);
 }
 
-#endif _WIN32
+std::filesystem::path gpr460::System_Win32::GetBaseDir() const
+{
+	return "/"; //FIXME?
+}
+
+#endif __EMSCRIPTEN__
