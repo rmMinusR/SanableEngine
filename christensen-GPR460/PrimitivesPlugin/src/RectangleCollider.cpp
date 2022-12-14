@@ -8,7 +8,7 @@
 
 std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
 
-RectangleCollider::RectangleCollider(float w, float h) :
+PLUGIN_API_CTOR RectangleCollider::RectangleCollider(float w, float h) :
 	Component(),
 	w(w),
 	h(h)
@@ -21,7 +21,7 @@ RectangleCollider::~RectangleCollider()
 	RectangleCollider::REGISTRY.erase(std::find(RectangleCollider::REGISTRY.cbegin(), RectangleCollider::REGISTRY.cend(), this));
 }
 
-bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
+PLUGIN_API(bool) RectangleCollider::CheckCollision(RectangleCollider const* other) const
 {
 	Vector3<float> aMin =        getGameObject()->getTransform()->getPosition();
 	Vector3<float> bMin = other->getGameObject()->getTransform()->getPosition();
@@ -45,7 +45,7 @@ bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 		//&& overlapMinCorner.getZ() <= overlapMaxCorner.getZ();
 }
 
-bool RectangleCollider::CheckCollisionAny() const
+PLUGIN_API(bool) RectangleCollider::CheckCollisionAny() const
 {
 	for (RectangleCollider* i : RectangleCollider::REGISTRY) if (i != this && CheckCollision(i)) return true;
 	return false;
