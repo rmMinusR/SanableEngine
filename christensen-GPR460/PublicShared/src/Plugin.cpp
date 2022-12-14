@@ -102,6 +102,8 @@ bool Plugin::init()
 	if (!success) return false;
 
 	status = Status::Hooked;
+
+	return true;
 }
 
 bool Plugin::cleanup()
@@ -118,8 +120,11 @@ bool Plugin::cleanup()
 
 	assert(reportedData);
 	delete reportedData;
+	reportedData = nullptr;
 
 	status = Status::Registered;
+
+	return true;
 }
 
 void Plugin::unloadDLL()

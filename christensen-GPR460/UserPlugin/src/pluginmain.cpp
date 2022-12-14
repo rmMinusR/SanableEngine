@@ -14,10 +14,10 @@ EngineCore* engine;
 
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
 {
-    std::cout << "TestPlugin: plugin_preInit() called" << std::endl;
+    std::cout << "UserPlugin: plugin_preInit() called" << std::endl;
     ::engine = engine;
 
-    report->name = "TestPlugin";
+    report->name = "UserPlugin";
 
     report->hotswappables.push_back(HotswapTypeData::build<ColliderColorChanger>(SDL_Color{}, SDL_Color{}));
     report->hotswappables.push_back(HotswapTypeData::build<PlayerController>());
@@ -31,7 +31,7 @@ GameObject* staticObj;
 
 PLUGIN_C_API(bool) plugin_init()
 {
-    std::cout << "TestPlugin: plugin_init() called" << std::endl;
+    std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
     player = engine->addGameObject();
     player->getTransform()->setPosition(Vector3<float>(50, 50, 0));
@@ -54,7 +54,7 @@ PLUGIN_C_API(bool) plugin_init()
 
 PLUGIN_C_API(void) plugin_cleanup()
 {
-    std::cout << "TestPlugin: plugin_cleanup() called" << std::endl;
+    std::cout << "UserPlugin: plugin_cleanup() called" << std::endl;
 
     engine->destroy(player);
     engine->destroy(obstacle);

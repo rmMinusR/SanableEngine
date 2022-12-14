@@ -15,7 +15,8 @@ class EngineCore;
 
 #if __EMSCRIPTEN__
 #include <emscripten.h>
-#define PLUGIN_API_CALLCONV __cdecl
+//#define PLUGIN_API_CALLCONV __cdecl
+#define PLUGIN_API_CALLCONV
 #define PLUGIN_API_KEEPALIVE EMSCRIPTEN_KEEPALIVE
 #define PLUGIN_API_EXPORT
 #endif

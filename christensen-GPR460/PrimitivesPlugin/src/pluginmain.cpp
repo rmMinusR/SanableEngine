@@ -8,7 +8,7 @@
 
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
 {
-    std::cout << "PrimitivesPlugin: plugin_preInit() called" << std::endl;
+    printf("PrimitivesPlugin: plugin_preInit() called\n");
 
     report->name = "PrimitivesPlugin";
 
@@ -20,11 +20,11 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
 
 PLUGIN_C_API(bool) plugin_init()
 {
-    std::cout << "PrimitivesPlugin: plugin_init() called" << std::endl;
+    printf("PrimitivesPlugin: plugin_init() called\n");
     return true;
 }
 
 PLUGIN_C_API(void) plugin_cleanup()
 {
-    std::cout << "PrimitivesPlugin: plugin_cleanup() called" << std::endl;
+    printf("PrimitivesPlugin: plugin_cleanup() called\n");
 }

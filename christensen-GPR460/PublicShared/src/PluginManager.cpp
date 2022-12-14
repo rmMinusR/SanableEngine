@@ -1,5 +1,6 @@
 #include "PluginManager.hpp"
 
+#include <iostream>
 #include <sstream>
 #include <cassert>
 #include <filesystem>
@@ -26,15 +27,26 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 	for (const std::filesystem::path& dllPath : engine->getSystem()->ListPlugins(pluginsFolder))
 	{
 		Plugin* p = new Plugin(dllPath);
+		std::cout << "Importing plugin code: " << dllPath.filename() << '\n';
 		p->loadDLL();
 		batch.push_back(p); //Defer plugin_preInit call
 		plugins.push_back(p);
 	}
 
-	for (Plugin* p : batch) p->preInit(engine);
+	for (Plugin* p : batch)
+	{
+		std::cout << "Registering plugin: " << p->path.filename() << '\n';
+		p->preInit(engine);
+		std::cout << "Reported name: " << p->reportedData->name << '\n';
+	}
 
-	//TODO dependency tree
-	for (Plugin* p : batch) p->init();
+	for (Plugin* p : batch)
+	{
+		std::cout << "Applying plugin hooks for " << p->reportedData->name << '\n';
+		p->init();
+	}
+
+	std::cout << "Done discovering plugins\n";
 }
 
 void PluginManager::load(const std::wstring& dllPath)
