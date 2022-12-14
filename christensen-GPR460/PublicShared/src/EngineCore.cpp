@@ -29,8 +29,8 @@ void EngineCore::applyConcurrencyBuffers()
     }
     objectAddBuffer.clear();
 
-    for (auto i : componentAddBuffer) i.second->BindComponent(i.first);
-    for (auto i : componentAddBuffer) i.first->onStart();
+    for (auto& i : componentAddBuffer) i.second->BindComponent(i.first);
+    for (auto& i : componentAddBuffer) i.first->onStart();
     componentAddBuffer.clear();
 }
 
@@ -55,13 +55,23 @@ void EngineCore::reloadPlugins()
 {
     std::cout << "Hot Reload Started\n";
 
-    std::cout << "Unloading plugins...\n";
+    std::cout << "Removing plugins hooks...\n";
+    pluginManager.unhookAll();
+    applyConcurrencyBuffers();
+
+    std::cout << "Unloading plugin code...\n";
     pluginManager.unloadAll();
 
-    std::cout << "Loading plugins...\n";
+    std::cout << "Loading plugin code...\n";
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
 
-    std::cout << "Refreshing pointers...\n";
+    std::cout << "Refreshing pointers... (vtables)\n";
+    pluginManager.refreshVtablePointers();
+
+    std::cout << "Applying plugin hooks...\n";
+    pluginManager.hookAll();
+    
+    std::cout << "Refreshing pointers... (call batchers)\n";
     refreshCallBatchers();
 
     std::cout << "Hot Reload Complete\n";
@@ -74,12 +84,12 @@ void EngineCore::refreshCallBatchers()
 
     for (GameObject* go : objects)
     {
-        for (Component* c : go->components)
+        for (GameObject::ComponentRecord& c : go->components)
         {
-            IUpdatable* u = dynamic_cast<IUpdatable*>(c);
+            IUpdatable* u = dynamic_cast<IUpdatable*>(c.ptr);
             if (u) updateList.add(u);
 
-            IRenderable* r = dynamic_cast<IRenderable*>(c);
+            IRenderable* r = dynamic_cast<IRenderable*>(c.ptr);
             if (r) renderList.add(r);
         }
     }
@@ -127,6 +137,7 @@ void EngineCore::shutdown()
     for (GameObject* o : objects) memoryManager.destroy(o);
     objects.clear();
 
+    pluginManager.unhookAll();
     pluginManager.unloadAll();
 
     SDL_DestroyRenderer(renderer);
@@ -163,8 +174,9 @@ void EngineCore::destroyImmediate(Component* c)
 {
     assert(std::find(objects.cbegin(), objects.cend(), c->getGameObject()) != objects.cend());
     auto& l = c->getGameObject()->components;
-    assert(std::find(l.cbegin(), l.cend(), c) != l.cend());
-    l.erase(std::find(l.begin(), l.end(), c));
+    auto it = std::find_if(l.cbegin(), l.cend(), [=](GameObject::ComponentRecord r) { return r.ptr == c; });
+    assert(it != l.cend());
+    l.erase(it);
     memoryManager.destroy(c);
 }
 

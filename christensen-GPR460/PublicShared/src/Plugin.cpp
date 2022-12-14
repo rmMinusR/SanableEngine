@@ -10,7 +10,8 @@
 
 __thiscall Plugin::Plugin(const std::filesystem::path& path) :
 	path(path),
-	status(Status::NotLoaded)
+	status(Status::NotLoaded),
+	reportedData(nullptr)
 {
 	dll = InvalidLibHandle;
 }
@@ -70,7 +71,10 @@ void Plugin::preInit(EngineCore* engine)
 	
 	fp_plugin_preInit func = (fp_plugin_preInit)getSymbol("plugin_preInit");
 	assert(func);
-	bool success = func(this, engine);
+
+	assert(!reportedData);
+	reportedData = new PluginReportedData();
+	bool success = func(this, reportedData, engine);
 	assert(success);
 
 	status = Status::Registered;
@@ -97,6 +101,9 @@ void Plugin::cleanup()
 	fp_plugin_cleanup func = (fp_plugin_cleanup)getSymbol("plugin_cleanup");
 	assert(func);
 	func();
+
+	assert(reportedData);
+	delete reportedData;
 
 	status = Status::Registered;
 }

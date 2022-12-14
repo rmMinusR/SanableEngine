@@ -35,6 +35,7 @@
     <ClInclude Include="public\Component.hpp" />
     <ClInclude Include="public\EngineCore.hpp" />
     <ClInclude Include="public\GameObject.hpp" />
+    <ClInclude Include="public\Hotswap.hpp" />
     <ClInclude Include="public\MemoryManager.hpp" />
     <ClInclude Include="public\MemoryPoolCommon.hpp" />
     <ClInclude Include="public\Plugin.hpp" />

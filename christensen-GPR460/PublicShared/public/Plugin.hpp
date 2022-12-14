@@ -20,6 +20,7 @@ typedef void* LibHandle;
 
 class EngineCore;
 class PluginManager;
+struct PluginReportedData;
 
 struct Plugin
 {
@@ -35,13 +36,7 @@ public:
 		LoadComplete = Hooked
 	} status;
 
-	//char const* name;
-
-	//unsigned int versionID;
-	//char const* versionString;
-
-	//char const* const* dependencies;
-	//unsigned int dependencyCount;
+	PluginReportedData* reportedData;
 
 	__thiscall Plugin(const std::filesystem::path& path);
 	~Plugin();

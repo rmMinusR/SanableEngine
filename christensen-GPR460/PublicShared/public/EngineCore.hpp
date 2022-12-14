@@ -69,6 +69,9 @@ public:
     void tick();
     void draw();
 
+    inline std::vector<GameObject*>::const_iterator objects_cbegin() const { return objects.cbegin(); }
+    inline std::vector<GameObject*>::const_iterator objects_cend  () const { return objects.cend  (); }
+
     gpr460::System* getSystem() { return system; }
     MemoryManager* getMemoryManager() { return &memoryManager; }
 };

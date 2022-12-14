@@ -3,9 +3,18 @@
 #include "PluginCore.hpp"
 #include "Plugin.hpp"
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* context, EngineCore* engine)
+#include "RectangleCollider.hpp"
+#include "RectangleRenderer.hpp"
+
+PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
 {
     std::cout << "PrimitivesPlugin: plugin_preInit() called" << std::endl;
+
+    report->name = "PrimitivesPlugin";
+
+    report->hotswappables.push_back(HotswapTypeData::build<RectangleCollider>(0, 0));
+    report->hotswappables.push_back(HotswapTypeData::build<RectangleRenderer>(0, 0, SDL_Color{}));
+
     return true;
 }
 

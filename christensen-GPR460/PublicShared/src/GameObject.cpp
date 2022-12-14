@@ -5,12 +5,17 @@
 
 #include "EngineCore.hpp"
 #include "Component.hpp"
+#include "Hotswap.hpp"
 
 void GameObject::BindComponent(Component* c)
 {
 	assert(c->gameObject == nullptr || c->gameObject == this);
-	assert(std::find(components.cbegin(), components.cend(), c) == components.cend());
-	components.push_back(c);
+	assert(std::find_if(components.cbegin(), components.cend(), [=](GameObject::ComponentRecord i) { return i.ptr == c; }) == components.cend());
+
+	ComponentRecord record;
+	record.ptr = c;
+	//r.name = ???
+	components.push_back(record);
 	c->BindToGameObject(this);
 
 	IUpdatable* u = dynamic_cast<IUpdatable*>(c);
@@ -22,7 +27,7 @@ void GameObject::BindComponent(Component* c)
 
 void GameObject::InvokeStart()
 {
-	for (Component* c : components) c->onStart();
+	for (ComponentRecord& c : components) c.ptr->onStart();
 }
 
 GameObject::GameObject(EngineCore* engine) :
@@ -35,7 +40,16 @@ GameObject::~GameObject()
 {
 	if (components.size() != 0)
 	{
-		for (Component* c : components) engine->getMemoryManager()->destroy(c);
+		for (ComponentRecord& c : components) engine->getMemoryManager()->destroy(c.ptr);
 		components.clear();
+	}
+}
+
+void GameObject::hotswapRefresh(std::vector<HotswapTypeData*>& refreshers)
+{
+	for (ComponentRecord& c : components)
+	{
+		auto it = std::find_if(refreshers.cbegin(), refreshers.cend(), [=](HotswapTypeData* d) { return d->name == c.name; });
+		set_vtable_ptr(c.ptr, (*it)->vtable);
 	}
 }

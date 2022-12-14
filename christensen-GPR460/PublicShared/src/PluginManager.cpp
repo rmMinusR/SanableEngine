@@ -6,6 +6,8 @@
 
 #include "EngineCore.hpp"
 #include "System.hpp"
+#include "PluginCore.hpp"
+#include "GameObject.hpp"
 
 PluginManager::PluginManager(EngineCore* engine) :
 	engine(engine)
@@ -43,12 +45,32 @@ void PluginManager::load(const std::wstring& dllPath)
 	plugins.push_back(p);
 }
 
-void PluginManager::unloadAll()
+void PluginManager::hookAll()
+{
+	for (Plugin* p : plugins) p->init();
+}
+
+void PluginManager::unhookAll()
 {
 	//TODO dependency tree
 	for (Plugin* p : plugins) p->cleanup();
+}
 
+void PluginManager::unloadAll()
+{
 	for (Plugin* p : plugins) p->unloadDLL();
 	for (Plugin* p : plugins) delete p;
 	plugins.clear();
+}
+
+void PluginManager::refreshVtablePointers()
+{
+	std::vector<HotswapTypeData*> refreshers;
+	for (Plugin* p : plugins) for (HotswapTypeData& d : p->reportedData->hotswappables) refreshers.push_back(&d);
+
+	for (auto go_it = engine->objects_cbegin(); go_it != engine->objects_cend(); ++go_it)
+	{
+		GameObject* go = *go_it;
+		go->hotswapRefresh(refreshers);
+	}
 }

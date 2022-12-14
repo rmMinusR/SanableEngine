@@ -1,6 +1,10 @@
 #pragma once
 
+#include <vector>
+#include "Hotswap.hpp"
+
 struct Plugin;
+struct PluginReportedData;
 class EngineCore;
 
 #if _WIN32
@@ -23,10 +27,22 @@ class EngineCore;
 //This file should be included by plugins so they can implement the following functions
 //Also put PLUGIN_API_ATTRIBS after exported function bodies
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* context, EngineCore* engine);
+PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine);
 PLUGIN_C_API(bool) plugin_init();
 PLUGIN_C_API(void) plugin_cleanup();
 
-typedef bool (PLUGIN_API_CALLCONV *fp_plugin_preInit)(Plugin* context, EngineCore* engine);
+typedef bool (PLUGIN_API_CALLCONV *fp_plugin_preInit)(Plugin* const context, PluginReportedData* report, EngineCore* engine);
 typedef bool (PLUGIN_API_CALLCONV *fp_plugin_init   )();
 typedef void (PLUGIN_API_CALLCONV *fp_plugin_cleanup)();
+
+struct PluginReportedData
+{
+	std::string name;
+
+	//unsigned int versionID;
+	//std::string versionString;
+
+	//std::vector<std::string> dependencies;
+
+	std::vector<HotswapTypeData> hotswappables;
+};

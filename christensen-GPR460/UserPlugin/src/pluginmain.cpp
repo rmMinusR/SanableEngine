@@ -12,10 +12,16 @@
 
 EngineCore* engine;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* context, EngineCore* engine)
+PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
 {
     std::cout << "TestPlugin: plugin_preInit() called" << std::endl;
     ::engine = engine;
+
+    report->name = "TestPlugin";
+
+    report->hotswappables.push_back(HotswapTypeData::build<ColliderColorChanger>(SDL_Color{}, SDL_Color{}));
+    report->hotswappables.push_back(HotswapTypeData::build<PlayerController>());
+
     return true;
 }
 

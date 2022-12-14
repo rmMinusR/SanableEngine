@@ -14,7 +14,11 @@ private:
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder);
 	void load(const std::wstring& dllPath);
+	void hookAll();
+	void unhookAll();
 	void unloadAll();
+
+	void refreshVtablePointers();
 
 	PluginManager(EngineCore* engine);
 	~PluginManager();
