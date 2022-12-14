@@ -174,7 +174,7 @@ void EngineCore::destroyImmediate(Component* c)
 {
     assert(std::find(objects.cbegin(), objects.cend(), c->getGameObject()) != objects.cend());
     auto& l = c->getGameObject()->components;
-    auto it = std::find_if(l.cbegin(), l.cend(), [=](GameObject::ComponentRecord r) { return r.ptr == c; });
+    auto it = std::find_if(l.cbegin(), l.cend(), [&](GameObject::ComponentRecord r) { return r.ptr == c; });
     assert(it != l.cend());
     l.erase(it);
     memoryManager.destroy(c);

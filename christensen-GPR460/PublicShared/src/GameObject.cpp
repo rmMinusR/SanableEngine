@@ -10,7 +10,7 @@
 void GameObject::BindComponent(Component* c)
 {
 	assert(c->gameObject == nullptr || c->gameObject == this);
-	assert(std::find_if(components.cbegin(), components.cend(), [=](GameObject::ComponentRecord i) { return i.ptr == c; }) == components.cend());
+	assert(std::find_if(components.cbegin(), components.cend(), [&](GameObject::ComponentRecord i) { return i.ptr == c; }) == components.cend());
 
 	ComponentRecord record;
 	record.ptr = c;
@@ -45,11 +45,11 @@ GameObject::~GameObject()
 	}
 }
 
-void GameObject::hotswapRefresh(std::vector<HotswapTypeData*>& refreshers)
+void GameObject::refreshVtables(std::vector<HotswapTypeData*>& refreshers)
 {
 	for (ComponentRecord& c : components)
 	{
-		auto it = std::find_if(refreshers.cbegin(), refreshers.cend(), [=](HotswapTypeData* d) { return d->name == c.name; });
+		auto it = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](HotswapTypeData* d) { return d->name == c.name; });
 		set_vtable_ptr(c.ptr, (*it)->vtable);
 	}
 }

@@ -55,5 +55,5 @@ public:
         return nullptr;
     }
 
-    void hotswapRefresh(std::vector<HotswapTypeData*>& refreshers);
+    void refreshVtables(std::vector<HotswapTypeData*>& refreshers);
 };

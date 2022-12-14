@@ -1,10 +1,14 @@
 #pragma once
 
+#include <unordered_map>
 #include <vector>
 #include "TypedMemoryPool.inl"
+#include "Hotswap.hpp"
 
 class GameObject;
 class EngineCore;
+struct HotswapTypeData;
+class PluginManager;
 
 template<typename T, size_t _maxObjectCount = 32>
 struct PoolSettings
@@ -24,16 +28,26 @@ private:
 	{
 		TypedMemoryPool<TObj>* out = nullptr;
 
-		//Search for pool matching type (FIXME slow?)
-		for (RawMemoryPool* p : pools) if (out = dynamic_cast<TypedMemoryPool<TObj>*>(p)) return out;
+		//Search for pool matching typename
+		auto it = pools.find(HotswapTypeData::extractName<TObj>());
+		if (it != pools.cend())
+		{
+			out = (TypedMemoryPool<TObj>*)it->second;
+			//assert(dynamic_cast<TypedMemoryPool<TObj>*>(it->second) != nullptr);
+		}
+		//for (RawMemoryPool* p : pools) if (out = dynamic_cast<TypedMemoryPool<TObj>*>(p)) return out;
 		
 		//If set to create on fallback, do so
-		if (!out && fallbackCreate) pools.push_back((RawMemoryPool*)(out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount)));
+		if (!out && fallbackCreate)
+		{
+			pools.emplace(HotswapTypeData::extractName<TObj>(), (RawMemoryPool*)(out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount)));
+		}
 
 		return out;
 	}
 
-	std::vector<RawMemoryPool*> pools;
+	//std::vector<RawMemoryPool*> pools;
+	std::unordered_map<std::string, RawMemoryPool*> pools;
 
 public:
 	template<typename TObj, typename... TCtorArgs>
@@ -51,7 +65,7 @@ public:
 		//If that fails, search every pool to find owner
 		if (!pool)
 		{
-			for (RawMemoryPool* p : pools) if (p->contains(obj)) { pool = p; break; }
+			for (auto& i : pools) if (i.second->contains(obj)) { pool = i.second; break; }
 		}
 
 		assert(pool);
@@ -64,4 +78,7 @@ private:
 	void init();
 	void cleanup();
 	friend class EngineCore;
+
+	void refreshVtables(std::vector<HotswapTypeData*> refreshers);
+	friend class PluginManager;
 };
