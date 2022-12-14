@@ -150,8 +150,9 @@
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SerializationLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
-      <Message>Copy .lib-&gt;.dll dependencies</Message>
+      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"
+xcopy /y "$(ProjectDir)\level.dat" "$(TargetDir)"</Command>
+      <Message>Copy dependencies</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>$(ProjectDir)..\embuild.bat</Command>
@@ -181,8 +182,9 @@
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SerializationLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
-      <Message>Copy .lib-&gt;.dll dependencies</Message>
+      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"
+xcopy /y "$(ProjectDir)\level.dat" "$(TargetDir)"</Command>
+      <Message>Copy dependencies</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>$(ProjectDir)..\embuild.bat</Command>
@@ -208,8 +210,9 @@
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SerializationLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
-      <Message>Copy .lib-&gt;.dll dependencies</Message>
+      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"
+xcopy /y "$(ProjectDir)\level.dat" "$(TargetDir)"</Command>
+      <Message>Copy dependencies</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Message>Building to Emscripten (WASM)</Message>
@@ -237,8 +240,9 @@
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SerializationLib.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"</Command>
-      <Message>Copy .lib-&gt;.dll dependencies</Message>
+      <Command>xcopy /y "$(ProjectDir)..\SDL2\lib\$(PlatformTarget)\SDL2.dll" "$(TargetDir)"
+xcopy /y "$(ProjectDir)\level.dat" "$(TargetDir)"</Command>
+      <Message>Copy dependencies</Message>
     </PostBuildEvent>
     <CustomBuildStep>
       <Message>Building to Emscripten (WASM)</Message>

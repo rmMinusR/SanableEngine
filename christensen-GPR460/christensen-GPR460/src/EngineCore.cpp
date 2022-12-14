@@ -55,7 +55,8 @@ void EngineCore::processEvents()
                 while (objects.size() > 0) destroy(objects[objects.size()-1]);
 
                 //Then load
-                std::ifstream fin(system.GetBaseDir()/"level.dat", std::ios::binary);
+                std::ifstream fin;
+                fin.open(system.GetBaseDir()/"level.dat", std::ios::binary);
                 while (!fin.eof())
                 {
                     SerializedObject so;

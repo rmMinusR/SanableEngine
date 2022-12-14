@@ -54,7 +54,7 @@ protected:
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			TObj* toFree = reinterpret_cast<TObj*>( ((uint8_t*)mMemory) + (i * mObjectSize) );
-			if (std::find(mFreeList.cbegin(), mFreeList.cend(), toFree) != mFreeList.cend()) freeSafe(toFree);
+			if (std::find(mFreeList.cbegin(), mFreeList.cend(), toFree) == mFreeList.cend()) freeSafe(toFree);
 		}
 		mFreeList.clear();
 		createFreeList();
