@@ -48,9 +48,9 @@ bool Plugin::_dllGood() const
 	return dll != InvalidLibHandle;
 }
 
-void Plugin::loadDLL()
+bool Plugin::loadDLL()
 {
-	assert(status == Status::NotLoaded);
+	if (status != Status::NotLoaded) return status > Status::NotLoaded;
 	assert(!_dllGood());
 
 #ifdef _WIN32
@@ -59,47 +59,61 @@ void Plugin::loadDLL()
 #ifdef __EMSCRIPTEN__
 	dll = dlopen(path.c_str(), RTLD_LAZY);
 #endif
-	assert(_dllGood());
-	
+	if (!_dllGood()) return false;
+
 	status = Status::DllLoaded;
+	return true;
 }
 
-void Plugin::preInit(EngineCore* engine)
+bool Plugin::preInit(EngineCore* engine)
 {
-	assert(status == Status::DllLoaded);
+	if (status != Status::DllLoaded) return status > Status::DllLoaded;
 	assert(_dllGood());
 	
 	fp_plugin_preInit func = (fp_plugin_preInit)getSymbol("plugin_preInit");
-	assert(func);
+	if (!func)
+	{
+		printf("ERROR: Plugin %s has no preInit function", (char*)path.filename().c_str());
+		return false;
+	}
 
 	assert(!reportedData);
 	reportedData = new PluginReportedData();
 	bool success = func(this, reportedData, engine);
-	assert(success);
+	if (!success) return false;
 
 	status = Status::Registered;
+	return true;
 }
 
-void Plugin::init()
+bool Plugin::init()
 {
-	assert(status == Status::Registered);
+	if (status != Status::Registered) return status > Status::Registered;
 	assert(_dllGood());
 
 	fp_plugin_init func = (fp_plugin_init)getSymbol("plugin_init");
-	assert(func);
+	if (!func)
+	{
+		printf("ERROR: Plugin %s has no init function", (char*)path.filename().c_str());
+		return false;
+	}
+
 	bool success = func();
-	assert(success);
+	if (!success) return false;
 
 	status = Status::Hooked;
 }
 
-void Plugin::cleanup()
+bool Plugin::cleanup()
 {
-	assert(status == Status::Hooked);
+	if (status != Status::Hooked) return status < Status::Hooked;
 	assert(_dllGood());
 
 	fp_plugin_cleanup func = (fp_plugin_cleanup)getSymbol("plugin_cleanup");
-	assert(func);
+	if (!func) {
+		printf("ERROR: Plugin %s has no cleanup function", (char*)path.filename().c_str());
+		return false;
+	}
 	func();
 
 	assert(reportedData);

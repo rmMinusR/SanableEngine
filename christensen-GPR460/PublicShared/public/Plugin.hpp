@@ -54,9 +54,9 @@ private:
 
 	bool _dllGood() const;
 
-	void loadDLL();
-	void preInit(EngineCore* engine);
-	void init();
-	void cleanup();
+	bool loadDLL();
+	bool preInit(EngineCore* engine);
+	bool init();
+	bool cleanup();
 	void unloadDLL();
 };
