@@ -109,6 +109,12 @@ std::vector<std::filesystem::path> gpr460::System_Win32::ListPlugins(std::filesy
 {
 	std::vector<std::filesystem::path> contents;
 
+	if (!std::filesystem::exists(path))
+	{
+		printf("Plugins folder does not exist, creating");
+		std::filesystem::create_directory(path);
+	}
+
 	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
 	{
 		std::ostringstream joiner;

@@ -6,18 +6,23 @@
 
 #include <emscripten.h>
 
+class EngineCore;
+
 namespace gpr460
 {
 
 	class System_Emscripten : public System
 	{
-	public:
-		System_Emscripten();
-		~System_Emscripten();
+		friend class EngineCore;
 
+	protected:
 		void Init(EngineCore*) override;
 		void DoMainLoop() override;
 		void Shutdown() override;
+
+	public:
+		System_Emscripten();
+		~System_Emscripten();
 
 		void ShowError(const gpr460::string& message) override;
 		void LogToErrorFile(const gpr460::string& message) override;

@@ -1,6 +1,6 @@
 @echo off
 
-call embuild-common.bat
+call embuild-env.bat
 
 echo:
 echo ======Building main project======
@@ -14,19 +14,9 @@ SET srcs=
 FOR /F "tokens=* USEBACKQ" %%F IN (`dir /b src\*.cpp`) DO (
 CALL SET "srcs=%%srcs%% src\%%F"
 )
-FOR /F "tokens=* USEBACKQ" %%F IN (`dir /b src\emscripten\*.cpp`) DO (
-CALL SET "srcs=%%srcs%% src\emscripten\%%F"
-)
-FOR /F "tokens=* USEBACKQ" %%F IN (`dir /b ..\PluginShared\src\*.cpp`) DO (
-CALL SET "srcs=%%srcs%% ..\PluginShared\src\%%F"
-)
 echo: Gathered files:
 echo: %srcs%
 echo:
 
 ::Make build
-mkdir ..\builds\web
-call em++ -Iinclude -I..\PluginShared\include%srcs% -sMAIN_MODULE %EMPP_ARGS% --use-preload-plugins --preload-file ..\builds\web\plugins@\plugins -o ..\builds\web\index.html
-
-
-pause
+call em++ -Iprivate -I%~dp0\PublicShared\public %srcs% %SHARED_LIB% -sMAIN_MODULE %EMPP_ARGS% --use-preload-plugins --preload-file %PLUGINS_FOLDER%@plugins -o %~dp0\builds\web\index.html

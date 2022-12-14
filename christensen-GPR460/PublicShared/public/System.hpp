@@ -17,6 +17,7 @@ namespace gpr460
 		bool isAlive = false;
 		EngineCore* engine;
 
+	public:
 		friend class EngineCore;
 		virtual void Init(EngineCore*);
 		virtual void DoMainLoop() = 0;

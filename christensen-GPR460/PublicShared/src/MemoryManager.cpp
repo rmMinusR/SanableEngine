@@ -9,6 +9,6 @@ void MemoryManager::init()
 
 void MemoryManager::cleanup()
 {
-	for (RawMemoryPool* p : pools) if (p) delete p;
+	for (RawMemoryPool* p : pools) delete p;
 	pools.clear();
 }

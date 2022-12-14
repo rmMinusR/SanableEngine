@@ -9,11 +9,7 @@ private:
 	std::vector<TObj*> objects;
 
 	typedef vtable_ptr sortID_t;
-	static inline sortID_t getSortID(TObj* obj)
-	{
-		//VC++ puts the vtable ptr at the very start of the object's memory
-		return *reinterpret_cast<vtable_ptr*>(obj);
-	}
+	static inline sortID_t getSortID(TObj* obj) { return get_vtable_ptr(obj); }
 
 public:
 	template<typename... TArgs>

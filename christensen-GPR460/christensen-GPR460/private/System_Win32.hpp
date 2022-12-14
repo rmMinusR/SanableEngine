@@ -12,6 +12,8 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
+class EngineCore;
+
 namespace gpr460
 {
 
@@ -22,17 +24,19 @@ namespace gpr460
 		HANDLE logFile;
 		const string logFileName = TEXT("GameErrors.txt");
 
+		friend class EngineCore;
 #ifdef _DEBUG
 		_CrtMemState checkpoint;
 #endif
 
-	public:
-		System_Win32();
-		~System_Win32();
-
+	protected:
 		void Init(EngineCore*) override;
 		void DoMainLoop() override;
 		void Shutdown() override;
+
+	public:
+		System_Win32();
+		~System_Win32();
 
 		void ShowError(const gpr460::string& message) override;
 		void LogToErrorFile(const gpr460::string& message) override;

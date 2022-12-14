@@ -23,7 +23,7 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 	std::vector<Plugin*> batch;
 	for (const std::filesystem::path& dllPath : engine->getSystem()->ListPlugins(pluginsFolder))
 	{
-		Plugin* p = engine->getMemoryManager()->create<Plugin>(dllPath);
+		Plugin* p = new Plugin(dllPath);
 		p->loadDLL();
 		batch.push_back(p); //Defer plugin_preInit call
 		plugins.push_back(p);
@@ -37,7 +37,7 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 
 void PluginManager::load(const std::wstring& dllPath)
 {
-	Plugin* p = engine->getMemoryManager()->create<Plugin>(dllPath);
+	Plugin* p = new Plugin(dllPath);
 	p->loadDLL();
 	p->preInit(engine);
 	plugins.push_back(p);
@@ -49,6 +49,6 @@ void PluginManager::unloadAll()
 	for (Plugin* p : plugins) p->cleanup();
 
 	for (Plugin* p : plugins) p->unloadDLL();
-	for (Plugin* p : plugins) engine->getMemoryManager()->destroy(p);
+	for (Plugin* p : plugins) delete p;
 	plugins.clear();
 }

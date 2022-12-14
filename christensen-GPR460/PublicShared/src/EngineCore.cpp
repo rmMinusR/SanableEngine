@@ -45,13 +45,6 @@ void EngineCore::processEvents()
 
         if (event.type == SDL_KEYDOWN)
         {
-            std::cout << "Key pressed!\n";
-            if (event.key.keysym.sym == SDLK_k)
-            {
-                std::cout << "K pressed!\n";
-
-                // TODO: Add calls to ErrorMessage and LogToErrorFile here
-            }
             if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
             if (event.key.keysym.sym == SDLK_F5) reloadPlugins();
         }
@@ -94,6 +87,7 @@ void EngineCore::refreshCallBatchers()
 
 EngineCore::EngineCore() :
     isAlive(false),
+    system(nullptr),
     window(nullptr),
     renderer(nullptr),
     pluginManager(this)
@@ -130,10 +124,10 @@ void EngineCore::shutdown()
     assert(isAlive);
     isAlive = false;
 
-    pluginManager.unloadAll();
-
     for (GameObject* o : objects) memoryManager.destroy(o);
     objects.clear();
+
+    pluginManager.unloadAll();
 
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
