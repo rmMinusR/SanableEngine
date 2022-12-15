@@ -10,69 +10,43 @@ class EngineCore;
 struct HotswapTypeData;
 class PluginManager;
 
-template<typename T, size_t _maxObjectCount = 32>
-struct PoolSettings
-{
-public:
-	constexpr static size_t maxObjectCount = _maxObjectCount;
-};
-
 template<>
 struct PoolSettings<GameObject, 64> {};
 
 class MemoryManager
 {
 private:
-	template<typename TObj>
-	TypedMemoryPool<TObj>* getPool(bool fallbackCreate)
+	struct PoolRecord
 	{
-		TypedMemoryPool<TObj>* out = nullptr;
+		std::string objectType;
+		std::string poolType;
+		RawMemoryPool* pool;
 
-		//Search for pool matching typename
-		auto it = pools.find(HotswapTypeData::extractName<TObj>());
-		if (it != pools.cend())
-		{
-			out = (TypedMemoryPool<TObj>*)it->second;
-			//assert(dynamic_cast<TypedMemoryPool<TObj>*>(it->second) != nullptr);
+		template<typename TObj>
+		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
+			PoolRecord r;
+			r.pool = (RawMemoryPool*)pool;
+			r.objectType = HotswapTypeData::extractName<TObj>();
+			r.poolType = HotswapTypeData::extractName<TypedMemoryPool<TObj>>();
+			return std::move(r);
 		}
-		//for (RawMemoryPool* p : pools) if (out = dynamic_cast<TypedMemoryPool<TObj>*>(p)) return out;
-		
-		//If set to create on fallback, do so
-		if (!out && fallbackCreate)
-		{
-			pools.emplace(HotswapTypeData::extractName<TObj>(), (RawMemoryPool*)(out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount)));
-		}
+	};
 
-		return out;
-	}
-
-	//std::vector<RawMemoryPool*> pools;
-	std::unordered_map<std::string, RawMemoryPool*> pools;
+	std::vector<PoolRecord> pools;
+	//std::unordered_map<std::string, RawMemoryPool*> pools;
 
 public:
+	template<typename TObj>
+	TypedMemoryPool<TObj>* getSpecificPool(bool fallbackCreate);
+
 	template<typename TObj, typename... TCtorArgs>
-	inline TObj* create(TCtorArgs... ctorArgs)
-	{
-		return getPool<TObj>(true)->emplace(ctorArgs...);
-	}
+	inline TObj* create(TCtorArgs... ctorArgs);
 
 	template<typename TObj>
-	inline void destroy(TObj* obj)
-	{
-		//Try direct lookup first
-		RawMemoryPool* pool = (RawMemoryPool*) getPool<TObj>(false);
+	void destroy(TObj* obj);
 
-		//If that fails, search every pool to find owner
-		if (!pool)
-		{
-			for (auto& i : pools) if (i.second->contains(obj)) { pool = i.second; break; }
-		}
-
-		assert(pool);
-		assert(pool->contains(obj));
-
-		pool->release(obj);
-	}
+	template<typename TObj>
+	void destroyPool();
 
 private:
 	void init();
@@ -82,3 +56,58 @@ private:
 	void refreshVtables(std::vector<HotswapTypeData*> refreshers);
 	friend class PluginManager;
 };
+
+
+
+template<typename TObj>
+inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
+{
+	//Search for pool matching typename
+	std::string tName = HotswapTypeData::extractName<TObj>();
+	for (const PoolRecord& r : pools) if (tName == r.objectType) return (TypedMemoryPool<TObj>*)r.pool;
+
+	//If set to create on fallback, do so
+	if (fallbackCreate)
+	{
+		TypedMemoryPool<TObj>* out = out = new TypedMemoryPool<TObj>;
+		pools.push_back(PoolRecord::create<TObj>(out));
+		return out;
+	}
+	else return nullptr;
+}
+
+template<typename TObj, typename... TCtorArgs>
+inline TObj* MemoryManager::create(TCtorArgs... ctorArgs)
+{
+	return getSpecificPool<TObj>(true)->emplace(ctorArgs...);
+}
+
+template<typename TObj>
+void MemoryManager::destroy(TObj* obj)
+{
+	//Try direct lookup first
+	RawMemoryPool* pool = (RawMemoryPool*) getSpecificPool<TObj>(false);
+
+	//If that fails, search every pool to find owner
+	if (!pool)
+	{
+		for (auto& i : pools) if (i.pool->contains(obj)) { pool = i.pool; break; }
+	}
+
+	assert(pool);
+	assert(pool->contains(obj));
+
+	pool->release(obj);
+}
+
+template<typename TObj>
+void MemoryManager::destroyPool()
+{
+	std::string tName = HotswapTypeData::extractName<TObj>();
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return tName == r.objectType; });
+	if (it != pools.cend())
+	{
+		delete it->pool;
+		pools.erase(it);
+	}
+}

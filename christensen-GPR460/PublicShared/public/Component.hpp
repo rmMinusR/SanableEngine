@@ -13,7 +13,7 @@ protected:
 	virtual void BindToGameObject(GameObject* obj);
 	friend class GameObject;
 
-	inline EngineCore* getEngine() { return gameObject->engine; }
+	inline EngineCore* getEngine() const { return gameObject->engine; }
 
 public:
 	Component();

@@ -14,9 +14,11 @@ private:
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder);
 	void load(const std::wstring& dllPath);
-	void hookAll();
-	void unhookAll();
+	void hookAll(bool firstRun);
+	void unhookAll(bool shutdown);
 	void unloadAll();
+
+	void reloadAll();
 
 	void refreshVtablePointers();
 

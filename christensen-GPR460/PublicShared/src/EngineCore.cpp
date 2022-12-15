@@ -46,35 +46,9 @@ void EngineCore::processEvents()
         if (event.type == SDL_KEYDOWN)
         {
             if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
-            if (event.key.keysym.sym == SDLK_F5) reloadPlugins();
+            if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
         }
     }
-}
-
-void EngineCore::reloadPlugins()
-{
-    std::cout << "Hot Reload Started\n";
-
-    std::cout << "Removing plugins hooks...\n";
-    pluginManager.unhookAll();
-    applyConcurrencyBuffers();
-
-    std::cout << "Unloading plugin code...\n";
-    pluginManager.unloadAll();
-
-    std::cout << "Loading plugin code...\n";
-    pluginManager.discoverAll(system->GetBaseDir()/"plugins");
-
-    std::cout << "Refreshing pointers... (vtables)\n";
-    pluginManager.refreshVtablePointers();
-
-    std::cout << "Applying plugin hooks...\n";
-    pluginManager.hookAll();
-    
-    std::cout << "Refreshing pointers... (call batchers)\n";
-    refreshCallBatchers();
-
-    std::cout << "Hot Reload Complete\n";
 }
 
 void EngineCore::refreshCallBatchers()
@@ -117,6 +91,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     system = createSystem();
     system->Init(this);
     memoryManager.init();
+    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool on main module
 
     quit = false;
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
@@ -137,7 +112,7 @@ void EngineCore::shutdown()
     for (GameObject* o : objects) memoryManager.destroy(o);
     objects.clear();
 
-    pluginManager.unhookAll();
+    pluginManager.unhookAll(true);
     pluginManager.unloadAll();
 
     SDL_DestroyRenderer(renderer);
@@ -146,7 +121,10 @@ void EngineCore::shutdown()
     SDL_DestroyWindow(window);
     window = nullptr;
 
+    //Clean up memory, GameObject pool first so components are released
+    memoryManager.destroyPool<GameObject>();
     memoryManager.cleanup();
+
     system->Shutdown();
     delete system;
 }

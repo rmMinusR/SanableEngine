@@ -22,6 +22,9 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
     report->hotswappables.push_back(HotswapTypeData::build<ColliderColorChanger>(SDL_Color{}, SDL_Color{}));
     report->hotswappables.push_back(HotswapTypeData::build<PlayerController>());
 
+    report->hotswappables.push_back(HotswapTypeData::build<TypedMemoryPool<ColliderColorChanger>>(1));
+    report->hotswappables.push_back(HotswapTypeData::build<TypedMemoryPool<PlayerController>>(1));
+
     return true;
 }
 
@@ -29,34 +32,43 @@ GameObject* player;
 GameObject* obstacle;
 GameObject* staticObj;
 
-PLUGIN_C_API(bool) plugin_init()
+PLUGIN_C_API(bool) plugin_init(bool firstRun)
 {
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
-    player = engine->addGameObject();
-    player->getTransform()->setPosition(Vector3<float>(50, 50, 0));
-    player->CreateComponent<PlayerController>();
-    player->CreateComponent<RectangleCollider>(10, 10);
-    player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
-    player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
+    if (firstRun) {
+        player = engine->addGameObject();
+        player->getTransform()->setPosition(Vector3<float>(50, 50, 0));
+        player->CreateComponent<PlayerController>();
+        player->CreateComponent<RectangleCollider>(10, 10);
+        player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
+        player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
 
-    obstacle = engine->addGameObject();
-    obstacle->getTransform()->setPosition(Vector3<float>(200, 200, 0));
-    obstacle->CreateComponent<RectangleCollider>(50, 50);
-    obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
+        obstacle = engine->addGameObject();
+        obstacle->getTransform()->setPosition(Vector3<float>(200, 200, 0));
+        obstacle->CreateComponent<RectangleCollider>(50, 50);
+        obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
 
-    staticObj = engine->addGameObject();
-    staticObj->getTransform()->setPosition(Vector3<float>(100, 150, 0));
-    staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
+        staticObj = engine->addGameObject();
+        staticObj->getTransform()->setPosition(Vector3<float>(100, 150, 0));
+        staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
+    }
+
 
     return true;
 }
 
-PLUGIN_C_API(void) plugin_cleanup()
+PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
 {
     std::cout << "UserPlugin: plugin_cleanup() called" << std::endl;
 
-    engine->destroy(player);
-    engine->destroy(obstacle);
-    engine->destroy(staticObj);
+    if (shutdown)
+    {
+        engine->destroy(player);
+        engine->destroy(obstacle);
+        engine->destroy(staticObj);
+
+        engine->getMemoryManager()->destroyPool<PlayerController>();
+        engine->getMemoryManager()->destroyPool<ColliderColorChanger>();
+    }
 }

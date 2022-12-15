@@ -6,19 +6,15 @@
 #undef min
 #undef max
 
-std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
-
 PLUGIN_API_CTOR RectangleCollider::RectangleCollider(float w, float h) :
 	Component(),
 	w(w),
 	h(h)
 {
-	RectangleCollider::REGISTRY.push_back(this);
 }
 
 RectangleCollider::~RectangleCollider()
 {
-	RectangleCollider::REGISTRY.erase(std::find(RectangleCollider::REGISTRY.cbegin(), RectangleCollider::REGISTRY.cend(), this));
 }
 
 PLUGIN_API(bool) RectangleCollider::CheckCollision(RectangleCollider const* other) const
@@ -47,6 +43,7 @@ PLUGIN_API(bool) RectangleCollider::CheckCollision(RectangleCollider const* othe
 
 PLUGIN_API(bool) RectangleCollider::CheckCollisionAny() const
 {
-	for (RectangleCollider* i : RectangleCollider::REGISTRY) if (i != this && CheckCollision(i)) return true;
+	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
+	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it) if (*it != this && CheckCollision((RectangleCollider*)*it)) return true;
 	return false;
 }

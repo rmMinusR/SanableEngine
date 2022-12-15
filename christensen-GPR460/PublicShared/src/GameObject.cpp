@@ -14,7 +14,7 @@ void GameObject::BindComponent(Component* c)
 
 	ComponentRecord record;
 	record.ptr = c;
-	//r.name = ???
+	record.name = typeid(*c).name();
 	components.push_back(record);
 	c->BindToGameObject(this);
 

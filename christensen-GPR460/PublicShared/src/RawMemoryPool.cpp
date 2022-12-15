@@ -97,5 +97,33 @@ void RawMemoryPool::createFreeList()
 	{
 		mFreeList.push_back(((uint8_t*)mMemory) + (i * mObjectSize));
 	}
+}
 
+RawMemoryPool::const_iterator::const_iterator(RawMemoryPool const* pool, uint8_t* index) :
+	pool(pool),
+	index(index)
+{
+}
+
+void* RawMemoryPool::const_iterator::operator*() const
+{
+	return reinterpret_cast<void*>(index);
+}
+
+RawMemoryPool::const_iterator RawMemoryPool::const_iterator::operator++()
+{
+	do index += pool->getMaxObjectSize();
+	while (!pool->isAlive(index) && pool->contains(index));
+
+	return *this;
+}
+
+RawMemoryPool::const_iterator RawMemoryPool::cbegin() const
+{
+	return const_iterator(this, (uint8_t*)mMemory);
+}
+
+RawMemoryPool::const_iterator RawMemoryPool::cend() const
+{
+	return const_iterator(this, ((uint8_t*)mMemory)+(mObjectSize*mMaxNumObjects));
 }

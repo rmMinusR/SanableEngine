@@ -86,7 +86,7 @@ bool Plugin::preInit(EngineCore* engine)
 	return true;
 }
 
-bool Plugin::init()
+bool Plugin::init(bool firstRun)
 {
 	if (status != Status::Registered) return status > Status::Registered;
 	assert(_dllGood());
@@ -98,7 +98,7 @@ bool Plugin::init()
 		return false;
 	}
 
-	bool success = func();
+	bool success = func(firstRun);
 	if (!success) return false;
 
 	status = Status::Hooked;
@@ -106,7 +106,7 @@ bool Plugin::init()
 	return true;
 }
 
-bool Plugin::cleanup()
+bool Plugin::cleanup(bool shutdown)
 {
 	if (status != Status::Hooked) return status < Status::Hooked;
 	assert(_dllGood());
@@ -116,7 +116,7 @@ bool Plugin::cleanup()
 		printf("ERROR: Plugin %s has no cleanup function", (char*)path.filename().c_str());
 		return false;
 	}
-	func();
+	func(shutdown);
 
 	assert(reportedData);
 	delete reportedData;

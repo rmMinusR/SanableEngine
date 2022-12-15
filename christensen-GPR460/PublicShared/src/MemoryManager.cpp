@@ -9,7 +9,7 @@ void MemoryManager::init()
 
 void MemoryManager::cleanup()
 {
-	for (auto& i : pools) delete i.second;
+	for (auto& i : pools) delete i.pool;
 	pools.clear();
 }
 
@@ -19,7 +19,7 @@ void MemoryManager::refreshVtables(std::vector<HotswapTypeData*> refreshers)
 	{
 		for (HotswapTypeData* d : refreshers)
 		{
-			if (d->name == p.first) set_vtable_ptr(p.second, d->vtable);
+			if (d->name == p.poolType) set_vtable_ptr(p.pool, d->vtable);
 		}
 	}
 }

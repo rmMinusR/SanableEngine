@@ -12,6 +12,11 @@ private:
 	static inline sortID_t getSortID(TObj* obj) { return get_vtable_ptr(obj); }
 
 public:
+	CallBatcher()
+	{
+		objects.reserve(8);
+	}
+
 	template<typename... TArgs>
 	void memberCall(void (TObj::*func)(TArgs...), TArgs... funcArgs)
 	{

@@ -25,8 +25,9 @@ private:
     bool isAlive;
     SDL_Window* window = nullptr;
     gpr460::System* system;
-    PluginManager pluginManager;
     MemoryManager memoryManager;
+    PluginManager pluginManager;
+    friend class PluginManager;
 
     std::vector<GameObject*> objects;
     void applyConcurrencyBuffers();
@@ -41,7 +42,6 @@ private:
 
     void processEvents();
 
-    void reloadPlugins();
     void refreshCallBatchers();
 
 public:

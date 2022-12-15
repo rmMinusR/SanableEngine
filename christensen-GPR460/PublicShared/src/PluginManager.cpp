@@ -43,7 +43,7 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 	for (Plugin* p : batch)
 	{
 		std::cout << "Applying plugin hooks for " << p->reportedData->name << '\n';
-		p->init();
+		p->init(true);
 	}
 
 	std::cout << "Done discovering plugins\n";
@@ -57,15 +57,15 @@ void PluginManager::load(const std::wstring& dllPath)
 	plugins.push_back(p);
 }
 
-void PluginManager::hookAll()
+void PluginManager::hookAll(bool firstRun)
 {
-	for (Plugin* p : plugins) p->init();
+	for (Plugin* p : plugins) p->init(firstRun);
 }
 
-void PluginManager::unhookAll()
+void PluginManager::unhookAll(bool shutdown)
 {
 	//TODO dependency tree
-	for (Plugin* p : plugins) p->cleanup();
+	for (Plugin* p : plugins) p->cleanup(shutdown);
 }
 
 void PluginManager::unloadAll()
@@ -73,6 +73,33 @@ void PluginManager::unloadAll()
 	for (Plugin* p : plugins) p->unloadDLL();
 	for (Plugin* p : plugins) delete p;
 	plugins.clear();
+}
+
+void PluginManager::reloadAll()
+{
+	std::cout << "Hot Reload Started\n";
+
+    std::cout << "Removing plugins hooks...\n";
+    unhookAll(false);
+    engine->applyConcurrencyBuffers();
+
+    std::cout << "Unloading plugin code...\n";
+	for (Plugin* p : plugins) p->unloadDLL();
+
+    std::cout << "Loading plugin code...\n";
+	for (Plugin* p : plugins) p->loadDLL();
+	for (Plugin* p : plugins) p->preInit(engine);
+
+    std::cout << "Refreshing pointers... (vtables)\n";
+    refreshVtablePointers();
+
+    std::cout << "Applying plugin hooks...\n";
+    hookAll(false);
+    
+    std::cout << "Refreshing pointers... (call batchers)\n";
+    engine->refreshCallBatchers();
+
+    std::cout << "Hot Reload Complete\n";
 }
 
 void PluginManager::refreshVtablePointers()

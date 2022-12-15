@@ -25,6 +25,7 @@ public:
 	virtual void release(void* obj);
 
 	bool contains(void* ptr) const;
+	inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };
@@ -40,4 +41,25 @@ protected:
 	std::vector<void*> mFreeList;
 
 	void createFreeList();
+
+public:
+	class const_iterator
+	{
+		RawMemoryPool const* pool;
+		uint8_t* index;
+
+		const_iterator(RawMemoryPool const* pool, uint8_t* index);
+
+		friend class RawMemoryPool;
+
+	public:
+		void* operator*() const;
+
+		const_iterator operator++();
+
+		inline bool operator!=(const const_iterator& other) const { return index != other.index; }
+		inline bool operator==(const const_iterator& other) const { return index == other.index; }
+	};
+	const_iterator cbegin() const;
+	const_iterator cend() const;
 };
