@@ -17,5 +17,5 @@ public:
 
 	bool CheckCollision(RectangleCollider const* other) const;
 
-	bool CheckCollisionAny() const;
+	int GetCollisions(RectangleCollider** outArr) const;
 };

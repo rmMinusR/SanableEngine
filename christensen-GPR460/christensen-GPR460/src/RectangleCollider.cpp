@@ -2,6 +2,7 @@
 
 #include "Vector3.inl"
 #include "GameObject.hpp"
+#include "EngineCore.hpp"
 
 std::vector<RectangleCollider*> RectangleCollider::REGISTRY;
 
@@ -42,8 +43,12 @@ bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 		//&& overlapMinCorner.getZ() <= overlapMaxCorner.getZ();
 }
 
-bool RectangleCollider::CheckCollisionAny() const
+int RectangleCollider::GetCollisions(RectangleCollider** outArr) const
 {
-	for (RectangleCollider* i : RectangleCollider::REGISTRY) if (i != this && CheckCollision(i)) return true;
-	return false;
+	int nHits = 0;
+	for (RectangleCollider* i : RectangleCollider::REGISTRY) if (i != this && CheckCollision(i)) {
+		if (outArr) outArr[nHits] = i;
+		++nHits;
+	}
+	return nHits;
 }
