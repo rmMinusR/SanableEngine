@@ -18,7 +18,6 @@ class EngineCore
 {
 private:
     bool isAlive;
-    SDL_Window* window = nullptr;
     gpr460::System system;
 
     StackAllocator* frameAllocator;
@@ -32,6 +31,7 @@ private:
     void processEvents();
 
 public:
+    SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
     Uint32 frameStart = 0;
     bool quit = false;

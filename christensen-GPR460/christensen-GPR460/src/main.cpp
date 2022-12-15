@@ -36,6 +36,14 @@ int main(int argc, char* argv[])
 
 void userInit(EngineCore* engine)
 {
+    time_t now; time(&now);
+    char* timeStr = engine->getFrameAllocator()->alloc<char>(256);
+    ctime_s(timeStr, 256, &now);
+
+    char* titleStr = engine->getFrameAllocator()->alloc<char>(256);
+    snprintf(titleStr, 256, "Engine [launched %s]", timeStr);
+    SDL_SetWindowTitle(engine->window, titleStr);
+
     GameObject* player = engine->addGameObject();
     player->getTransform()->setPosition(Vector3<float>(50, 50, 0));
     player->CreateComponent<PlayerController>();

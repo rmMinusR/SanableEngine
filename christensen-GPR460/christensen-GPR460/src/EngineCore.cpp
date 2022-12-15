@@ -64,7 +64,9 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
 
     frameAllocator = new StackAllocator(frameAllocatorSize);
 
+    StackAllocator::Checkpoint checkpoint = frameAllocator->markCheckpoint();
     if (userInitCallback) (*userInitCallback)(this);
+    frameAllocator->restoreCheckpoint(checkpoint);
 }
 
 void EngineCore::shutdown()

@@ -5,7 +5,7 @@
 StackAllocator::StackAllocator(size_t bytesToAllocate)
 {
     maxSize = bytesToAllocate;
-    head = memory = malloc(bytesToAllocate);
+    head = memory = (uint8_t*)malloc(bytesToAllocate);
 }
 
 StackAllocator::~StackAllocator()

@@ -1,13 +1,14 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 
 class StackAllocator
 {
 private:
     size_t maxSize;
-    void* memory;
-    void* head;
+    uint8_t* memory;
+    uint8_t* head;
 
 public:
     StackAllocator(size_t maxSize);
@@ -15,7 +16,7 @@ public:
 
     template <typename T>
     T* alloc() {
-        T* ptr = head;
+        T* ptr = (T*)head;
         head += sizeof(T);
         assert(head < memory+maxSize);
         return ptr;
@@ -23,7 +24,7 @@ public:
 
     template <typename T>
     T* alloc(size_t arrayCount) {
-        T* ptr = head;
+        T* ptr = (T*)head;
         head += sizeof(T)*arrayCount;
         assert(head < memory+maxSize);
         return ptr;
@@ -33,7 +34,7 @@ public:
     class Checkpoint
     {
     private:
-        void* head;
+        uint8_t* head;
         friend class StackAllocator;
     };
 
