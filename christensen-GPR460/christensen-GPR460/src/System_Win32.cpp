@@ -94,7 +94,7 @@ void gpr460::System_Win32::LogToErrorFile(const gpr460::string& message)
 	}
 
 	DWORD nWritten;
-	if (!WriteFile(logFile, message.c_str(), message.length(), &nWritten, NULL))
+	if (!WriteFile(logFile, message.c_str(), (DWORD)message.length(), &nWritten, NULL))
 	{
 		System::ShowError(L"Error code %i while logging to file", GetLastError());
 	}

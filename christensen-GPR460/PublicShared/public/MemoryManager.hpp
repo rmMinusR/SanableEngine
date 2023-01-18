@@ -18,16 +18,14 @@ class MemoryManager
 private:
 	struct PoolRecord
 	{
-		std::string objectType;
-		std::string poolType;
+		HotswapTypeData poolType;
 		RawMemoryPool* pool;
 
 		template<typename TObj>
 		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
 			PoolRecord r;
 			r.pool = (RawMemoryPool*)pool;
-			r.objectType = HotswapTypeData::extractName<TObj>();
-			r.poolType = HotswapTypeData::extractName<TypedMemoryPool<TObj>>();
+			r.poolType = HotswapTypeData::blank<TypedMemoryPool<TObj>>();
 			return std::move(r);
 		}
 	};
@@ -62,18 +60,24 @@ private:
 template<typename TObj>
 inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
 {
+	TypedMemoryPool<TObj>* out = nullptr;
+
 	//Search for pool matching typename
-	std::string tName = HotswapTypeData::extractName<TObj>();
-	for (const PoolRecord& r : pools) if (tName == r.objectType) return (TypedMemoryPool<TObj>*)r.pool;
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == typeid(TypedMemoryPool<TObj>).name(); });
+	if (it != pools.cend())
+	{
+		out = (TypedMemoryPool<TObj>*)it->pool;
+		//assert(dynamic_cast<TypedMemoryPool<TObj>*>(it->second) != nullptr);
+	}
+	//for (RawMemoryPool* p : pools) if (out = dynamic_cast<TypedMemoryPool<TObj>*>(p)) return out;
 
 	//If set to create on fallback, do so
-	if (fallbackCreate)
+	if (!out && fallbackCreate)
 	{
-		TypedMemoryPool<TObj>* out = out = new TypedMemoryPool<TObj>;
-		pools.push_back(PoolRecord::create<TObj>(out));
-		return out;
+		pools.push_back(PoolRecord::create<TObj>( out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount) ));
 	}
-	else return nullptr;
+
+	return out;
 }
 
 template<typename TObj, typename... TCtorArgs>
@@ -103,8 +107,7 @@ void MemoryManager::destroy(TObj* obj)
 template<typename TObj>
 void MemoryManager::destroyPool()
 {
-	std::string tName = HotswapTypeData::extractName<TObj>();
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return tName == r.objectType; });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == typeid(TypedMemoryPool<TObj>).name(); });
 	if (it != pools.cend())
 	{
 		delete it->pool;

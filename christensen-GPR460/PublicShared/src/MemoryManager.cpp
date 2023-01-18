@@ -19,7 +19,7 @@ void MemoryManager::refreshVtables(std::vector<HotswapTypeData*> refreshers)
 	{
 		for (HotswapTypeData* d : refreshers)
 		{
-			if (d->name == p.poolType) set_vtable_ptr(p.pool, d->vtable);
+			if (d->name == p.poolType.name) set_vtable_ptr(p.pool, d->vtable);
 		}
 	}
 }
