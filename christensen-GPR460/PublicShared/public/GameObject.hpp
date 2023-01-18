@@ -16,13 +16,7 @@ class GameObject
 protected:
     Transform transform;
 
-    struct ComponentRecord
-    {
-        Component* ptr;
-        std::string name;
-    };
-
-    std::vector<ComponentRecord> components;
+    std::vector<Component*> components;
     friend class EngineCore;
     friend class Component;
 
@@ -51,9 +45,7 @@ public:
     inline T* GetComponent()
     {
         T* out = nullptr;
-        for (ComponentRecord& c : components) if (out = dynamic_cast<T*>(c.ptr)) return out;
+        for (Component* c : components) if (out = dynamic_cast<T*>(c)) return out;
         return nullptr;
     }
-
-    void refreshVtables(std::vector<HotswapTypeData*>& refreshers);
 };

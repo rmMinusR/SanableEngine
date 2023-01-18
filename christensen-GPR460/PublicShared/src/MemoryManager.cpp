@@ -22,4 +22,5 @@ void MemoryManager::refreshVtables(std::vector<HotswapTypeData*> refreshers)
 			if (d->name == p.poolType.name) set_vtable_ptr(p.pool, d->vtable);
 		}
 	}
+	for (auto& p : pools) p.pool->refreshVtables(refreshers);
 }

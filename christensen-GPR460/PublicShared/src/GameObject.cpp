@@ -10,12 +10,9 @@
 void GameObject::BindComponent(Component* c)
 {
 	assert(c->gameObject == nullptr || c->gameObject == this);
-	assert(std::find_if(components.cbegin(), components.cend(), [&](GameObject::ComponentRecord i) { return i.ptr == c; }) == components.cend());
+	assert(std::find(components.cbegin(), components.cend(), c) == components.cend());
 
-	ComponentRecord record;
-	record.ptr = c;
-	record.name = typeid(*c).name();
-	components.push_back(record);
+	components.push_back(c);
 	c->BindToGameObject(this);
 
 	IUpdatable* u = dynamic_cast<IUpdatable*>(c);
@@ -23,11 +20,13 @@ void GameObject::BindComponent(Component* c)
 
 	IRenderable* r = dynamic_cast<IRenderable*>(c);
 	if (r) engine->renderList.add(r);
+
+	c->onStart();
 }
 
 void GameObject::InvokeStart()
 {
-	for (ComponentRecord& c : components) c.ptr->onStart();
+	for (Component* c : components) c->onStart();
 }
 
 GameObject::GameObject(EngineCore* engine) :
@@ -40,16 +39,7 @@ GameObject::~GameObject()
 {
 	if (components.size() != 0)
 	{
-		for (ComponentRecord& c : components) engine->getMemoryManager()->destroy(c.ptr);
+		for (Component* c : components) engine->getMemoryManager()->destroy(c);
 		components.clear();
-	}
-}
-
-void GameObject::refreshVtables(std::vector<HotswapTypeData*>& refreshers)
-{
-	for (ComponentRecord& c : components)
-	{
-		auto it = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](HotswapTypeData* d) { return d->name == c.name; });
-		set_vtable_ptr(c.ptr, (*it)->vtable);
 	}
 }

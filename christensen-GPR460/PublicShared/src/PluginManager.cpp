@@ -79,7 +79,7 @@ void PluginManager::reloadAll()
 {
 	std::cout << "Hot Reload Started\n";
 
-    std::cout << "Removing plugins hooks...\n";
+    std::cout << "Removing plugin hooks...\n";
     unhookAll(false);
     engine->applyConcurrencyBuffers();
 
@@ -109,11 +109,4 @@ void PluginManager::refreshVtablePointers()
 	for (Plugin* p : plugins) for (HotswapTypeData& d : p->reportedData->hotswappables) refreshers.push_back(&d);
 
 	engine->getMemoryManager()->refreshVtables(refreshers);
-
-	//Write to objects
-	for (auto go_it = engine->objects_cbegin(); go_it != engine->objects_cend(); ++go_it)
-	{
-		GameObject* go = *go_it;
-		go->refreshVtables(refreshers);
-	}
 }

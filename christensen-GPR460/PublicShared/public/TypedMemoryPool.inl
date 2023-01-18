@@ -39,17 +39,23 @@ public:
 		}
 	}
 
-	void onHotswap(const HotswapTypeData& newHotswapData)
+	void refreshVtables(const std::vector<HotswapTypeData*>& refreshers) override
 	{
-		assert(hotswap.name == newHotswapData.name); //Ensure same type
-		assert(hotswap.size == newHotswapData.size); //Ensure no changes to data members
-		hotswap = newHotswapData;
-		for (size_t i = 0; i < mMaxNumObjects; i++)
+		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](HotswapTypeData* d) { return d->name == hotswap.name; });
+		if (newHotswap != refreshers.cend())
 		{
-			TObj* obj = reinterpret_cast<TObj*>(((uint8_t*)mMemory) + (i * mObjectSize));
-			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
-			if (isAlive) set_vtable_ptr(obj, hotswap.vtable);
+			assert(hotswap.name == (**newHotswap).name); //Ensure same type
+			assert(hotswap.size == (**newHotswap).size); //Ensure no changes to data members (FIXME fragile)
+			hotswap = **newHotswap;
+
+			for (size_t i = 0; i < mMaxNumObjects; i++)
+			{
+				TObj* obj = reinterpret_cast<TObj*>(((uint8_t*)mMemory) + (i * mObjectSize));
+				bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
+				if (isAlive) set_vtable_ptr(obj, hotswap.vtable);
+			}
 		}
+
 	}
 
 	//Allocates memory and creates an object.

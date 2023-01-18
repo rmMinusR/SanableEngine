@@ -58,12 +58,12 @@ void EngineCore::refreshCallBatchers()
 
     for (GameObject* go : objects)
     {
-        for (GameObject::ComponentRecord& c : go->components)
+        for (Component* c : go->components)
         {
-            IUpdatable* u = dynamic_cast<IUpdatable*>(c.ptr);
+            IUpdatable* u = dynamic_cast<IUpdatable*>(c);
             if (u) updateList.add(u);
 
-            IRenderable* r = dynamic_cast<IRenderable*>(c.ptr);
+            IRenderable* r = dynamic_cast<IRenderable*>(c);
             if (r) renderList.add(r);
         }
     }
@@ -152,7 +152,7 @@ void EngineCore::destroyImmediate(Component* c)
 {
     assert(std::find(objects.cbegin(), objects.cend(), c->getGameObject()) != objects.cend());
     auto& l = c->getGameObject()->components;
-    auto it = std::find_if(l.cbegin(), l.cend(), [&](GameObject::ComponentRecord r) { return r.ptr == c; });
+    auto it = std::find(l.cbegin(), l.cend(), c);
     assert(it != l.cend());
     l.erase(it);
     memoryManager.destroy(c);

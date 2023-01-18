@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "MemoryPoolCommon.hpp"
+#include "Hotswap.hpp"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
@@ -15,6 +16,8 @@ public:
 	//Idiotproofing against myself
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
+
+	virtual void refreshVtables(const std::vector<HotswapTypeData*>& refreshers);
 
 	//Allocates raw memory.
 	//Should almost always be wrapped by children, since it does no initialization.
