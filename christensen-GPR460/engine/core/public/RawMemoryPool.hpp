@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "MemoryPoolCommon.hpp"
-#include "Hotswap.hpp"
+#include "Hotswap.inl"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool

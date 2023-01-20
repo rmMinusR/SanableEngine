@@ -5,6 +5,7 @@
 
 # Build output directory
 christensen-GPR460/builds
+out/
 
 # User-specific files
 *.rsuser

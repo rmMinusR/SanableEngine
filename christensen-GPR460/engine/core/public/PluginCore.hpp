@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "Hotswap.hpp"
+#include "Hotswap.inl"
 
 struct Plugin;
 struct PluginReportedData;

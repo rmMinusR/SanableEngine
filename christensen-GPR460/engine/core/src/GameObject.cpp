@@ -5,7 +5,7 @@
 
 #include "EngineCore.hpp"
 #include "Component.hpp"
-#include "Hotswap.hpp"
+#include "Hotswap.inl"
 
 void GameObject::BindComponent(Component* c)
 {

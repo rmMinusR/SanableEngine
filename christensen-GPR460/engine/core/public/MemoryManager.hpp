@@ -3,7 +3,6 @@
 #include <unordered_map>
 #include <vector>
 #include "TypedMemoryPool.inl"
-#include "Hotswap.hpp"
 
 class GameObject;
 class EngineCore;

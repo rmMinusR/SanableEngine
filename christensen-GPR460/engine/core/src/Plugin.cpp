@@ -54,7 +54,7 @@ bool Plugin::loadDLL()
 	assert(!_dllGood());
 
 #ifdef _WIN32
-	dll = LoadLibrary(path.c_str());
+	dll = LoadLibraryW(path.c_str());
 #endif
 #ifdef __EMSCRIPTEN__
 	dll = dlopen(path.c_str(), RTLD_LAZY);
