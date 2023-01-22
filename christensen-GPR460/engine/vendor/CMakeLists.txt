@@ -4,9 +4,9 @@ set (CMAKE_CXX_STANDARD 17)
 project("engine-vendor")
 
 # Declare target
-aux_source_directory("vendor/src" engine_vendor_sources)
+aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_vendor_sources)
 add_executable("engine-vendor" ${engine_vendor_sources})
-target_include_directories("engine-vendor" PRIVATE "vendor/private")
+target_include_directories("engine-vendor" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare post-build action: Copy SDL2.dll to output dir
 if (WIN32)
