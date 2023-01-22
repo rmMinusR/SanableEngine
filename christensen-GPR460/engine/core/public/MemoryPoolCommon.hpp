@@ -70,7 +70,7 @@ private:
 
 #pragma region From original MemoryPool by Dean Lawson
 
-int isPowerOfTwo(unsigned int x);
-unsigned int getClosestPowerOf2LargerThan(unsigned int num);
+int isPowerOfTwo(size_t x);
+size_t getClosestPowerOf2LargerThan(size_t num);
 
 #pragma endregion

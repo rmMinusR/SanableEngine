@@ -4,7 +4,7 @@ set (CMAKE_CXX_STANDARD 17)
 project("engine-vendor")
 
 # Declare target
-aux_source_directory("core/src" engine_vendor_sources)
+aux_source_directory("vendor/src" engine_vendor_sources)
 add_executable("engine-vendor" ${engine_vendor_sources})
 target_include_directories("engine-vendor" PRIVATE "vendor/private")
 

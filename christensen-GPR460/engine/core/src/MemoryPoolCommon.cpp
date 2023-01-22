@@ -5,12 +5,12 @@
 #pragma region From original MemoryPool by Dean Lawson
 
 //got this algorithm from: http://www.exploringbinary.com/ten-ways-to-check-if-an-integer-is-a-power-of-two-in-c/
-int isPowerOfTwo(unsigned int x)
+int isPowerOfTwo(size_t x)
 {
 	return ((x != 0) && !(x & (x - 1)));
 }
 
-unsigned int getClosestPowerOf2LargerThan(unsigned int num)
+size_t getClosestPowerOf2LargerThan(size_t num)
 {
 	static uint32_t powersOf2[32];
 	static bool arrayInitted = false;

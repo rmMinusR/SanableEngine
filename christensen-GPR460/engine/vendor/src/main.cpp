@@ -3,7 +3,6 @@
 #include <emscripten.h>
 #endif
 
-//#define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include "EngineCore.hpp"
 #include "System_Switcher.hpp"
