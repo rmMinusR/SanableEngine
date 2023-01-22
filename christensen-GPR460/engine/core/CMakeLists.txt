@@ -9,7 +9,7 @@ add_library("engine-core" SHARED ${engine_core_sources})
 target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare imports
-include_directories("engine-core" PRIVATE ${SDL2_INCLUDE_DIRS})
+target_include_directories("engine-core" PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries("engine-core" ${SDL2_LIBRARIES})
 
 # Declare exports

@@ -10,4 +10,4 @@ else ()
 endif ()
 
 include("engine/CMakeLists.txt")
-#include("PrimitivesPlugin/CMakeLists.txt")
+include("PrimitivesPlugin/CMakeLists.txt")

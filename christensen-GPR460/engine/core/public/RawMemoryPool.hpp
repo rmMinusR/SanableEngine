@@ -12,8 +12,8 @@
 class RawMemoryPool
 {
 public:
-	RawMemoryPool(size_t maxNumObjects, size_t objectSize);
-	virtual ~RawMemoryPool();
+	ENGINECORE_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
+	ENGINECORE_API virtual ~RawMemoryPool();
 
 	//Idiotproofing against myself
 	RawMemoryPool(const RawMemoryPool&) = delete;
@@ -27,7 +27,7 @@ public:
 
 	//Deallocates raw memory.
 	//Children that deal with types should override this to add destructor logic.
-	virtual void release(void* obj);
+	ENGINECORE_API virtual void release(void* obj);
 
 	bool contains(void* ptr) const;
 	inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
@@ -58,13 +58,13 @@ public:
 		friend class RawMemoryPool;
 
 	public:
-		void* operator*() const;
+		ENGINECORE_API void* operator*() const;
 
-		const_iterator operator++();
+		ENGINECORE_API const_iterator operator++();
 
-		inline bool operator!=(const const_iterator& other) const { return index != other.index; }
-		inline bool operator==(const const_iterator& other) const { return index == other.index; }
+		ENGINECORE_API inline bool operator!=(const const_iterator& other) const { return index != other.index; }
+		ENGINECORE_API inline bool operator==(const const_iterator& other) const { return index == other.index; }
 	};
-	const_iterator cbegin() const;
-	const_iterator cend() const;
+	ENGINECORE_API const_iterator cbegin() const;
+	ENGINECORE_API const_iterator cend() const;
 };

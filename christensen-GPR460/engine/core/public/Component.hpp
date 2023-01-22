@@ -12,17 +12,17 @@ class Component
 protected:
 	GameObject* gameObject;
 
-	virtual void BindToGameObject(GameObject* obj);
+	ENGINECORE_API virtual void BindToGameObject(GameObject* obj);
 	friend class GameObject;
 
-	inline EngineCore* getEngine() const { return gameObject->engine; }
+	ENGINECORE_API inline EngineCore* getEngine() const { return gameObject->engine; }
 
 public:
-	Component();
-	virtual ~Component();
+	ENGINECORE_API Component();
+	ENGINECORE_API virtual ~Component();
 
-	inline GameObject* getGameObject() const { return gameObject; }
-	virtual void onStart();
+	ENGINECORE_API inline GameObject* getGameObject() const { return gameObject; }
+	ENGINECORE_API virtual void onStart();
 };
 
 
