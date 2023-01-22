@@ -22,7 +22,7 @@ namespace gpr460
 	private:
 		FILE* consolePsuedofile;
 		HANDLE logFile;
-		const string logFileName = TEXT("GameErrors.txt");
+		const string logFileName = L"GameErrors.txt";
 
 		friend class EngineCore;
 #ifdef _DEBUG
