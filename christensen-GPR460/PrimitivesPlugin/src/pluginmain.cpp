@@ -25,13 +25,13 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
     return true;
 }
 
-PLUGIN_C_API(bool) plugin_init(bool firstRun)
+PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
 {
     printf("PrimitivesPlugin: plugin_init() called\n");
     return true;
 }
 
-PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
+PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 {
     printf("PrimitivesPlugin: plugin_cleanup() called\n");
 

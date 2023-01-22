@@ -23,7 +23,7 @@ public:
 
 	//Allocates raw memory.
 	//Should almost always be wrapped by children, since it does no initialization.
-	void* allocate();
+	ENGINECORE_API void* allocate();
 
 	//Deallocates raw memory.
 	//Children that deal with types should override this to add destructor logic.

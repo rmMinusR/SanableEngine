@@ -6,8 +6,6 @@
 
 #include <cassert>
 
-#include "PluginCore.hpp"
-
 __thiscall Plugin::Plugin(const std::filesystem::path& path) :
 	path(path),
 	status(Status::NotLoaded),
@@ -73,7 +71,7 @@ bool Plugin::preInit(EngineCore* engine)
 	fp_plugin_preInit func = (fp_plugin_preInit)getSymbol("plugin_preInit");
 	if (!func)
 	{
-		printf("ERROR: Plugin %s has no preInit function", (char*)path.filename().c_str());
+		wprintf(L"ERROR: Plugin %s has no preInit function\n", path.filename().c_str());
 		return false;
 	}
 

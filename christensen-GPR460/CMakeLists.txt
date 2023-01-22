@@ -9,5 +9,16 @@ else ()
   set(ARCH_NAME x86)
 endif ()
 
+function(export_dll dll project)
+	if (WIN32)
+        add_custom_command(
+            TARGET ${project} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${dll}>" "$<TARGET_FILE_DIR:${project}>"
+            VERBATIM
+        )
+    endif()
+endfunction()
+
 include("engine/CMakeLists.txt")
 include("PrimitivesPlugin/CMakeLists.txt")
+include("UserPlugin/CMakeLists.txt")

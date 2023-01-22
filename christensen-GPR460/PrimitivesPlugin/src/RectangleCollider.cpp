@@ -6,7 +6,7 @@
 #undef min
 #undef max
 
-PLUGIN_API_CTOR RectangleCollider::RectangleCollider(float w, float h) :
+RectangleCollider::RectangleCollider(float w, float h) :
 	Component(),
 	w(w),
 	h(h)
@@ -17,7 +17,7 @@ RectangleCollider::~RectangleCollider()
 {
 }
 
-PLUGIN_API(bool) RectangleCollider::CheckCollision(RectangleCollider const* other) const
+bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 {
 	Vector3<float> aMin =        getGameObject()->getTransform()->getPosition();
 	Vector3<float> bMin = other->getGameObject()->getTransform()->getPosition();
@@ -41,7 +41,7 @@ PLUGIN_API(bool) RectangleCollider::CheckCollision(RectangleCollider const* othe
 		//&& overlapMinCorner.getZ() <= overlapMaxCorner.getZ();
 }
 
-PLUGIN_API(bool) RectangleCollider::CheckCollisionAny() const
+bool RectangleCollider::CheckCollisionAny() const
 {
 	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
 	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it) if (*it != this && CheckCollision((RectangleCollider*)*it)) return true;

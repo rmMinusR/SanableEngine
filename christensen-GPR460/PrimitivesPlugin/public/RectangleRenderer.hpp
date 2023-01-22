@@ -1,9 +1,10 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include <SDL_pixels.h>
 
 #include "Component.hpp"
-#include "PluginCore.hpp"
 
 class RectangleRenderer :
 	public Component,
@@ -14,10 +15,10 @@ private:
 	SDL_Color color;
 
 public:
-	PLUGIN_API_CTOR RectangleRenderer(float w, float h, SDL_Color color);
-	~RectangleRenderer();
+	PRIMITIVES_API RectangleRenderer(float w, float h, SDL_Color color);
+	PRIMITIVES_API ~RectangleRenderer();
 
-	void Render() override;
+	PRIMITIVES_API void Render() override;
 
-	inline void SetColor(SDL_Color newColor) { color = newColor; }
+	PRIMITIVES_API inline void SetColor(SDL_Color newColor) { color = newColor; }
 };

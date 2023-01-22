@@ -6,7 +6,7 @@
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 
-PLUGIN_API_CTOR RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
+RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
 	Component(),
 	w(w),
 	h(h),

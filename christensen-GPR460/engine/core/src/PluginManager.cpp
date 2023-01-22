@@ -7,7 +7,6 @@
 
 #include "EngineCore.hpp"
 #include "System.hpp"
-#include "PluginCore.hpp"
 #include "GameObject.hpp"
 
 PluginManager::PluginManager(EngineCore* engine) :
