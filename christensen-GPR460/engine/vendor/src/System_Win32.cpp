@@ -111,7 +111,7 @@ std::vector<std::filesystem::path> gpr460::System_Win32::ListPlugins(std::filesy
 
 	if (!std::filesystem::exists(path))
 	{
-		printf("Plugins folder does not exist, creating");
+		printf("Plugins folder does not exist, creating\n");
 		std::filesystem::create_directory(path);
 	}
 
