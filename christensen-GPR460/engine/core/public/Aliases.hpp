@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include <string>
 
 namespace gpr460

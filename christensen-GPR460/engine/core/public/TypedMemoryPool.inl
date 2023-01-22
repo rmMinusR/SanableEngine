@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include "RawMemoryPool.hpp"
 
 #include <stdio.h>

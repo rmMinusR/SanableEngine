@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include "Vector3.inl"
 
 class Transform

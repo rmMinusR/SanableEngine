@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include <vector>
 
 #include "Plugin.hpp"

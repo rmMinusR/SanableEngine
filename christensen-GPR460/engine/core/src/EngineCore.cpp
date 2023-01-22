@@ -1,18 +1,13 @@
 #include "EngineCore.hpp"
 
-#include <SDL.h>
-
 #include <cassert>
 #include <iostream>
+
+#include <SDL.h>
 
 #include "GameObject.hpp"
 #include "Component.hpp"
 #include "System.hpp"
-
-uint32_t GetTicks()
-{
-    return SDL_GetTicks();
-}
 
 void EngineCore::applyConcurrencyBuffers()
 {

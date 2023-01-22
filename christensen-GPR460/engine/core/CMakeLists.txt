@@ -1,11 +1,11 @@
-cmake_minimum_required (VERSION 3.8)
+cmake_minimum_required (VERSION 3.11)
 set (CMAKE_CXX_STANDARD 17)
 
 project("engine-core")
 
 # Declare target
 aux_source_directory("core/src" engine_core_sources)
-add_library("engine-core" STATIC ${engine_core_sources}) #TODO switch to SHARED?
+add_library("engine-core" SHARED ${engine_core_sources})
 target_include_directories("engine-core" PRIVATE "core/private")
 
 # Declare imports

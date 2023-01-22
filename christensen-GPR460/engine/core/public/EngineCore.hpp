@@ -1,12 +1,12 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include <vector>
 
 #include "CallBatcher.inl"
 #include "PluginManager.hpp"
 #include "MemoryManager.hpp"
-
-uint32_t GetTicks();
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -44,33 +44,31 @@ private:
 
     void refreshCallBatchers();
 
+    void destroyImmediate(GameObject* go);
+    void destroyImmediate(Component* c);
+
+    void tick();
+    void draw();
+
 public:
     SDL_Renderer* renderer = nullptr;
     uint32_t frameStart = 0;
     bool quit = false;
     int frame = 0;
 
-    EngineCore();
-    ~EngineCore();
+    ENGINECORE_API EngineCore();
+    ENGINECORE_API ~EngineCore();
 
     typedef void (*UserInitFunc)(EngineCore*);
     typedef gpr460::System* (*SystemFactoryFunc)();
-    void init(char const* windowName, int windowWidth, int windowHeight, SystemFactoryFunc createSystem, UserInitFunc userInitCallback);
-    void shutdown();
+    ENGINECORE_API void init(char const* windowName, int windowWidth, int windowHeight, SystemFactoryFunc createSystem, UserInitFunc userInitCallback);
+    ENGINECORE_API void shutdown();
 
-    GameObject* addGameObject();
-    void destroy(GameObject* go);
-    void destroyImmediate(GameObject* go);
-    void destroyImmediate(Component* c);
+    ENGINECORE_API GameObject* addGameObject();
+    ENGINECORE_API void destroy(GameObject* go);
 
-    void doMainLoop();
-    static void frameStep(void* arg);
-
-    void tick();
-    void draw();
-
-    inline std::vector<GameObject*>::const_iterator objects_cbegin() const { return objects.cbegin(); }
-    inline std::vector<GameObject*>::const_iterator objects_cend  () const { return objects.cend  (); }
+    ENGINECORE_API void doMainLoop();
+    ENGINECORE_API static void frameStep(void* arg);
 
     gpr460::System* getSystem() { return system; }
     MemoryManager* getMemoryManager() { return &memoryManager; }

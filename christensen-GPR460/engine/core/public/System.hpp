@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include "Aliases.hpp"
 
 #include <vector>
@@ -7,6 +9,8 @@
 
 class EngineCore;
 class PluginManager;
+
+ENGINECORE_API uint32_t GetTicks();
 
 namespace gpr460
 {
@@ -19,7 +23,7 @@ namespace gpr460
 
 	public:
 		friend class EngineCore;
-		virtual void Init(EngineCore*);
+		ENGINECORE_API virtual void Init(EngineCore*);
 		virtual void DoMainLoop() = 0;
 		virtual void Shutdown() = 0;
 
@@ -27,8 +31,8 @@ namespace gpr460
 		virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const = 0;
 
 	public:
-		System() = default;
-		virtual ~System() = default;
+		ENGINECORE_API System() = default;
+		ENGINECORE_API virtual ~System() = default;
 
 		//TODO these should be combined
 		virtual void ShowError(const gpr460::string& message) = 0;

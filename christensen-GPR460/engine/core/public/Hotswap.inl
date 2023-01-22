@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include <type_traits>
 
 #include "Aliases.hpp"

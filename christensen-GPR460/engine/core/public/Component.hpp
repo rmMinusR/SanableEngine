@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 #include "GameObject.hpp"
 
 class GameObject;
