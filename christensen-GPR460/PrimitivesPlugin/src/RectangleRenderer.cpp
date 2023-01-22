@@ -29,6 +29,7 @@ void RectangleRenderer::Render()
 		(int) h
 	};
 
-	SDL_SetRenderDrawColor(getEngine()->renderer, color.r, color.g, color.b, color.a);
+	SDL_SetRenderDrawColor(getEngine()->renderer, color.r, color.g, color.b, 255);
+	//SDL_SetRenderDrawColor(getEngine()->renderer, color.r, color.g, color.b, color.a);
 	SDL_RenderFillRect(getEngine()->renderer, &r);
 }

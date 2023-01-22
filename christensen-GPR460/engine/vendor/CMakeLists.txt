@@ -8,6 +8,13 @@ aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_vendor_sources)
 add_executable("engine-vendor" ${engine_vendor_sources})
 target_include_directories("engine-vendor" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
+if (EMSCRIPTEN)
+	set_target_properties(engine-vendor PROPERTIES
+		OUTPUT_NAME "index"
+		SUFFIX ".html"
+	)
+endif()
+
 # Declare post-build action: Copy SDL2.dll to output dir
 export_dll(SDL2::SDL2 engine-vendor)
 

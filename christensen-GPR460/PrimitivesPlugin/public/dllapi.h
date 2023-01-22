@@ -3,7 +3,7 @@
 #include "PluginCore.hpp"
 
 #if PrimitivesPlugin_EXPORTS
-#define PRIMITIVES_API __declspec(dllexport) PLUGIN_API_KEEPALIVE
+#define PRIMITIVES_API API_EXPORT API_KEEPALIVE
 #else
-#define PRIMITIVES_API __declspec(dllimport) PLUGIN_API_KEEPALIVE
+#define PRIMITIVES_API API_IMPORT API_KEEPALIVE
 #endif

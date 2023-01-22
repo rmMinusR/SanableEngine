@@ -47,7 +47,7 @@ public:
     inline T* GetComponent()
     {
         T* out = nullptr;
-        for (Component* c : components) if (out = dynamic_cast<T*>(c)) return out;
+        for (Component* c : components) if (( out = dynamic_cast<T*>(c) )) return out;
         return nullptr;
     }
 };
