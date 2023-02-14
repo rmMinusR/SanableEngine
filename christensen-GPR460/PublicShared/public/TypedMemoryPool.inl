@@ -23,20 +23,7 @@ public:
 		RawMemoryPool(maxNumObjects, sizeof(TObj)),
 		hotswap(HotswapTypeData::blank<TObj>())
 	{
-	}
-	~TypedMemoryPool()
-	{
-		//Call dtors on living objects
-		for (size_t i = 0; i < mMaxNumObjects; i++)
-		{
-			TObj* obj = reinterpret_cast<TObj*>(((uint8_t*)mMemory) + (i * mObjectSize));
-			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
-			if (isAlive)
-			{
-				printf("WARNING: Unreleased %s@%p", typeid(TObj).name(), obj);
-				optional_destructor<TObj>::call(obj);
-			}
-		}
+		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
 	}
 
 	void refreshVtables(const std::vector<HotswapTypeData*>& refreshers) override
@@ -55,7 +42,6 @@ public:
 				if (isAlive) set_vtable_ptr(obj, hotswap.vtable);
 			}
 		}
-
 	}
 
 	//Allocates memory and creates an object.
@@ -75,15 +61,9 @@ public:
 		return pObj;
 	}
 
-	inline void release(TObj* obj) { release((void*)obj); }
+	//Pass through
+	inline void release(TObj* obj) { RawMemoryPool::release(obj); }
 protected:
-	virtual void release(void* obj) override
-	{
-		//Manual dtor call since we didn't call delete/memfree
-		optional_destructor<TObj>::call((TObj*)obj);
-
-		RawMemoryPool::release(obj);
-	}
 
 	TypedMemoryPool(TypedMemoryPool&&) = default;
 	TypedMemoryPool(const TypedMemoryPool&) = delete;

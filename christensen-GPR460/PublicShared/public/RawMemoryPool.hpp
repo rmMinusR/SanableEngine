@@ -19,13 +19,17 @@ public:
 
 	virtual void refreshVtables(const std::vector<HotswapTypeData*>& refreshers);
 
+	typedef void (*hook_t)(void*);
+
 	//Allocates raw memory.
-	//Should almost always be wrapped by children, since it does no initialization.
+	//Set hook if type requires special initialization
 	void* allocate();
+	hook_t initHook = nullptr;
 
 	//Deallocates raw memory.
-	//Children that deal with types should override this to add destructor logic.
-	virtual void release(void* obj);
+	//Set hook if type requires special cleanup
+	void release(void* obj);
+	hook_t releaseHook = nullptr;
 
 	bool contains(void* ptr) const;
 	inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
