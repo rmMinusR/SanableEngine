@@ -26,6 +26,12 @@
     <ClInclude Include="SerializationDefines.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SerializationReaderWriter.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SerialRefl.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SerializationRegistryEntry.cpp">
@@ -38,6 +44,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SerializationRegistry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SerializationReaderWriter.inl">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

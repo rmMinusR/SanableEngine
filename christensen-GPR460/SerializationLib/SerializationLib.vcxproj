@@ -21,12 +21,15 @@
   <ItemGroup>
     <ClInclude Include="ISerializable.hpp" />
     <ClInclude Include="SerializationDefines.hpp" />
+    <ClInclude Include="SerializationReaderWriter.hpp" />
     <ClInclude Include="SerializationRegistry.hpp" />
     <ClInclude Include="SerializationRegistryEntry.hpp" />
     <ClInclude Include="SerializedObject.hpp" />
+    <ClInclude Include="SerialRefl.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISerializable.cpp" />
+    <ClCompile Include="SerializationReaderWriter.inl" />
     <ClCompile Include="SerializationRegistry.cpp" />
     <ClCompile Include="SerializationRegistryEntry.cpp" />
     <ClCompile Include="SerializedObject.cpp" />
