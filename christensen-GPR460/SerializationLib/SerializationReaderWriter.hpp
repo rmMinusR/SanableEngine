@@ -18,8 +18,11 @@ inline bool isLittleEndian()
 template<typename T, typename std::enable_if<std::is_arithmetic_v<T>>* = nullptr>
 void correctEndianness(T* buf) //Symmetric: Both host-to-net and net-to-host
 {
-	char* bytes = (char*)buf;
-	for (int i = 0; i < sizeof(T)/2; ++i) std::swap(bytes[i], bytes[sizeof(T)-1-i]);
+	if (isLittleEndian())
+	{
+		char* bytes = (char*)buf;
+		for (int i = 0; i < sizeof(T)/2; ++i) std::swap(bytes[i], bytes[sizeof(T)-1-i]);
+	}
 }
 
 #pragma endregion
@@ -27,25 +30,26 @@ void correctEndianness(T* buf) //Symmetric: Both host-to-net and net-to-host
 
 namespace Serialization::Utils
 {
-	template<typename T>
+	template<typename T, typename>
 	static void write(const T& obj, std::ostream& stream) = delete;
 
-	template<typename T>
+	template<typename T, typename>
 	static void read(T& obj, std::istream& stream) = delete;
 
 	#pragma region Arithmetics (int, float)
 
 	template<typename T, typename std::enable_if<std::is_arithmetic_v<T>>* = nullptr>
-	static void write(T obj, std::ostream& stream) //MUST COPY so we can correct its endianness without modifying original
+	static void write(const T& obj, std::ostream& stream)
 	{
-		correctEndianness(&obj);
-		stream.write(&obj, sizeof(T));
+		T buf = obj;
+		correctEndianness(&buf);
+		stream.write((char*)&buf, sizeof(T));
 	}
 
 	template<typename T, typename std::enable_if<std::is_arithmetic_v<T>>* = nullptr>
 	static void read(T& obj, std::istream& stream)
 	{
-		stream.read(&obj, sizeof(T));
+		stream.read((char*)&obj, sizeof(T));
 		correctEndianness(&obj);
 	}
 
