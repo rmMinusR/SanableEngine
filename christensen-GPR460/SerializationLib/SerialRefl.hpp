@@ -13,17 +13,11 @@ template<typename... Ts>
 struct has_all_helper {}; //Utility struct, pass parameter names in SFINAE
 
 template<typename T, typename... TMembers>
-struct has_all : std::false_type {};
-
-template<typename T, typename... TMembers>
-struct has_all<
-    T,
-    std::conditional_t<
-        false,
-        has_all_helper<TMembers...>,
-        void
-    >
-> : public std::true_type {};
+struct has_all : std::conditional_t<
+    false,
+    has_all_helper<TMembers...>,
+    void
+> {};
 
 template<typename T>
 using is_container = has_all<T,
