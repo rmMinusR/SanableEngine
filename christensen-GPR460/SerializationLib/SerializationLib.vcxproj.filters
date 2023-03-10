@@ -46,8 +46,13 @@
     <ClCompile Include="SerializationRegistry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SerializationReaderWriter.inl">
+    <ClCompile Include="SerializationReaderWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SerializedTypes.hpp">
+      <Filter>Header Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

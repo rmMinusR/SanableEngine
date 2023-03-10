@@ -29,10 +29,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ISerializable.cpp" />
-    <ClCompile Include="SerializationReaderWriter.inl" />
+    <ClCompile Include="SerializationReaderWriter.cpp" />
     <ClCompile Include="SerializationRegistry.cpp" />
     <ClCompile Include="SerializationRegistryEntry.cpp" />
     <ClCompile Include="SerializedObject.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SerializedTypes.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

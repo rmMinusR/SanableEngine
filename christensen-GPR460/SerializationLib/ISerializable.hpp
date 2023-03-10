@@ -13,11 +13,15 @@ In binary mode, reads two bytes as ID to find ctor, then reads one byte to deter
 */
 
 struct SerializationRegistryEntry;
+struct SerializationOptions;
 
 class ISerializable
 {
 public:
 	virtual ~ISerializable();
+
+	void   serialize(std::ostream& out, const SerializationOptions& options) const;
+	void deserialize(std::istream&  in, const SerializationOptions& options);
 
 protected:
 	virtual SerializationRegistryEntry const* getRegistryEntry() const = 0;
