@@ -207,7 +207,7 @@ inline void test()
 		Serialization::Types::write(v, std::cout, options); \
 		Serialization::Types:: read(v, std::cin , options); \
 	}
-
+	
 	__TEST_SER(char)
 	__TEST_SER(int8_t)
 	__TEST_SER(int16_t)

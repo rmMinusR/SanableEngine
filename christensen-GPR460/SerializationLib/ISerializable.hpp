@@ -20,8 +20,10 @@ class ISerializable
 public:
 	virtual ~ISerializable();
 
-	void   serialize(std::ostream& out, const SerializationOptions& options) const;
-	void deserialize(std::istream&  in, const SerializationOptions& options);
+	//Temp measure
+	//TODO switch based on options
+	inline void   serialize(std::ostream& out, const SerializationOptions& options) const { binarySerializeMembers (out); }
+	inline void deserialize(std::istream&  in, const SerializationOptions& options)       { binaryDeserializeMembers(in); }
 
 protected:
 	virtual SerializationRegistryEntry const* getRegistryEntry() const = 0;
