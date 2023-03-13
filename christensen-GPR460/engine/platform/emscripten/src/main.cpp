@@ -1,11 +1,9 @@
 #include <iostream>
-#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
-#endif
 
 #include <SDL.h>
 #include "EngineCore.hpp"
-#include "System_Switcher.hpp"
+#include "System_Emscripten.hpp"
 
 void vendorInit(EngineCore* engine);
 gpr460::System* systemFactory();
@@ -23,6 +21,9 @@ int main(int argc, char* argv[])
     //Loop
     engine.doMainLoop();
 
+    //NOTE: Due to Emscripten shenanigans, code beyond this point will never run
+    //It is here for readability when compared to the Win32 version
+
     //Shutdown
     engine.shutdown();
     SDL_Quit();
@@ -37,7 +38,7 @@ int main(int argc, char* argv[])
 
 gpr460::System* systemFactory()
 {
-    return new gpr460::System_Impl();
+    return new gpr460::System_Emscripten();
 }
 
 void vendorInit(EngineCore* engine)

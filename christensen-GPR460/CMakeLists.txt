@@ -19,6 +19,16 @@ function(export_dll dll project)
     endif()
 endfunction()
 
+function(export_plugin_dll project)
+	if (WIN32)
+        set_target_properties(${project} PROPERTIES
+	        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/${project}"
+	        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/${project}"
+	        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/${project}"
+        )
+    endif()
+endfunction()
+
 # Configure SDL2
 message("-- Configuring SDL2")
 if (WIN32)
@@ -34,6 +44,16 @@ if (EMSCRIPTEN) # Support Emscripten
 endif()
 find_package(SDL2 REQUIRED)
 
-include("engine/CMakeLists.txt")
+include("engine/core/CMakeLists.txt") # Shared common code
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
+
+
+# Platform-specific builds
+# Must be done last so Emscripten can pack plugins as assets in VFS
+if (EMSCRIPTEN)
+    include("engine/platform/emscripten/CMakeLists.txt")
+endif()
+if (WIN32)
+    include("engine/platform/win32/CMakeLists.txt")
+endif()

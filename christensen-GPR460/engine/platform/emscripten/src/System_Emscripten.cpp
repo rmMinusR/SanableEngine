@@ -1,6 +1,6 @@
 #include "System_Emscripten.hpp"
 
-#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
 
 #include <dirent.h>
 
@@ -114,5 +114,3 @@ std::filesystem::path gpr460::System_Emscripten::GetBaseDir() const
 {
 	return "/"; //FIXME?
 }
-
-#endif __EMSCRIPTEN__

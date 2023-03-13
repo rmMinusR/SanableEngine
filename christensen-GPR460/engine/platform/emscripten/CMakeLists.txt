@@ -13,6 +13,8 @@ if (EMSCRIPTEN)
 		OUTPUT_NAME "index"
 		SUFFIX ".html"
 	)
+	target_link_options(engine-vendor PRIVATE "--shell-file ${CMAKE_CURRENT_LIST_DIR}/frontend.html")
+	#target_link_options(engine-vendor PRIVATE "--embed-file ${RUNTIME_OUTPUT_DIRECTORY}/plugins@plugins")
 endif()
 
 # Declare post-build action: Copy SDL2.dll to output dir
