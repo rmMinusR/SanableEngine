@@ -54,7 +54,6 @@ include("engine/core/CMakeLists.txt") # Shared common code
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
 
-
 # Platform-specific builds
 # Must be done last so Emscripten can pack plugins as assets in VFS
 if (EMSCRIPTEN)

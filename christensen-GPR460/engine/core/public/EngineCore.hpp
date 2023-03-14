@@ -52,7 +52,6 @@ private:
 
 public:
     SDL_Renderer* renderer = nullptr;
-    uint32_t frameStart = 0;
     bool quit = false;
     int frame = 0;
 

@@ -92,7 +92,6 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     frame = 0;
-    frameStart = GetTicks();
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
 
@@ -170,8 +169,7 @@ void EngineCore::tick()
     assert(isAlive);
 
     frame++;
-    frameStart = GetTicks();
-
+    
     processEvents();
 
     applyConcurrencyBuffers();

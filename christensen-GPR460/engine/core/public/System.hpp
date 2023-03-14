@@ -10,8 +10,6 @@
 class EngineCore;
 class PluginManager;
 
-ENGINECORE_API uint32_t GetTicks();
-
 namespace gpr460
 {
 

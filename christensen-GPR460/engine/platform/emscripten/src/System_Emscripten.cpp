@@ -47,32 +47,22 @@ void gpr460::System_Emscripten::Shutdown()
 	isAlive = false;
 }
 
-//extern "C" void jsnative_alert(const wchar_t* message);
+EM_JS(void, jsnative_alert, (const wchar_t* message), {
+	alert(UTF16ToString(message));
+})
 
 void gpr460::System_Emscripten::ShowError(const gpr460::string& message)
 {
-	//jsnative_alert(message.c_str());
-
-	//constexpr size_t bufferSize = 256;
-	//wchar_t buffer[bufferSize];
-	//memset(buffer, '\0', bufferSize);
-	//int nValid = swprintf_s(buffer, bufferSize, L"alert($%s)", message.c_str());
-	
-	//emscripten_run_script(buffer);
-	//EM_ASM({
-	//	alert($0);
-	//}, message);
+	jsnative_alert(message.c_str());
 }
 
-//extern "C" void jsnative_console_error(const wchar_t* message);
+EM_JS(void, jsnative_console_error, (const wchar_t* message), {
+	console.error(UTF16ToString(message));
+})
 
 void gpr460::System_Emscripten::LogToErrorFile(const gpr460::string& message)
 {
-	//jsnative_console_error(message.c_str());
-
-	//EM_ASM({
-	//	console.log($0);
-	//}, message);
+	jsnative_console_error(message.c_str());
 }
 
 std::vector<std::filesystem::path> gpr460::System_Emscripten::ListPlugins(std::filesystem::path path) const
