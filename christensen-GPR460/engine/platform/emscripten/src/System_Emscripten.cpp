@@ -19,6 +19,15 @@ gpr460::System_Emscripten::~System_Emscripten()
 	assert(!isAlive);
 }
 
+void gpr460::System_Emscripten::DebugPause()
+{
+#ifdef _DEBUG
+	//Pause so we can read console
+	wprintf(L"\nDEBUG Paused, type any key in console to continue\n");
+	std::cin.get();
+#endif
+}
+
 void gpr460::System_Emscripten::Init(EngineCore* engine)
 {
 	System::Init(engine);

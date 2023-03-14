@@ -60,8 +60,7 @@ public:
     ENGINECORE_API ~EngineCore();
 
     typedef void (*UserInitFunc)(EngineCore*);
-    typedef gpr460::System* (*SystemFactoryFunc)();
-    ENGINECORE_API void init(char const* windowName, int windowWidth, int windowHeight, SystemFactoryFunc createSystem, UserInitFunc userInitCallback);
+    ENGINECORE_API void init(char const* windowName, int windowWidth, int windowHeight, gpr460::System& system, UserInitFunc userInitCallback);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API GameObject* addGameObject();

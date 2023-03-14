@@ -13,10 +13,12 @@ int main(int argc, char* argv[])
     const int WIDTH = 640;
     const int HEIGHT = 480;
 
+    gpr460::System_Emscripten system;
+
     //Init
     SDL_Init(SDL_INIT_VIDEO);
     EngineCore engine;
-    engine.init("SDL2 Test", WIDTH, HEIGHT, systemFactory, vendorInit);
+    engine.init("SDL2 Test", WIDTH, HEIGHT, system, vendorInit);
 
     //Loop
     engine.doMainLoop();
@@ -28,17 +30,7 @@ int main(int argc, char* argv[])
     engine.shutdown();
     SDL_Quit();
 
-    //Pause so we can read console
-#if _WIN32
-    system("pause");
-#endif
-
     return 0;
-}
-
-gpr460::System* systemFactory()
-{
-    return new gpr460::System_Emscripten();
 }
 
 void vendorInit(EngineCore* engine)

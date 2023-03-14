@@ -2,15 +2,12 @@
 
 #include "System.hpp"
 
-class EngineCore;
-
 namespace gpr460
 {
 	class System_Emscripten : public System
 	{
-		friend class EngineCore;
-
 	protected:
+		friend class EngineCore;
 		void Init(EngineCore*) override;
 		void DoMainLoop() override;
 		void Shutdown() override;
@@ -18,6 +15,8 @@ namespace gpr460
 	public:
 		System_Emscripten();
 		~System_Emscripten();
+
+		void DebugPause() override;
 
 		void ShowError(const gpr460::string& message) override;
 		void LogToErrorFile(const gpr460::string& message) override;

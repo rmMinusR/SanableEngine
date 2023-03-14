@@ -78,12 +78,12 @@ EngineCore::~EngineCore()
     assert(!isAlive);
 }
 
-void EngineCore::init(char const* windowName, int windowWidth, int windowHeight, SystemFactoryFunc createSystem, UserInitFunc userInitCallback)
+void EngineCore::init(char const* windowName, int windowWidth, int windowHeight, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
 
-    system = createSystem();
+    this->system = &_system;
     system->Init(this);
     memoryManager.init();
     memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool on main module
@@ -121,7 +121,6 @@ void EngineCore::shutdown()
     memoryManager.cleanup();
 
     system->Shutdown();
-    delete system;
 }
 
 GameObject* EngineCore::addGameObject()

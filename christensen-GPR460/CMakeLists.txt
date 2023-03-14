@@ -2,6 +2,12 @@ cmake_minimum_required (VERSION 3.13)
 
 project ("devenv") #Ignore
 
+# Color output (not supported by MSVC)
+if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(-fdiagnostics-color=always)
+    add_link_options(-fdiagnostics-color=always)
+endif()
+
 # Support both 32 and 64 bit builds
 if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
   set(ARCH_NAME x64)
