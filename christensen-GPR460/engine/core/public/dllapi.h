@@ -14,8 +14,6 @@
 #define API_KEEPALIVE EMSCRIPTEN_KEEPALIVE
 #endif
 
-#include "PluginCore.hpp"
-
 #if engine_core_EXPORTS
 #define ENGINECORE_API API_EXPORT API_KEEPALIVE
 #else

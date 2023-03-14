@@ -1,5 +1,7 @@
 #include "Plugin.hpp"
 
+#include "PluginCore.hpp"
+
 #if __EMSCRIPTEN__
 #include <dlfcn.h>
 #endif

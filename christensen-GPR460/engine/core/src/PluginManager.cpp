@@ -5,6 +5,7 @@
 #include <cassert>
 #include <filesystem>
 
+#include "PluginCore.hpp"
 #include "EngineCore.hpp"
 #include "System.hpp"
 #include "GameObject.hpp"
