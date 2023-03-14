@@ -8,44 +8,22 @@ if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     add_link_options(-fdiagnostics-color=always)
 endif()
 
-# Support both 32 and 64 bit builds
-if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
-  set(ARCH_NAME x64)
-else ()
-  set(ARCH_NAME x86)
-endif ()
+if (EMSCRIPTEN)
+    add_compile_options("-fPIC") # I don't know why this works, but without it spews errors. Maybe related to linker?
+endif()
 
-function(export_dll dll project)
-	if (WIN32)
-        add_custom_command(
-            TARGET ${project} POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${dll}>" "$<TARGET_FILE_DIR:${project}>"
-            VERBATIM
-        )
-    endif()
-endfunction()
-
-function(export_plugin_dll project)
-	if (WIN32)
-        set_target_properties(${project} PROPERTIES
-	        ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/${project}"
-	        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/${project}"
-	        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins/${project}"
-        )
-    endif()
-endfunction()
+# Include function library
+include("CMakeHelperFuncs.txt")
 
 # Configure SDL2
 message("-- Configuring SDL2")
 if (WIN32)
+    message(" > Detected Win32")
     set(SDL2_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/SDL2")
     set(SDL2_DIR "${SDL2_BASE_DIR}/cmake")
 endif()
-if (EMSCRIPTEN) # Support Emscripten
-    message("-- Detected Emscripten")
-    #set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-    #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -sUSE_SDL=2")
-    #set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -sUSE_SDL=2")
+if (EMSCRIPTEN)
+    message(" > Detected Emscripten")
     add_link_options("-sUSE_SDL=2")
 endif()
 find_package(SDL2 REQUIRED)

@@ -6,6 +6,7 @@ project("engine-core")
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_core_sources)
 add_library("engine-core" SHARED ${engine_core_sources})
+set_linkage_shared(engine-core)
 target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare imports

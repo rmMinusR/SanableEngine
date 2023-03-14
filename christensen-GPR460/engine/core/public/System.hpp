@@ -18,6 +18,8 @@ namespace gpr460
 	protected:
 		bool isAlive = false;
 		EngineCore* engine;
+		float targetFps;
+		static constexpr float defaultTargetFps = 60;
 
 	public: //FIXME make protected again
 		friend class EngineCore;
@@ -29,7 +31,7 @@ namespace gpr460
 		virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const = 0;
 
 	public:
-		System() = default;
+		ENGINECORE_API System();
 		virtual ~System() = default;
 
 		virtual void DebugPause() = 0;
