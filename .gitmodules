@@ -1,6 +1,3 @@
 [submodule "emsdk"]
-	path = christensen-GPR460/emsdk
-	url = https://github.com/emscripten-core/emsdk.git
-[submodule "christensen-GPR460/emsdk"]
-	path = christensen-GPR460/emsdk
+	path = emsdk
 	url = https://github.com/emscripten-core/emsdk.git

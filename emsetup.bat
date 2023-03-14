@@ -1,5 +1,5 @@
 cd /D %~dp0
-call christensen-GPR460\emsdk\emsdk.bat install tot
-call christensen-GPR460\emsdk\emsdk.bat activate tot
-call christensen-GPR460\emsdk\upstream\emscripten\emcc --generate-config
+call emsdk\emsdk.bat install tot
+call emsdk\emsdk.bat activate tot
+call emsdk\upstream\emscripten\emcc --generate-config
 pause

@@ -3,10 +3,6 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
-# Build output directory
-christensen-GPR460/builds
-out/
-
 # User-specific files
 *.rsuser
 *.suo
@@ -21,20 +17,7 @@ out/
 mono_crash.*
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+/SanableEngine/out/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
