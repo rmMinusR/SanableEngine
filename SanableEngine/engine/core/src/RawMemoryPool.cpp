@@ -34,12 +34,46 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
 
 RawMemoryPool::~RawMemoryPool()
 {
+	//Call release hook on living objects
+	if (releaseHook && mFreeList.size() < mMaxNumObjects)
+	{
+		printf("WARNING: A release hook was set, but objects weren't properly released");
+
+		for (size_t i = 0; i < mMaxNumObjects; i++)
+		{
+			void* obj = ((uint8_t*)mMemory) + (i * mObjectSize);
+			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
+			if (isAlive)
+			{
+				printf(" -> %p", obj);
+				releaseHook(obj);
+			}
+		}
+	}
+
 	::free(mMemory);
 	mFreeList.clear();
 }
 
 void RawMemoryPool::reset()
 {
+	//Call release hook on living objects
+	if (releaseHook && mFreeList.size() < mMaxNumObjects)
+	{
+		printf("WARNING: A release hook was set, but objects weren't properly released");
+
+		for (size_t i = 0; i < mMaxNumObjects; i++)
+		{
+			void* obj = ((uint8_t*)mMemory) + (i * mObjectSize);
+			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
+			if (isAlive)
+			{
+				printf(" -> %p", obj);
+				releaseHook(obj);
+			}
+		}
+	}
+
 	//clear the free list
 	mFreeList.clear();
 	//create the free list again
@@ -65,6 +99,7 @@ void* RawMemoryPool::allocate()
 	{
 		void* ptr = mFreeList[0];
 		mFreeList.erase(mFreeList.cbegin());
+		if (initHook) initHook(ptr);
 		return ptr;
 	}
 	else
@@ -79,6 +114,8 @@ void RawMemoryPool::release(void* ptr)
 	//make sure that the address passed in is actually one managed by this pool
 	if (contains(ptr))
 	{
+		if (releaseHook) releaseHook(ptr);
+
 		//add address back to free list
 		mFreeList.push_back(ptr);
 
@@ -86,8 +123,8 @@ void RawMemoryPool::release(void* ptr)
 	}
 	else
 	{
-		cout << "ERROR: object freed from a pool that doesn't manage it\n";
-		assert(ptr >= mMemory && ptr <= mHighestValidAddress);
+		cerr << "ERROR: object freed from a pool that doesn't manage it\n";
+		assert(false);
 	}
 }
 
