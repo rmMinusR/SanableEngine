@@ -7,9 +7,7 @@
 #include "CallBatcher.inl"
 #include "PluginManager.hpp"
 #include "MemoryManager.hpp"
-
-struct SDL_Window;
-struct SDL_Renderer;
+#include "Window.hpp"
 
 class GameObject;
 class Component;
@@ -50,8 +48,8 @@ private:
     void tick();
     void draw();
 
+    Window* mainWindow = nullptr;
 public:
-    SDL_Renderer* renderer = nullptr;
     bool quit = false;
     int frame = 0;
 

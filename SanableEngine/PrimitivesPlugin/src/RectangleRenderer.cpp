@@ -18,7 +18,7 @@ RectangleRenderer::~RectangleRenderer()
 {
 }
 
-void RectangleRenderer::Render()
+void RectangleRenderer::Render(Renderer* renderer)
 {
 	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 
@@ -29,7 +29,5 @@ void RectangleRenderer::Render()
 		(int) h
 	};
 
-	SDL_SetRenderDrawColor(getEngine()->renderer, color.r, color.g, color.b, 255);
-	//SDL_SetRenderDrawColor(getEngine()->renderer, color.r, color.g, color.b, color.a);
-	SDL_RenderFillRect(getEngine()->renderer, &r);
+	renderer->drawRect(r, color);
 }
