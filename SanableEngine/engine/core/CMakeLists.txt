@@ -10,7 +10,7 @@ target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/priv
 
 # Declare imports
 target_include_directories("engine-core" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-core" ${SDL2_LIBRARIES})
+target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} engine-memory)
 
 # Declare exports
 target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")

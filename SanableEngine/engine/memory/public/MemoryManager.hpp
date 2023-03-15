@@ -1,7 +1,5 @@
 #pragma once
 
-#include "dllapi.h"
-
 #include <unordered_map>
 #include <vector>
 #include "TypedMemoryPool.inl"

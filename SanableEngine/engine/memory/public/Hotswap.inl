@@ -1,10 +1,10 @@
 #pragma once
 
-#include "dllapi.h"
-
 #include <type_traits>
+#include <string>
 
-#include "Aliases.hpp"
+#include "dllapi.h"
+#include "vtable.h"
 
 struct HotswapTypeData
 {

@@ -29,7 +29,7 @@ else()
 endif()
 find_package(SDL2 REQUIRED)
 
-include("engine/core/CMakeLists.txt") # Shared common code
+include("engine/CMakeLists.txt") # Shared common code
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
 

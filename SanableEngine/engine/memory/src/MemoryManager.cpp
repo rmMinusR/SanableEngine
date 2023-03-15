@@ -1,7 +1,5 @@
 #include "MemoryManager.hpp"
 
-#include "GameObject.hpp"
-
 void MemoryManager::init()
 {
 	//Nothing to do here
