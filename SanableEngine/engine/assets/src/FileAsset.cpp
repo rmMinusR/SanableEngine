@@ -1,6 +1,9 @@
 #include "FileAsset.hpp"
 
-FileAsset::FileAsset(const std::filesystem::path&) :
+#include <cassert>
+
+FileAsset::FileAsset(const std::filesystem::path& path) :
 	path(path)
 {
+	assert(std::filesystem::exists(path));
 }

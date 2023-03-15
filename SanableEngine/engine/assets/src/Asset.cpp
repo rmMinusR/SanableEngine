@@ -15,11 +15,13 @@ Asset::~Asset()
 void Asset::load(MemoryManager* memMgr)
 {
 	assert(!isLoaded);
+	isLoaded = true;
 	loadInternal(memMgr);
 }
 
 void Asset::unload(MemoryManager* memMgr)
 {
 	assert(isLoaded);
+	isLoaded = false;
 	unloadInternal(memMgr);
 }

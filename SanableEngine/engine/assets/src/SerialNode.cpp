@@ -30,11 +30,15 @@ std::wstring jsonCaptureString(std::wistream& in)
 	{
 		pv = v;
 		v = in.get();
-
+		
 		if (v == opener && pv != L'\\')
 		{
-			in.unget();
+			//in.unget(); //No need to unget, since we just consumed the closing '"'
 			return out.str();
+		}
+		else
+		{
+			out << v;
 		}
 	}
 }
@@ -86,13 +90,18 @@ readNext:
 SerialObject* SerialObject::parseJson(std::wistream& in)
 {
 	wchar_t header = in.get();
-	assert(header == L'[');
+	assert(header == L'{');
 
 	skipWhitespace(in); //Seek to next value
 
 	SerialObject::contents_t contents;
 parseNext:
-	contents.emplace(jsonCaptureString(in), SerialNode::parseJson(in)); //Recurse for value
+	std::wstring key = jsonCaptureString(in);
+	skipWhitespace(in); //Seek to ':'
+	wchar_t sep = in.get(); //Skip ':'
+	assert(sep == L':');
+	SerialNode* val = SerialNode::parseJson(in);
+	contents.emplace(key, val); //Recurse for value
 
 	skipWhitespace(in); //Seek to next control character
 	wchar_t delim = in.get();
@@ -101,7 +110,7 @@ parseNext:
 		skipWhitespace(in); //Seek to next value
 		goto parseNext; //Keep parsing
 	}
-	else if (delim == L']') return new SerialObject(contents);
+	else if (delim == L'}') return new SerialObject(contents);
 	else
 	{
 		//Unknown control character

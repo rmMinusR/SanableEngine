@@ -11,5 +11,6 @@ protected:
 
 	SerialNode* rootNode;
 public:
+	SerialFile(const std::filesystem::path&);
 	inline SerialNode const* getRootNode() const { return rootNode; }
 };
