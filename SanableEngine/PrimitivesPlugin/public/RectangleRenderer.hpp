@@ -18,7 +18,7 @@ public:
 	PRIMITIVES_API RectangleRenderer(float w, float h, SDL_Color color);
 	PRIMITIVES_API ~RectangleRenderer();
 
-	PRIMITIVES_API void Render() override;
+	PRIMITIVES_API void Render(Renderer*) override;
 
 	PRIMITIVES_API inline void SetColor(SDL_Color newColor) { color = newColor; }
 };

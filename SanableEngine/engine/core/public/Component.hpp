@@ -37,9 +37,10 @@ protected:
 	friend class EngineCore;
 };
 
+class Renderer;
 class IRenderable
 {
 protected:
-	virtual void Render() = 0;
+	virtual void Render(Renderer*) = 0;
 	friend class EngineCore;
 };

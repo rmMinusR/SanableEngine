@@ -4,6 +4,8 @@
 
 #include "Aliases.hpp"
 
+#include "vtable.h"
+
 template<typename TObj>
 class CallBatcher
 {

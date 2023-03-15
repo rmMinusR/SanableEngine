@@ -12,8 +12,8 @@
 class RawMemoryPool
 {
 public:
-	ENGINECORE_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
-	ENGINECORE_API virtual ~RawMemoryPool();
+	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
+	ENGINEMEM_API virtual ~RawMemoryPool();
 
 	//Idiotproofing against myself
 	RawMemoryPool(const RawMemoryPool&) = delete;
@@ -25,12 +25,12 @@ public:
 
 	//Allocates raw memory.
 	//Set hook if type requires special initialization
-	ENGINECORE_API void* allocate();
+	ENGINEMEM_API void* allocate();
 	hook_t initHook = nullptr;
 
 	//Deallocates raw memory.
 	//Set hook if type requires special cleanup
-	ENGINECORE_API void release(void* obj);
+	ENGINEMEM_API void release(void* obj);
 	hook_t releaseHook = nullptr;
 
 	bool contains(void* ptr) const;
@@ -62,13 +62,13 @@ public:
 		friend class RawMemoryPool;
 
 	public:
-		ENGINECORE_API void* operator*() const;
+		ENGINEMEM_API void* operator*() const;
 
-		ENGINECORE_API const_iterator operator++();
+		ENGINEMEM_API const_iterator operator++();
 
-		ENGINECORE_API inline bool operator!=(const const_iterator& other) const { return index != other.index; }
-		ENGINECORE_API inline bool operator==(const const_iterator& other) const { return index == other.index; }
+		ENGINEMEM_API inline bool operator!=(const const_iterator& other) const { return index != other.index; }
+		ENGINEMEM_API inline bool operator==(const const_iterator& other) const { return index == other.index; }
 	};
-	ENGINECORE_API const_iterator cbegin() const;
-	ENGINECORE_API const_iterator cend() const;
+	ENGINEMEM_API const_iterator cbegin() const;
+	ENGINEMEM_API const_iterator cend() const;
 };

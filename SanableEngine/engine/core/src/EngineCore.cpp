@@ -5,6 +5,8 @@
 
 #include <SDL.h>
 
+#include "SDLModule.hpp"
+
 #include "GameObject.hpp"
 #include "Component.hpp"
 #include "System.hpp"
@@ -67,8 +69,7 @@ void EngineCore::refreshCallBatchers()
 EngineCore::EngineCore() :
     isAlive(false),
     system(nullptr),
-    window(nullptr),
-    renderer(nullptr),
+    mainWindow(nullptr),
     pluginManager(this)
 {
 }
@@ -82,15 +83,16 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
 {
     assert(!isAlive);
     isAlive = true;
+    quit = false;
 
     this->system = &_system;
     system->Init(this);
     memoryManager.init();
-    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool on main module
+    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module
 
-    quit = false;
-    window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDLModule::video.load(&memoryManager);
+
+    mainWindow = new Window(windowName, windowWidth, windowHeight);
     frame = 0;
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
@@ -109,11 +111,10 @@ void EngineCore::shutdown()
     pluginManager.unhookAll(true);
     pluginManager.unloadAll();
 
-    SDL_DestroyRenderer(renderer);
-    renderer = nullptr;
-
-    SDL_DestroyWindow(window);
-    window = nullptr;
+    delete mainWindow;
+    mainWindow = nullptr;
+    
+    SDLModule::video.unload(&memoryManager);
 
     //Clean up memory, GameObject pool first so components are released
     memoryManager.destroyPool<GameObject>();
@@ -182,11 +183,10 @@ void EngineCore::draw()
     assert(isAlive);
 
     //Clear screen
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(renderer);
+    mainWindow->getRenderer()->beginFrame();
 
     //Draw objects
-    renderList.memberCall(&IRenderable::Render);
+    renderList.memberCall(&IRenderable::Render, mainWindow->getRenderer());
 
-    SDL_RenderPresent(renderer);
+    mainWindow->getRenderer()->finishFrame();
 }

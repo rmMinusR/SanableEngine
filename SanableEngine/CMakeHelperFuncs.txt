@@ -42,10 +42,12 @@ endfunction()
 function(declare_plugin name exportRelpath sources_var)
     add_library(${name} SHARED ${${sources_var}})
     set_linkage_shared(${name})
-    set_target_properties(${name} PROPERTIES
-	    PREFIX ""
-	    SUFFIX ${PLATFORM_DLL_EXTENSION}
-    )
+    if (EMSCRIPTEN)
+        set_target_properties(${name} PROPERTIES
+	        PREFIX ""
+	        SUFFIX ${PLATFORM_DLL_EXTENSION}
+        )
+    endif()
     set_target_properties(${name} PROPERTIES
 	    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
 	    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"

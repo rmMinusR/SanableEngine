@@ -15,7 +15,6 @@ int main(int argc, char* argv[])
     gpr460::System_Win32 system;
 
     //Init
-    SDL_Init(SDL_INIT_VIDEO);
     EngineCore engine;
     engine.init("SDL2 Test", WIDTH, HEIGHT, system, vendorInit);
 
