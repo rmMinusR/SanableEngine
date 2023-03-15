@@ -34,7 +34,7 @@ private:
 
 public:
 	template<typename TObj>
-	TypedMemoryPool<TObj>* getSpecificPool(bool fallbackCreate);
+	inline TypedMemoryPool<TObj>* getSpecificPool(bool fallbackCreate);
 
 	template<typename TObj, typename... TCtorArgs>
 	inline TObj* create(TCtorArgs... ctorArgs);

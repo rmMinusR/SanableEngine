@@ -12,14 +12,14 @@ Asset::~Asset()
 	assert(!isLoaded);
 }
 
-void Asset::load()
+void Asset::load(MemoryManager* memMgr)
 {
 	assert(!isLoaded);
-	loadInternal();
+	loadInternal(memMgr);
 }
 
-void Asset::unload()
+void Asset::unload(MemoryManager* memMgr)
 {
 	assert(isLoaded);
-	unloadInternal();
+	unloadInternal(memMgr);
 }
