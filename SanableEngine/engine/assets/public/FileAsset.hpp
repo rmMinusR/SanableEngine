@@ -10,5 +10,5 @@ protected:
 	std::filesystem::path path;
 
 public:
-	FileAsset(const std::filesystem::path&);
+	ENGINEASSETS_API FileAsset(const std::filesystem::path&);
 };

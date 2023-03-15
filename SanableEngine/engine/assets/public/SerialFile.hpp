@@ -3,6 +3,8 @@
 #include "FileAsset.hpp"
 #include "SerialNode.hpp"
 
+#include "dllapi.h"
+
 class SerialFile : public FileAsset
 {
 protected:
@@ -11,6 +13,6 @@ protected:
 
 	SerialNode* rootNode;
 public:
-	SerialFile(const std::filesystem::path&);
-	inline SerialNode const* getRootNode() const { return rootNode; }
+	ENGINEASSETS_API SerialFile(const std::filesystem::path&);
+	ENGINEASSETS_API SerialNode const* getRootNode() const;
 };

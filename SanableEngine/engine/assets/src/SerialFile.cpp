@@ -8,6 +8,11 @@ SerialFile::SerialFile(const std::filesystem::path& path) :
 {
 }
 
+SerialNode const* SerialFile::getRootNode() const
+{
+	return rootNode;
+}
+
 void SerialFile::loadInternal(MemoryManager* mem)
 {
 	std::wifstream in;

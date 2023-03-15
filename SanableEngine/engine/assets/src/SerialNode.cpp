@@ -11,6 +11,19 @@ void skipWhitespace(std::wistream& in)
 	in.unget(); //Correct for over-read
 }
 
+SerialNode* SerialNode::parse(std::wistream& in, SerialFormat format)
+{
+	switch (format)
+	{
+	case SerialFormat::YAML: return parseYaml(in);
+	case SerialFormat::JSON: return parseJson(in);
+
+	default:
+		assert(false);
+		return nullptr;
+	}
+}
+
 SerialNode* SerialNode::parseYaml(std::wistream& in, const wchar_t* indent)
 {
 	if (indent == nullptr) indent = L"";

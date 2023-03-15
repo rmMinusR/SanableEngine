@@ -8,6 +8,8 @@
 #include <cassert>
 #include <variant>
 
+#include "dllapi.h"
+
 enum class SerialFormat
 {
 	JSON,
@@ -22,21 +24,10 @@ protected:
 public:
 	virtual ~SerialNode() = default;
 
-	inline static SerialNode* parse(std::wistream& in, SerialFormat format)
-	{
-		switch (format)
-		{
-		case SerialFormat::YAML: return parseYaml(in);
-		case SerialFormat::JSON: return parseJson(in);
+	ENGINEASSETS_API static SerialNode* parse(std::wistream& in, SerialFormat format);
 
-		default:
-			assert(false);
-			return nullptr;
-		}
-	}
-
-	static SerialNode* parseYaml(std::wistream& in, const wchar_t* indent = nullptr);
-	static SerialNode* parseJson(std::wistream& in);
+	ENGINEASSETS_API static SerialNode* parseYaml(std::wistream& in, const wchar_t* indent = nullptr);
+	ENGINEASSETS_API static SerialNode* parseJson(std::wistream& in);
 };
 
 class SerialString : public SerialNode

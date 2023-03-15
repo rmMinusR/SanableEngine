@@ -5,7 +5,7 @@ project("engine-assets")
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_assets_sources)
-add_library("engine-assets" STATIC ${engine_assets_sources}) # TODO make SHARED
+declare_plugin("engine-assets" "" engine_assets_sources)
 target_include_directories("engine-assets" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare imports

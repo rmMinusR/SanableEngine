@@ -1,5 +1,7 @@
 #pragma once
 
+#include "dllapi.h"
+
 class MemoryManager;
 
 class Asset
@@ -11,9 +13,9 @@ protected:
 	virtual void unloadInternal(MemoryManager*) = 0;
 
 public:
-	Asset();
-	virtual ~Asset();
+	ENGINEASSETS_API Asset();
+	ENGINEASSETS_API virtual ~Asset();
 
-	void load(MemoryManager*);
-	void unload(MemoryManager*);
+	ENGINEASSETS_API void load(MemoryManager*);
+	ENGINEASSETS_API void unload(MemoryManager*);
 };
