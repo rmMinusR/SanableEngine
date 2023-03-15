@@ -6,7 +6,6 @@
 #include "System_Emscripten.hpp"
 
 void vendorInit(EngineCore* engine);
-gpr460::System* systemFactory();
 
 int main(int argc, char* argv[])
 {
@@ -16,7 +15,6 @@ int main(int argc, char* argv[])
     gpr460::System_Emscripten system;
 
     //Init
-    SDL_Init(SDL_INIT_VIDEO);
     EngineCore engine;
     engine.init("SDL2 Test", WIDTH, HEIGHT, system, vendorInit);
 

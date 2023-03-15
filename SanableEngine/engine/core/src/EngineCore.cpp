@@ -5,6 +5,8 @@
 
 #include <SDL.h>
 
+#include "SDLModule.hpp"
+
 #include "GameObject.hpp"
 #include "Component.hpp"
 #include "System.hpp"
@@ -82,13 +84,15 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
 {
     assert(!isAlive);
     isAlive = true;
+    quit = false;
 
     this->system = &_system;
     system->Init(this);
     memoryManager.init();
-    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool on main module
+    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module
 
-    quit = false;
+    SDLModule::video.load(&memoryManager);
+
     window = SDL_CreateWindow(windowName, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     frame = 0;
@@ -114,6 +118,8 @@ void EngineCore::shutdown()
 
     SDL_DestroyWindow(window);
     window = nullptr;
+
+    SDLModule::video.unload(&memoryManager);
 
     //Clean up memory, GameObject pool first so components are released
     memoryManager.destroyPool<GameObject>();
