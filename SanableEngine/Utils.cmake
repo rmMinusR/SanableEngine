@@ -1,0 +1,56 @@
+# Detect 32/64-bit architecture
+if (${CMAKE_SIZEOF_VOID_P} MATCHES 8)
+    set(ARCH_NAME x64)
+elseif (${CMAKE_SIZEOF_VOID_P} MATCHES 4)
+    set(ARCH_NAME x86)
+else()
+    message(ERROR " > Unknown architecture: ${CMAKE_SIZEOF_VOID_P}-byte")
+endif ()
+
+# Detect platform
+if (WIN32)
+    set(PLATFORM_DLL_EXTENSION ".dll")
+elseif(EMSCRIPTEN)
+    set(PLATFORM_DLL_EXTENSION ".wasm")
+else()
+    message(ERROR " > Could not determine plugin extension: Unknown platform")
+endif()
+add_compile_definitions(PLATFORM_DLL_EXTENSION="${PLATFORM_DLL_EXTENSION}")
+
+function(export_dll dll project)
+	if (WIN32)
+        add_custom_command(
+            TARGET ${project} POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${dll}>" "$<TARGET_FILE_DIR:${project}>"
+            VERBATIM
+        )
+    endif()
+endfunction()
+
+function(set_linkage_static project)
+    if (EMSCRIPTEN)
+        target_link_options(${project} PRIVATE -sMAIN_MODULE)
+    endif()
+endfunction()
+
+function(set_linkage_shared project)
+    if (EMSCRIPTEN)
+        target_link_options(${project} PRIVATE -sSIDE_MODULE)
+    endif()
+endfunction()
+
+function(declare_plugin name exportRelpath sources_var)
+    add_library(${name} SHARED ${${sources_var}})
+    set_linkage_shared(${name})
+    if (EMSCRIPTEN)
+        set_target_properties(${name} PROPERTIES
+	        PREFIX ""
+	        SUFFIX ${PLATFORM_DLL_EXTENSION}
+        )
+    endif()
+    set_target_properties(${name} PROPERTIES
+	    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
+	    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
+	    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
+    )
+endfunction()
