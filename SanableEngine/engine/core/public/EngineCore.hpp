@@ -61,6 +61,9 @@ public:
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API GameObject* addGameObject();
+    ENGINECORE_API GameObject* addGameObject(object_id_t id);
+    ENGINECORE_API GameObject* getGameObject(object_id_t id);
+    ENGINECORE_API GameObject* getOrAddGameObject(object_id_t id);
     ENGINECORE_API void destroy(GameObject* go);
 
     ENGINECORE_API void doMainLoop();

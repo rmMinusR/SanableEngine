@@ -2,6 +2,10 @@
 
 #include <cassert>
 #include <iostream>
+#include <fstream>
+#include <cassert>
+
+#include <SerializedObject.hpp>
 
 #include <SDL.h>
 
@@ -44,6 +48,35 @@ void EngineCore::processEvents()
         {
             if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
             if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
+
+            //Save level to file
+            if (event.key.keysym.sym == SDLK_s)
+            {
+                std::ofstream fout("level.dat", std::ios::binary);
+                for (GameObject* o : objects)
+                {
+                    SerializedObject so;
+                    so.serialize(o, fout);
+                }
+                fout.close();
+            }
+
+            //Load level from file
+            if (event.key.keysym.sym == SDLK_l)
+            {
+                //First clean up level
+                while (objects.size() > 0) destroyImmediate(objects[objects.size()-1]);
+
+                //Then load
+                std::ifstream fin;
+                fin.open(system->GetBaseDir()/"level.dat", std::ios::binary);
+                while (!fin.eof())
+                {
+                    SerializedObject so;
+                    so.parse(this, fin);
+                }
+                fin.close();
+            }
         }
     }
 }
@@ -130,9 +163,30 @@ GameObject* EngineCore::addGameObject()
     return o;
 }
 
-void EngineCore::destroy(GameObject* go)
+GameObject* EngineCore::addGameObject(object_id_t id)
 {
-    objectDelBuffer.push_back(go);
+    GameObject* o = getMemoryManager()->create<GameObject>(this, id);
+    objects.push_back(o);
+    return o;
+}
+
+GameObject* EngineCore::getGameObject(object_id_t id)
+{
+    for (GameObject* o : objects) if (o->getID() == id) return o;
+    for (GameObject* o : objectAddBuffer) if (o->getID() == id) return o;
+    return nullptr;
+}
+
+GameObject* EngineCore::getOrAddGameObject(object_id_t id)
+{
+    GameObject* o = getGameObject(id);
+    if (!o) o = addGameObject(id);
+    return o;
+}
+
+void EngineCore::destroy(GameObject* obj)
+{
+    objectDelBuffer.push_back(obj);
 }
 
 void EngineCore::destroyImmediate(GameObject* go)

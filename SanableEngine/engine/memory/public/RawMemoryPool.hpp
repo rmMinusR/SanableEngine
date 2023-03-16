@@ -33,8 +33,8 @@ public:
 	ENGINEMEM_API void release(void* obj);
 	hook_t releaseHook = nullptr;
 
-	bool contains(void* ptr) const;
-	inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
+	ENGINEMEM_API bool contains(void* ptr) const;
+	ENGINEMEM_API inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };

@@ -1,17 +1,24 @@
 #include "RectangleRenderer.hpp"
 
+#include <SerializationRegistryEntry.hpp>
+#include <SerializedObject.hpp>
+
 #include <SDL_rect.h>
 #include <SDL_render.h>
 
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
 
-RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
-	Component(),
-	w(w),
-	h(h),
-	color(color)
+RectangleRenderer::RectangleRenderer(EngineCore* engine, GameObject* owner) :
+	Component(engine, owner)
 {
+}
+
+void RectangleRenderer::init(float w, float h, SDL_Color color)
+{
+	this->w = w;
+	this->h = h;
+	this->color = color;
 }
 
 RectangleRenderer::~RectangleRenderer()
@@ -30,4 +37,29 @@ void RectangleRenderer::Render(Renderer* renderer)
 	};
 
 	renderer->drawRect(r, color);
+}
+
+const SerializationRegistryEntry RectangleRenderer::SERIALIZATION_REGISTRY_ENTRY = AUTO_Component_SerializationRegistryEntry(RectangleRenderer);
+
+SerializationRegistryEntry const* RectangleRenderer::getRegistryEntry() const
+{
+	return &SERIALIZATION_REGISTRY_ENTRY;
+}
+
+void RectangleRenderer::binarySerializeMembers(std::ostream& out) const
+{
+	Component::binarySerializeMembers(out);
+
+	binWriteRaw(w, out);
+	binWriteRaw(h, out);
+	binWriteRaw(color, out);
+}
+
+void RectangleRenderer::binaryDeserializeMembers(std::istream& in)
+{
+	Component::binaryDeserializeMembers(in);
+
+	binReadRaw(w, in);
+	binReadRaw(h, in);
+	binReadRaw(color, in);
 }

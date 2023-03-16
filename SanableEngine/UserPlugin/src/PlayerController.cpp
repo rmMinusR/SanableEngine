@@ -1,11 +1,14 @@
 #include "PlayerController.hpp"
 
-#include "GameObject.hpp"
-
 #include <SDL_keyboard.h>
 
-PlayerController::PlayerController() :
-	Component()
+#include <SerializationRegistryEntry.hpp>
+
+#include "GameObject.hpp"
+
+
+PlayerController::PlayerController(EngineCore* engine, GameObject* owner) :
+	Component(engine, owner)
 {
 }
 
@@ -23,4 +26,21 @@ void PlayerController::Update()
 	if (keys[SDL_SCANCODE_DOWN ]) position += Vector3<float>(0,  SPEED, 0);
 
 	getGameObject()->getTransform()->setPosition(position);
+}
+
+const SerializationRegistryEntry PlayerController::SERIALIZATION_REGISTRY_ENTRY = AUTO_Component_SerializationRegistryEntry(PlayerController);
+
+SerializationRegistryEntry const* PlayerController::getRegistryEntry() const
+{
+	return &SERIALIZATION_REGISTRY_ENTRY;
+}
+
+void PlayerController::binarySerializeMembers(std::ostream& out) const
+{
+	Component::binarySerializeMembers(out);
+}
+
+void PlayerController::binaryDeserializeMembers(std::istream& in)
+{
+	Component::binaryDeserializeMembers(in);
 }

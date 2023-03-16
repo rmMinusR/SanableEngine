@@ -10,13 +10,14 @@ struct HotswapTypeData
 {
 	std::string name; //Cannot use typeinfo here
 	size_t size = 0;
+	bool isPolymorphic;
 	vtable_ptr vtable = nullptr;
 
 	template<typename TObj>
-	void set_vtable(const TObj& obj)
+	void set(const TObj& obj)
 	{
-		if (std::is_polymorphic_v<TObj>) vtable = get_vtable_ptr(obj);
-		else							 vtable = nullptr;
+		isPolymorphic = std::is_polymorphic_v<TObj>;
+		if (isPolymorphic) vtable = get_vtable_ptr(obj);
 	}
 
 	//Factories

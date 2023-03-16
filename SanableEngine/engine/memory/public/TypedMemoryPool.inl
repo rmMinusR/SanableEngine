@@ -25,8 +25,22 @@ public:
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
 	}
 
+	template<typename ...TCtorArgs>
+	TObj* emplace(TCtorArgs... ctorArgs)
+	{
+		TObj* pObj = reinterpret_cast<TObj*>(allocate());
+		assert(pObj);
+		//Construct object
+		new (pObj) TObj(ctorArgs...);
+		//Extract vtable (if not initted)
+		if (!hotswap.vtable) hotswap.set(pObj);
+		return pObj;
+	}
+
 	void refreshVtables(const std::vector<HotswapTypeData*>& refreshers) override
 	{
+		if (!std::is_polymorphic_v<TObj>) return;
+
 		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](HotswapTypeData* d) { return d->name == hotswap.name; });
 		if (newHotswap != refreshers.cend())
 		{
@@ -43,27 +57,7 @@ public:
 		}
 	}
 
-	//Allocates memory and creates an object.
-	template<typename... TCtorArgs>
-	TObj* emplace(TCtorArgs... ctorArgs)
-	{
-		//Allocate memory
-		TObj* pObj = reinterpret_cast<TObj*>(allocate());
-		assert(pObj);
-
-		//Construct object
-		new (pObj) TObj(ctorArgs...);
-
-		//Extract vtable (if not initted)
-		if (!hotswap.vtable) hotswap.set_vtable(pObj);
-
-		return pObj;
-	}
-
-	//Pass through
-	inline void release(TObj* obj) { RawMemoryPool::release(obj); }
-protected:
-
+private:
 	TypedMemoryPool(TypedMemoryPool&&) = default;
 	TypedMemoryPool(const TypedMemoryPool&) = delete;
 };

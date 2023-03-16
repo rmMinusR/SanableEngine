@@ -14,8 +14,8 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
 
     report->name = "PrimitivesPlugin";
 
-    report->hotswappables.push_back(HotswapTypeData::build<RectangleCollider>(0, 0));
-    report->hotswappables.push_back(HotswapTypeData::build<RectangleRenderer>(0, 0, SDL_Color{}));
+    report->hotswappables.push_back(HotswapTypeData::build<RectangleCollider>(nullptr, nullptr));
+    report->hotswappables.push_back(HotswapTypeData::build<RectangleRenderer>(nullptr, nullptr));
 
     report->hotswappables.push_back(HotswapTypeData::build<TypedMemoryPool<RectangleCollider>>(1));
     report->hotswappables.push_back(HotswapTypeData::build<TypedMemoryPool<RectangleRenderer>>(1));

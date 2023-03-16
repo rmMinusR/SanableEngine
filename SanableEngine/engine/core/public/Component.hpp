@@ -2,27 +2,39 @@
 
 #include "dllapi.h"
 
+#include "Aliases.hpp"
+
+#include <ISerializable.hpp>
+
 #include "GameObject.hpp"
 
 class GameObject;
 class EngineCore;
 
-class Component
+class Component : public ISerializable
 {
-protected:
+private:
+	EngineCore* engine;
 	GameObject* gameObject;
+	object_id_t gameObjectID;
 
-	ENGINECORE_API virtual void BindToGameObject(GameObject* obj);
+protected:
 	friend class GameObject;
+	ENGINECORE_API virtual void BindToGameObject(GameObject* obj);
 
 	ENGINECORE_API inline EngineCore* getEngine() const { return gameObject->engine; }
 
 public:
-	ENGINECORE_API Component();
+	ENGINECORE_API Component(EngineCore* engine);
+	ENGINECORE_API Component(EngineCore* engine, GameObject* owner);
 	ENGINECORE_API virtual ~Component();
 
-	ENGINECORE_API inline GameObject* getGameObject() const { return gameObject; }
 	ENGINECORE_API virtual void onStart();
+
+	ENGINECORE_API inline GameObject* getGameObject() const { return gameObject; }
+protected:
+	ENGINECORE_API virtual void binarySerializeMembers(std::ostream& out) const override;
+	ENGINECORE_API virtual void binaryDeserializeMembers(std::istream& in) override;
 };
 
 
@@ -44,3 +56,11 @@ protected:
 	virtual void Render(Renderer*) = 0;
 	friend class EngineCore;
 };
+
+
+//Serializable
+#define AUTO_Component_SerializationRegistryEntry(T) AUTO_SerializationRegistryEntry(T, {  \
+    T* c = engine->getMemoryManager()->create<T>(engine, nullptr);						   \
+	c->binaryDeserializeMembers(in);													   \
+	/*c->bindReferences();*/															   \
+})

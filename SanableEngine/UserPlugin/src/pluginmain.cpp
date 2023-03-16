@@ -19,8 +19,8 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
 
     report->name = "UserPlugin";
 
-    report->hotswappables.push_back(HotswapTypeData::build<ColliderColorChanger>(SDL_Color{}, SDL_Color{}));
-    report->hotswappables.push_back(HotswapTypeData::build<PlayerController>());
+    report->hotswappables.push_back(HotswapTypeData::build<ColliderColorChanger>(nullptr, nullptr));
+    report->hotswappables.push_back(HotswapTypeData::build<PlayerController    >(nullptr, nullptr));
 
     report->hotswappables.push_back(HotswapTypeData::build<TypedMemoryPool<ColliderColorChanger>>(1));
     report->hotswappables.push_back(HotswapTypeData::build<TypedMemoryPool<PlayerController>>(1));
