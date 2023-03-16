@@ -23,8 +23,5 @@ set_target_properties(engine-emscripten PROPERTIES
 #target_link_options(engine-emscripten PRIVATE --embed-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
 target_link_options(engine-emscripten PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
 
-# Declare post-build action: Copy SDL2.dll to output dir
-export_dll(SDL2::SDL2 engine-emscripten)
-
 # Declare imports
 target_link_libraries("engine-emscripten" "engine-core")
