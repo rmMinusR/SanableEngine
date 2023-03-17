@@ -2,15 +2,14 @@
 
 #include <cstdlib>
 
-StackAllocator::StackAllocator()
+StackAllocator::StackAllocator() :
+    maxSize(0),
+    used(0),
+    memory(nullptr)
 {
-    maxSize = 0;
-    used = 0;
-    memory = nullptr;
 }
 
-StackAllocator::StackAllocator(size_t bytesToAllocate) :
-    StackAllocator()
+StackAllocator::StackAllocator(size_t bytesToAllocate) : StackAllocator()
 {
     resize(bytesToAllocate);
 }
