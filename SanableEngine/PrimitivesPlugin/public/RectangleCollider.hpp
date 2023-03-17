@@ -18,4 +18,5 @@ public:
 	PRIMITIVES_API bool CheckCollision(RectangleCollider const* other) const;
 
 	PRIMITIVES_API bool CheckCollisionAny() const;
+	PRIMITIVES_API int GetCollisions(RectangleCollider** outArr = nullptr) const; //It is recommended to allocate this array using the stack allocator
 };

@@ -3,6 +3,7 @@
 #include "GameObject.hpp"
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
+#include "EngineCore.hpp"
 
 void ColliderColorChanger::BindToGameObject(GameObject* obj)
 {
@@ -30,5 +31,10 @@ ColliderColorChanger::~ColliderColorChanger()
 
 void ColliderColorChanger::Update()
 {
-	renderer->SetColor(collider->CheckCollisionAny() ? overlapColor : normalColor);
+	int nHits = collider->GetCollisions(nullptr);
+	RectangleCollider** hits = getEngine()->getFrameAllocator()->alloc<RectangleCollider*>(nHits);
+
+	renderer->SetColor(nHits>0 ? overlapColor : normalColor);
+
+	for (int i = 0; i < nHits; ++i) printf("0x%p is colliding with 0x%p\n", this, hits[i]);
 }

@@ -44,6 +44,26 @@ bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 bool RectangleCollider::CheckCollisionAny() const
 {
 	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
-	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it) if (*it != this && CheckCollision((RectangleCollider*)*it)) return true;
+	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it)
+	{
+		if (*it != this && CheckCollision((RectangleCollider*)*it)) return true;
+	}
 	return false;
+}
+
+int RectangleCollider::GetCollisions(RectangleCollider** outArr) const
+{
+	int nHits = 0;
+	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
+	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it)
+	{
+		RectangleCollider* c = (RectangleCollider*)*it;
+
+		if (c != this && CheckCollision(c))
+		{
+			if (outArr) outArr[nHits] = c; //Array it optional, only write if it is present
+			++nHits;
+		}
+	}
+	return nHits;
 }

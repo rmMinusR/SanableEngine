@@ -7,6 +7,7 @@
 #include "CallBatcher.inl"
 #include "PluginManager.hpp"
 #include "MemoryManager.hpp"
+#include "StackAllocator.hpp"
 #include "Window.hpp"
 
 class GameObject;
@@ -24,6 +25,7 @@ private:
     SDL_Window* window = nullptr;
     gpr460::System* system;
     MemoryManager memoryManager;
+    StackAllocator frameAllocator;
     PluginManager pluginManager;
     friend class PluginManager;
 
@@ -68,4 +70,5 @@ public:
 
     gpr460::System* getSystem() { return system; }
     MemoryManager* getMemoryManager() { return &memoryManager; }
+    StackAllocator* getFrameAllocator() { return &frameAllocator; }
 };
