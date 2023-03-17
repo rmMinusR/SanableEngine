@@ -35,4 +35,10 @@ public:
 	ENGINEASSETS_API virtual ~Asset();
 
 	ENGINEASSETS_API void setLoadPolicy(LoadPolicy loadPolicy);
+
+	//Protect against accidental copying/moving
+	Asset(const Asset& cpy) = delete;
+	Asset(Asset&& mov) = delete;
+	Asset& operator=(const Asset& cpy) = delete;
+	Asset& operator=(Asset&& mov) = delete;
 };

@@ -18,4 +18,10 @@ protected:
 
 	ENGINEASSETS_API void require(Asset*);
 	ENGINEASSETS_API void release(Asset*);
+
+	//Protect against accidental copying/moving
+	AssetUser(const AssetUser& cpy) = delete;
+	AssetUser(AssetUser&& mov) = delete;
+	AssetUser& operator=(const AssetUser& cpy) = delete;
+	AssetUser& operator=(AssetUser&& mov) = delete;
 };
