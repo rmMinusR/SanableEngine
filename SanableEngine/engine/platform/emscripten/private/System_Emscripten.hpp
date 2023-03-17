@@ -18,8 +18,8 @@ namespace gpr460
 
 		void DebugPause() override;
 
-		void ShowError(const gpr460::string& message) override;
-		void LogToErrorFile(const gpr460::string& message) override;
+		void ShowError(const std::wstring& message) override;
+		void LogToErrorFile(const std::wstring& message) override;
 
 		std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
 		std::filesystem::path GetBaseDir() const override;
