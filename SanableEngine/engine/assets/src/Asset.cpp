@@ -2,9 +2,10 @@
 
 #include <cassert>
 
-Asset::Asset()
+Asset::Asset() :
+	isLoaded(false),
+	loadPolicy(LoadPolicy::Default)
 {
-	isLoaded = false;
 }
 
 Asset::~Asset()
@@ -12,16 +13,29 @@ Asset::~Asset()
 	assert(!isLoaded);
 }
 
-void Asset::load(MemoryManager* memMgr)
+void Asset::updateIsLoaded()
 {
-	assert(!isLoaded);
-	isLoaded = true;
-	loadInternal(memMgr);
+	bool shouldLoad = usedBy.size() != 0 || loadPolicy == LoadPolicy::Persistent;
+
+	if ( shouldLoad && !isLoaded)   loadInternal(nullptr);
+	if (!shouldLoad &&  isLoaded) unloadInternal(nullptr);
 }
 
-void Asset::unload(MemoryManager* memMgr)
+void Asset::requireBy(AssetUser* x)
 {
-	assert(isLoaded);
-	isLoaded = false;
-	unloadInternal(memMgr);
+	usedBy.insert(x);
+	updateIsLoaded();
+}
+
+void Asset::releaseBy(AssetUser* x)
+{
+	usedBy.erase(x);
+	updateIsLoaded();
+}
+
+
+void Asset::setLoadPolicy(LoadPolicy loadPolicy)
+{
+	this->loadPolicy = loadPolicy;
+	updateIsLoaded();
 }
