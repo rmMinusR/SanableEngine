@@ -30,7 +30,6 @@ void GameObject::InvokeStart()
 }
 
 GameObject::GameObject(EngineCore* engine) :
-	transform(0, 0, 0),
 	engine(engine)
 {
 }
