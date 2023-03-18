@@ -7,12 +7,12 @@ Sprite::Sprite(const std::filesystem::path& path, Texture* owner, SDL_Rect bound
 {
 }
 
-void Sprite::loadInternal(MemoryManager*)
+void Sprite::loadInternal()
 {
 	//TODO refcount
 }
 
-void Sprite::unloadInternal(MemoryManager*)
+void Sprite::unloadInternal()
 {
 	//TODO refcount
 }

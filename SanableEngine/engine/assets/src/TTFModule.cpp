@@ -2,12 +2,12 @@
 
 #include <SDL_ttf.h>
 
-void TTFModule::loadInternal(MemoryManager*)
+void TTFModule::loadInternal()
 {
 	TTF_Init();
 }
 
-void TTFModule::unloadInternal(MemoryManager*)
+void TTFModule::unloadInternal()
 {
 	TTF_Quit();
 }

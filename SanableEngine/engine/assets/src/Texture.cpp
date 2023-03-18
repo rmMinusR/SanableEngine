@@ -13,7 +13,7 @@ Texture::Texture(const std::filesystem::path& path, SDL_Renderer* renderer) :
 {
 }
 
-void Texture::loadInternal(MemoryManager*)
+void Texture::loadInternal()
 {
 	handle = IMG_Load(path.u8string().c_str());
 	assert(handle);
@@ -22,7 +22,7 @@ void Texture::loadInternal(MemoryManager*)
 	assert(view);
 }
 
-void Texture::unloadInternal(MemoryManager*)
+void Texture::unloadInternal()
 {
 	SDL_DestroyTexture(view);
 	view = nullptr;

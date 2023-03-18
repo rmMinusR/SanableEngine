@@ -6,8 +6,8 @@
 class TTFModule : public Asset
 {
 protected:
-	virtual void loadInternal(MemoryManager*) override;
-	virtual void unloadInternal(MemoryManager*) override;
+	virtual void loadInternal() override;
+	virtual void unloadInternal() override;
 
 	TTFModule() = default;
 public:

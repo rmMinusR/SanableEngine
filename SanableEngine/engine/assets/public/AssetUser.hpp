@@ -5,6 +5,7 @@
 #include "dllapi.h"
 
 class Asset;
+class MemoryManager;
 
 class AssetUser
 {

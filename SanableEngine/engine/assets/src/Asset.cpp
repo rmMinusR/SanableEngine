@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "AssetUser.hpp"
+
 Asset::Asset() :
 	isLoaded(false),
 	loadPolicy(LoadPolicy::Default)
@@ -17,8 +19,8 @@ void Asset::updateIsLoaded()
 {
 	bool shouldLoad = usedBy.size() != 0 || loadPolicy == LoadPolicy::Persistent;
 
-	if ( shouldLoad && !isLoaded)   loadInternal(nullptr);
-	if (!shouldLoad &&  isLoaded) unloadInternal(nullptr);
+	if ( shouldLoad && !isLoaded)   loadInternal();
+	if (!shouldLoad &&  isLoaded) unloadInternal();
 }
 
 void Asset::requireBy(AssetUser* x)

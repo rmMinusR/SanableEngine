@@ -12,8 +12,8 @@ class Renderer;
 class Texture : public FileAsset
 {
 protected:
-	virtual void loadInternal(MemoryManager*) override;
-	virtual void unloadInternal(MemoryManager*) override;
+	virtual void loadInternal() override;
+	virtual void unloadInternal() override;
 
 	friend class Renderer;
 	SDL_Renderer* renderer;

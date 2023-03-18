@@ -21,8 +21,8 @@ protected:
 	bool isLoaded;
 	LoadPolicy loadPolicy;
 
-	virtual void loadInternal(MemoryManager*) = 0;
-	virtual void unloadInternal(MemoryManager*) = 0;
+	virtual void loadInternal() = 0;
+	virtual void unloadInternal() = 0;
 
 	void updateIsLoaded();
 

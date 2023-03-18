@@ -8,8 +8,8 @@
 class Font : public FileAsset
 {
 protected:
-	virtual void loadInternal(MemoryManager*) override;
-	virtual void unloadInternal(MemoryManager*) override;
+	virtual void loadInternal() override;
+	virtual void unloadInternal() override;
 
 	friend class Renderer;
 	TTF_Font* handle;
