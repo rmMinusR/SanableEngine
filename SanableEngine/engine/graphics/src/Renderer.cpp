@@ -59,5 +59,5 @@ void Renderer::drawTexture(const Texture& tex, int x, int y)
 void Renderer::drawSprite(const Sprite& sprite, int x, int y)
 {
 	SDL_Rect dst = { x, y, sprite.bounds.w, sprite.bounds.h };
-	SDL_RenderCopy(handle, sprite.owner->view, &sprite.bounds, &dst);
+	SDL_RenderCopy(handle, sprite.spritesheet->view, &sprite.bounds, &dst);
 }
