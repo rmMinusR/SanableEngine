@@ -1,18 +1,23 @@
 #include "Sprite.hpp"
 
-Sprite::Sprite(const std::filesystem::path& path, Texture* owner, SDL_Rect bounds) :
+#include <cassert>
+
+#include "Texture.hpp"
+
+Sprite::Sprite(const std::filesystem::path& path, Texture* spritesheet, SDL_Rect bounds) :
 	FileAsset(path),
-	owner(owner),
+	spritesheet(spritesheet),
 	bounds(bounds)
 {
+	assert(spritesheet);
 }
 
-void Sprite::loadInternal(MemoryManager*)
+void Sprite::loadInternal()
 {
-	//TODO refcount
+	require(spritesheet);
 }
 
-void Sprite::unloadInternal(MemoryManager*)
+void Sprite::unloadInternal()
 {
-	//TODO refcount
+	release(spritesheet);
 }

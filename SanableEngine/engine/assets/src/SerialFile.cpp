@@ -13,7 +13,7 @@ SerialNode const* SerialFile::getRootNode() const
 	return rootNode;
 }
 
-void SerialFile::loadInternal(MemoryManager* mem)
+void SerialFile::loadInternal()
 {
 	std::wifstream in;
 	in.open(path);
@@ -22,7 +22,7 @@ void SerialFile::loadInternal(MemoryManager* mem)
 	in.close();
 }
 
-void SerialFile::unloadInternal(MemoryManager* mem)
+void SerialFile::unloadInternal()
 {
 	delete rootNode;
 	rootNode = nullptr;
