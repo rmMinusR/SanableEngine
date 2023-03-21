@@ -13,3 +13,7 @@ export_dll(SDL2::SDL2 engine-win32)
 
 # Declare imports
 target_link_libraries("engine-win32" "engine-core")
+
+function(package_assets)
+	#Nothing to do, plugins are responsible for copying their assets to their output directory
+endfunction()

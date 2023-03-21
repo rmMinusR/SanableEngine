@@ -33,11 +33,4 @@ include("engine/CMakeLists.txt") # Shared common code
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
 
-# Platform-specific builds
-# Must be done last so Emscripten can pack plugins as assets in VFS
-if (EMSCRIPTEN)
-    include("engine/platform/emscripten/CMakeLists.txt")
-endif()
-if (WIN32)
-    include("engine/platform/win32/CMakeLists.txt")
-endif()
+package_assets() # Must be done last so Emscripten can build VFS

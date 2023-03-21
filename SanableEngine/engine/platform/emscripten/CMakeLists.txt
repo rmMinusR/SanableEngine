@@ -21,10 +21,19 @@ set_target_properties(engine-emscripten PROPERTIES
 # Additional assets
 #target_link_options(engine-emscripten PRIVATE --shell-file ${CMAKE_CURRENT_LIST_DIR}/frontend.html)
 #target_link_options(engine-emscripten PRIVATE --embed-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
-target_link_options(engine-emscripten PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
+#target_link_options(engine-emscripten PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
+target_link_options(engine-emscripten PRIVATE -sFORCE_FILESYSTEM)
 
 # Declare post-build action: Copy SDL2.dll to output dir
 export_dll(SDL2::SDL2 engine-emscripten)
 
 # Declare imports
 target_link_libraries("engine-emscripten" "engine-core")
+
+function(package_assets)
+	add_custom_command(
+		OUTPUT "index.data"
+		COMMAND "file_packager.bat TARGET --embed ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins --obj-output ${CMAKE_CURRENT_BINARY_DIR}/index.data --use-preload-plugins"
+	)
+	add_dependencies("engine-emscripten" "index.data")
+endfunction()
