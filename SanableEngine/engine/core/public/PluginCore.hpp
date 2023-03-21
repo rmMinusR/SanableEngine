@@ -3,7 +3,7 @@
 #include "dllapi.h"
 
 #include <vector>
-#include "Hotswap.inl"
+#include "StableTypeInfo.inl"
 
 struct Plugin;
 struct PluginReportedData;
@@ -31,5 +31,5 @@ struct PluginReportedData
 
 	//std::vector<std::string> dependencies;
 
-	std::vector<HotswapTypeData> hotswappables;
+	std::vector<StableTypeInfo> hotswappables;
 };

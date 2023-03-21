@@ -11,11 +11,11 @@ void MemoryManager::cleanup()
 	pools.clear();
 }
 
-void MemoryManager::refreshVtables(std::vector<HotswapTypeData*> refreshers)
+void MemoryManager::refreshVtables(std::vector<StableTypeInfo*> refreshers)
 {
 	for (auto& p : pools)
 	{
-		for (HotswapTypeData* d : refreshers)
+		for (StableTypeInfo* d : refreshers)
 		{
 			if (d->name == p.poolType.name) set_vtable_ptr(p.pool, d->vtable);
 		}

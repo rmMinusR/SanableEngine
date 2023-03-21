@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "MemoryPoolCommon.hpp"
-#include "Hotswap.inl"
+#include "StableTypeInfo.inl"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
@@ -19,7 +19,7 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
 
-	virtual void refreshVtables(const std::vector<HotswapTypeData*>& refreshers);
+	virtual void refreshVtables(const std::vector<StableTypeInfo*>& refreshers);
 
 	typedef void (*hook_t)(void*);
 

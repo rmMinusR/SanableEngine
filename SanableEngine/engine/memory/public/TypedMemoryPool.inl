@@ -15,19 +15,19 @@ public:
 template<typename TObj>
 class TypedMemoryPool : protected RawMemoryPool
 {
-	HotswapTypeData hotswap;
+	StableTypeInfo hotswap;
 
 public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
 		RawMemoryPool(maxNumObjects, sizeof(TObj)),
-		hotswap(HotswapTypeData::blank<TObj>())
+		hotswap(StableTypeInfo::blank<TObj>())
 	{
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
 	}
 
-	void refreshVtables(const std::vector<HotswapTypeData*>& refreshers) override
+	void refreshVtables(const std::vector<StableTypeInfo*>& refreshers) override
 	{
-		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](HotswapTypeData* d) { return d->name == hotswap.name; });
+		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](StableTypeInfo* d) { return d->name == hotswap.name; });
 		if (newHotswap != refreshers.cend())
 		{
 			assert(hotswap.name == (**newHotswap).name); //Ensure same type

@@ -6,7 +6,7 @@
 #include "dllapi.h"
 #include "vtable.h"
 
-struct HotswapTypeData
+struct StableTypeInfo
 {
 	std::string name; //Cannot use typeinfo here
 	size_t size = 0;
@@ -22,27 +22,27 @@ struct HotswapTypeData
 	//Factories
 
 	template<typename TObj>
-	static HotswapTypeData blank()
+	static StableTypeInfo blank()
 	{
-		HotswapTypeData out;
+		StableTypeInfo out;
 		out.name = typeid(TObj).name();
 		out.size = sizeof(TObj);
 		return out;
 	}
 
 	template<typename TObj>
-	static HotswapTypeData extract(const TObj& obj)
+	static StableTypeInfo extract(const TObj& obj)
 	{
-		HotswapTypeData out = blank<TObj>();
+		StableTypeInfo out = blank<TObj>();
 		out.vtable = get_vtable_ptr(&obj);
 		return out;
 	}
 
 	template<typename TObj, typename... TCtorArgs>
-	static HotswapTypeData build(TCtorArgs... ctorArgs)
+	static StableTypeInfo build(TCtorArgs... ctorArgs)
 	{
 		TObj* obj = new TObj(ctorArgs...);
-		HotswapTypeData out = extract(*obj);
+		StableTypeInfo out = extract(*obj);
 		delete obj;
 		return out;
 	}

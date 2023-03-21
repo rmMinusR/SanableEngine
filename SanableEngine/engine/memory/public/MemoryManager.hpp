@@ -6,7 +6,7 @@
 
 class GameObject;
 class EngineCore;
-struct HotswapTypeData;
+struct StableTypeInfo;
 class PluginManager;
 
 template<>
@@ -17,14 +17,14 @@ class MemoryManager
 private:
 	struct PoolRecord
 	{
-		HotswapTypeData poolType;
+		StableTypeInfo poolType;
 		RawMemoryPool* pool;
 
 		template<typename TObj>
 		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
 			PoolRecord r;
 			r.pool = (RawMemoryPool*)pool;
-			r.poolType = HotswapTypeData::blank<TypedMemoryPool<TObj>>();
+			r.poolType = StableTypeInfo::blank<TypedMemoryPool<TObj>>();
 			return std::move(r);
 		}
 	};
@@ -50,7 +50,7 @@ private:
 	void cleanup();
 	friend class EngineCore;
 
-	void refreshVtables(std::vector<HotswapTypeData*> refreshers);
+	void refreshVtables(std::vector<StableTypeInfo*> refreshers);
 	friend class PluginManager;
 };
 
