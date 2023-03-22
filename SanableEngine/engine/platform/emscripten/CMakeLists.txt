@@ -31,9 +31,10 @@ export_dll(SDL2::SDL2 engine-emscripten)
 target_link_libraries("engine-emscripten" "engine-core")
 
 function(package_assets)
+	set(file_packager "${CMAKE_SOURCE_DIR}/../emsdk/upstream/emscripten/tools/file_packager.bat")
 	add_custom_command(
 		OUTPUT "index.data"
-		COMMAND "file_packager.bat TARGET --embed ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins --obj-output ${CMAKE_CURRENT_BINARY_DIR}/index.data --use-preload-plugins"
+		COMMAND "${file_packager} TARGET --embed ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins --obj-output ${CMAKE_CURRENT_BINARY_DIR}/index.data --use-preload-plugins"
 	)
 	add_dependencies("engine-emscripten" "index.data")
 endfunction()
