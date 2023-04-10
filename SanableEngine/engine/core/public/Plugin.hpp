@@ -58,7 +58,7 @@ private:
 
 	bool loadDLL();
 	bool preInit(EngineCore* engine);
-	bool init(bool firstRun);
-	bool cleanup(bool shutdown);
+	bool init(bool firstRun, EngineCore* engine);
+	bool cleanup(bool shutdown, EngineCore* engine);
 	void unloadDLL();
 };

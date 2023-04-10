@@ -15,13 +15,10 @@
 #define REGISTER_RTTI(...)
 #endif
 
-EngineCore* engine;
-
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
 {
     std::cout << "UserPlugin: plugin_preInit() called" << std::endl;
-    ::engine = engine;
-
+    
     report->name = "UserPlugin";
 
     REGISTER_RTTI(report->rtti);
@@ -33,7 +30,7 @@ GameObject* player;
 GameObject* obstacle;
 GameObject* staticObj;
 
-PLUGIN_C_API(bool) plugin_init(bool firstRun)
+PLUGIN_C_API(bool) plugin_init(bool firstRun, EngineCore* engine)
 {
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
@@ -59,7 +56,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
     return true;
 }
 
-PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
+PLUGIN_C_API(void) plugin_cleanup(bool shutdown, EngineCore* engine)
 {
     std::cout << "UserPlugin: plugin_cleanup() called" << std::endl;
 

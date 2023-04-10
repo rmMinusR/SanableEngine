@@ -10,8 +10,6 @@
 #define REGISTER_RTTI(...)
 #endif
 
-EngineCore* engine;
-
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
 {
     printf("PrimitivesPlugin: plugin_preInit() called\n");
@@ -20,18 +18,16 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
 
     REGISTER_RTTI(report->rtti);
 
-    ::engine = engine;
-
     return true;
 }
 
-PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
+PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun, EngineCore* engine)
 {
     printf("PrimitivesPlugin: plugin_init() called\n");
     return true;
 }
 
-PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
+PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown, EngineCore* engine)
 {
     printf("PrimitivesPlugin: plugin_cleanup() called\n");
 

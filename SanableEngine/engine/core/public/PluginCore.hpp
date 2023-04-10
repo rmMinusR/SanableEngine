@@ -15,12 +15,12 @@ class EngineCore;
 //This file should be included by plugins so they can implement the following functions
 
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine);
-PLUGIN_C_API(bool) plugin_init(bool firstRun);
-PLUGIN_C_API(void) plugin_cleanup(bool shutdown);
+PLUGIN_C_API(bool) plugin_init(bool firstRun, EngineCore* engine);
+PLUGIN_C_API(void) plugin_cleanup(bool shutdown, EngineCore* engine);
 
 typedef bool (PLUGIN_C_API_SPEC *fp_plugin_preInit)(Plugin* const context, PluginReportedData* report, EngineCore* engine);
-typedef bool (PLUGIN_C_API_SPEC *fp_plugin_init   )(bool firstRun);
-typedef void (PLUGIN_C_API_SPEC *fp_plugin_cleanup)(bool shutdown);
+typedef bool (PLUGIN_C_API_SPEC *fp_plugin_init   )(bool firstRun, EngineCore* engine);
+typedef void (PLUGIN_C_API_SPEC *fp_plugin_cleanup)(bool shutdown, EngineCore* engine);
 
 struct PluginReportedData
 {

@@ -43,7 +43,7 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 	for (Plugin* p : batch)
 	{
 		std::cout << "Applying plugin hooks for " << p->reportedData->name << '\n';
-		p->init(true);
+		p->init(true, engine);
 	}
 
 	std::cout << "Done discovering plugins\n";
@@ -59,13 +59,13 @@ void PluginManager::load(const std::wstring& dllPath)
 
 void PluginManager::hookAll(bool firstRun)
 {
-	for (Plugin* p : plugins) p->init(firstRun);
+	for (Plugin* p : plugins) p->init(firstRun, engine);
 }
 
 void PluginManager::unhookAll(bool shutdown)
 {
 	//TODO dependency tree
-	for (Plugin* p : plugins) p->cleanup(shutdown);
+	for (Plugin* p : plugins) p->cleanup(shutdown, engine);
 }
 
 void PluginManager::unloadAll()
