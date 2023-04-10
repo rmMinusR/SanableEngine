@@ -6,6 +6,10 @@
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
 
+#ifndef REGISTER_RTTI
+#define REGISTER_RTTI(...)
+#endif
+
 EngineCore* engine;
 
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
@@ -14,11 +18,7 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
 
     report->name = "PrimitivesPlugin";
 
-    report->hotswappables.push_back(StableTypeInfo::build<RectangleCollider>(0, 0));
-    report->hotswappables.push_back(StableTypeInfo::build<RectangleRenderer>(0, 0, SDL_Color{}));
-
-    report->hotswappables.push_back(StableTypeInfo::build<TypedMemoryPool<RectangleCollider>>(1));
-    report->hotswappables.push_back(StableTypeInfo::build<TypedMemoryPool<RectangleRenderer>>(1));
+    REGISTER_RTTI(report->rtti);
 
     ::engine = engine;
 

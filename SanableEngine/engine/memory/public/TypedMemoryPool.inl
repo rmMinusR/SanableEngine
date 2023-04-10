@@ -20,9 +20,10 @@ class TypedMemoryPool : protected RawMemoryPool
 public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
 		RawMemoryPool(maxNumObjects, sizeof(TObj)),
-		hotswap(StableTypeInfo::blank<TObj>())
+		hotswap()
 	{
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
+		//FIXME need a way to obtain StableTypeInfo
 	}
 
 	void refreshVtables(const std::vector<StableTypeInfo*>& refreshers) override
@@ -53,9 +54,6 @@ public:
 
 		//Construct object
 		new (pObj) TObj(ctorArgs...);
-
-		//Extract vtable (if not initted)
-		if (!hotswap.vtable) hotswap.set_vtable(pObj);
 
 		return pObj;
 	}

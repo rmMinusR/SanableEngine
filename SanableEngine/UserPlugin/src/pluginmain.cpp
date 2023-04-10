@@ -1,14 +1,19 @@
 #include <iostream>
 
+#include <SDL.h>
+
 #include "PluginCore.hpp"
 #include "Plugin.hpp"
 
-#include <SDL.h>
 #include "GameObject.hpp"
 #include "RectangleRenderer.hpp"
 #include "RectangleCollider.hpp"
 #include "ColliderColorChanger.hpp"
 #include "PlayerController.hpp"
+
+#ifndef REGISTER_RTTI
+#define REGISTER_RTTI(...)
+#endif
 
 EngineCore* engine;
 
@@ -19,11 +24,7 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
 
     report->name = "UserPlugin";
 
-    report->hotswappables.push_back(StableTypeInfo::build<ColliderColorChanger>(SDL_Color{}, SDL_Color{}));
-    report->hotswappables.push_back(StableTypeInfo::build<PlayerController>());
-
-    report->hotswappables.push_back(StableTypeInfo::build<TypedMemoryPool<ColliderColorChanger>>(1));
-    report->hotswappables.push_back(StableTypeInfo::build<TypedMemoryPool<PlayerController>>(1));
+    REGISTER_RTTI(report->rtti);
 
     return true;
 }

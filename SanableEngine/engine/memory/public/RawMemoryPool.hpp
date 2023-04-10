@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "MemoryPoolCommon.hpp"
-#include "StableTypeInfo.inl"
+#include "StableTypeInfo.h"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
