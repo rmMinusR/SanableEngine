@@ -6,11 +6,22 @@
 #include "dllapi.h"
 #include "vtable.h"
 
+struct StableTypeInfo;
+
+struct FieldInfo
+{
+	std::string name;
+	size_t offset;
+	StableTypeInfo* type;
+};
+
 struct StableTypeInfo
 {
 	std::string name; //Cannot use typeinfo here
 	size_t size = 0;
 	vtable_ptr vtable = nullptr;
+
+	std::vector<FieldInfo> fields;
 
 	template<typename TObj>
 	void set_vtable(const TObj& obj)
