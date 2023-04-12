@@ -85,6 +85,8 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     isAlive = true;
     quit = false;
 
+    frameAllocator.resize(frameAllocatorSize);
+
     this->system = &_system;
     system->Init(this);
     memoryManager.init();
@@ -161,6 +163,7 @@ void EngineCore::frameStep(void* arg)
 {
     EngineCore* engine = (EngineCore*)arg;
 
+    engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
     engine->tick();
     engine->draw();
 }
@@ -170,7 +173,7 @@ void EngineCore::tick()
     assert(isAlive);
 
     frame++;
-    
+
     processEvents();
 
     applyConcurrencyBuffers();

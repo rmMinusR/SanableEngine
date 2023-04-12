@@ -25,7 +25,8 @@ private:
     SDL_Window* window = nullptr;
     gpr460::System* system;
     MemoryManager memoryManager;
-    StackAllocator frameAllocator;
+    StackAllocator frameAllocator; //Temp memory that will be reset every frame
+    constexpr static size_t frameAllocatorSize = 4096;
     PluginManager pluginManager;
     friend class PluginManager;
 
