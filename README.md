@@ -3,7 +3,8 @@
 # Setup
 
 1. Clone this repo with `--recursive` (uses submodules for emsdk)
-2. Run `emsetup.bat`
+2. Run `emsetup.bat` to install Emscripten toolchain
+3. Use pip to install `libclang`
 
 # Building
 

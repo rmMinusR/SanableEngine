@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include <string>
+#include <vector>
 
 #include "dllapi.h"
 #include "vtable.h"
@@ -24,4 +25,4 @@ struct StableTypeInfo
 	std::vector<FieldInfo> fields;
 };
 
-using RTTIRegistry = std::vector<StableTypeInfo>;
+using TypeRegistry = std::vector<StableTypeInfo>;
