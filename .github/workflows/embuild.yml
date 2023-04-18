@@ -13,24 +13,25 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-
+    
+    - uses: lukka/get-cmake@v3.26.1
+    
     - name: Setup Emscripten
       uses: mymindstorm/setup-emsdk@v11
       with:
         version: tot
     
-    #- name: Configure Emscripten
-    #  working-directory: ${{env.GITHUB_WORKSPACE}}
-    #  run: emcc --generate-config
-
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
+    - name: Setup build script (CMake)
+      working-directory: SanableEngine/
       run: |
-        mkdir christensen-GPR460\builds\web
-        em++ -Ichristensen-GPR460\christensen-GPR460\include christensen-GPR460\christensen-GPR460\src\main.cpp -sUSE_SDL=2 -o christensen-GPR460\builds\web\index.html
-
+        emcmake cmake builds/Win64/
+    
+    - name: Build (Ninja)
+      working-directory: SanableEngine/builds/Win64
+      run: ninja
+      
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
-        path: christensen-GPR460/builds/web/
+        path: SanableEngine/builds/web/
         name: Build-Emscripten
