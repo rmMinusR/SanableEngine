@@ -4,7 +4,7 @@ project ("UserGameplayPlugin")
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" UserGameplayPlugin_sources)
-declare_plugin("UserGameplayPlugin" "plugins/UserGameplayPlugin" UserGameplayPlugin_sources)
+declare_plugin("UserGameplayPlugin" UserGameplayPlugin_sources)
 target_include_directories("UserGameplayPlugin" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare imports

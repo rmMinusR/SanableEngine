@@ -9,6 +9,8 @@ endif()
 # Include function library
 include("CMakeHelperFuncs.txt")
 
+set_property(GLOBAL PROPERTY PREFIX "")
+
 # Configure SDL2
 if (WIN32)
     message(" > Configuring SDL2 for Win32")

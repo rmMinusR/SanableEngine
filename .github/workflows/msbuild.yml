@@ -15,18 +15,23 @@ jobs:
         submodules: recursive
     
     - uses: lukka/get-cmake@v3.26.1
+
+    - run: mkdir SanableEngine\builds\Win64\
     
-    - name: Setup build script (CMake)
-      working-directory: SanableEngine/
-      run: |
-        cmake builds/Win64/
+    - name: Generate build files
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake -S ../../ -B intermediate -G Ninja
     
-    - name: Build (Ninja)
-      working-directory: SanableEngine/builds/Win64
-      run: ninja
+    - name: Build
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake --build intermediate
+    
+    - name: Package
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake --install intermediate --prefix install
 
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
-        path: SanableEngine/builds/Win64
+        path: SanableEngine/builds/Win64/install
         name: Build-Windows

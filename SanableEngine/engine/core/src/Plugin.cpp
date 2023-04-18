@@ -36,7 +36,7 @@ void* Plugin::getSymbol(const char* name) const
 {
 	assert(_dllGood());
 #ifdef _WIN32
-	return GetProcAddress(dll, name);
+	return reinterpret_cast<void*>(GetProcAddress(dll, name));
 #endif
 #ifdef __EMSCRIPTEN__
 	return dlsym(dll, name);

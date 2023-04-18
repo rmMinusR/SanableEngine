@@ -21,17 +21,22 @@ jobs:
       with:
         version: tot
     
-    - name: Setup build script (CMake)
-      working-directory: SanableEngine/
-      run: |
-        emcmake cmake builds/Win64/
+    - run: mkdir SanableEngine\builds\web\
     
-    - name: Build (Ninja)
-      working-directory: SanableEngine/builds/Win64
-      run: ninja
+    - name: Generate build files
+      working-directory: SanableEngine/builds/web/
+      run: emcmake cmake -S ../../ -B intermediate -G Ninja
+    
+    - name: Build
+      working-directory: SanableEngine/builds/web/
+      run: cmake --build intermediate
+    
+    - name: Package
+      working-directory: SanableEngine/builds/web/
+      run: cmake --install intermediate --prefix install
       
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
-        path: SanableEngine/builds/web/
+        path: SanableEngine/builds/web/install/bin
         name: Build-Emscripten

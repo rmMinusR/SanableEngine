@@ -13,3 +13,7 @@ export_dll(SDL2::SDL2 engine-win32)
 
 # Declare imports
 target_link_libraries("engine-win32" "engine-core")
+
+# Declare install targets
+install(TARGETS "engine-win32")
+install(FILES "$<TARGET_FILE:SDL2::SDL2>" DESTINATION "bin/")
