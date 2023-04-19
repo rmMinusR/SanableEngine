@@ -17,3 +17,7 @@ target_link_libraries("engine-win32" "engine-core")
 function(package_assets)
 	#Nothing to do, plugins are responsible for copying their assets to their output directory
 endfunction()
+
+# Declare install targets
+install(TARGETS "engine-win32")
+install(FILES "$<TARGET_FILE:SDL2::SDL2>" DESTINATION "bin/")

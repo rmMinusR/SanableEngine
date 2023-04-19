@@ -2,17 +2,6 @@ name: Build (Windows)
 
 on: workflow_dispatch
 
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: christensen-GPR460
-
-  # Configuration type to build.
-  # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Release
-
-  BUILD_PLATFORM: x64
-
 permissions:
   contents: read
 
@@ -22,22 +11,27 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - uses: lukka/get-cmake@v3.26.1
 
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
-
-    - name: Restore NuGet packages
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
-
-    - name: Build (x64, Release)
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{env.BUILD_PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
+    - run: mkdir SanableEngine\builds\Win64\
+    
+    - name: Generate build files
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake -S ../../ -B intermediate -G Ninja
+    
+    - name: Build
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake --build intermediate
+    
+    - name: Package
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake --install intermediate --prefix install
 
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
-        path: christensen-GPR460/builds/${{env.BUILD_PLATFORM}}/${{env.BUILD_CONFIGURATION}}
-        name: Build-${{env.BUILD_PLATFORM}}-${{env.BUILD_CONFIGURATION}}
+        path: SanableEngine/builds/Win64/install
+        name: Build-Windows

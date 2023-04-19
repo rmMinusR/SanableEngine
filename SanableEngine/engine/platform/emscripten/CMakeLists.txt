@@ -38,3 +38,6 @@ function(package_assets)
 	)
 	add_dependencies("engine-emscripten" "index.data")
 endfunction()
+
+# Declare install targets
+install(FILES "$<TARGET_FILE_DIR:engine-emscripten>/index.html" "$<TARGET_FILE_DIR:engine-emscripten>/index.js" "$<TARGET_FILE_DIR:engine-emscripten>/index.wasm" "$<TARGET_FILE_DIR:engine-emscripten>/index.data" DESTINATION "bin/")

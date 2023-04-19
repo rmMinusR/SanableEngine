@@ -33,6 +33,7 @@ void ColliderColorChanger::Update()
 {
 	int nHits = collider->GetCollisions(nullptr);
 	RectangleCollider** hits = getEngine()->getFrameAllocator()->alloc<RectangleCollider*>(nHits);
+	collider->GetCollisions(hits);
 
 	renderer->SetColor(nHits>0 ? overlapColor : normalColor);
 

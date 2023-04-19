@@ -13,3 +13,7 @@ gpr460::System::System()
 	engine = nullptr;
 	targetFps = defaultTargetFps;
 }
+
+gpr460::System::~System()
+{
+}

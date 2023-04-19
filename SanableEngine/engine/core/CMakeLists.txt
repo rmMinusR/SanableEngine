@@ -5,7 +5,7 @@ project("engine-core")
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_core_sources)
-declare_plugin("engine-core" "" engine_core_sources)
+declare_dll("engine-core" "" engine_core_sources)
 target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare imports
@@ -14,3 +14,6 @@ target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} engine-memory engin
 
 # Declare exports
 target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
+
+# Declare install targets
+install(TARGETS "engine-core")

@@ -2,18 +2,14 @@ cmake_minimum_required (VERSION 3.13)
 
 project ("devenv") #Ignore
 
-# Color output (not supported by MSVC)
-if (NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(-fdiagnostics-color=always)
-    add_link_options(-fdiagnostics-color=always)
-endif()
-
 if (EMSCRIPTEN)
     add_compile_options("-fPIC") # I don't know why this works, but without it spews errors. Maybe related to linker?
 endif()
 
 # Include function library
 include("CMakeHelperFuncs.txt")
+
+set_property(GLOBAL PROPERTY PREFIX "")
 
 # Configure SDL2
 if (WIN32)

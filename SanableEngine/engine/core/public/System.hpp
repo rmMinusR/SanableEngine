@@ -32,7 +32,7 @@ namespace gpr460
 
 	public:
 		ENGINECORE_API System();
-		virtual ~System() = default;
+		ENGINECORE_API virtual ~System();
 
 		virtual void DebugPause() = 0;
 
