@@ -9,7 +9,7 @@ endif()
 # Include function library
 include("CMakeHelperFuncs.txt")
 
-set_property(GLOBAL PROPERTY PREFIX "")
+set_property(GLOBAL PROPERTY PREFIX "") # Stop prefixing everything with lib!
 
 # Configure SDL2
 if (WIN32)

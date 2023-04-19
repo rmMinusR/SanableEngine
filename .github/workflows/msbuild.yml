@@ -5,6 +5,10 @@ on: workflow_dispatch
 permissions:
   contents: read
 
+env:
+  CC: clang
+  CXX: clang++
+
 jobs:
   build:
     runs-on: windows-latest
