@@ -40,4 +40,4 @@ function(package_assets)
 endfunction()
 
 # Declare install targets
-install(FILES "$<TARGET_FILE_DIR:engine-emscripten>/index.html" "$<TARGET_FILE_DIR:engine-emscripten>/index.js" "$<TARGET_FILE_DIR:engine-emscripten>/index.wasm" "$<TARGET_FILE_DIR:engine-emscripten>/index.data" DESTINATION "bin/")
+install(FILES "$<TARGET_FILE_DIR:engine-emscripten>/index.html" "$<TARGET_FILE_DIR:engine-emscripten>/index.js" "$<TARGET_FILE_DIR:engine-emscripten>/index.wasm" "$<TARGET_FILE_DIR:engine-emscripten>/index.data" DESTINATION "./")

@@ -12,4 +12,4 @@ target_include_directories("engine-memory" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/pr
 target_include_directories("engine-memory" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
 # Declare install targets
-#install(TARGETS "engine-memory") # Statically linked, no need to export .lib
+# Statically linked, no need to export .lib

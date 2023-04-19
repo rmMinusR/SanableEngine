@@ -38,5 +38,5 @@ jobs:
     - name: Upload build
       uses: actions/upload-artifact@v3.1.0
       with:
-        path: SanableEngine/builds/web/install/bin
+        path: SanableEngine/builds/web/install/
         name: Build-Emscripten

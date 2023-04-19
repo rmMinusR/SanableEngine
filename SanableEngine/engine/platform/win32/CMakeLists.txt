@@ -19,5 +19,8 @@ function(package_assets)
 endfunction()
 
 # Declare install targets
-install(TARGETS "engine-win32")
-install(FILES "$<TARGET_FILE:SDL2::SDL2>" DESTINATION "bin/")
+install(TARGETS "engine-win32"
+	RUNTIME DESTINATION "." COMPONENT Runtime
+	LIBRARY DESTINATION "." COMPONENT Runtime
+)
+install(FILES "$<TARGET_FILE:SDL2::SDL2>" DESTINATION ".")

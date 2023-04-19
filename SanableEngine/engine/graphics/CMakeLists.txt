@@ -16,4 +16,7 @@ target_link_libraries("engine-graphics" PUBLIC ${SDL2_LIBRARIES} engine-memory)
 target_include_directories("engine-graphics" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
 # Declare install targets
-install(TARGETS "engine-graphics")
+install(TARGETS "engine-graphics"
+	RUNTIME DESTINATION "." COMPONENT Runtime
+	LIBRARY DESTINATION "." COMPONENT Runtime
+)

@@ -56,5 +56,8 @@ endfunction()
 
 function(declare_plugin name sources_var)
     declare_dll(${name} "plugins/${name}" ${sources_var})
-    install(TARGETS "${name}" DESTINATION "bin/plugins/${name}")
+    install(TARGETS "${name}"
+	    RUNTIME DESTINATION "plugins/${name}" COMPONENT Runtime
+	    LIBRARY DESTINATION "plugins/${name}" COMPONENT Runtime
+    )
 endfunction()
