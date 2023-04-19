@@ -26,6 +26,8 @@ endif()
 find_package(SDL2 REQUIRED)
 
 include("engine/CMakeLists.txt") # Shared common code
+
+# YOUR PLUGINS HERE
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
 

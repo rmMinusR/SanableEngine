@@ -16,6 +16,7 @@ target_link_libraries("engine-win32" "engine-core")
 
 function(package_assets)
 	#Nothing to do, plugins are responsible for copying their assets to their output directory
+	message("Detected plugins ${sanableAllPlugins}")
 endfunction()
 
 # Declare install targets

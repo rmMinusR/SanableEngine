@@ -39,6 +39,19 @@ function(set_linkage_shared project)
     endif()
 endfunction()
 
+function(install_dll name dest)
+    if (WIN32)
+        install(TARGETS "${name}"
+	        RUNTIME DESTINATION "${dest}" COMPONENT Runtime
+	        LIBRARY DESTINATION "${dest}" COMPONENT Runtime
+        )
+    elseif (EMSCRIPTEN)
+        install(TARGETS "${name}" ARCHIVE DESTINATION "${dest}" COMPONENT Runtime)
+    else()
+        message(ERROR "Unknown platform, don't know how to install DLL")
+    endif()
+endfunction()
+
 function(declare_dll name exportRelpath sources_var)
     add_library(${name} SHARED ${${sources_var}})
     set_linkage_shared(${name})
@@ -54,10 +67,9 @@ function(declare_dll name exportRelpath sources_var)
     )
 endfunction()
 
+SET(sanableAllPlugins "")
 function(declare_plugin name sources_var)
     declare_dll(${name} "plugins/${name}" ${sources_var})
-    install(TARGETS "${name}"
-	    RUNTIME DESTINATION "plugins/${name}" COMPONENT Runtime
-	    LIBRARY DESTINATION "plugins/${name}" COMPONENT Runtime
-    )
+    install_dll(${name} "plugins/${name}")
+    SET(sanableAllPlugins ${sanableAllPlugins} ${name} PARENT_SCOPE)
 endfunction()
