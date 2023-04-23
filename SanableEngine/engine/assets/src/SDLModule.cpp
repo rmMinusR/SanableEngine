@@ -2,13 +2,13 @@
 
 #include <cassert>
 
-void SDLModule::loadInternal(MemoryManager*)
+void SDLModule::loadInternal()
 {
 	int err = SDL_InitSubSystem(flags);
 	assert(!err);
 }
 
-void SDLModule::unloadInternal(MemoryManager*)
+void SDLModule::unloadInternal()
 {
 	SDL_QuitSubSystem(flags);
 }

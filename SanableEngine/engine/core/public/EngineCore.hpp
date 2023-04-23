@@ -1,14 +1,14 @@
 #pragma once
 
-#include "dllapi.h"
-
 #include <vector>
 
 #include "CallBatcher.inl"
-#include "PluginManager.hpp"
 #include "MemoryManager.hpp"
 #include "StackAllocator.hpp"
 #include "Window.hpp"
+
+#include "dllapi.h"
+#include "PluginManager.hpp"
 
 class GameObject;
 class Component;

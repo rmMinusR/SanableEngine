@@ -25,10 +25,8 @@ target_link_options(engine-emscripten PRIVATE -sFORCE_FILESYSTEM)
 # Debug options
 #target_link_options(engine-emscripten PRIVATE --cpuprofiler)
 
-# Link against SDL2
-target_link_options(engine-emscripten PRIVATE -sUSE_SDL=2)
-
 # Declare imports
+target_link_options(engine-emscripten PRIVATE -sUSE_SDL=2)
 target_link_libraries("engine-emscripten" "engine-core")
 
 function(package_assets)

@@ -93,12 +93,12 @@ void gpr460::System_Win32::DebugPause()
 #endif
 }
 
-void gpr460::System_Win32::ShowError(const gpr460::string& message)
+void gpr460::System_Win32::ShowError(const std::wstring& message)
 {
 	MessageBoxW(NULL, message.c_str(), L"Error", MB_OK | MB_ICONSTOP);
 }
 
-void gpr460::System_Win32::LogToErrorFile(const gpr460::string& message)
+void gpr460::System_Win32::LogToErrorFile(const std::wstring& message)
 {
 	//Lazy init logfile
 	if (!logFile)

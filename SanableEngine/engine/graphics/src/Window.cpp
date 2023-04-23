@@ -2,7 +2,10 @@
 
 #include <SDL_render.h>
 
-Window::Window(char const* name, int width, int height)
+#include "SDLModule.hpp"
+
+Window::Window(char const* name, int width, int height) :
+    AssetUser({ &SDLModule::video })
 {
     handle = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(handle, -1, SDL_RENDERER_ACCELERATED);

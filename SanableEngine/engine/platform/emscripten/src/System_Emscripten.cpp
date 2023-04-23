@@ -51,7 +51,7 @@ EM_JS(void, jsnative_alert, (const wchar_t* message), {
 	alert(UTF16ToString(message));
 })
 
-void gpr460::System_Emscripten::ShowError(const gpr460::string& message)
+void gpr460::System_Emscripten::ShowError(const std::wstring& message)
 {
 	jsnative_alert(message.c_str());
 }
@@ -60,7 +60,7 @@ EM_JS(void, jsnative_console_error, (const wchar_t* message), {
 	console.error(UTF16ToString(message));
 })
 
-void gpr460::System_Emscripten::LogToErrorFile(const gpr460::string& message)
+void gpr460::System_Emscripten::LogToErrorFile(const std::wstring& message)
 {
 	jsnative_console_error(message.c_str());
 }
