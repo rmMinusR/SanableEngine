@@ -1,9 +1,6 @@
 cmake_minimum_required (VERSION 3.8)
 set (CMAKE_CXX_STANDARD 17)
 
-# Allow pseudo-blocking operations
-target_link_options("engine-core" PUBLIC -sASYNCIFY)
-
 project("engine-emscripten")
 
 # Declare target
@@ -17,25 +14,30 @@ set_target_properties(engine-emscripten PROPERTIES
 	OUTPUT_NAME "index"
 	SUFFIX ".html"
 )
+set_property(TARGET "engine-emscripten" APPEND PROPERTY ADDITIONAL_CLEAN_FILES "index.data" "index.wasm" "index.js")
 
 # Additional assets
 #target_link_options(engine-emscripten PRIVATE --shell-file ${CMAKE_CURRENT_LIST_DIR}/frontend.html)
 #target_link_options(engine-emscripten PRIVATE --embed-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
-#target_link_options(engine-emscripten PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
+target_link_options(engine-emscripten PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
 target_link_options(engine-emscripten PRIVATE -sFORCE_FILESYSTEM)
 
-# Declare post-build action: Copy SDL2.dll to output dir
-export_dll(SDL2::SDL2 engine-emscripten)
+# Debug options
+#target_link_options(engine-emscripten PRIVATE --cpuprofiler)
+
+# Link against SDL2
+target_link_options(engine-emscripten PRIVATE -sUSE_SDL=2)
 
 # Declare imports
 target_link_libraries("engine-emscripten" "engine-core")
 
 function(package_assets)
 	message("Detected plugins ${sanableAllPlugins}")
-	set(file_packager "${CMAKE_SOURCE_DIR}/../emsdk/upstream/emscripten/tools/file_packager.py")
-	add_custom_target("index.data" python ${file_packager} TARGET --embed ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins --obj-output=${CMAKE_CURRENT_BINARY_DIR}/index.data --wasm64 --use-preload-plugins
-					DEPENDS ${sanableAllPlugins})
-	add_dependencies("engine-emscripten" "index.data")
+	add_dependencies("engine-emscripten" ${sanableAllPlugins}) # Ensure plugins make it into index.data first time around
+	#set(file_packager "${CMAKE_SOURCE_DIR}/../emsdk/upstream/emscripten/tools/file_packager.py")
+	#add_custom_target("index.data" python ${file_packager} ${CMAKE_CURRENT_BINARY_DIR}/index.data --preload ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins --wasm64 --use-preload-plugins
+	#				DEPENDS ${sanableAllPlugins})
+	#add_dependencies("engine-emscripten" "index.data")
 endfunction()
 
 # Declare install targets

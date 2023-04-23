@@ -43,10 +43,9 @@ function(install_dll name dest)
     if (WIN32)
         install(TARGETS "${name}"
 	        RUNTIME DESTINATION "${dest}" COMPONENT Runtime
-	        LIBRARY DESTINATION "${dest}" COMPONENT Runtime
         )
     elseif (EMSCRIPTEN)
-        install(TARGETS "${name}" ARCHIVE DESTINATION "${dest}" COMPONENT Runtime)
+        install(FILES "$<TARGET_FILE_DIR:${name}>/${name}.wasm" DESTINATION "${dest}")
     else()
         message(ERROR "Unknown platform, don't know how to install DLL")
     endif()
@@ -54,17 +53,22 @@ endfunction()
 
 function(declare_dll name exportRelpath sources_var)
     add_library(${name} SHARED ${${sources_var}})
+    set_target_properties(${name} PROPERTIES PREFIX "") # Stop prefixing everything with lib!
     set_linkage_shared(${name})
-    if (EMSCRIPTEN)
-        set_target_properties(${name} PROPERTIES
-	        SUFFIX ${PLATFORM_DLL_EXTENSION}
-        )
-    endif()
     set_target_properties(${name} PROPERTIES
 	    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
 	    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
 	    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${exportRelpath}"
     )
+
+    if (EMSCRIPTEN)
+        # This is actually an .a archive file (output of the "ar" command), which needs to be turned into a WASM binary
+        add_custom_command(TARGET ${name} POST_BUILD
+            COMMAND ${CMAKE_CXX_COMPILER} -shared -sSIDE_MODULE -o $<TARGET_FILE_DIR:${name}>/${name}.wasm $<TARGET_FILE:${name}>
+            COMMENT "Packaging ${name}: .a -> .wasm"
+        )
+        set_property(TARGET ${name} APPEND PROPERTY ADDITIONAL_CLEAN_FILES "$<TARGET_FILE_DIR:${name}>/${name}.wasm") # Ensure it gets cleaned up
+    endif()
 endfunction()
 
 SET(sanableAllPlugins "")

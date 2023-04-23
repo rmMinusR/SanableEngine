@@ -3,13 +3,24 @@ cmake_minimum_required (VERSION 3.13)
 project ("devenv") #Ignore
 
 if (EMSCRIPTEN)
-    add_compile_options("-fPIC") # I don't know why this works, but without it spews errors. Maybe related to linker?
+    add_compile_options("-fPIC") # Emscripten side modules require PIC. Might as well turn it on globally.
 endif()
 
 # Include function library
-include("CMakeHelperFuncs.txt")
+include("CMakeHelperFuncs.cmake")
 
-set_property(GLOBAL PROPERTY PREFIX "") # Stop prefixing everything with lib!
+# Set debug flags
+if (CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
+    message(" > Detected debug build. Names will be left in.")
+    #add_compile_options(-g3)
+    #add_link_options(-g3)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RELEASE")
+    message(" > Detected release build. Output will be optimized.")
+    add_compile_options(-O2)
+    add_link_options(-O2)
+else()
+    message(ERROR " > Unknown build type ${CMAKE_BUILD_TYPE}")
+endif()
 
 # Configure SDL2
 if (WIN32)

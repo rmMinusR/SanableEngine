@@ -8,10 +8,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary
 mkdir %~dp0\build\web
 cd /D %~dp0\build\web
 
-rem call emcmake cmake -S %~dp0 -B intermediate -DCMAKE_BUILD_TYPE=DEBUG -DCMAKE_VERBOSE_MAKEFILE=ON
-
-call emcmake cmake -S %~dp0 -B intermediate -DCMAKE_BUILD_TYPE=DEBUG
-call cmake --build intermediate
+call python %~dp0/../emsdk/upstream/emscripten/tools/file_packager.py intermediate/index.data --preload intermediate/plugins@/plugins --wasm64 --use-preload-plugins
 call cmake --install intermediate --prefix install
 
 pause
