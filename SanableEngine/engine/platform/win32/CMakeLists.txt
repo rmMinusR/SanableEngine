@@ -10,6 +10,20 @@ target_include_directories("engine-win32" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/pri
 
 # Declare post-build action: Copy SDL2.dll to output dir
 export_dll(SDL2::SDL2 engine-win32)
+export_dll(SDL2_image::SDL2_image engine-win32)
+export_dll(SDL2_ttf::SDL2_ttf engine-win32)
 
 # Declare imports
 target_link_libraries("engine-win32" "engine-core")
+
+function(package_assets)
+	#Nothing to do, plugins are responsible for copying their assets to their output directory
+	message("Detected plugins ${sanableAllPlugins}")
+endfunction()
+
+# Declare install targets
+install(TARGETS "engine-win32"
+	RUNTIME DESTINATION "." COMPONENT Runtime
+	LIBRARY DESTINATION "." COMPONENT Runtime
+)
+install(FILES "$<TARGET_FILE:SDL2::SDL2>" DESTINATION ".")

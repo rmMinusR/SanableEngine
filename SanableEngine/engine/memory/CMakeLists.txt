@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.11)
+cmake_minimum_required (VERSION 3.14)
 set (CMAKE_CXX_STANDARD 17)
 
 project("engine-memory")
@@ -10,3 +10,6 @@ target_include_directories("engine-memory" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/pr
 
 # Declare exports
 target_include_directories("engine-memory" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
+
+# Declare install targets
+# Statically linked, no need to export .lib

@@ -1,12 +1,14 @@
 #pragma once
 
+#include "AssetUser.hpp"
+
 #include "dllapi.h"
 #include "Renderer.hpp"
 
 struct SDL_Window;
 struct SDL_Renderer;
 
-class Window
+class Window : public AssetUser
 {
 private:
 	SDL_Window* handle;

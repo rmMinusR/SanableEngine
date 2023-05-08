@@ -28,7 +28,7 @@ namespace gpr460
 	private:
 		FILE* consolePsuedofile;
 		HANDLE logFile;
-		const string logFileName = L"GameErrors.txt";
+		const std::wstring logFileName = L"GameErrors.txt";
 
 		friend class EngineCore;
 #ifdef _DEBUG
@@ -45,8 +45,8 @@ namespace gpr460
 
 		void DebugPause() override;
 
-		void ShowError(const gpr460::string& message) override;
-		void LogToErrorFile(const gpr460::string& message) override;
+		void ShowError(const std::wstring& message) override;
+		void LogToErrorFile(const std::wstring& message) override;
 
 		std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
 		std::filesystem::path GetBaseDir() const override;

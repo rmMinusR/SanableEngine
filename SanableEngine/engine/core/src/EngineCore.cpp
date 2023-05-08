@@ -92,8 +92,6 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     memoryManager.init();
     memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module
 
-    SDLModule::video.load(&memoryManager);
-
     mainWindow = new Window(windowName, windowWidth, windowHeight);
     frame = 0;
 
@@ -116,8 +114,6 @@ void EngineCore::shutdown()
     delete mainWindow;
     mainWindow = nullptr;
     
-    SDLModule::video.unload(&memoryManager);
-
     //Clean up memory, GameObject pool first so components are released
     memoryManager.destroyPool<GameObject>();
     memoryManager.cleanup();

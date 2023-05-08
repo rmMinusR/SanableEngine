@@ -1,6 +1,7 @@
 #include "Transform.hpp"
 
 #include <cassert>
+#include <algorithm>
 
 Transform::Transform() :
 	isDirtySelf(false),

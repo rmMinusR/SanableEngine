@@ -8,8 +8,8 @@
 class SDLModule : public Asset
 {
 protected:
-	virtual void loadInternal(MemoryManager*) override;
-	virtual void unloadInternal(MemoryManager*) override;
+	virtual void loadInternal() override;
+	virtual void unloadInternal() override;
 
 	Uint32 flags;
 public:

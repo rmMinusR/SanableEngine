@@ -1,9 +1,8 @@
 #pragma once
 
+#include <algorithm>
+
 #include "dllapi.h"
-
-#include "Aliases.hpp"
-
 #include "vtable.h"
 
 template<typename TObj>

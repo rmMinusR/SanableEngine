@@ -36,7 +36,7 @@ void* Plugin::getSymbol(const char* name) const
 {
 	assert(_dllGood());
 #ifdef _WIN32
-	return GetProcAddress(dll, name);
+	return reinterpret_cast<void*>(GetProcAddress(dll, name));
 #endif
 #ifdef __EMSCRIPTEN__
 	return dlsym(dll, name);
@@ -59,7 +59,17 @@ bool Plugin::loadDLL()
 #ifdef __EMSCRIPTEN__
 	dll = dlopen(path.c_str(), RTLD_LAZY);
 #endif
-	if (!_dllGood()) return false;
+	if (!_dllGood())
+	{
+#ifdef _WIN32
+		DWORD err = GetLastError();
+		printf_s("Error: Code %u\n", err);
+#endif
+#ifdef __EMSCRIPTEN__
+		printf("Error: %s\n", dlerror());
+#endif
+		return false;
+	}
 
 	status = Status::DllLoaded;
 	return true;
