@@ -53,16 +53,20 @@ def isClass(cursor: clang.cindex.Cursor) -> bool:
 
 def flatten(target: Iterator | clang.cindex.Cursor) -> Generator[clang.cindex.Cursor, None, None]:
 	# Default case: Cursor
-	if hasattr(target, "kind"):
+	if isinstance(target, clang.cindex.Cursor):
 		if target.kind == clang.cindex.CursorKind.NAMESPACE:
 			for i in target.get_children():
 				for j in flatten(i):
 					yield j
+		elif target.kind == clang.cindex.CursorKind.CLASS_DECL: # FIXME: Won't work for templates
+			yield target
+			for i in target.get_children():
+				yield i
 		else:
 			yield target
 
 	# Option for Cursor generators
-	elif hasattr(target, "__iter__"):
+	elif isinstance(target, (Iterator, Generator)):
 		for i in target:
 			for j in flatten(i):
 				yield j
@@ -71,12 +75,20 @@ def flatten(target: Iterator | clang.cindex.Cursor) -> Generator[clang.cindex.Cu
 		raise TypeError("Don't know how to handle type "+type(target).__name__)
 
 
+def getAbsName(target: clang.cindex.Cursor) -> str:
+	if type(target.semantic_parent) == type(None) or target.semantic_parent.kind == clang.cindex.CursorKind.TRANSLATION_UNIT:
+		# Root case: Drop TU name
+		return target.displayname
+	else:
+		# Loop case
+		return getAbsName(target.semantic_parent) + "::" + target.displayname
+
 
 if __name__ == "__main__":
 	def _testRig(filePath):
 		print(f"Parsing {filePath}:")
 		for i in flatten(parseAuto(filePath)):
-			print(f"   {i.displayname} : {i.kind}")
+			print(f"   {getAbsName(i)} : {i.kind}")
 		print("")
 
 	_testRig(r"UserPlugin/")
