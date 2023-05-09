@@ -1,26 +1,44 @@
 import clang.cindex
 import sys, os
+from typing import Generator, Iterator
+import typing
 
-def parseAuto(target: str) -> list[clang.cindex.Cursor]:
+index = clang.cindex.Index.create()
+fileTypes = {
+	".h"   : "c++-header",
+	".hpp" : "c++-header",
+	".inl" : "c++-header",
+	".c"   : "c++",
+	".cpp" : "c++"
+}
+
+def parseAuto(target: str) -> Generator[clang.cindex.Cursor, None, None]:
 	if os.path.isdir(target):
 		return parseDir(target)
-	elif os.path.splitext(target)[1] in [".h", ".hpp", ".inl", ".c", ".cpp"]:
+
+	ext = os.path.splitext(target)[1]
+	if ext in fileTypes.keys():
 		return parseFile(target)
 	else:
-		return []
+		print(f"WARNING: Skipping file of unknown type \"{ext}\" ({target})")
 
-def parseDir(target: str) -> list[clang.cindex.Cursor]:
-	out = []
+def parseDir(target: str) -> Generator[clang.cindex.Cursor, None, None]:
 	for subpath in os.listdir(target):
-		out += parseAuto(os.path.join(target, subpath))
-	return out
+		it = parseAuto(os.path.join(target, subpath))
+		if it != None:
+			for i in it:
+				yield i
 
-def parseFile(target: str) -> list[clang.cindex.Cursor]:
-	index = clang.cindex.Index.create()
-
+def parseFile(target: str) -> Generator[clang.cindex.Cursor, None, None]:
+	ext = os.path.splitext(target)[1]
+	fileType = fileTypes[ext]
 	try:
-		tu = index.parse(target, args=["-std=c++17", "--language=c++-header"], options=clang.cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
-		return [i for i in tu.cursor.get_children() if isOurs(target, i)]
+		tu = index.parse(target, args=["-std=c++17", "--language="+fileType])#, options=clang.cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
+
+		for i in tu.cursor.get_children():
+			if isOurs(target, i):
+				yield i
+		
 	except Exception as e:
 		print(f"Error parsing translation unit for target {target}")
 		raise e
@@ -33,13 +51,32 @@ def isClass(cursor: clang.cindex.Cursor) -> bool:
 
 
 
+def flatten(target: Iterator | clang.cindex.Cursor) -> Generator[clang.cindex.Cursor, None, None]:
+	# Default case: Cursor
+	if hasattr(target, "kind"):
+		if target.kind == clang.cindex.CursorKind.NAMESPACE:
+			for i in target.get_children():
+				for j in flatten(i):
+					yield j
+		else:
+			yield target
+
+	# Option for Cursor generators
+	elif hasattr(target, "__iter__"):
+		for i in target:
+			for j in flatten(i):
+				yield j
+
+	else:
+		raise TypeError("Don't know how to handle type "+type(target).__name__)
+
 
 
 if __name__ == "__main__":
 	def _testRig(filePath):
 		print(f"Parsing {filePath}:")
-		for i in parseAuto(filePath):
-			print(f" - {i.displayname} : {i.kind}")
+		for i in flatten(parseAuto(filePath)):
+			print(f"   {i.displayname} : {i.kind}")
 		print("")
 
 	_testRig(r"UserPlugin/")
