@@ -19,9 +19,10 @@ public:
 	struct Parent
 	{
 		vtable_ptr vtable; //nullptr if not polymorphic
-		size_t memoryOffset;
+		std::ptrdiff_t memoryOffset;
 		TypeInfo* type;
 	};
+
 private:
 	std::size_t hash; //For fast compares
 	std::string stdRttiName; //Obtained from std::type_info/typeid. String so it persists across reloads. Used for matching.
@@ -66,6 +67,7 @@ public:
 		ENGINEREFL_API void execute(void* obj);
 		ENGINEREFL_API void doSanityCheck(); //Complain if new members are introduced, or old members are deleted
 	private:
+		size_t swapSize; //We need to make a temporary allocation with this algorithm
 		std::vector<std::pair<const FieldInfo*, const FieldInfo*>> contents;
 		friend class TypeInfo;
 	};

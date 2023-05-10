@@ -12,6 +12,9 @@
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
 {
+protected:
+	TypeInfo* hotswap;
+
 public:
 	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
 	ENGINEMEM_API ~RawMemoryPool();
@@ -20,7 +23,7 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
 
-	virtual void refreshVtables(const std::vector<TypeInfo*>& refreshers);
+	void refreshVtables(const std::vector<TypeInfo*>& refreshers);
 
 	typedef void (*hook_t)(void*);
 

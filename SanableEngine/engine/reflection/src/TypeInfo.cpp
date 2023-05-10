@@ -71,19 +71,45 @@ void TypeInfo::vptrJam(void* target) const
 	}
 }
 
-void TypeInfo::LayoutRemap::execute(void* target)
+void TypeInfo::LayoutRemap::execute(void* obj)
 {
-	//TODO implement stub
+	void* old = malloc(this->swapSize); //TODO lazy auto-resizing allocation?
+	memcpy(old, obj, this->swapSize);
+	
+	for (const std::pair<const FieldInfo*, const FieldInfo*>& i : contents)
+	{
+		if (i.first && i.second)
+		{
+			//FIXME move constructors should probably be called. It will also break pointers, but you shouldn't be sharing pointers anyway.
+			//i.second->declaredType->move(i.second->bind(obj), i.first->bind(old), std::min(i.first->declaredType->getSize(), i.second->declaredType->getSize()));
+			memcpy(i.second->bind(obj), i.first->bind(old), std::min(i.first->declaredType->getSize(), i.second->declaredType->getSize()));
+		}
+	}
+
+	free(old);
 }
 
 void TypeInfo::LayoutRemap::doSanityCheck()
 {
-	//TODO implement stub
+	for (const std::pair<const FieldInfo*, const FieldInfo*>& i : contents)
+	{
+		     if (!i.second) printf("WARNING: Field %s has been dropped. No destructor will be called.\n", i.first->name.c_str());
+		else if (!i.first ) printf("WARNING: Field %s has been added. No constructor will be called.\n", i.second->name.c_str());
+		else if (*i.first->declaredType != *i.second->declaredType)
+		{
+			printf("WARNING: Field %s has had its type change (%s -> %s). Your program will almost certainly crash.\n",
+				i.second->name.c_str(),
+				i.first ->declaredType->getShortName().c_str(),
+				i.second->declaredType->getShortName().c_str()
+			);
+		}
+	}
 }
 
 TypeInfo::LayoutRemap TypeInfo::buildLayoutRemap(const TypeInfo* _old, const TypeInfo* _new)
 {
 	LayoutRemap out;
+	out.swapSize = std::max(_old->getSize(), _new->getSize());
 
 	//Detect fields that match, and deleted fields
 	for (const FieldInfo& oldField : _old->getFields())

@@ -22,7 +22,7 @@ def _getAbsName(target: Cursor) -> str:
 		return _getAbsName(target.semantic_parent) + "::" + target.displayname
 
 
-class Renderable:
+class Symbol:
     __metaclass__ = abc.ABCMeta
 
     def __init__(this, cursor: Cursor):
@@ -75,9 +75,9 @@ class Ownable:
         return this.__owner
 
 
-class FuncInfo(Renderable, Ownable):
+class FuncInfo(Symbol, Ownable):
     def __init__(this, module, cursor: Cursor):
-        Renderable.__init__(this, cursor)
+        Symbol.__init__(this, cursor)
         Ownable.__init__(this, module, cursor)
         assert FuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
 
@@ -95,9 +95,9 @@ class FuncInfo(Renderable, Ownable):
         return "FuncInfo "+this.renderedName+" = FuncInfo(); // "+this.absName # TODO implement
 
 
-class VarInfo(Renderable, Ownable):
+class VarInfo(Symbol, Ownable):
     def __init__(this, module, cursor: Cursor):
-        Renderable.__init__(this, cursor)
+        Symbol.__init__(this, cursor)
         Ownable.__init__(this, module, cursor)
         assert VarInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
 
@@ -114,7 +114,7 @@ class VarInfo(Renderable, Ownable):
         return "VarInfo "+this.renderedName+" = VarInfo(); // "+this.absName # TODO implement
 
 
-class TypeInfo(Renderable):
+class TypeInfo(Symbol):
     def __init__(this, module, cursor: Cursor):
         super().__init__(cursor)
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"

@@ -6,7 +6,8 @@
 
 using namespace std;
 
-RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
+RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) :
+	hotswap(nullptr)
 {
 	//make objectSize a power of 2 - used for padding
 	objectSize = getClosestPowerOf2LargerThan(objectSize);
@@ -84,7 +85,31 @@ void RawMemoryPool::reset()
 
 void RawMemoryPool::refreshVtables(const std::vector<TypeInfo*>& refreshers)
 {
+	if (!hotswap) return; //Can't do anything if we don't have hotswap data. TODO option to acquire hotswap data?
 
+	auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](TypeInfo* d) { return *d == *hotswap; });
+	if (newHotswap != refreshers.cend())
+	{
+		TypeInfo::LayoutRemap layoutRemap = TypeInfo::buildLayoutRemap(hotswap, *newHotswap);
+		layoutRemap.doSanityCheck(); //Complain if new members are introduced, or old members are deleted
+
+		for (size_t i = 0; i < mMaxNumObjects; i++)
+		{
+			void* obj = reinterpret_cast<void*>(((uint8_t*)mMemory) + (i * mObjectSize));
+			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
+			if (isAlive)
+			{
+				layoutRemap.execute(obj);
+				(*newHotswap)->vptrJam(obj);
+			}
+		}
+
+		hotswap = *newHotswap;
+	}
+	else
+	{
+		printf("WARNING: Reflection info missing for %s. It will not be remapped. Your instance will likely crash.", hotswap->getShortName().c_str());
+	}
 }
 
 void* RawMemoryPool::allocate()

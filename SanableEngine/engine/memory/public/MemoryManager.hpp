@@ -24,7 +24,7 @@ private:
 		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
 			PoolRecord r;
 			r.pool = (RawMemoryPool*)pool;
-			//FIXME need a way to obtain StableTypeInfo
+			r.poolType = RTTIRegistry::get()->lookupType(typeid(TypedMemoryPool<TObj>));
 			return std::move(r);
 		}
 
