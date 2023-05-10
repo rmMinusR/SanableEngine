@@ -11,13 +11,13 @@ void MemoryManager::cleanup()
 	pools.clear();
 }
 
-void MemoryManager::refreshVtables(std::vector<StableTypeInfo*> refreshers)
+void MemoryManager::refreshVtables(std::vector<TypeInfo*> refreshers)
 {
 	for (auto& p : pools)
 	{
-		for (StableTypeInfo* d : refreshers)
+		for (TypeInfo* d : refreshers)
 		{
-			if (d->name == p.poolType.name) set_vtable_ptr(p.pool, d->vtable);
+			if (*d == *p.poolType) d->vptrJam(p.pool); //No need to TypeInfo::updateLayout here. We can assume Memory Pools will stay the same. Probably.
 		}
 	}
 	for (auto& p : pools) p.pool->refreshVtables(refreshers);

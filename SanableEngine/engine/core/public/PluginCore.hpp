@@ -3,7 +3,7 @@
 #include "dllapi.h"
 
 #include <vector>
-#include "StableTypeInfo.hpp"
+#include "Module.hpp"
 
 struct Plugin;
 struct PluginReportedData;
@@ -31,5 +31,5 @@ struct PluginReportedData
 
 	//std::vector<std::string> dependencies;
 
-	TypeRegistry rtti;
+	Module rtti;
 };

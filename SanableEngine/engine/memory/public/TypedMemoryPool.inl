@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 
+#include "RTTIRegistry.hpp"
+
 template<typename T, size_t _maxObjectCount = 32>
 struct PoolSettings
 {
@@ -15,32 +17,41 @@ public:
 template<typename TObj>
 class TypedMemoryPool : protected RawMemoryPool
 {
-	StableTypeInfo hotswap;
+	TypeInfo* hotswap;
 
 public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
 		RawMemoryPool(maxNumObjects, sizeof(TObj)),
-		hotswap()
+		hotswap(RTTIRegistry::get()->lookupType(typeid(TObj)))
 	{
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
-		//FIXME need a way to obtain StableTypeInfo
+		//FIXME need a way to obtain TypeInfo
 	}
 
-	void refreshVtables(const std::vector<StableTypeInfo*>& refreshers) override
+	void refreshVtables(const std::vector<TypeInfo*>& refreshers) override
 	{
-		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](StableTypeInfo* d) { return d->name == hotswap.name; });
+		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](TypeInfo* d) { return *d == *hotswap; });
 		if (newHotswap != refreshers.cend())
 		{
-			assert(hotswap.name == (**newHotswap).name); //Ensure same type
-			assert(hotswap.size == (**newHotswap).size); //Ensure no changes to data members (FIXME fragile)
-			hotswap = **newHotswap;
+			TypeInfo::LayoutRemap layoutRemap = TypeInfo::buildLayoutRemap(hotswap, *newHotswap);
+			layoutRemap.doSanityCheck(); //Complain if new members are introduced, or old members are deleted
 
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
-				TObj* obj = reinterpret_cast<TObj*>(((uint8_t*)mMemory) + (i * mObjectSize));
+				void* obj = reinterpret_cast<void*>(((uint8_t*)mMemory) + (i * mObjectSize));
 				bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
-				if (isAlive) set_vtable_ptr(obj, hotswap.vtable);
+				if (isAlive)
+				{
+					layoutRemap.execute(obj);
+					(*newHotswap)->vptrJam(obj);
+				}
 			}
+
+			hotswap = *newHotswap;
+		}
+		else
+		{
+			printf("WARNING: Reflection info missing for %s. It will not be remapped. Your instance will likely crash.", hotswap->getShortName().c_str());
 		}
 	}
 

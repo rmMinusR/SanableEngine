@@ -7,20 +7,20 @@
 #include <algorithm>
 
 #include "MemoryPoolCommon.hpp"
-#include "StableTypeInfo.hpp"
+#include "TypeInfo.hpp"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
 {
 public:
 	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
-	ENGINEMEM_API virtual ~RawMemoryPool();
+	ENGINEMEM_API ~RawMemoryPool();
 
 	//Idiotproofing against myself
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
 
-	virtual void refreshVtables(const std::vector<StableTypeInfo*>& refreshers);
+	virtual void refreshVtables(const std::vector<TypeInfo*>& refreshers);
 
 	typedef void (*hook_t)(void*);
 

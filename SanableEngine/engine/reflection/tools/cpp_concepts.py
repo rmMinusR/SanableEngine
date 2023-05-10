@@ -2,12 +2,14 @@
 from clang.cindex import *
 from textwrap import indent
 import abc
+import re
+import zlib, hashlib
 
 
 class log:
     trace = lambda x: print("[TRACE] "+x)
-    info  = lambda x: print(" [INFO] "+x)
-    warn  = lambda x: print(" [WARN] "+x)
+    info  = lambda x: print("[ INFO] "+x)
+    warn  = lambda x: print("[ WARN] "+x)
     error = lambda x: print("[ERROR] "+x)
 
 
@@ -37,9 +39,15 @@ class Renderable:
         return this.__cachedAbsName
 
     @property
+    def relName(this) -> str:
+        return this.__astRepr.displayname
+
+    @property
     def renderedName(this) -> str:
         if not hasattr(this, "__cachedRenderedName"):
-            this.__cachedRenderedName = "__generatedRTTI_"+this.absName.replace("::", "_") # FIXME rendered methods will have () and parameters in their names
+            #this.__cachedRenderedName = "__generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName)
+            #this.__cachedRenderedName = "_"+hex(zlib.crc32(this.absName.encode("utf-8")))[2::]+"_generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName) # Fixes variable length limit
+            this.__cachedRenderedName = "__generatedRTTI_"+hashlib.sha256(this.absName.encode("utf-8")).hexdigest()[:8]
         return this.__cachedRenderedName
 
     @abc.abstractmethod
@@ -84,7 +92,7 @@ class FuncInfo(Renderable, Ownable):
         ]
 
     def forwardRender(this):
-        return "FuncInfo "+this.renderedName+" = FuncInfo();" # TODO implement
+        return "FuncInfo "+this.renderedName+" = FuncInfo(); // "+this.absName # TODO implement
 
 
 class VarInfo(Renderable, Ownable):
@@ -103,7 +111,7 @@ class VarInfo(Renderable, Ownable):
         ]
 
     def forwardRender(this):
-        return "VarInfo "+this.renderedName+" = VarInfo();" # TODO implement
+        return "VarInfo "+this.renderedName+" = VarInfo(); // "+this.absName # TODO implement
 
 
 class TypeInfo(Renderable):
@@ -126,9 +134,18 @@ class TypeInfo(Renderable):
         ]
 
     def forwardRender(this):
-        varDecls = "\n".join([i.forwardRender() for i in this.__contents])
-        ownDecl = "TypeInfo "+this.renderedName+" = TypeInfo({\n"+indent(",\n".join(['&'+i.renderedName for i in this.__contents]), ' '*4)+"\n});"
-        return varDecls + "\n" + ownDecl
+        memberFwdDecls = "\n".join([i.forwardRender() for i in this.__contents])
+
+        fmtRef = lambda member, isLast: "&"+member.renderedName+("," if not isLast else " ")+" // "+member.relName
+        memberRefDecls = "\n".join([fmtRef(i, False) for i in this.__contents[:-2]])
+        if len(this.__contents) != 0:
+            memberRefDecls += "\n"+fmtRef(this.__contents[-1], True)
+
+        ownDecl = f"""TypeInfo {this.renderedName} = TypeInfo("{this.relName}", "{this.absName}", typeid({this.absName}), sizeof({this.absName}), (vtable_ptr)nullptr, """+"{\n"
+        ownDecl += indent(memberRefDecls, ' '*4)+"\n"
+        ownDecl += "});"
+
+        return memberFwdDecls + "\n" + ownDecl
 
 
 class Module:
@@ -180,4 +197,5 @@ class Module:
                 yield i
 
     def render(this):
-        return "\n\n".join([v.forwardRender() for v in this.__contents.values()])
+        return "\n\n".join([v.forwardRender() for v in this.__contents.values()])+"\n\n"+\
+            "Module module = Module({\n"+indent(",\n".join(["&"+i.renderedName for i in this.__contents.values()]), ' '*4)+"\n});"

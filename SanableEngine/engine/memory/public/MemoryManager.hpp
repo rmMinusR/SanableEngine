@@ -6,7 +6,7 @@
 
 class GameObject;
 class EngineCore;
-struct StableTypeInfo;
+class TypeInfo;
 class PluginManager;
 
 template<>
@@ -17,7 +17,7 @@ class MemoryManager
 private:
 	struct PoolRecord
 	{
-		StableTypeInfo poolType;
+		TypeInfo* poolType;
 		RawMemoryPool* pool;
 
 		template<typename TObj>
@@ -27,6 +27,9 @@ private:
 			//FIXME need a way to obtain StableTypeInfo
 			return std::move(r);
 		}
+
+		inline PoolRecord() {}
+		inline ~PoolRecord() {}
 	};
 
 	std::vector<PoolRecord> pools;
@@ -50,7 +53,7 @@ private:
 	void cleanup();
 	friend class EngineCore;
 
-	void refreshVtables(std::vector<StableTypeInfo*> refreshers);
+	void refreshVtables(std::vector<TypeInfo*> refreshers);
 	friend class PluginManager;
 };
 
@@ -62,7 +65,7 @@ inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate
 	TypedMemoryPool<TObj>* out = nullptr;
 
 	//Search for pool matching typename
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == typeid(TypedMemoryPool<TObj>).name(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType->matches<TypedMemoryPool<TObj>>(); });
 	if (it != pools.cend())
 	{
 		out = (TypedMemoryPool<TObj>*)it->pool;
@@ -106,7 +109,7 @@ void MemoryManager::destroy(TObj* obj)
 template<typename TObj>
 void MemoryManager::destroyPool()
 {
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == typeid(TypedMemoryPool<TObj>).name(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType->matches<TypedMemoryPool<TObj>>(); });
 	if (it != pools.cend())
 	{
 		delete it->pool;
