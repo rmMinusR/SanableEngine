@@ -6,6 +6,9 @@
 class EngineCore;
 class PluginManager;
 
+int main(int argc, char* argv[]);
+int SDL_main(int argc, char* argv[]);
+
 namespace gpr460
 {
 
@@ -17,13 +20,13 @@ namespace gpr460
 		float targetFps;
 		static constexpr float defaultTargetFps = 60;
 
-	public: //FIXME make protected again
-		friend class EngineCore;
+	protected:
+		friend class ::EngineCore;
 		virtual void Init(EngineCore*);
 		virtual void DoMainLoop() = 0;
 		virtual void Shutdown() = 0;
 		
-		friend class PluginManager;
+		friend class ::PluginManager;
 		virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const = 0;
 
 	public:

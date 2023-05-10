@@ -30,7 +30,7 @@ namespace gpr460
 		HANDLE logFile;
 		const std::wstring logFileName = L"GameErrors.txt";
 
-		friend class EngineCore;
+		friend class ::EngineCore;
 #ifdef _DEBUG
 		_CrtMemState checkpoint;
 #endif

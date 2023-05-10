@@ -7,7 +7,7 @@ namespace gpr460
 	class System_Emscripten : public System
 	{
 	protected:
-		friend class EngineCore;
+		friend class ::EngineCore;
 		void Init(EngineCore*) override;
 		void DoMainLoop() override;
 		void Shutdown() override;
