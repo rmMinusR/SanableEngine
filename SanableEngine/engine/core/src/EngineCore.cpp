@@ -69,8 +69,8 @@ void EngineCore::refreshCallBatchers()
 EngineCore::EngineCore() :
     isAlive(false),
     system(nullptr),
-    mainWindow(nullptr),
-    pluginManager(this)
+    pluginManager(this),
+    mainWindow(nullptr)
 {
 }
 

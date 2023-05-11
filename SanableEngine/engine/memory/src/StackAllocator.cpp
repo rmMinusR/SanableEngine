@@ -4,8 +4,8 @@
 
 StackAllocator::StackAllocator() :
     maxSize(0),
-    used(0),
-    memory(nullptr)
+    memory(nullptr),
+    used(0)
 {
 }
 
