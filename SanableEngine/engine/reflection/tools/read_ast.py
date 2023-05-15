@@ -13,13 +13,23 @@ fileTypes = {
 
 def parseAuto(target: str) -> Generator[Cursor, None, None]:
 	if os.path.isdir(target):
-		return parseDir(target)
+		if not target.endswith(".generated"):
+			return parseDir(target)
+		else:
+			print(f"[TRACE] Skipping generated file directory ({target})")
+			return None
 
-	ext = os.path.splitext(target)[1]
-	if ext in fileTypes.keys():
-		return parseFile(target)
-	else:
-		print(f"[WARN] Skipping file of unknown type \"{ext}\" ({target})")
+	else: # Path refers to file
+		name, ext = os.path.splitext(target)
+		if not name.endswith(".generated"):
+			if ext in fileTypes.keys():
+				return parseFile(target)
+			else:
+				print(f"[ WARN] Skipping file of unknown type \"{ext}\" ({target})")
+				return None
+		else:
+			print(f"[TRACE] Skipping generated file ({target})")
+			return None
 
 def parseDir(target: str) -> Generator[Cursor, None, None]:
 	for subpath in os.listdir(target):

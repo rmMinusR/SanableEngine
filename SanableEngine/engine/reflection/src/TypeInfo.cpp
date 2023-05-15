@@ -4,7 +4,7 @@
 
 #include "FieldInfo.hpp"
 
-TypeInfo::TypeInfo(std::string&& shortName, std::string&& absName, std::type_info& stdRtti, size_t size, vtable_ptr vtable, std::initializer_list<FieldInfo> fields)
+TypeInfo::TypeInfo(const std::string& shortName, const std::string& absName, const std::type_info& stdRtti, size_t size, vtable_ptr vtable, std::initializer_list<FieldInfo> fields)
 {
 	
 }

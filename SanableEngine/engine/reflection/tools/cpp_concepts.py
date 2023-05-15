@@ -196,6 +196,16 @@ class Module:
             if isinstance(i, FuncInfo):
                 yield i
 
+    @property
+    def renderedName(this) -> str:
+        if not hasattr(this, "__cachedRenderedName"):
+            #this.__cachedRenderedName = "__generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName)
+            #this.__cachedRenderedName = "_"+hex(zlib.crc32(this.absName.encode("utf-8")))[2::]+"_generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName) # Fixes variable length limit
+            this.__cachedRenderedName = "__generatedRTTI_"+hashlib.sha256(','.join([i.renderedName for i in this.__contents.values()]).encode("utf-8")).hexdigest()[:8]
+        return this.__cachedRenderedName
+
     def render(this):
-        return "\n\n".join([v.forwardRender() for v in this.__contents.values()])+"\n\n"+\
-            "Module module = Module({\n"+indent(",\n".join(["&"+i.renderedName for i in this.__contents.values()]), ' '*4)+"\n});"
+        out = "\n\n".join([v.forwardRender() for v in this.__contents.values()])+"\n\n"
+        out += "Module "+this.renderedName+" = Module({\n"+indent(",\n".join(["&"+i.renderedName for i in this.__contents.values()]), ' '*4)+"\n});"
+        out = "namespace {\n"+indent(out, ' '*4)+"\n}" # Wrap in anonymous namespace
+        return out

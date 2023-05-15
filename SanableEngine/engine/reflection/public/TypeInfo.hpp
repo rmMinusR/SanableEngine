@@ -41,8 +41,9 @@ private:
 
 	std::vector<Parent> parents;
 	std::vector<FieldInfo> allFields; //Includes fields inherited from parents
+
 public:
-	ENGINEREFL_API TypeInfo(std::string&& shortName, std::string&& absName, std::type_info& stdRtti, size_t size, vtable_ptr vtable, std::initializer_list<FieldInfo> fields);
+	ENGINEREFL_API TypeInfo(const std::string& shortName, const std::string& absName, const std::type_info& stdRtti, size_t size, vtable_ptr vtable, std::initializer_list<FieldInfo> fields);
 	ENGINEREFL_API ~TypeInfo();
 
 	ENGINEREFL_API const std::string& getShortName() const;
