@@ -7,99 +7,100 @@
 typedef void* abs_addr_t;
 typedef std::ptrdiff_t rel_addr_t;
 
-#pragma region PointerRange
+#pragma region MemoryBlock
 
 template<typename addr_t>
-struct PointerRange;
+struct MemoryBlock;
 
 template<>
-struct PointerRange<abs_addr_t>
+struct MemoryBlock<abs_addr_t>
 {
 	abs_addr_t start = nullptr;
 	size_t length = 0;
 	inline abs_addr_t end() const { return ((char*)start)+length; } // NOTE: Exclusive, does NOT include this pointer
 
-	ENGINEREFL_API PointerRange<rel_addr_t> toRel(void* object) const;
+	ENGINEREFL_API MemoryBlock<rel_addr_t> toRel(void* object) const;
 	ENGINEREFL_API bool contains(abs_addr_t addr) const;
 
-	ENGINEREFL_API bool fullyContains(const PointerRange<abs_addr_t>& other) const;
-	ENGINEREFL_API bool intersects(const PointerRange<abs_addr_t>& other) const;
+	ENGINEREFL_API bool fullyContains(const MemoryBlock<abs_addr_t>& other) const;
+	ENGINEREFL_API bool intersects(const MemoryBlock<abs_addr_t>& other) const;
 
-	ENGINEREFL_API bool operator==(const PointerRange<abs_addr_t>& other) const;
-	ENGINEREFL_API bool operator!=(const PointerRange<abs_addr_t>& other) const;
+	ENGINEREFL_API bool operator==(const MemoryBlock<abs_addr_t>& other) const;
+	ENGINEREFL_API bool operator!=(const MemoryBlock<abs_addr_t>& other) const;
 };
 
 template<>
-struct PointerRange<rel_addr_t>
+struct MemoryBlock<rel_addr_t>
 {
 	rel_addr_t start = 0;
 	size_t length = 0;
 
-	ENGINEREFL_API PointerRange<abs_addr_t> toAbs(void* object) const;
+	ENGINEREFL_API MemoryBlock<abs_addr_t> toAbs(void* object) const;
 	ENGINEREFL_API bool contains(rel_addr_t addr) const;
 
-	ENGINEREFL_API bool operator==(const PointerRange<rel_addr_t>& other) const;
-	ENGINEREFL_API bool operator!=(const PointerRange<rel_addr_t>& other) const;
+	ENGINEREFL_API bool operator==(const MemoryBlock<rel_addr_t>& other) const;
+	ENGINEREFL_API bool operator!=(const MemoryBlock<rel_addr_t>& other) const;
 };
 
 #pragma endregion
 
-#pragma region RemapCommand
+#pragma region RemappedBlock
 
 template<typename addr_t>
-struct RemapCommand;
+struct RemappedBlock;
 
 template<>
-struct RemapCommand<abs_addr_t>
+struct RemappedBlock<abs_addr_t>
 {
-	PointerRange<abs_addr_t> from, to;
+	MemoryBlock<abs_addr_t> from, to;
 	bool moved = false;
 
 	ENGINEREFL_API void doMove(); // NOTE: Skips if move already performed
 	ENGINEREFL_API void* updatePointer(void* ptr) const;
 
-	ENGINEREFL_API RemapCommand<rel_addr_t> toRel(void* object) const;
+	ENGINEREFL_API RemappedBlock<rel_addr_t> toRel(void* object) const;
 
-	ENGINEREFL_API bool operator==(const RemapCommand<abs_addr_t>& other) const;
-	ENGINEREFL_API bool operator!=(const RemapCommand<abs_addr_t>& other) const;
+	ENGINEREFL_API bool operator==(const RemappedBlock<abs_addr_t>& other) const;
+	ENGINEREFL_API bool operator!=(const RemappedBlock<abs_addr_t>& other) const;
 };
 
 template<>
-struct RemapCommand<rel_addr_t>
+struct RemappedBlock<rel_addr_t>
 {
-	PointerRange<rel_addr_t> from, to;
+	MemoryBlock<rel_addr_t> from, to;
 
-	ENGINEREFL_API RemapCommand<abs_addr_t> toAbs(void* object) const;
+	ENGINEREFL_API RemappedBlock<abs_addr_t> toAbs(void* object) const;
 
-	ENGINEREFL_API bool operator==(const RemapCommand<rel_addr_t>& other) const;
-	ENGINEREFL_API bool operator!=(const RemapCommand<rel_addr_t>& other) const;
+	ENGINEREFL_API bool operator==(const RemappedBlock<rel_addr_t>& other) const;
+	ENGINEREFL_API bool operator!=(const RemappedBlock<rel_addr_t>& other) const;
 };
 
 #pragma endregion
 
-class LayoutRemapCommandBuffer
+class LayoutRemapBuilder;
+
+class LayoutRemap
 {
 private:
-	std::vector<RemapCommand<abs_addr_t>> buffer;
+	std::vector<RemappedBlock<abs_addr_t>> buffer; //Guaranteed flat and in order
+	bool haveBlocksMoved = false;
+
+	friend class LayoutRemapBuilder;
 
 public:
-	ENGINEREFL_API void enqueue(const RemapCommand<abs_addr_t>& command);
-	ENGINEREFL_API void enqueue(const RemapCommand<rel_addr_t>& command, void* object);
-
-	ENGINEREFL_API void doMove();
+	ENGINEREFL_API void moveBlocks();
 	ENGINEREFL_API void* updatePointer(void* ptr) const;
 };
 
-
-
-#include "FieldInfo.hpp"
-
-struct LayoutRemap
+class LayoutRemapBuilder
 {
-	ENGINEREFL_API void execute(void* obj);
-	ENGINEREFL_API void doSanityCheck(); //Complain if new members are introduced, or old members are deleted
 private:
-	size_t swapSize; //We need to make a temporary allocation with this algorithm
-	std::vector<std::pair<const FieldInfo*, const FieldInfo*>> contents;
-	friend class TypeInfo;
+	std::vector<RemappedBlock<abs_addr_t>> buffer;
+
+public:
+	ENGINEREFL_API void enqueue(const RemappedBlock<abs_addr_t>& command);
+	ENGINEREFL_API void enqueue(const RemappedBlock<rel_addr_t>& command, void* object);
+
+	ENGINEREFL_API void doSanityCheck(); //Complain if new stuff was introduced, or old members are deleted
+	ENGINEREFL_API LayoutRemap build() const;
 };
