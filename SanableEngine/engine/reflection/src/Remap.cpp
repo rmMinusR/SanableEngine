@@ -22,8 +22,12 @@ bool PointerRange<abs_addr_t>::fullyContains(const PointerRange<abs_addr_t>& oth
 
 bool PointerRange<abs_addr_t>::intersects(const PointerRange<abs_addr_t>& other) const
 {
-	return this->contains(other.start) || this->contains(other.end())
-		|| other.contains(this->start) || other.contains(this->end());
+	// Calculate common area
+	void* lb = std::max(this->start, other.start);
+	void* ub = std::min(this->end(), other.end());
+
+	// Is common area valid?
+	return lb < ub;
 }
 
 bool PointerRange<abs_addr_t>::operator==(const PointerRange<abs_addr_t>& other) const
