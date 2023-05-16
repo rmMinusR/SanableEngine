@@ -13,7 +13,7 @@
 class RawMemoryPool
 {
 protected:
-	TypeInfo const* dataType;
+	TypeInfo* dataType; //Dynamic, owned by self. Version owned by DLL would become invalid when reloaded.
 
 	ENGINEMEM_API static constexpr size_t calcEffectiveObjectSize(size_t baseObjSize);
 

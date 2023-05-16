@@ -56,6 +56,8 @@ RawMemoryPool::~RawMemoryPool()
 
 	::free(mMemory);
 	mFreeList.clear();
+
+	if (dataType) ::free(dataType);
 }
 
 void RawMemoryPool::reset()
@@ -114,7 +116,10 @@ void RawMemoryPool::updateDataType(TypeInfo const* newType)
 		}
 	}
 
-	dataType = newType; //TODO make sure is a dynamic allocation rather than static (which will become invalid when reloaded)
+	//Write new TypeInfo
+	if (!dataType) dataType = (TypeInfo*)malloc(sizeof(TypeInfo));
+	else dataType->~TypeInfo();
+	new(dataType) TypeInfo(*newType);
 }
 
 void RawMemoryPool::refreshVtables(const std::vector<TypeInfo*>& refreshers)
