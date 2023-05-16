@@ -13,7 +13,9 @@
 class RawMemoryPool
 {
 protected:
-	TypeInfo* hotswap;
+	TypeInfo const* dataType;
+
+	ENGINEMEM_API static constexpr size_t calcEffectiveObjectSize(size_t baseObjSize);
 
 public:
 	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
@@ -23,7 +25,8 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
 
-	void refreshVtables(const std::vector<TypeInfo*>& refreshers);
+	ENGINEMEM_API void updateDataType(TypeInfo const* newType);
+	ENGINEMEM_API void refreshVtables(const std::vector<TypeInfo*>& refreshers);
 
 	typedef void (*hook_t)(void*);
 
@@ -37,17 +40,18 @@ public:
 	ENGINEMEM_API void release(void* obj);
 	hook_t releaseHook = nullptr;
 
-	bool contains(void* ptr) const;
-	inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
-	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
+	ENGINEMEM_API bool contains(void* ptr) const;
+	ENGINEMEM_API void* operator[](size_t index) const;
+	ENGINEMEM_API bool isAlive(void* ptr) const;
+	ENGINEMEM_API void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
-	inline size_t getMaxObjectSize()  const { return mObjectSize; };
+	inline size_t getMaxObjectSize() const { return mObjectSize; };
 	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; };
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
 
 protected:
 	void* mMemory;
-	void* mHighestValidAddress;
+	size_t mMemoryAllocSize;
 	size_t mMaxNumObjects;
 	size_t mNumAllocatedObjects;
 	size_t mObjectSize;

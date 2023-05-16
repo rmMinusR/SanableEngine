@@ -6,6 +6,20 @@
 
 #include "RTTIRegistry.hpp"
 
+/// 
+/// Remap algorithm:
+/// 
+/// Handle living object instances - RECORD ALL MOVES
+///		Pooled object shuffling if size changed
+///		Pooled object member shuffling
+/// 
+/// Calculate DLL remap
+///		Calculate new root address
+///		Calculate new relative addresses for all symbols
+/// 
+/// Update pointers referencing remapped memory (living objects or DLLs)
+/// 
+
 template<typename T, size_t _maxObjectCount = 32>
 struct PoolSettings
 {
@@ -22,7 +36,7 @@ public:
 		RawMemoryPool(maxNumObjects, sizeof(TObj))
 	{
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
-		hotswap = RTTIRegistry::get()->lookupType(typeid(TObj));
+		dataType = RTTIRegistry::get()->lookupType(typeid(TObj));
 	}
 
 	//Allocates memory and creates an object.

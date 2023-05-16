@@ -4,26 +4,28 @@
 #include <assert.h>
 #include <iostream>
 
+#include "TypeInfo.hpp"
+
 using namespace std;
 
-RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) :
-	hotswap(nullptr)
+constexpr size_t RawMemoryPool::calcEffectiveObjectSize(size_t baseObjSize)
 {
-	//make objectSize a power of 2 - used for padding
-	objectSize = getClosestPowerOf2LargerThan(objectSize);
-	if (objectSize < 4)
-	{
-		objectSize = 4;
-	}
+	if (baseObjSize < 4) return 4; //Min: 4
+	return getClosestPowerOf2LargerThan(baseObjSize);
+}
+
+RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) :
+	dataType(nullptr)
+{
+	objectSize = calcEffectiveObjectSize(objectSize);
 
 	//allocate the memory
-	mMemory = (void*)malloc(objectSize * maxNumObjects);
+	mMemory = (void*)malloc(mMemoryAllocSize = objectSize * maxNumObjects);
 
 	//set member variables
 	mMaxNumObjects = maxNumObjects;
 	mNumAllocatedObjects = 0;
 	mObjectSize = objectSize;
-	mHighestValidAddress = ((uint8_t*)mMemory) + ((maxNumObjects - 1) * objectSize);
 
 	//allocate the free list
 	mFreeList.clear();
@@ -36,7 +38,7 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) :
 RawMemoryPool::~RawMemoryPool()
 {
 	//Call release hook on living objects
-	if (releaseHook && mFreeList.size() < mMaxNumObjects)
+	if (releaseHook && mNumAllocatedObjects != 0)
 	{
 		printf("WARNING: A release hook was set, but objects weren't properly released");
 
@@ -83,14 +85,46 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
+void RawMemoryPool::updateDataType(TypeInfo const* newType)
+{
+	if (*dataType != *newType)
+	{
+		printf("WARNING: Type does not explicitly match (%s => %s). Your instance might crash.", dataType->getAbsName().c_str(), newType->getAbsName().c_str());
+	}
+
+	size_t newSize = calcEffectiveObjectSize(newType->getSize());
+	if (newSize > mObjectSize)
+	{
+		//If size grows, addresses are moving forward, so start at high end
+		//Index 0 is always in the right spot and can be skipped
+		for (int i = mMaxNumObjects-1; i > 0; --i)
+		{
+			//TODO record address range change
+			memcpy_s(((char*)mMemory)+newSize*i, newSize, ((char*)mMemory)+mObjectSize*i, mObjectSize);
+		}
+	}
+	else if (newSize < mObjectSize)
+	{
+		//If size shrinks, addresses are moving backward, so start at low end
+		//Index 0 is always in the right spot and can be skipped
+		for (int i = 1; i < mMaxNumObjects; ++i)
+		{
+			//TODO record address range change
+			memcpy_s(((char*)mMemory)+newSize*i, newSize, ((char*)mMemory)+mObjectSize*i, mObjectSize);
+		}
+	}
+
+	dataType = newType; //TODO make sure is a dynamic allocation rather than static (which will become invalid when reloaded)
+}
+
 void RawMemoryPool::refreshVtables(const std::vector<TypeInfo*>& refreshers)
 {
-	if (!hotswap) return; //Can't do anything if we don't have hotswap data. TODO option to acquire hotswap data?
+	if (!dataType) return; //Can't do anything if we don't have hotswap data. TODO option to acquire hotswap data?
 
-	auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](TypeInfo* d) { return *d == *hotswap; });
+	auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](TypeInfo* d) { return *d == *dataType; });
 	if (newHotswap != refreshers.cend())
 	{
-		TypeInfo::LayoutRemap layoutRemap = TypeInfo::buildLayoutRemap(hotswap, *newHotswap);
+		TypeInfo::LayoutRemap layoutRemap = TypeInfo::buildLayoutRemap(dataType, *newHotswap);
 		layoutRemap.doSanityCheck(); //Complain if new members are introduced, or old members are deleted
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
@@ -104,11 +138,11 @@ void RawMemoryPool::refreshVtables(const std::vector<TypeInfo*>& refreshers)
 			}
 		}
 
-		hotswap = *newHotswap;
+		dataType = *newHotswap;
 	}
 	else
 	{
-		printf("WARNING: Reflection info missing for %s. It will not be remapped. Your instance will likely crash.", hotswap->getShortName().c_str());
+		printf("WARNING: Reflection info missing for %s. It will not be remapped. Your instance will likely crash.", dataType->getShortName().c_str());
 	}
 }
 
@@ -155,7 +189,19 @@ void RawMemoryPool::release(void* ptr)
 
 bool RawMemoryPool::contains(void* ptr) const
 {
-	return (ptr >= mMemory && ptr <= mHighestValidAddress);
+	return mMemory <= ptr && ptr < ((char*)mMemory+mMemoryAllocSize);
+}
+
+void* RawMemoryPool::operator[](size_t index) const
+{
+	void* out = ((uint8_t*)mMemory) + (index * mObjectSize);
+	assert(contains(out));
+	return out;
+}
+
+bool RawMemoryPool::isAlive(void* ptr) const
+{
+	return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend();
 }
 
 void RawMemoryPool::createFreeList()

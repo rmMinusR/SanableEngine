@@ -10,4 +10,5 @@ public:
 	inline static RTTIRegistry* get() { return nullptr; } //TODO implement stub
 
 	inline TypeInfo* lookupType(const std::type_info&) { return nullptr; } //TODO implement stub
+	inline TypeInfo const* lookupType(const std::type_info&) const { return nullptr; } //TODO implement stub
 };
