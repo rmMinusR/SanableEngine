@@ -98,9 +98,39 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void RawMemoryPool::refreshObjects(const std::vector<StableTypeInfo const*>& refreshers)
+void RawMemoryPool::refreshObjects(MemoryMapper& mapper, const std::vector<StableTypeInfo const*>& refreshers)
 {
 
+}
+
+void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
+{
+	newSize = getClosestPowerOf2LargerThan(newSize);
+	if (newSize != mObjectSize)
+	{
+		if (newSize > mObjectSize)
+		{
+			//Size increased. Move starting from highest address.
+			for (size_t i = mMaxNumObjects-1; i != (size_t)-1; i--)
+			{
+				void* src = ((uint8_t*)mMemory) + (i * mObjectSize);
+				void* dst = ((uint8_t*)mMemory) + (i * newSize);
+				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
+			}
+		}
+		else if (newSize > mObjectSize)
+		{
+			//Size decreased. Move starting from lowest address.
+			for (size_t i = 0; i < mMaxNumObjects; i++)
+			{
+				void* src = ((uint8_t*)mMemory) + (i * mObjectSize);
+				void* dst = ((uint8_t*)mMemory) + (i * newSize);
+				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
+			}
+		}
+
+		mObjectSize = newSize;
+	}
 }
 
 void* RawMemoryPool::allocate()

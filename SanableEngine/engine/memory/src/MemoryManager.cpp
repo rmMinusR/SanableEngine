@@ -13,6 +13,8 @@ void MemoryManager::cleanup()
 
 void MemoryManager::refreshObjects(std::vector<StableTypeInfo const*> refreshers)
 {
+	MemoryMapper mapper;
+
 	for (auto& p : pools)
 	{
 		for (StableTypeInfo const* d : refreshers)
@@ -20,5 +22,5 @@ void MemoryManager::refreshObjects(std::vector<StableTypeInfo const*> refreshers
 			if (d->name == p.poolType.name) set_vtable_ptr(p.pool, d->vtable);
 		}
 	}
-	for (auto& p : pools) p.pool->refreshObjects(refreshers);
+	for (auto& p : pools) p.pool->refreshObjects(mapper, refreshers);
 }

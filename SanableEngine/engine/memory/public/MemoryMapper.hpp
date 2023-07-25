@@ -9,27 +9,25 @@
 
 #include <vector>
 
-class MemoryMapper;
-
-/// <summary>
-/// INTERNAL. Represents a move that can be stored and replayed later.
-/// </summary>
-struct RemapOp
-{
-	void* src;
-	void* dst;
-	size_t blockSize;
-	
-private:
-	friend class MemoryMapper;
-	ENGINEMEM_API RemapOp() = default;
-};
-
 /// <summary>
 /// An interface for moving that will allow pointers to be updated to new object addresses.
 /// </summary>
 class MemoryMapper
 {
+	/// <summary>
+	/// INTERNAL. Represents a move that can be stored and replayed later.
+	/// </summary>
+	struct RemapOp
+	{
+		void* src;
+		void* dst;
+		size_t blockSize;
+	
+	private:
+		friend class MemoryMapper;
+		ENGINEMEM_API RemapOp() = default;
+	};
+
 	std::vector<RemapOp> opLog;
 
 	static constexpr bool USE_INVALID_DATA_FILL = true;
@@ -37,9 +35,21 @@ class MemoryMapper
 
 public:
 	/// <summary>
+	/// Like typelessMove, but calls move ctor first. Undefined behaviour when hot reloading.
+	/// </summary>
+	template<typename T>
+	ENGINEMEM_API void move(T* dst, T* src)
+	{
+		*dst = std::move(*src); //Do actual move op
+		if (USE_INVALID_DATA_FILL) memset(src, INVALID_DATA_FILL_VALUE, bytesToMove); //Fill old memory
+
+		logMove(dst, src, bytesToMove);
+	}
+
+	/// <summary>
 	/// Alters data, then logs move. Same syntax as memcpy.
 	/// </summary>
-	ENGINEMEM_API void move(void* dst, void* src, size_t bytesToMove);
+	ENGINEMEM_API void rawMove(void* dst, void* src, size_t bytesToMove);
 
 	/// <summary>
 	/// Affects only pointer transformation, does not directly touch data. Used mainly for DLLs.

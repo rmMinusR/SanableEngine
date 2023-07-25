@@ -8,6 +8,7 @@
 
 #include "MemoryPoolCommon.hpp"
 #include "StableTypeInfo.inl"
+#include "MemoryMapper.hpp"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
@@ -45,7 +46,8 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&);
 
-	virtual void refreshObjects(const std::vector<StableTypeInfo const*>& refreshers);
+	virtual void refreshObjects(MemoryMapper& mapper, const std::vector<StableTypeInfo const*>& refreshers);
+	ENGINEMEM_API void resizeObjects(size_t newSize, MemoryMapper* mapper = nullptr);
 
 	typedef void (*hook_t)(void*);
 
@@ -59,12 +61,12 @@ public:
 	ENGINEMEM_API void release(void* obj);
 	hook_t releaseHook;
 
-	bool contains(void* ptr) const;
+	ENGINEMEM_API bool contains(void* ptr) const;
 	inline bool isAlive(void* ptr) const
 	{
 		return isAliveById(ptrToId(ptr)); //Convert to id and defer to main impl
 	}
-	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
+	ENGINEMEM_API void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };
 	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; };

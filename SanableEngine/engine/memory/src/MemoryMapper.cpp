@@ -3,12 +3,13 @@
 #include <cstring>
 #include <cassert>
 
-void MemoryMapper::move(void* dst, void* src, size_t bytesToMove)
+void MemoryMapper::rawMove(void* dst, void* src, size_t bytesToMove)
 {
 	memcpy(dst, src, bytesToMove); //Do actual move op
 	if (USE_INVALID_DATA_FILL) memset(src, INVALID_DATA_FILL_VALUE, bytesToMove); //Fill old memory
 
-	logMove(dst, src, bytesToMove);
+	//Allow calls on nullptr -- only log if not null.
+	if (this) logMove(dst, src, bytesToMove);
 }
 
 void MemoryMapper::logMove(void* dst, void* src, size_t bytesToMove)

@@ -27,15 +27,21 @@ public:
 
 	virtual ~TypedMemoryPool() = default;
 
-	void refreshObjects(const std::vector<StableTypeInfo const*>& refreshers) override
+	void refreshObjects(MemoryMapper& mapper, const std::vector<StableTypeInfo const*>& refreshers) override
 	{
 		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](StableTypeInfo const* d) { return d->name == hotswap.name; });
 		if (newHotswap != refreshers.cend())
 		{
 			assert(hotswap.name == (**newHotswap).name); //Ensure same type
-			assert(hotswap.size == (**newHotswap).size); //Ensure no changes to data members (FIXME fragile)
+			
+			//Handle changes to size
+			if (hotswap.size != (**newHotswap).size) resizeObjects((**newHotswap).size, &mapper);
+
+			//TODO handle changes to members
+
 			hotswap = **newHotswap;
 
+			//Write vtable ptrs
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
 				TObj* obj = reinterpret_cast<TObj*>(idToPtr(i));
