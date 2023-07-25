@@ -105,8 +105,8 @@ void PluginManager::reloadAll()
 void PluginManager::refreshVtablePointers()
 {
 	//Build new list of vtable pointers
-	std::vector<StableTypeInfo*> refreshers;
-	for (Plugin* p : plugins) for (StableTypeInfo& d : p->reportedData->hotswappables) refreshers.push_back(&d);
+	std::vector<StableTypeInfo const*> refreshers;
+	for (Plugin* p : plugins) for (const StableTypeInfo& d : p->reportedData->types.getTypes()) refreshers.push_back(&d);
 
 	engine->getMemoryManager()->refreshVtables(refreshers);
 }

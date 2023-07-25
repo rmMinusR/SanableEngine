@@ -20,7 +20,7 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&) = default;
 
-	virtual void refreshVtables(const std::vector<StableTypeInfo*>& refreshers);
+	virtual void refreshVtables(const std::vector<StableTypeInfo const*>& refreshers);
 
 	typedef void (*hook_t)(void*);
 

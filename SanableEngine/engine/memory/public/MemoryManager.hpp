@@ -50,7 +50,7 @@ private:
 	void cleanup();
 	friend class EngineCore;
 
-	void refreshVtables(std::vector<StableTypeInfo*> refreshers);
+	void refreshVtables(std::vector<StableTypeInfo const*> refreshers);
 	friend class PluginManager;
 };
 

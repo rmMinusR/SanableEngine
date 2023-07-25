@@ -3,7 +3,7 @@
 #include "dllapi.h"
 
 #include <vector>
-#include "StableTypeInfo.inl"
+#include "ModuleTypeRegistry.inl"
 
 struct Plugin;
 struct PluginReportedData;
@@ -31,5 +31,5 @@ struct PluginReportedData
 
 	//std::vector<std::string> dependencies;
 
-	std::vector<StableTypeInfo> hotswappables;
+	ModuleTypeRegistry types;
 };
