@@ -25,7 +25,7 @@ public:
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
 	}
 
-	void refreshVtables(const std::vector<StableTypeInfo const*>& refreshers) override
+	void refreshObjects(const std::vector<StableTypeInfo const*>& refreshers) override
 	{
 		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](StableTypeInfo const* d) { return d->name == hotswap.name; });
 		if (newHotswap != refreshers.cend())

@@ -17,12 +17,12 @@ void MemoryMapper::logMove(void* dst, void* src, size_t bytesToMove)
 	op.src = src;
 	op.dst = dst;
 	op.blockSize = bytesToMove;
-	opQueue.push_back(op);
+	opLog.push_back(op);
 }
 
 void* MemoryMapper::transformAddress(void* ptr, size_t ptrSize) const
 {
-	for (const RemapOp& op : opQueue)
+	for (const RemapOp& op : opLog)
 	{
 		void* srcEnd = ((char*)op.src) + op.blockSize; //First byte NOT in remapped block
 		if (op.src <= ptr && ptr < srcEnd)
@@ -34,4 +34,9 @@ void* MemoryMapper::transformAddress(void* ptr, size_t ptrSize) const
 	}
 
 	return ptr;
+}
+
+void MemoryMapper::clear()
+{
+	opLog.clear();
 }

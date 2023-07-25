@@ -30,7 +30,7 @@ private:
 /// </summary>
 class MemoryMapper
 {
-	std::vector<RemapOp> opQueue;
+	std::vector<RemapOp> opLog;
 
 	static constexpr bool USE_INVALID_DATA_FILL = true;
 	static constexpr unsigned char INVALID_DATA_FILL_VALUE = 219;
@@ -56,4 +56,6 @@ public:
 	{
 		return transformAddress(ptr, sizeof(T)); //Defer to main impl
 	}
+
+	ENGINEMEM_API void clear();
 };

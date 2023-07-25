@@ -82,7 +82,7 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void RawMemoryPool::refreshVtables(const std::vector<StableTypeInfo const*>& refreshers)
+void RawMemoryPool::refreshObjects(const std::vector<StableTypeInfo const*>& refreshers)
 {
 
 }

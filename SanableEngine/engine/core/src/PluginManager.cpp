@@ -108,5 +108,5 @@ void PluginManager::refreshVtablePointers()
 	std::vector<StableTypeInfo const*> refreshers;
 	for (Plugin* p : plugins) for (const StableTypeInfo& d : p->reportedData->types.getTypes()) refreshers.push_back(&d);
 
-	engine->getMemoryManager()->refreshVtables(refreshers);
+	engine->getMemoryManager()->refreshObjects(refreshers);
 }
