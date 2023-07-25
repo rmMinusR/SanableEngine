@@ -6,7 +6,18 @@
 
 using namespace std;
 
-RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
+RawMemoryPool::RawMemoryPool() :
+	initHook(nullptr),
+	releaseHook(nullptr),
+	mMemory(nullptr),
+	mMaxNumObjects(0),
+	mNumAllocatedObjects(0),
+	mObjectSize(0),
+	mLivingObjects(nullptr)
+{
+}
+
+RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemoryPool()
 {
 	//make objectSize a power of 2 - used for padding
 	objectSize = getClosestPowerOf2LargerThan(objectSize);
@@ -23,10 +34,6 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
 	mNumAllocatedObjects = 0;
 	mObjectSize = objectSize;
 
-	//allocate the free list
-	mFreeList.clear();
-	mFreeList.reserve(mMaxNumObjects);
-
 	//create the free list
 	createFreeList();
 }
@@ -34,15 +41,14 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
 RawMemoryPool::~RawMemoryPool()
 {
 	//Call release hook on living objects
-	if (releaseHook && mFreeList.size() < mMaxNumObjects)
+	if (releaseHook && mNumAllocatedObjects < mMaxNumObjects)
 	{
 		printf("WARNING: A release hook was set, but objects weren't properly released");
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			void* obj = idToPtr(i);
-			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
-			if (isAlive)
+			if (isAlive(obj))
 			{
 				printf(" -> %p", obj);
 				releaseHook(obj);
@@ -51,32 +57,43 @@ RawMemoryPool::~RawMemoryPool()
 	}
 
 	::free(mMemory);
-	mFreeList.clear();
+	mMemory = nullptr;
+
+	::free(mLivingObjects);
+	mLivingObjects = nullptr;
+}
+
+RawMemoryPool::RawMemoryPool(RawMemoryPool&& rhs) :
+	RawMemoryPool(rhs.mMaxNumObjects, rhs.mObjectSize)
+{
+	std::swap(this->mMemory       , rhs.mMemory       );
+	std::swap(this->mLivingObjects, rhs.mLivingObjects);
 }
 
 void RawMemoryPool::reset()
 {
 	//Call release hook on living objects
-	if (releaseHook && mFreeList.size() < mMaxNumObjects)
+	if (releaseHook && mNumAllocatedObjects < mMaxNumObjects)
 	{
 		printf("WARNING: A release hook was set, but objects weren't properly released");
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			void* obj = idToPtr(i);
-			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
-			if (isAlive)
+			if (isAlive(obj))
 			{
 				printf(" -> %p", obj);
 				releaseHook(obj);
 			}
 		}
 	}
+	
+	::free(mLivingObjects);
+	mLivingObjects = nullptr;
 
-	//clear the free list
-	mFreeList.clear();
 	//create the free list again
 	createFreeList();
+
 	//reset count of allocated objects
 	mNumAllocatedObjects = 0;
 }
@@ -93,18 +110,26 @@ void* RawMemoryPool::allocate()
 		return NULL;
 	}
 
-	mNumAllocatedObjects++;
-	if (mFreeList.size() > 0)
+	if (mNumAllocatedObjects < mMaxNumObjects)
 	{
-		void* ptr = mFreeList[0];
-		mFreeList.erase(mFreeList.cbegin());
+		mNumAllocatedObjects++;
+
+		//Scan for first free address
+		int id = 0;
+		void* ptr;
+		for (ptr = idToPtr(id); contains(ptr); ptr = idToPtr(++id))
+		{
+			if (isAlive(ptr)) break;
+		}
+
+		setFree(id, false);
 		if (initHook) initHook(ptr);
 		return ptr;
 	}
 	else
 	{
 		assert(false);
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -116,7 +141,7 @@ void RawMemoryPool::release(void* ptr)
 		if (releaseHook) releaseHook(ptr);
 
 		//add address back to free list
-		mFreeList.push_back(ptr);
+		setFree(ptrToId(ptr), true);
 
 		mNumAllocatedObjects--;
 	}
@@ -134,10 +159,23 @@ bool RawMemoryPool::contains(void* ptr) const
 
 void RawMemoryPool::createFreeList()
 {
-	for (size_t i = 0; i < mMaxNumObjects; i++)
-	{
-		mFreeList.push_back(idToPtr(i));
-	}
+	assert(!mLivingObjects);
+
+	//Allocate
+	float bytesRequired_f = mMaxNumObjects / 8.0f;
+	int bytesRequired = std::ceil(bytesRequired_f);
+	mLivingObjects = (uint8_t*)malloc(bytesRequired);
+
+	//Mark all unused
+	memset(mLivingObjects, 0x00, bytesRequired);
+}
+
+void RawMemoryPool::setFree(id_t id, bool isFree)
+{
+	uint8_t* chunk = mLivingObjects +(id/8);
+	uint8_t bitmask = 1 << (id%8);
+	if (isFree) *chunk &= ~bitmask;
+	else        *chunk |=  bitmask;
 }
 
 RawMemoryPool::const_iterator::const_iterator(RawMemoryPool const* pool, uint8_t* index) :

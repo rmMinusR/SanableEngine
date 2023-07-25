@@ -12,13 +12,31 @@
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
 {
+protected:
+	typedef uint16_t id_t;
+
+	inline void* idToPtr(id_t id) const
+	{
+		return ((char*)mMemory) + mObjectSize * id;
+	}
+
+	inline id_t ptrToId(void* ptr) const
+	{
+		assert(contains(ptr));
+		ptrdiff_t offset = ((char*)ptr) - ((char*)mMemory);
+		assert((offset%mObjectSize) == 0);
+		return offset / mObjectSize;
+	}
+
+private:
+	ENGINEMEM_API RawMemoryPool();
 public:
 	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
 	ENGINEMEM_API virtual ~RawMemoryPool();
 
 	//Idiotproofing against myself
 	RawMemoryPool(const RawMemoryPool&) = delete;
-	RawMemoryPool(RawMemoryPool&&) = default;
+	RawMemoryPool(RawMemoryPool&&);
 
 	virtual void refreshObjects(const std::vector<StableTypeInfo const*>& refreshers);
 
@@ -27,15 +45,21 @@ public:
 	//Allocates raw memory.
 	//Set hook if type requires special initialization
 	ENGINEMEM_API void* allocate();
-	hook_t initHook = nullptr;
+	hook_t initHook;
 
 	//Deallocates raw memory.
 	//Set hook if type requires special cleanup
 	ENGINEMEM_API void release(void* obj);
-	hook_t releaseHook = nullptr;
+	hook_t releaseHook;
 
 	bool contains(void* ptr) const;
-	inline bool isAlive(void* ptr) const { return std::find(mFreeList.cbegin(), mFreeList.cend(), ptr) == mFreeList.cend(); }
+	inline bool isAlive(void* ptr) const
+	{
+		id_t id = ptrToId(ptr);
+		uint8_t* chunk = mLivingObjects+(id/8);
+		uint8_t bitmask = 1 << (id%8);
+		return *chunk & bitmask;
+	}
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
 	inline size_t getMaxObjectSize()  const { return mObjectSize; };
@@ -47,21 +71,10 @@ protected:
 	size_t mMaxNumObjects;
 	size_t mNumAllocatedObjects;
 	size_t mObjectSize;
-	std::vector<void*> mFreeList;
+	uint8_t* mLivingObjects; //Effectively a dynamically-sized bitset. 1 = alive, 0 = free
 
 	void createFreeList();
-
-	inline void* idToPtr(int id) const
-	{
-		return ((char*)mMemory) + mObjectSize * id;
-	}
-
-	inline int ptrToId(void* ptr) const
-	{
-		ptrdiff_t offset = ((char*)ptr) - ((char*)mMemory);
-		assert((offset%mObjectSize) == 0);
-		return offset / mObjectSize;
-	}
+	void setFree(id_t id, bool isFree);
 
 public:
 	class const_iterator

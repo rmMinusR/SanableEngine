@@ -25,6 +25,8 @@ public:
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
 	}
 
+	virtual ~TypedMemoryPool() = default;
+
 	void refreshObjects(const std::vector<StableTypeInfo const*>& refreshers) override
 	{
 		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](StableTypeInfo const* d) { return d->name == hotswap.name; });
@@ -37,10 +39,12 @@ public:
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
 				TObj* obj = reinterpret_cast<TObj*>(idToPtr(i));
-				bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
-				if (isAlive) set_vtable_ptr(obj, hotswap.vtable);
+				if (isAlive(obj)) set_vtable_ptr(obj, hotswap.vtable);
 			}
 		}
+
+		//Fix bad dtors
+		releaseHook = (RawMemoryPool::hook_t)optional_destructor<TObj>::call;
 	}
 
 	//Allocates memory and creates an object.
