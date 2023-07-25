@@ -36,7 +36,7 @@ public:
 
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
-				TObj* obj = reinterpret_cast<TObj*>(((uint8_t*)mMemory) + (i * mObjectSize));
+				TObj* obj = reinterpret_cast<TObj*>(idToPtr(i));
 				bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
 				if (isAlive) set_vtable_ptr(obj, hotswap.vtable);
 			}

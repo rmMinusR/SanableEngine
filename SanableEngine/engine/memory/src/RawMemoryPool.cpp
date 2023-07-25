@@ -22,7 +22,6 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize)
 	mMaxNumObjects = maxNumObjects;
 	mNumAllocatedObjects = 0;
 	mObjectSize = objectSize;
-	mHighestValidAddress = ((uint8_t*)mMemory) + ((maxNumObjects - 1) * objectSize);
 
 	//allocate the free list
 	mFreeList.clear();
@@ -41,7 +40,7 @@ RawMemoryPool::~RawMemoryPool()
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
-			void* obj = ((uint8_t*)mMemory) + (i * mObjectSize);
+			void* obj = idToPtr(i);
 			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
 			if (isAlive)
 			{
@@ -64,7 +63,7 @@ void RawMemoryPool::reset()
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
-			void* obj = ((uint8_t*)mMemory) + (i * mObjectSize);
+			void* obj = idToPtr(i);
 			bool isAlive = std::find(mFreeList.cbegin(), mFreeList.cend(), obj) == mFreeList.cend();
 			if (isAlive)
 			{
@@ -130,14 +129,14 @@ void RawMemoryPool::release(void* ptr)
 
 bool RawMemoryPool::contains(void* ptr) const
 {
-	return (ptr >= mMemory && ptr <= mHighestValidAddress);
+	return idToPtr(0) <= ptr && ptr < idToPtr(mMaxNumObjects);
 }
 
 void RawMemoryPool::createFreeList()
 {
 	for (size_t i = 0; i < mMaxNumObjects; i++)
 	{
-		mFreeList.push_back(((uint8_t*)mMemory) + (i * mObjectSize));
+		mFreeList.push_back(idToPtr(i));
 	}
 }
 
@@ -162,10 +161,10 @@ RawMemoryPool::const_iterator RawMemoryPool::const_iterator::operator++()
 
 RawMemoryPool::const_iterator RawMemoryPool::cbegin() const
 {
-	return const_iterator(this, (uint8_t*)mMemory);
+	return const_iterator(this, (uint8_t*)idToPtr(0));
 }
 
 RawMemoryPool::const_iterator RawMemoryPool::cend() const
 {
-	return const_iterator(this, ((uint8_t*)mMemory)+(mObjectSize*mMaxNumObjects));
+	return const_iterator(this, (uint8_t*)idToPtr(mMaxNumObjects));
 }

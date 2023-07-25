@@ -44,13 +44,24 @@ public:
 
 protected:
 	void* mMemory;
-	void* mHighestValidAddress;
 	size_t mMaxNumObjects;
 	size_t mNumAllocatedObjects;
 	size_t mObjectSize;
 	std::vector<void*> mFreeList;
 
 	void createFreeList();
+
+	inline void* idToPtr(int id) const
+	{
+		return ((char*)mMemory) + mObjectSize * id;
+	}
+
+	inline int ptrToId(void* ptr) const
+	{
+		ptrdiff_t offset = ((char*)ptr) - ((char*)mMemory);
+		assert((offset%mObjectSize) == 0);
+		return offset / mObjectSize;
+	}
 
 public:
 	class const_iterator
