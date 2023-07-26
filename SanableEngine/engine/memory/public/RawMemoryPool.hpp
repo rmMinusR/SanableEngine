@@ -28,6 +28,13 @@ protected:
 		return offset / mObjectSize;
 	}
 
+	inline bool isAliveById(id_t id) const
+	{
+		uint8_t* chunk = mLivingObjects + (id / 8);
+		uint8_t bitmask = 1 << (id % 8);
+		return *chunk & bitmask;
+	}
+
 private:
 	ENGINEMEM_API RawMemoryPool();
 public:
@@ -55,10 +62,7 @@ public:
 	bool contains(void* ptr) const;
 	inline bool isAlive(void* ptr) const
 	{
-		id_t id = ptrToId(ptr);
-		uint8_t* chunk = mLivingObjects+(id/8);
-		uint8_t bitmask = 1 << (id%8);
-		return *chunk & bitmask;
+		return isAliveById(ptrToId(ptr)); //Convert to id and defer to main impl
 	}
 	void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
@@ -80,9 +84,9 @@ public:
 	class const_iterator
 	{
 		RawMemoryPool const* pool;
-		uint8_t* index;
+		id_t index;
 
-		const_iterator(RawMemoryPool const* pool, uint8_t* index);
+		const_iterator(RawMemoryPool const* pool, id_t index);
 
 		friend class RawMemoryPool;
 
@@ -91,8 +95,8 @@ public:
 
 		ENGINEMEM_API const_iterator operator++();
 
-		ENGINEMEM_API inline bool operator!=(const const_iterator& other) const { return index != other.index; }
-		ENGINEMEM_API inline bool operator==(const const_iterator& other) const { return index == other.index; }
+		ENGINEMEM_API inline bool operator!=(const const_iterator& other) const { return pool == other.pool && index != other.index; }
+		ENGINEMEM_API inline bool operator==(const const_iterator& other) const { return pool == other.pool && index == other.index; }
 	};
 	ENGINEMEM_API const_iterator cbegin() const;
 	ENGINEMEM_API const_iterator cend() const;

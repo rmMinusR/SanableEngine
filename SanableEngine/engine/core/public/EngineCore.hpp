@@ -69,7 +69,7 @@ public:
     ENGINECORE_API void doMainLoop();
     ENGINECORE_API static void frameStep(void* arg);
 
-    gpr460::System* getSystem() { return system; }
-    MemoryManager* getMemoryManager() { return &memoryManager; }
-    StackAllocator* getFrameAllocator() { return &frameAllocator; }
+    ENGINECORE_API gpr460::System* getSystem();
+    ENGINECORE_API MemoryManager* getMemoryManager();
+    ENGINECORE_API StackAllocator* getFrameAllocator();
 };

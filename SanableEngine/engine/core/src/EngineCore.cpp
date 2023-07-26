@@ -189,3 +189,18 @@ void EngineCore::draw()
 
     mainWindow->getRenderer()->finishFrame();
 }
+
+gpr460::System* EngineCore::getSystem()
+{
+    return system;
+}
+
+MemoryManager* EngineCore::getMemoryManager()
+{
+    return &memoryManager;
+}
+
+StackAllocator* EngineCore::getFrameAllocator()
+{
+    return &frameAllocator;
+}

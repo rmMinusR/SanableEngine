@@ -41,7 +41,7 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemor
 RawMemoryPool::~RawMemoryPool()
 {
 	//Call release hook on living objects
-	if (releaseHook && mNumAllocatedObjects < mMaxNumObjects)
+	if (releaseHook && mNumAllocatedObjects > 0)
 	{
 		printf("WARNING: A release hook was set, but objects weren't properly released");
 
@@ -73,7 +73,7 @@ RawMemoryPool::RawMemoryPool(RawMemoryPool&& rhs) :
 void RawMemoryPool::reset()
 {
 	//Call release hook on living objects
-	if (releaseHook && mNumAllocatedObjects < mMaxNumObjects)
+	if (releaseHook && mNumAllocatedObjects > 0)
 	{
 		printf("WARNING: A release hook was set, but objects weren't properly released");
 
@@ -119,7 +119,7 @@ void* RawMemoryPool::allocate()
 		void* ptr;
 		for (ptr = idToPtr(id); contains(ptr); ptr = idToPtr(++id))
 		{
-			if (isAlive(ptr)) break;
+			if (!isAlive(ptr)) break;
 		}
 
 		setFree(id, false);
@@ -172,13 +172,13 @@ void RawMemoryPool::createFreeList()
 
 void RawMemoryPool::setFree(id_t id, bool isFree)
 {
-	uint8_t* chunk = mLivingObjects +(id/8);
+	uint8_t* chunk = mLivingObjects+(id/8);
 	uint8_t bitmask = 1 << (id%8);
 	if (isFree) *chunk &= ~bitmask;
 	else        *chunk |=  bitmask;
 }
 
-RawMemoryPool::const_iterator::const_iterator(RawMemoryPool const* pool, uint8_t* index) :
+RawMemoryPool::const_iterator::const_iterator(RawMemoryPool const* pool, id_t index) :
 	pool(pool),
 	index(index)
 {
@@ -186,23 +186,26 @@ RawMemoryPool::const_iterator::const_iterator(RawMemoryPool const* pool, uint8_t
 
 void* RawMemoryPool::const_iterator::operator*() const
 {
-	return reinterpret_cast<void*>(index);
+	return pool->idToPtr(index);
 }
 
 RawMemoryPool::const_iterator RawMemoryPool::const_iterator::operator++()
 {
-	do index += pool->getMaxObjectSize();
-	while (!pool->isAlive(index) && pool->contains(index));
+	//Advance one
+	index++;
+
+	//Skip any IDs that aren't alive
+	while (index < pool->mMaxNumObjects && !pool->isAliveById(index)) index++;
 
 	return *this;
 }
 
 RawMemoryPool::const_iterator RawMemoryPool::cbegin() const
 {
-	return const_iterator(this, (uint8_t*)idToPtr(0));
+	return const_iterator(this, 0);
 }
 
 RawMemoryPool::const_iterator RawMemoryPool::cend() const
 {
-	return const_iterator(this, (uint8_t*)idToPtr(mMaxNumObjects));
+	return const_iterator(this, mMaxNumObjects);
 }
