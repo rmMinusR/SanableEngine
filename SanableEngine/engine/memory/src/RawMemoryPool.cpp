@@ -27,7 +27,7 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemor
 	}
 
 	//allocate the memory
-	mMemory = (void*)malloc(objectSize * maxNumObjects);
+	mMemory = malloc(objectSize * maxNumObjects);
 
 	//set member variables
 	mMaxNumObjects = maxNumObjects;
@@ -108,27 +108,36 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 	newSize = getClosestPowerOf2LargerThan(newSize);
 	if (newSize != mObjectSize)
 	{
+		//Allocate new backing block
+		void* newMemory = malloc(newSize * mMaxNumObjects);
+
 		if (newSize > mObjectSize)
 		{
 			//Size increased. Move starting from highest address.
 			for (size_t i = mMaxNumObjects-1; i != (size_t)-1; i--)
 			{
-				void* src = ((uint8_t*)mMemory) + (i * mObjectSize);
-				void* dst = ((uint8_t*)mMemory) + (i * newSize);
+				void* src = ((uint8_t*)  mMemory) + (i * mObjectSize);
+				void* dst = ((uint8_t*)newMemory) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
+
+			//TODO shuffle members after moving to new block
 		}
 		else if (newSize > mObjectSize)
 		{
+			//TODO shuffle members before moving to new block
+
 			//Size decreased. Move starting from lowest address.
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
-				void* src = ((uint8_t*)mMemory) + (i * mObjectSize);
-				void* dst = ((uint8_t*)mMemory) + (i * newSize);
+				void* src = ((uint8_t*)  mMemory) + (i * mObjectSize);
+				void* dst = ((uint8_t*)newMemory) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
 		}
-
+		
+		::free(mMemory);
+		mMemory = newMemory;
 		mObjectSize = newSize;
 	}
 }
