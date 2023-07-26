@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     SDL_Quit();
 
     //Pause so we can read console
-    //system.DebugPause();
+    system.DebugPause();
     
     return 0;
 }

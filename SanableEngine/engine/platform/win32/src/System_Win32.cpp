@@ -88,7 +88,7 @@ void gpr460::System_Win32::DebugPause()
 {
 #ifdef _DEBUG
 	//Pause so we can read console
-	wprintf(L"\nDEBUG Paused, type any key in console to continue\n");
+	WriteConsoleW(logFile, L"\nDEBUG Paused, type any key in console to continue\n", 52, nullptr, nullptr);
 	std::cin.get();
 #endif
 }
