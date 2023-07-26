@@ -44,7 +44,7 @@ public:
 			//Write vtable ptrs
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
-				TObj* obj = reinterpret_cast<TObj*>(idToPtr(i));
+				TObj* obj = (TObj*) idToPtr(i);
 				if (isAlive(obj)) set_vtable_ptr(obj, hotswap.vtable);
 			}
 		}
@@ -58,7 +58,7 @@ public:
 	TObj* emplace(TCtorArgs... ctorArgs)
 	{
 		//Allocate memory
-		TObj* pObj = reinterpret_cast<TObj*>(allocate());
+		TObj* pObj = (TObj*) allocate();
 		assert(pObj);
 
 		//Construct object
