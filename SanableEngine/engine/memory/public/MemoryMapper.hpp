@@ -64,7 +64,7 @@ public:
 	template<typename T>
 	inline T* transformAddress(T* ptr)
 	{
-		return transformAddress(ptr, sizeof(T)); //Defer to main impl
+		return (T*) transformAddress(ptr, sizeof(T)); //Defer to main impl
 	}
 
 	ENGINEMEM_API void clear();
