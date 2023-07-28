@@ -38,12 +38,11 @@ RawMemoryPool::RawMemoryPool() :
 
 RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemoryPool()
 {
+	//Disabled: Let's just trust the caller. TypedMemoryPool has safety anyway.
 	//make objectSize a power of 2 - used for padding
-	objectSize = getClosestPowerOf2LargerThan(objectSize);
-	if (objectSize < 4) //TODO: Why?
-	{
-		objectSize = 4;
-	}
+	//assert(isPowerOfTwo(objectSize));
+	//objectSize = getClosestPowerOf2LargerThan(objectSize);
+	//if (objectSize < 4) objectSize = 4;
 
 	//allocate the memory
 	mMemoryBlock = malloc(getLivingListSpaceRequired() + objectSize * maxNumObjects);

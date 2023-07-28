@@ -19,7 +19,7 @@ class TypedMemoryPool : protected RawMemoryPool
 
 public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
-		RawMemoryPool(maxNumObjects, sizeof(TObj)),
+		RawMemoryPool(maxNumObjects, roundUp(sizeof(TObj), alignof(TObj))),
 		hotswap(StableTypeInfo::blank<TObj>())
 	{
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;

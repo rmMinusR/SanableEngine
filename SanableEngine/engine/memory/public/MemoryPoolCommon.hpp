@@ -36,3 +36,5 @@ int isPowerOfTwo(size_t x);
 size_t getClosestPowerOf2LargerThan(size_t num);
 
 #pragma endregion
+
+int roundUp(int n, int multiple);

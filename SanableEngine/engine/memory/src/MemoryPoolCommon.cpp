@@ -38,3 +38,9 @@ size_t getClosestPowerOf2LargerThan(size_t num)
 }
 
 #pragma endregion
+
+int roundUp(int n, int multiple)
+{
+	if (n%multiple == 0) return n;
+	else return n - n%multiple + multiple;
+}
