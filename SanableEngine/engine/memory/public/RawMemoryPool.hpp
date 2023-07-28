@@ -16,25 +16,9 @@ class RawMemoryPool
 protected:
 	typedef uint16_t id_t;
 
-	inline void* idToPtr(id_t id) const
-	{
-		return ((char*)mMemory) + mObjectSize * id;
-	}
-
-	inline id_t ptrToId(void* ptr) const
-	{
-		assert(contains(ptr));
-		ptrdiff_t offset = ((char*)ptr) - ((char*)mMemory);
-		assert((offset%mObjectSize) == 0);
-		return offset / mObjectSize;
-	}
-
-	inline bool isAliveById(id_t id) const
-	{
-		uint8_t* chunk = mLivingObjects + (id / 8);
-		uint8_t bitmask = 1 << (id % 8);
-		return *chunk & bitmask;
-	}
+	ENGINEMEM_API void* idToPtr(id_t id) const;
+	ENGINEMEM_API id_t ptrToId(void* ptr) const;
+	ENGINEMEM_API bool isAliveById(id_t id) const;
 
 private:
 	ENGINEMEM_API RawMemoryPool();
@@ -73,13 +57,15 @@ public:
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
 
 protected:
-	void* mMemory;
+	void* mMemoryBlock; //One single allocation acts as both our free list and storage for objects. Free list is a dynamically-sized bitset. 1 = alive, 0 = free.
+	ENGINEMEM_API uint8_t* getLivingListBlock() const { return (uint8_t*)mMemoryBlock; }
+	ENGINEMEM_API void* getObjectDataBlock() const { return ((char*)mMemoryBlock)+getLivingListSpaceRequired(); }
+
 	size_t mMaxNumObjects;
 	size_t mNumAllocatedObjects;
 	size_t mObjectSize;
-	uint8_t* mLivingObjects; //Effectively a dynamically-sized bitset. 1 = alive, 0 = free
 
-	void createFreeList();
+	inline size_t getLivingListSpaceRequired() const { return ceil(mMaxNumObjects / 8.0f); }
 	void setFree(id_t id, bool isFree);
 
 public:

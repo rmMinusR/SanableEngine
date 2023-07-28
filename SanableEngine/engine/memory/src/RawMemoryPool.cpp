@@ -6,14 +6,33 @@
 
 using namespace std;
 
+void* RawMemoryPool::idToPtr(id_t id) const
+{
+	return ((char*)getObjectDataBlock()) + mObjectSize * id;
+}
+
+RawMemoryPool::id_t RawMemoryPool::ptrToId(void* ptr) const
+{
+	assert(contains(ptr));
+	ptrdiff_t offset = ((char*)ptr) - ((char*)getObjectDataBlock());
+	assert((offset % mObjectSize) == 0);
+	return offset / mObjectSize;
+}
+
+bool RawMemoryPool::isAliveById(id_t id) const
+{
+	uint8_t* Block = getLivingListBlock() + (id / 8);
+	uint8_t bitmask = 1 << (id % 8);
+	return *Block & bitmask;
+}
+
 RawMemoryPool::RawMemoryPool() :
 	initHook(nullptr),
 	releaseHook(nullptr),
-	mMemory(nullptr),
+	mMemoryBlock(nullptr),
 	mMaxNumObjects(0),
 	mNumAllocatedObjects(0),
-	mObjectSize(0),
-	mLivingObjects(nullptr)
+	mObjectSize(0)
 {
 }
 
@@ -21,21 +40,21 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemor
 {
 	//make objectSize a power of 2 - used for padding
 	objectSize = getClosestPowerOf2LargerThan(objectSize);
-	if (objectSize < 4)
+	if (objectSize < 4) //TODO: Why?
 	{
 		objectSize = 4;
 	}
 
 	//allocate the memory
-	mMemory = malloc(objectSize * maxNumObjects);
+	mMemoryBlock = malloc(getLivingListSpaceRequired() + objectSize * maxNumObjects);
 
 	//set member variables
 	mMaxNumObjects = maxNumObjects;
 	mNumAllocatedObjects = 0;
 	mObjectSize = objectSize;
 
-	//create the free list
-	createFreeList();
+	//Mark all as unused
+	memset(getLivingListBlock(), 0x00, getLivingListSpaceRequired());
 }
 
 RawMemoryPool::~RawMemoryPool()
@@ -56,18 +75,14 @@ RawMemoryPool::~RawMemoryPool()
 		}
 	}
 
-	::free(mMemory);
-	mMemory = nullptr;
-
-	::free(mLivingObjects);
-	mLivingObjects = nullptr;
+	::free(mMemoryBlock);
+	mMemoryBlock = nullptr;
 }
 
 RawMemoryPool::RawMemoryPool(RawMemoryPool&& rhs) :
 	RawMemoryPool(rhs.mMaxNumObjects, rhs.mObjectSize)
 {
-	std::swap(this->mMemory       , rhs.mMemory       );
-	std::swap(this->mLivingObjects, rhs.mLivingObjects);
+	std::swap(this->mMemoryBlock, rhs.mMemoryBlock);
 }
 
 void RawMemoryPool::reset()
@@ -88,11 +103,8 @@ void RawMemoryPool::reset()
 		}
 	}
 	
-	::free(mLivingObjects);
-	mLivingObjects = nullptr;
-
-	//create the free list again
-	createFreeList();
+	//Mark all as unused
+	memset(getLivingListBlock(), 0x00, getLivingListSpaceRequired());
 
 	//reset count of allocated objects
 	mNumAllocatedObjects = 0;
@@ -109,15 +121,20 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 	if (newSize != mObjectSize)
 	{
 		//Allocate new backing block
-		void* newMemory = malloc(newSize * mMaxNumObjects);
+		void* newMemoryBlock = malloc(getLivingListSpaceRequired() + newSize*mMaxNumObjects);
+		void* newObjectBlock = ((char*)newMemoryBlock) + getLivingListSpaceRequired();
+
+		//Transfer living list
+		void* newLivingBlock = newMemoryBlock;
+		memcpy_s(newLivingBlock, getLivingListSpaceRequired(), getLivingListBlock(), getLivingListSpaceRequired());
 
 		if (newSize > mObjectSize)
 		{
 			//Size increased. Move starting from highest address.
 			for (size_t i = mMaxNumObjects-1; i != (size_t)-1; i--)
 			{
-				void* src = ((uint8_t*)  mMemory) + (i * mObjectSize);
-				void* dst = ((uint8_t*)newMemory) + (i * newSize);
+				void* src = ((uint8_t*) getObjectDataBlock()) + (i * mObjectSize);
+				void* dst = ((uint8_t*)     newObjectBlock  ) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
 
@@ -130,14 +147,14 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 			//Size decreased. Move starting from lowest address.
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
-				void* src = ((uint8_t*)  mMemory) + (i * mObjectSize);
-				void* dst = ((uint8_t*)newMemory) + (i * newSize);
+				void* src = ((uint8_t*) getObjectDataBlock()) + (i * mObjectSize);
+				void* dst = ((uint8_t*)     newObjectBlock  ) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
 		}
 		
-		::free(mMemory);
-		mMemory = newMemory;
+		::free(mMemoryBlock);
+		mMemoryBlock = newMemoryBlock;
 		mObjectSize = newSize;
 	}
 }
@@ -196,22 +213,9 @@ bool RawMemoryPool::contains(void* ptr) const
 	return idToPtr(0) <= ptr && ptr < idToPtr(mMaxNumObjects);
 }
 
-void RawMemoryPool::createFreeList()
-{
-	assert(!mLivingObjects);
-
-	//Allocate
-	float bytesRequired_f = mMaxNumObjects / 8.0f;
-	int bytesRequired = std::ceil(bytesRequired_f);
-	mLivingObjects = (uint8_t*)malloc(bytesRequired);
-
-	//Mark all unused
-	memset(mLivingObjects, 0x00, bytesRequired);
-}
-
 void RawMemoryPool::setFree(id_t id, bool isFree)
 {
-	uint8_t* chunk = mLivingObjects+(id/8);
+	uint8_t* chunk = getLivingListBlock() + (id / 8);
 	uint8_t bitmask = 1 << (id%8);
 	if (isFree) *chunk &= ~bitmask;
 	else        *chunk |=  bitmask;
