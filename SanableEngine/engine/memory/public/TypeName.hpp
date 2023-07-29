@@ -5,24 +5,24 @@
 
 #pragma region Template helpers
 
-/*
 template<typename T, bool isPtr = std::is_pointer<T>::value>
-struct PtrUnwrapper;
+struct PtrUnwrapper
+{
+};
 
 template<typename T>
 struct PtrUnwrapper<T, false>
 {
-	using UnwrappedType = std::remove_cv<T>::type;
+	using RootType = typename std::remove_cv<T>::type;
 	constexpr static size_t ptrDepth = 0;
 };
 
 template<typename T>
 struct PtrUnwrapper<T*, true>
 {
-	using UnwrappedType = PtrUnwrapper<T>::UnwrappedType;
+	using RootType = typename PtrUnwrapper<T>::UnwrappedType;
 	constexpr static size_t ptrDepth = PtrUnwrapper<T>::ptrDepth + 1;
 };
-// */
 
 #pragma endregion
 
@@ -42,20 +42,12 @@ public:
 	template<typename TRaw>
 	static TypeName create()
 	{
-		/*
 		return TypeName(
-			typeid(PtrUnwrapper<TRaw>::UnwrappedType).name(),
+			typeid(typename PtrUnwrapper<TRaw>::RootType).name(),
 			PtrUnwrapper<TRaw>::ptrDepth
 		);
-		// */
-		return TypeName(typeid(TRaw).name(), 0); //FIXME temp since PtrUnwrapper has issues. TODO
 	}
 
-	inline void test()
-	{
-		create<int>();
-	}
-	
 	//Compare the stuff that's easy before doing a full string compare
 	inline bool operator==(const TypeName& other) const { return ptrDepth == other.ptrDepth && nameHash == other.nameHash && unwrappedTypeName == other.unwrappedTypeName; }
 	inline bool operator!=(const TypeName& other) const { return ptrDepth != other.ptrDepth || nameHash != other.nameHash || unwrappedTypeName != other.unwrappedTypeName; }
