@@ -1,7 +1,7 @@
 #include "RawMemoryPool.hpp"
 
 #include <cstdlib>
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 
 using namespace std;
@@ -21,9 +21,9 @@ RawMemoryPool::id_t RawMemoryPool::ptrToId(void* ptr) const
 
 bool RawMemoryPool::isAliveById(id_t id) const
 {
-	uint8_t* Block = getLivingListBlock() + (id / 8);
+	uint8_t* block = getLivingListBlock() + (id / 8);
 	uint8_t bitmask = 1 << (id % 8);
-	return *Block & bitmask;
+	return *block & bitmask;
 }
 
 RawMemoryPool::RawMemoryPool() :
