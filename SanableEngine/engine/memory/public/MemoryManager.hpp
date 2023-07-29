@@ -62,7 +62,7 @@ inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate
 	TypedMemoryPool<TObj>* out = nullptr;
 
 	//Search for pool matching typename
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == typeid(TypedMemoryPool<TObj>).name(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == TypeName::create<TypedMemoryPool<TObj>>(); });
 	if (it != pools.cend())
 	{
 		out = (TypedMemoryPool<TObj>*)it->pool;
@@ -106,7 +106,7 @@ void MemoryManager::destroy(TObj* obj)
 template<typename TObj>
 void MemoryManager::destroyPool()
 {
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == typeid(TypedMemoryPool<TObj>).name(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == TypeName::create<TypedMemoryPool<TObj>>(); });
 	if (it != pools.cend())
 	{
 		delete it->pool;

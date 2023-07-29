@@ -7,9 +7,11 @@
 #include "dllapi.h"
 #include "vtable.h"
 
+#include "TypeName.hpp"
+
 struct StableTypeInfo
 {
-	std::string name; //Cannot use typeinfo here
+	TypeName name; //Cannot use typeinfo here
 	size_t size = 0;
 	vtable_ptr vtable = nullptr;
 
@@ -26,7 +28,7 @@ struct StableTypeInfo
 	static StableTypeInfo blank()
 	{
 		StableTypeInfo out;
-		out.name = typeid(TObj).name();
+		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
 		return out;
 	}
