@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "StableTypeInfo.hpp"
+#include "TypeInfo.hpp"
 #include "TypedMemoryPool.inl"
 
 class GlobalTypeRegistry;
@@ -12,7 +12,7 @@ class GlobalTypeRegistry;
 /// </summary>
 class ModuleTypeRegistry
 {
-	std::vector<StableTypeInfo> types;
+	std::vector<TypeInfo> types;
 
 public:
 	/// <summary>
@@ -22,17 +22,17 @@ public:
 	template<typename TObj, typename... TCtorArgs>
 	void registerType(TCtorArgs... ctorArgs)
 	{
-		types.push_back(StableTypeInfo::build<TObj>(ctorArgs...));
-		types.push_back(StableTypeInfo::build<TypedMemoryPool<TObj>>(1));
+		types.push_back(TypeInfo::build<TObj>(ctorArgs...));
+		types.push_back(TypeInfo::build<TypedMemoryPool<TObj>>(1));
 	}
 	
-	inline StableTypeInfo const* lookupType(const TypeName& name) const
+	inline TypeInfo const* lookupType(const TypeName& name) const
 	{
-		for (const StableTypeInfo& i : types) if (i.name == name) return &i;
+		for (const TypeInfo& i : types) if (i.name == name) return &i;
 		return nullptr;
 	}
 
-	inline const std::vector<StableTypeInfo>& getTypes() const { return types; }
+	inline const std::vector<TypeInfo>& getTypes() const { return types; }
 	inline auto cbegin() const { return types.cbegin(); }
 	inline auto cend  () const { return types.cend  (); }
 };

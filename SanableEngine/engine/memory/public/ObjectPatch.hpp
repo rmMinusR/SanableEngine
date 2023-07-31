@@ -1,11 +1,11 @@
 #pragma once
 
-#include "StableTypeInfo.hpp"
+#include "TypeInfo.hpp"
 
 struct ObjectPatch
 {
-	StableTypeInfo oldData;
-	StableTypeInfo newData;
+	TypeInfo oldData;
+	TypeInfo newData;
 
 	ENGINEMEM_API void apply(void* target, MemoryMapper* remapLog = nullptr) const;
 	ENGINEMEM_API bool isValid() const;
@@ -13,5 +13,5 @@ struct ObjectPatch
 
 	ENGINEMEM_API void debugLog() const;
 
-	ENGINEMEM_API static ObjectPatch create(StableTypeInfo oldData, StableTypeInfo newData);
+	ENGINEMEM_API static ObjectPatch create(TypeInfo oldData, TypeInfo newData);
 };

@@ -34,7 +34,7 @@ void ObjectPatch::debugLog() const
 	}
 }
 
-ObjectPatch ObjectPatch::create(StableTypeInfo oldData, StableTypeInfo newData)
+ObjectPatch ObjectPatch::create(TypeInfo oldData, TypeInfo newData)
 {
 	ObjectPatch out;
 	out.oldData = oldData;

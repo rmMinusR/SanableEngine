@@ -37,7 +37,7 @@ bool TypeName::isValid() const
     return !unwrappedTypeName.empty();
 }
 
-StableTypeInfo const* TypeName::resolve() const
+TypeInfo const* TypeName::resolve() const
 {
     return GlobalTypeRegistry::lookupType(*this);
 }

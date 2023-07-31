@@ -29,7 +29,7 @@ struct PtrUnwrapper<T*, true>
 
 #pragma endregion
 
-struct StableTypeInfo;
+struct TypeInfo;
 
 
 class TypeName
@@ -57,7 +57,7 @@ public:
 	}
 
 	ENGINEMEM_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.
-	ENGINEMEM_API StableTypeInfo const* resolve() const;
+	ENGINEMEM_API TypeInfo const* resolve() const;
 
 	ENGINEMEM_API bool operator==(const TypeName& other) const;
 	ENGINEMEM_API bool operator!=(const TypeName& other) const;

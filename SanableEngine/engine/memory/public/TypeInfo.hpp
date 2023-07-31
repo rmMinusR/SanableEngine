@@ -43,16 +43,20 @@ struct dtor_utils<T, false>
 #pragma endregion
 
 
-struct StableTypeInfo
+/// <summary>
+/// For cases where we cannot use C++ builtin type_info.
+/// Mainly whenever the owning DLL is unloaded.
+/// </summary>
+struct TypeInfo
 {
-	TypeName name; //Cannot use C++ builtin type_info here
+	TypeName name;
 	size_t size = 0;
 	vtable_ptr vtable = nullptr;
 
-	dtor_t dtor; //FIXME: After unloading a DLL, the lambda backing this becomes illegal.
+	dtor_t dtor; //Not guaranteed to be present, null check before calling
 
-	ENGINEMEM_API StableTypeInfo() = default;
-	ENGINEMEM_API ~StableTypeInfo() = default;
+	ENGINEMEM_API TypeInfo() = default;
+	ENGINEMEM_API ~TypeInfo() = default;
 
 	/// <summary>
 	/// Check if this type has data (ie. hasn't been empty-constructed).
@@ -83,9 +87,9 @@ struct StableTypeInfo
 	//Factories
 
 	template<typename TObj>
-	static StableTypeInfo blank()
+	static TypeInfo blank()
 	{
-		StableTypeInfo out;
+		TypeInfo out;
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
 		out.dtor = dtor_utils<TObj>::dtor;
@@ -93,18 +97,18 @@ struct StableTypeInfo
 	}
 
 	template<typename TObj>
-	static StableTypeInfo extract(const TObj& obj) //Requires EXACT type
+	static TypeInfo extract(const TObj& obj) //Requires EXACT type
 	{
-		StableTypeInfo out = blank<TObj>();
+		TypeInfo out = blank<TObj>();
 		out.vtable = get_vtable_ptr(&obj);
 		return out;
 	}
 
 	template<typename TObj, typename... TCtorArgs>
-	static StableTypeInfo build(TCtorArgs... ctorArgs)
+	static TypeInfo build(TCtorArgs... ctorArgs)
 	{
 		TObj* obj = new TObj(ctorArgs...);
-		StableTypeInfo out = extract(*obj);
+		TypeInfo out = extract(*obj);
 		delete obj;
 		return out;
 	}

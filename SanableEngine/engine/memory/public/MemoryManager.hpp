@@ -6,7 +6,7 @@
 
 class GameObject;
 class EngineCore;
-struct StableTypeInfo;
+struct TypeInfo;
 class PluginManager;
 
 template<>
@@ -17,14 +17,14 @@ class MemoryManager
 private:
 	struct PoolRecord
 	{
-		StableTypeInfo poolType;
+		TypeInfo poolType;
 		GenericTypedMemoryPool* pool;
 
 		template<typename TObj>
 		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
 			PoolRecord r;
 			r.pool = pool;
-			r.poolType = StableTypeInfo::blank<TypedMemoryPool<TObj>>();
+			r.poolType = TypeInfo::blank<TypedMemoryPool<TObj>>();
 			return std::move(r);
 		}
 	};

@@ -23,7 +23,7 @@ public:
 	/// <summary>
 	/// Look up a type's metadata, if it is currently alive. If not, returns nullptr.
 	/// </summary>
-	ENGINEMEM_API static StableTypeInfo const* lookupType(const TypeName& name);
+	ENGINEMEM_API static TypeInfo const* lookupType(const TypeName& name);
 
 	//////////// INTERNAL FUNCTIONS ////////////
 

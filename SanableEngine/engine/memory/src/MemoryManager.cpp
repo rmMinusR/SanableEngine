@@ -26,7 +26,7 @@ void MemoryManager::ensureFresh()
 		auto it = std::find_if(typesToPatch.cbegin(), typesToPatch.cend(), [&](const TypeName& i) { return i == p.poolType.name; });
 		if (it != typesToPatch.cend())
 		{
-			StableTypeInfo const* newTypeInfo = it->resolve();
+			TypeInfo const* newTypeInfo = it->resolve();
 			if (newTypeInfo) set_vtable_ptr(p.pool, newTypeInfo->vtable);
 		}
 	}
@@ -37,7 +37,7 @@ void MemoryManager::ensureFresh()
 		auto it = std::find_if(typesToPatch.cbegin(), typesToPatch.cend(), [&](const TypeName& i) { return i == p.pool->contentsType.name; });
 		if (it != typesToPatch.cend())
 		{
-			StableTypeInfo const* newTypeInfo = it->resolve();
+			TypeInfo const* newTypeInfo = it->resolve();
 			if (newTypeInfo) p.pool->refreshObjects(*newTypeInfo, &remapper);
 		}
 	}

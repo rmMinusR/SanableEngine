@@ -24,7 +24,7 @@ public:
 		GenericTypedMemoryPool(
 			maxNumObjects,
 			getClosestPowerOf2LargerThan( std::max(sizeof(TObj), alignof(TObj)) ),
-			StableTypeInfo::blank<TObj>()
+			TypeInfo::blank<TObj>()
 		)
 	{
 		if (contentsType.tryRefresh()) releaseHook = contentsType.dtor;
@@ -33,7 +33,7 @@ public:
 	virtual ~TypedMemoryPool() = default;
 
 protected:
-	void refreshObjects(const StableTypeInfo& newTypeData, MemoryMapper* remapper) override
+	void refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper) override
 	{
 		assert(newTypeData.name == contentsType.name); //Ensure same type
 		

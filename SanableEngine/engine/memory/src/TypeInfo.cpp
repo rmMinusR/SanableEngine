@@ -1,21 +1,21 @@
-#include "StableTypeInfo.hpp"
+#include "TypeInfo.hpp"
 
 #include <cassert>
 
 #include "GlobalTypeRegistry.hpp"
 
-bool StableTypeInfo::isValid() const
+bool TypeInfo::isValid() const
 {
 	return size != 0 && name.isValid();
 }
 
-bool StableTypeInfo::isLoaded() const
+bool TypeInfo::isLoaded() const
 {
 	assert(isValid());
 	return GlobalTypeRegistry::lookupType(name);
 }
 
-bool StableTypeInfo::tryRefresh()
+bool TypeInfo::tryRefresh()
 {
 	if (isLoaded())
 	{
