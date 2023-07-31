@@ -28,6 +28,16 @@ bool RawMemoryPool::isAliveById(id_t id) const
 	return *block & bitmask;
 }
 
+void RawMemoryPool::debugWarnUnreleased() const
+{
+	printf("WARNING: A release hook was set, but objects (%s) weren't properly released\n", debugName.c_str());
+}
+
+void RawMemoryPool::debugWarnUnreleased(void* obj) const
+{
+	printf(" -> %p\n", obj);
+}
+
 RawMemoryPool::RawMemoryPool() :
 	initHook(nullptr),
 	releaseHook(nullptr),
@@ -61,20 +71,7 @@ RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemor
 RawMemoryPool::~RawMemoryPool()
 {
 	//Call release hook on living objects
-	if (releaseHook && mNumAllocatedObjects > 0)
-	{
-		printf("WARNING: A release hook was set, but objects weren't properly released\n");
-
-		for (size_t i = 0; i < mMaxNumObjects; i++)
-		{
-			void* obj = idToPtr(i);
-			if (isAlive(obj))
-			{
-				printf(" -> %p\n", obj);
-				releaseHook(obj);
-			}
-		}
-	}
+	reset();
 
 	::free(mMemoryBlock);
 	mMemoryBlock = nullptr;
@@ -91,14 +88,14 @@ void RawMemoryPool::reset()
 	//Call release hook on living objects
 	if (releaseHook && mNumAllocatedObjects > 0)
 	{
-		printf("WARNING: A release hook was set, but objects weren't properly released\n");
+		debugWarnUnreleased();
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			void* obj = idToPtr(i);
 			if (isAlive(obj))
 			{
-				printf(" -> %p\n", obj);
+				debugWarnUnreleased(obj);
 				releaseHook(obj);
 			}
 		}

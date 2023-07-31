@@ -5,7 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
-#include <functional>
+#include <string>
 
 #include "MemoryMapper.hpp"
 
@@ -19,6 +19,10 @@ protected:
 	ENGINEMEM_API id_t ptrToId(void* ptr) const;
 	ENGINEMEM_API bool isAliveById(id_t id) const;
 
+	std::string debugName;
+	ENGINEMEM_API void debugWarnUnreleased() const;
+	ENGINEMEM_API void debugWarnUnreleased(void* obj) const;
+
 private:
 	ENGINEMEM_API RawMemoryPool();
 public:
@@ -31,7 +35,7 @@ public:
 
 	ENGINEMEM_API void resizeObjects(size_t newSize, MemoryMapper* mapper = nullptr);
 
-	typedef std::function<void(void*)> hook_t;
+	typedef void (*hook_t)(void*);
 
 	//Allocates raw memory.
 	//Set hook if type requires special initialization

@@ -15,7 +15,7 @@ protected:
 
 public:
 	ENGINEMEM_API GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, TypeInfo contentsType);
-	ENGINEMEM_API virtual ~GenericTypedMemoryPool() = default;
+	ENGINEMEM_API virtual ~GenericTypedMemoryPool();
 
 	ENGINEMEM_API bool isLoaded() const;
 };

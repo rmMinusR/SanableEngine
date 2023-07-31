@@ -12,7 +12,7 @@
 
 #pragma region Destructor type erasure
 
-typedef void (*dtor_t)(const void*); //CANNOT be a std::function or lambda because destroying the dtor_t instance would attempt to delete memory from a possibly-unloaded plugin
+typedef void (*dtor_t)(void*); //CANNOT be a std::function or lambda because destroying the dtor_t instance would attempt to delete memory from a possibly-unloaded plugin
 
 
 template<typename T, bool has_destructor = std::is_destructible<T>::value>
@@ -24,7 +24,7 @@ struct dtor_utils
 template<typename T>
 struct dtor_utils<T, true>
 {
-	inline static void call_dtor(const void* obj)
+	inline static void call_dtor(void* obj)
 	{
 		//C++ forbids getting the address of a dtor, but we can still wrap it
 		static_cast<const T*>(obj)->~T();
