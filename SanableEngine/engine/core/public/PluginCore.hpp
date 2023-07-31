@@ -17,10 +17,12 @@ class EngineCore;
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine);
 PLUGIN_C_API(bool) plugin_init(bool firstRun);
 PLUGIN_C_API(void) plugin_cleanup(bool shutdown);
+PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* report); //Optional, but strongly recommended.
 
 typedef bool (PLUGIN_C_API_SPEC *fp_plugin_preInit)(Plugin* const context, PluginReportedData* report, EngineCore* engine);
 typedef bool (PLUGIN_C_API_SPEC *fp_plugin_init   )(bool firstRun);
 typedef void (PLUGIN_C_API_SPEC *fp_plugin_cleanup)(bool shutdown);
+typedef void (PLUGIN_C_API_SPEC *fp_plugin_reportTypes)(ModuleTypeRegistry* report); //Optional, but strongly recommended.
 
 struct PluginReportedData
 {
@@ -30,6 +32,4 @@ struct PluginReportedData
 	//std::string versionString;
 
 	//std::vector<std::string> dependencies;
-
-	ModuleTypeRegistry types;
 };

@@ -6,6 +6,12 @@
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
 
+PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* types)
+{
+    types->registerType<RectangleCollider>(0, 0);
+    types->registerType<RectangleRenderer>(0, 0, SDL_Color{});
+}
+
 EngineCore* engine;
 
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
@@ -13,9 +19,6 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
     printf("PrimitivesPlugin: plugin_preInit() called\n");
 
     report->name = "PrimitivesPlugin";
-
-    report->types.registerType<RectangleCollider>(0, 0);
-    report->types.registerType<RectangleRenderer>(0, 0, SDL_Color{});
     
     ::engine = engine;
 

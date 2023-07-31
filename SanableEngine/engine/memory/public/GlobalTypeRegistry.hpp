@@ -30,7 +30,7 @@ public:
 	/// <summary>
 	/// Register a new module. If one already exists with the same name, it will be unloaded first.
 	/// </summary>
-	ENGINEMEM_API static void loadModule(module_key_t key, ModuleTypeRegistry newTypes);
+	ENGINEMEM_API static void loadModule(module_key_t key, const ModuleTypeRegistry& newTypes);
 
 	/// <summary>
 	/// Mark a module as unloaded

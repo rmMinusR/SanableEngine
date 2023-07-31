@@ -5,6 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
+#include <functional>
 
 #include "MemoryMapper.hpp"
 
@@ -30,7 +31,7 @@ public:
 
 	ENGINEMEM_API void resizeObjects(size_t newSize, MemoryMapper* mapper = nullptr);
 
-	typedef void (*hook_t)(void*);
+	typedef std::function<void(void*)> hook_t;
 
 	//Allocates raw memory.
 	//Set hook if type requires special initialization

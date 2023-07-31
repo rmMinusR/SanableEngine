@@ -4,6 +4,7 @@
 
 #include "EngineCore.hpp"
 #include "System_Win32.hpp"
+#include "GlobalTypeRegistry.hpp"
 
 void vendorInit(EngineCore* engine);
 
@@ -24,7 +25,7 @@ int main(int argc, char* argv[])
     //Shutdown
     engine.shutdown();
     SDL_Quit();
-
+    
     //Pause so we can read console
     system.DebugPause();
     

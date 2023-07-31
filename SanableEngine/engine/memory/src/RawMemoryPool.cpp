@@ -63,14 +63,14 @@ RawMemoryPool::~RawMemoryPool()
 	//Call release hook on living objects
 	if (releaseHook && mNumAllocatedObjects > 0)
 	{
-		printf("WARNING: A release hook was set, but objects weren't properly released");
+		printf("WARNING: A release hook was set, but objects weren't properly released\n");
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			void* obj = idToPtr(i);
 			if (isAlive(obj))
 			{
-				printf(" -> %p", obj);
+				printf(" -> %p\n", obj);
 				releaseHook(obj);
 			}
 		}
@@ -91,14 +91,14 @@ void RawMemoryPool::reset()
 	//Call release hook on living objects
 	if (releaseHook && mNumAllocatedObjects > 0)
 	{
-		printf("WARNING: A release hook was set, but objects weren't properly released");
+		printf("WARNING: A release hook was set, but objects weren't properly released\n");
 
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			void* obj = idToPtr(i);
 			if (isAlive(obj))
 			{
-				printf(" -> %p", obj);
+				printf(" -> %p\n", obj);
 				releaseHook(obj);
 			}
 		}

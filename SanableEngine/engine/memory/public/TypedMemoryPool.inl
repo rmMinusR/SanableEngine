@@ -2,8 +2,7 @@
 
 #include <stdio.h>
 
-#include "RawMemoryPool.hpp"
-#include "StableTypeInfo.hpp"
+#include "GenericTypedMemoryPool.hpp"
 #include "MemoryPoolCommon.hpp"
 #include "ObjectPatch.hpp"
 
@@ -13,22 +12,6 @@ struct PoolSettings
 {
 public:
 	constexpr static size_t maxObjectCount = _maxObjectCount;
-};
-
-
-//Wrapper for TypedMemoryPool so we can still safely access common data
-class GenericTypedMemoryPool : protected RawMemoryPool
-{
-protected:
-	StableTypeInfo contentsType;
-
-	friend class MemoryManager;
-
-	virtual void refreshObjects(const StableTypeInfo& newTypeData, MemoryMapper* remapper) = 0;
-
-public:
-	ENGINEMEM_API inline GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, StableTypeInfo contentsType) : RawMemoryPool(maxNumObjects, objectSize), contentsType(contentsType) {}
-	ENGINEMEM_API virtual ~GenericTypedMemoryPool() = default;
 };
 
 
@@ -44,7 +27,7 @@ public:
 			StableTypeInfo::blank<TObj>()
 		)
 	{
-		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
+		if (contentsType.tryRefresh()) releaseHook = contentsType.dtor;
 	}
 
 	virtual ~TypedMemoryPool() = default;
@@ -72,8 +55,8 @@ protected:
 
 		contentsType = newTypeData;
 
-		//Fix bad dtors - TODO pull from StableTypeInfo
-		releaseHook = (RawMemoryPool::hook_t)optional_destructor<TObj>::call;
+		//Fix bad dtors
+		releaseHook = newTypeData.dtor;
 	}
 
 public:

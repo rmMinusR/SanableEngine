@@ -1,6 +1,7 @@
 #include "Plugin.hpp"
 
 #include "PluginCore.hpp"
+#include "GlobalTypeRegistry.hpp"
 
 #if __EMSCRIPTEN__
 #include <dlfcn.h>
@@ -94,6 +95,21 @@ bool Plugin::preInit(EngineCore* engine)
 
 	status = Status::Registered;
 	return true;
+}
+
+void Plugin::tryRegisterTypes()
+{
+	assert(_dllGood() && status >= Status::Registered);
+	
+	fp_plugin_reportTypes report = (fp_plugin_reportTypes)getSymbol("plugin_reportTypes");
+	if (report)
+	{
+		ModuleTypeRegistry types;
+		report(&types);
+		GlobalTypeRegistry::loadModule(reportedData->name, types);
+
+		wprintf(L"Loaded RTTI for %u types from plugin %s\n", types.getTypes().size(), path.filename().c_str());
+	}
 }
 
 bool Plugin::init(bool firstRun)

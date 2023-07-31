@@ -10,13 +10,68 @@
 #include "TypeName.hpp"
 #include "MemoryMapper.hpp"
 
+#pragma region Destructor type erasure
+
+typedef void (*dtor_t)(const void*); //CANNOT be a std::function or lambda because destroying the dtor_t instance would attempt to delete memory from a possibly-unloaded plugin
+
+
+template<typename T, bool has_destructor = std::is_destructible<T>::value>
+struct dtor_utils
+{
+	dtor_utils() = delete;
+};
+
+template<typename T>
+struct dtor_utils<T, true>
+{
+	inline static void call_dtor(const void* obj)
+	{
+		//C++ forbids getting the address of a dtor, but we can still wrap it
+		static_cast<const T*>(obj)->~T();
+	}
+
+	constexpr static dtor_t dtor = &call_dtor;
+};
+
+template<typename T>
+struct dtor_utils<T, false>
+{
+	//Can't call a dtor that doesn't exist
+	constexpr static dtor_t dtor = nullptr;
+};
+
+#pragma endregion
+
+
 struct StableTypeInfo
 {
 	TypeName name; //Cannot use C++ builtin type_info here
 	size_t size = 0;
 	vtable_ptr vtable = nullptr;
-	
-	bool isValid() const;
+
+	dtor_t dtor; //FIXME: After unloading a DLL, the lambda backing this becomes illegal.
+
+	ENGINEMEM_API StableTypeInfo() = default;
+	ENGINEMEM_API ~StableTypeInfo() = default;
+
+	/// <summary>
+	/// Check if this type has data (ie. hasn't been empty-constructed).
+	/// Does NOT indicate whether using instances will cause errors.
+	/// </summary>
+	/// <returns></returns>
+	ENGINEMEM_API bool isValid() const;
+
+	/// <summary>
+	/// Check if this type is currently loaded.
+	/// If so, instances can be used without causing errors.
+	/// </summary>
+	ENGINEMEM_API bool isLoaded() const;
+
+	/// <summary>
+	/// Update from live copy in GlobalTypeRegistry, if one is present.
+	/// </summary>
+	/// <returns>Whether a live copy was present</returns>
+	ENGINEMEM_API bool tryRefresh();
 
 	template<typename TObj>
 	void set_vtable(const TObj& obj)
@@ -33,11 +88,12 @@ struct StableTypeInfo
 		StableTypeInfo out;
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
+		out.dtor = dtor_utils<TObj>::dtor;
 		return out;
 	}
 
 	template<typename TObj>
-	static StableTypeInfo extract(const TObj& obj)
+	static StableTypeInfo extract(const TObj& obj) //Requires EXACT type
 	{
 		StableTypeInfo out = blank<TObj>();
 		out.vtable = get_vtable_ptr(&obj);

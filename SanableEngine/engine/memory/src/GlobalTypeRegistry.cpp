@@ -15,10 +15,10 @@ StableTypeInfo const* GlobalTypeRegistry::lookupType(const TypeName& name)
 	return nullptr;
 }
 
-void GlobalTypeRegistry::loadModule(module_key_t key, ModuleTypeRegistry newTypes)
+void GlobalTypeRegistry::loadModule(module_key_t key, const ModuleTypeRegistry& newTypes)
 {
 	//If a module already exists with the same name, unload first
-	if (modules.find(key) == modules.cend()) unloadModule(key);
+	if (modules.find(key) != modules.cend()) unloadModule(key);
 
 	//Register types
 	auto it = modules.emplace(key, newTypes).first;

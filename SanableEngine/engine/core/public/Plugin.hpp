@@ -58,6 +58,7 @@ private:
 
 	bool loadDLL();
 	bool preInit(EngineCore* engine);
+	void tryRegisterTypes();
 	bool init(bool firstRun);
 	bool cleanup(bool shutdown);
 	void unloadDLL();

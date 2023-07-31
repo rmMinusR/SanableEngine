@@ -42,6 +42,11 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 
 	for (Plugin* p : batch)
 	{
+		p->tryRegisterTypes();
+	}
+
+	for (Plugin* p : batch)
+	{
 		std::cout << "Applying plugin hooks for " << p->reportedData->name << '\n';
 		p->init(true);
 	}
@@ -54,6 +59,7 @@ void PluginManager::load(const std::wstring& dllPath)
 	Plugin* p = new Plugin(dllPath);
 	p->loadDLL();
 	p->preInit(engine);
+	p->tryRegisterTypes();
 	plugins.push_back(p);
 }
 
@@ -90,8 +96,9 @@ void PluginManager::reloadAll()
 	for (Plugin* p : plugins) p->loadDLL();
 	for (Plugin* p : plugins) p->preInit(engine);
 
-    std::cout << "Refreshing pointers... (vtables)\n";
-    refreshVtablePointers();
+    std::cout << "Refreshing object layouts and vtables...\n";
+	for (Plugin* p : plugins) p->tryRegisterTypes();
+	engine->getMemoryManager()->ensureFresh();
 
     std::cout << "Applying plugin hooks...\n";
     hookAll(false);
@@ -100,9 +107,4 @@ void PluginManager::reloadAll()
     engine->refreshCallBatchers();
 
     std::cout << "Hot Reload Complete\n";
-}
-
-void PluginManager::refreshVtablePointers()
-{
-	engine->getMemoryManager()->ensureFresh();
 }

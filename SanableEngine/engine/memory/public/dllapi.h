@@ -13,12 +13,10 @@
 #define API_KEEPALIVE EMSCRIPTEN_KEEPALIVE
 #endif
 
-//*
 #if engine_memory_EXPORTS
 #define ENGINEMEM_API API_EXPORT API_KEEPALIVE
 #else
 #define ENGINEMEM_API API_IMPORT API_KEEPALIVE
 #endif
-// */
 
 //#define ENGINEMEM_API

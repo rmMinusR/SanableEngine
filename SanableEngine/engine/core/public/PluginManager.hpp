@@ -22,8 +22,6 @@ private:
 
 	void reloadAll();
 
-	void refreshVtablePointers();
-
 	PluginManager(EngineCore* engine);
 	~PluginManager();
 
