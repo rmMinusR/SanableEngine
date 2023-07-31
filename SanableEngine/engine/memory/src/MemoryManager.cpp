@@ -34,7 +34,7 @@ void MemoryManager::ensureFresh()
 	//Update the type data for contents of each pool
 	for (PoolRecord& p : pools)
 	{
-		auto it = std::find_if(typesToPatch.cbegin(), typesToPatch.cend(), [&](const TypeName& i) { return i == p.pool->hotswap.name; });
+		auto it = std::find_if(typesToPatch.cbegin(), typesToPatch.cend(), [&](const TypeName& i) { return i == p.pool->contentsType.name; });
 		if (it != typesToPatch.cend())
 		{
 			StableTypeInfo const* newTypeInfo = it->resolve();

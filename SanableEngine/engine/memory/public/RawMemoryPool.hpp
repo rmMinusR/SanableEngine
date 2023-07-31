@@ -6,8 +6,6 @@
 #include <vector>
 #include <algorithm>
 
-#include "MemoryPoolCommon.hpp"
-#include "StableTypeInfo.inl"
 #include "MemoryMapper.hpp"
 
 //Void pointers of a given max size (not recommended)

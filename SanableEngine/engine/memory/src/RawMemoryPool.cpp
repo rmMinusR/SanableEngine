@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "MemoryPoolCommon.hpp"
+
 using namespace std;
 
 void* RawMemoryPool::idToPtr(id_t id) const

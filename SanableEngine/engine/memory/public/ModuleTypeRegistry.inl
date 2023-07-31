@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "StableTypeInfo.inl"
+#include "StableTypeInfo.hpp"
 #include "TypedMemoryPool.inl"
 
 class GlobalTypeRegistry;

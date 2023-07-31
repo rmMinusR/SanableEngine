@@ -1,8 +1,12 @@
 #pragma once
 
-#include "RawMemoryPool.hpp"
-
 #include <stdio.h>
+
+#include "RawMemoryPool.hpp"
+#include "StableTypeInfo.hpp"
+#include "MemoryPoolCommon.hpp"
+#include "ObjectPatch.hpp"
+
 
 template<typename T, size_t _maxObjectCount = 32>
 struct PoolSettings
@@ -16,14 +20,14 @@ public:
 class GenericTypedMemoryPool : protected RawMemoryPool
 {
 protected:
-	StableTypeInfo hotswap;
+	StableTypeInfo contentsType;
 
 	friend class MemoryManager;
 
 	virtual void refreshObjects(const StableTypeInfo& newTypeData, MemoryMapper* remapper) = 0;
 
 public:
-	ENGINEMEM_API inline GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, StableTypeInfo hotswap) : RawMemoryPool(maxNumObjects, objectSize), hotswap(hotswap) {}
+	ENGINEMEM_API inline GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, StableTypeInfo contentsType) : RawMemoryPool(maxNumObjects, objectSize), contentsType(contentsType) {}
 	ENGINEMEM_API virtual ~GenericTypedMemoryPool() = default;
 };
 
@@ -48,25 +52,25 @@ public:
 protected:
 	void refreshObjects(const StableTypeInfo& newTypeData, MemoryMapper* remapper) override
 	{
-		assert(newTypeData.name == hotswap.name); //Ensure same type
+		assert(newTypeData.name == contentsType.name); //Ensure same type
 		
 		//Resize if we grew
 		//Must be done before writing to members so writes don't happen in other objects' memory
-		if (newTypeData.size > hotswap.size) resizeObjects(newTypeData.size, remapper);
+		if (newTypeData.size > contentsType.size) resizeObjects(newTypeData.size, remapper);
 
 		//Remap members and write vtable ptrs
-		ObjectPatch patch = ObjectPatch::create(hotswap, newTypeData);
+		ObjectPatch patch = ObjectPatch::create(contentsType, newTypeData);
 		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
 			TObj* obj = (TObj*)idToPtr(i);
-			if (isAlive(obj)) patch.apply(obj, remapper); //set_vtable_ptr(obj, hotswap.vtable);
+			if (isAlive(obj)) patch.apply(obj, remapper); //set_vtable_ptr(obj, contentsType.vtable);
 		}
 
 		//Resize if we shrunk
 		//Must be done after writing to members so we aren't reading other objects' memory
-		if (newTypeData.size < hotswap.size) resizeObjects(newTypeData.size, remapper);
+		if (newTypeData.size < contentsType.size) resizeObjects(newTypeData.size, remapper);
 
-		hotswap = newTypeData;
+		contentsType = newTypeData;
 
 		//Fix bad dtors - TODO pull from StableTypeInfo
 		releaseHook = (RawMemoryPool::hook_t)optional_destructor<TObj>::call;
@@ -85,7 +89,7 @@ public:
 		new (pObj) TObj(ctorArgs...);
 
 		//Extract vtable (if not initted)
-		if (!hotswap.vtable) hotswap.set_vtable(pObj);
+		if (!contentsType.vtable) contentsType.set_vtable(pObj);
 
 		return pObj;
 	}
