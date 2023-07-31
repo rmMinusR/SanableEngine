@@ -1,5 +1,7 @@
 #include "TypeName.hpp"
 
+#include <cassert>
+
 TypeName::hash_t TypeName::makeHash(const std::string& str)
 {
     //DJB2 string hash
@@ -26,4 +28,37 @@ TypeName::TypeName(const std::string& unwrappedTypeName, int ptrDepth) :
     nameHash(makeHash(unwrappedTypeName)),
     ptrDepth(ptrDepth)
 {
+}
+
+bool TypeName::isValid() const
+{
+    return !unwrappedTypeName.empty();
+}
+
+bool TypeName::operator==(const TypeName& other) const
+{
+    //Compare the stuff that's easy before doing a full string compare
+    return ptrDepth == other.ptrDepth
+        && nameHash == other.nameHash
+        && unwrappedTypeName == other.unwrappedTypeName;
+}
+
+bool TypeName::operator!=(const TypeName& other) const
+{
+    //Compare the stuff that's easy before doing a full string compare
+    return ptrDepth != other.ptrDepth
+        || nameHash != other.nameHash
+        || unwrappedTypeName != other.unwrappedTypeName;
+}
+
+const std::string& TypeName::as_str() const
+{
+    assert(isValid());
+    return unwrappedTypeName;
+}
+
+char const* TypeName::c_str() const
+{
+    assert(isValid());
+    return unwrappedTypeName.c_str();
 }

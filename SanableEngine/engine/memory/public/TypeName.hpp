@@ -3,11 +3,14 @@
 #include <string>
 #include <typeinfo>
 
+#include "dllapi.h"
+
 #pragma region Template helpers
 
 template<typename T, bool isPtr = std::is_pointer<T>::value>
 struct PtrUnwrapper
 {
+	PtrUnwrapper() = delete;
 };
 
 template<typename T>
@@ -33,11 +36,13 @@ class TypeName
 
 	std::string unwrappedTypeName;
 	hash_t nameHash;
-	int ptrDepth;
+	size_t ptrDepth;
+
+	friend struct std::hash<TypeName>;
 
 public:
-	TypeName();
-	TypeName(const std::string& unwrappedTypeName, int ptrDepth);
+	ENGINEMEM_API TypeName();
+	ENGINEMEM_API TypeName(const std::string& unwrappedTypeName, int ptrDepth);
 
 	template<typename TRaw>
 	static TypeName create()
@@ -48,13 +53,27 @@ public:
 		);
 	}
 
-	//Compare the stuff that's easy before doing a full string compare
-	inline bool operator==(const TypeName& other) const { return ptrDepth == other.ptrDepth && nameHash == other.nameHash && unwrappedTypeName == other.unwrappedTypeName; }
-	inline bool operator!=(const TypeName& other) const { return ptrDepth != other.ptrDepth || nameHash != other.nameHash || unwrappedTypeName != other.unwrappedTypeName; }
+	ENGINEMEM_API bool isValid() const;
 
-	TypeName(const TypeName& cpy) = default;
-	TypeName(TypeName&& mov) = default;
-	TypeName& operator=(const TypeName& cpy) = default;
-	TypeName& operator=(TypeName&& mov) = default;
-	~TypeName() = default;
+	ENGINEMEM_API bool operator==(const TypeName& other) const;
+	ENGINEMEM_API bool operator!=(const TypeName& other) const;
+
+	ENGINEMEM_API const std::string& as_str() const;
+	ENGINEMEM_API char const* c_str() const;
+
+	ENGINEMEM_API TypeName(const TypeName& cpy) = default;
+	ENGINEMEM_API TypeName(TypeName&& mov) = default;
+	ENGINEMEM_API TypeName& operator=(const TypeName& cpy) = default;
+	ENGINEMEM_API TypeName& operator=(TypeName&& mov) = default;
+	ENGINEMEM_API ~TypeName() = default;
+};
+
+
+template <>
+struct std::hash<TypeName>
+{
+	std::size_t operator()(const TypeName& k) const
+	{
+		return k.nameHash;
+	}
 };

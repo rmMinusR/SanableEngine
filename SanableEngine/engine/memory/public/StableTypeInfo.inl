@@ -8,12 +8,15 @@
 #include "vtable.h"
 
 #include "TypeName.hpp"
+#include "MemoryMapper.hpp"
 
 struct StableTypeInfo
 {
-	TypeName name; //Cannot use typeinfo here
+	TypeName name; //Cannot use C++ builtin type_info here
 	size_t size = 0;
 	vtable_ptr vtable = nullptr;
+	
+	bool isValid() const;
 
 	template<typename TObj>
 	void set_vtable(const TObj& obj)
@@ -49,4 +52,15 @@ struct StableTypeInfo
 		delete obj;
 		return out;
 	}
+};
+
+struct ObjectPatch
+{
+	StableTypeInfo oldData;
+	StableTypeInfo newData;
+
+	void apply(void* target, MemoryMapper* remapLog = nullptr) const;
+	bool isValid() const;
+
+	void debugLog() const;
 };
