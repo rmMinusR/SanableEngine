@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstddef>
 
+#include "dllapi.h"
+
 class StackAllocator
 {
 private:
@@ -11,13 +13,13 @@ private:
     size_t used;
 
 public:
-    StackAllocator();
-    StackAllocator(size_t maxSize);
-    ~StackAllocator();
+    ENGINEMEM_API StackAllocator();
+    ENGINEMEM_API StackAllocator(size_t maxSize);
+    ENGINEMEM_API ~StackAllocator();
 
-    void resize(size_t newSize);
+    ENGINEMEM_API void resize(size_t newSize);
 
-    void* allocRaw(size_t size);
+    ENGINEMEM_API void* allocRaw(size_t size);
 
     template <typename T>
     inline T* alloc(size_t arrayCount = 1) { return (T*)allocRaw(sizeof(T)*arrayCount); }
@@ -29,6 +31,6 @@ public:
         friend class StackAllocator;
     };
 
-    Checkpoint markCheckpoint();
-    void restoreCheckpoint(const Checkpoint& c);
+    ENGINEMEM_API Checkpoint markCheckpoint();
+    ENGINEMEM_API void restoreCheckpoint(const Checkpoint& c);
 };

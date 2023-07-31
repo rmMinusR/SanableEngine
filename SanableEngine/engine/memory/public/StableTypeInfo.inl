@@ -59,8 +59,11 @@ struct ObjectPatch
 	StableTypeInfo oldData;
 	StableTypeInfo newData;
 
-	void apply(void* target, MemoryMapper* remapLog = nullptr) const;
-	bool isValid() const;
+	ENGINEMEM_API void apply(void* target, MemoryMapper* remapLog = nullptr) const;
+	ENGINEMEM_API bool isValid() const;
+	ENGINEMEM_API TypeName getTypeName() const;
 
-	void debugLog() const;
+	ENGINEMEM_API void debugLog() const;
+
+	ENGINEMEM_API static ObjectPatch create(StableTypeInfo oldData, StableTypeInfo newData);
 };

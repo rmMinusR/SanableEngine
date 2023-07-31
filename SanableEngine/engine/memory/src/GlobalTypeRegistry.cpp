@@ -3,7 +3,7 @@
 #include <unordered_set>
 
 std::unordered_map<GlobalTypeRegistry::module_key_t, ModuleTypeRegistry> GlobalTypeRegistry::modules;
-std::vector<ObjectPatch> GlobalTypeRegistry::pendingPatches;
+std::unordered_set<TypeName> GlobalTypeRegistry::dirtyTypes;
 
 StableTypeInfo const* GlobalTypeRegistry::lookupType(const TypeName& name)
 {
@@ -15,40 +15,34 @@ StableTypeInfo const* GlobalTypeRegistry::lookupType(const TypeName& name)
 	return nullptr;
 }
 
-void GlobalTypeRegistry::addModule(module_key_t key, ModuleTypeRegistry newTypes)
+void GlobalTypeRegistry::loadModule(module_key_t key, ModuleTypeRegistry newTypes)
 {
-	assert(modules.find(key) == modules.cend());
-	modules.emplace(key, newTypes);
+	//If a module already exists with the same name, unload first
+	if (modules.find(key) == modules.cend()) unloadModule(key);
+
+	//Register types
+	auto it = modules.emplace(key, newTypes).first;
+
+	//Mark all known names as dirty
+	for (const StableTypeInfo& i : newTypes.getTypes()) dirtyTypes.emplace(i.name);
 }
 
-void GlobalTypeRegistry::updateModule(module_key_t key, ModuleTypeRegistry newTypes)
+void GlobalTypeRegistry::unloadModule(module_key_t key)
 {
 	auto it = modules.find(key);
 	assert(it != modules.cend());
-	ModuleTypeRegistry& oldTypes = it->second;
 
-	//Collect names from both old and new version
-	std::unordered_set<TypeName> allNames;
-	for (const StableTypeInfo& i : oldTypes.getTypes()) allNames.emplace(i.name);
-	for (const StableTypeInfo& i : newTypes.getTypes()) allNames.emplace(i.name);
+	//Mark all known names as dirty
+	const ModuleTypeRegistry& oldTypes = it->second;
+	for (const StableTypeInfo& i : oldTypes.getTypes()) dirtyTypes.emplace(i.name);
 
-	//Produce patch for each name
-	for (const TypeName& i : allNames)
-	{
-		ObjectPatch objPatch;
-		objPatch.oldData = *oldTypes.lookupType(i);
-		objPatch.newData = *newTypes.lookupType(i);
-		assert(objPatch.isValid());
-		pendingPatches.push_back(objPatch);
-	}
-
-	//Update backing data
-	it->second = newTypes;
+	//Unregister types
+	modules.erase(it);
 }
 
-std::vector<ObjectPatch> GlobalTypeRegistry::exportPatch()
+std::unordered_set<TypeName> GlobalTypeRegistry::getDirtyTypes()
 {
-	std::vector<ObjectPatch> out;
-	std::swap(out, pendingPatches);
+	std::unordered_set<TypeName> out;
+	std::swap(out, dirtyTypes);
 	return out;
 }

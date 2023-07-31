@@ -32,9 +32,9 @@ struct optional_destructor<TObj, false> {
 
 #pragma region From original MemoryPool by Dean Lawson
 
-int isPowerOfTwo(size_t x);
-size_t getClosestPowerOf2LargerThan(size_t num);
+ENGINEMEM_API int isPowerOfTwo(size_t x);
+ENGINEMEM_API size_t getClosestPowerOf2LargerThan(size_t num);
 
 #pragma endregion
 
-int roundUp(int n, int multiple);
+ENGINEMEM_API int roundUp(int n, int multiple);

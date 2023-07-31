@@ -30,7 +30,6 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&);
 
-	virtual void refreshObjects(MemoryMapper& mapper, const std::vector<StableTypeInfo const*>& refreshers);
 	ENGINEMEM_API void resizeObjects(size_t newSize, MemoryMapper* mapper = nullptr);
 
 	typedef void (*hook_t)(void*);

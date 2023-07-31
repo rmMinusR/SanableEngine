@@ -109,11 +109,6 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void RawMemoryPool::refreshObjects(MemoryMapper& mapper, const std::vector<StableTypeInfo const*>& refreshers)
-{
-
-}
-
 void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 {
 	newSize = getClosestPowerOf2LargerThan(newSize);

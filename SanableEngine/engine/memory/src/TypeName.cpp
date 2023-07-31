@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "GlobalTypeRegistry.hpp"
+
 TypeName::hash_t TypeName::makeHash(const std::string& str)
 {
     //DJB2 string hash
@@ -33,6 +35,11 @@ TypeName::TypeName(const std::string& unwrappedTypeName, int ptrDepth) :
 bool TypeName::isValid() const
 {
     return !unwrappedTypeName.empty();
+}
+
+StableTypeInfo const* TypeName::resolve() const
+{
+    return GlobalTypeRegistry::lookupType(*this);
 }
 
 bool TypeName::operator==(const TypeName& other) const

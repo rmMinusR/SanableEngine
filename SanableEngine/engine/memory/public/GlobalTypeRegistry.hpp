@@ -1,6 +1,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 #include "ModuleTypeRegistry.inl"
@@ -16,7 +17,7 @@ public:
 
 private:
 	static std::unordered_map<module_key_t, ModuleTypeRegistry> modules;
-	static std::vector<ObjectPatch> pendingPatches;
+	static std::unordered_set<TypeName> dirtyTypes;
 	
 public:
 	/// <summary>
@@ -27,17 +28,17 @@ public:
 	//////////// INTERNAL FUNCTIONS ////////////
 
 	/// <summary>
-	/// Register a new module
+	/// Register a new module. If one already exists with the same name, it will be unloaded first.
 	/// </summary>
-	ENGINEMEM_API static void addModule(module_key_t key, ModuleTypeRegistry newTypes);
+	ENGINEMEM_API static void loadModule(module_key_t key, ModuleTypeRegistry newTypes);
 
 	/// <summary>
-	/// Update an existing module, and prepare to patch accordingly
+	/// Mark a module as unloaded
 	/// </summary>
-	ENGINEMEM_API static void updateModule(module_key_t key, ModuleTypeRegistry newTypes);
+	ENGINEMEM_API static void unloadModule(module_key_t key);
 
 	/// <summary>
-	/// Get pending patch data. Clears internal state, so call only once!
+	/// Get the names of any types that have been altered via updateModule since last call.
 	/// </summary>
-	ENGINEMEM_API [[nodiscard]] static std::vector<ObjectPatch> exportPatch();
+	[[nodiscard]] ENGINEMEM_API static std::unordered_set<TypeName> getDirtyTypes();
 };

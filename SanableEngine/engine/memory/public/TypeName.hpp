@@ -29,10 +29,13 @@ struct PtrUnwrapper<T*, true>
 
 #pragma endregion
 
+struct StableTypeInfo;
+
+
 class TypeName
 {
 	typedef uint32_t hash_t;
-	static hash_t makeHash(const std::string& str);
+	ENGINEMEM_API static hash_t makeHash(const std::string& str);
 
 	std::string unwrappedTypeName;
 	hash_t nameHash;
@@ -53,7 +56,8 @@ public:
 		);
 	}
 
-	ENGINEMEM_API bool isValid() const;
+	ENGINEMEM_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.
+	ENGINEMEM_API StableTypeInfo const* resolve() const;
 
 	ENGINEMEM_API bool operator==(const TypeName& other) const;
 	ENGINEMEM_API bool operator!=(const TypeName& other) const;

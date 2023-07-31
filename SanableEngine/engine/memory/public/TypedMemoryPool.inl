@@ -11,48 +11,68 @@ public:
 	constexpr static size_t maxObjectCount = _maxObjectCount;
 };
 
-//Strongly typed pointers (recommended)
-template<typename TObj>
-class TypedMemoryPool : protected RawMemoryPool
+
+//Wrapper for TypedMemoryPool so we can still safely access common data
+class GenericTypedMemoryPool : protected RawMemoryPool
 {
+protected:
 	StableTypeInfo hotswap;
 
+	friend class MemoryManager;
+
+	virtual void refreshObjects(const StableTypeInfo& newTypeData, MemoryMapper* remapper) = 0;
+
+public:
+	ENGINEMEM_API inline GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, StableTypeInfo hotswap) : RawMemoryPool(maxNumObjects, objectSize), hotswap(hotswap) {}
+	ENGINEMEM_API virtual ~GenericTypedMemoryPool() = default;
+};
+
+
+//Strongly typed pointers (recommended)
+template<typename TObj>
+class TypedMemoryPool : public GenericTypedMemoryPool
+{
 public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
-		RawMemoryPool(maxNumObjects, getClosestPowerOf2LargerThan( std::max(sizeof(TObj), alignof(TObj)) )),
-		hotswap(StableTypeInfo::blank<TObj>())
+		GenericTypedMemoryPool(
+			maxNumObjects,
+			getClosestPowerOf2LargerThan( std::max(sizeof(TObj), alignof(TObj)) ),
+			StableTypeInfo::blank<TObj>()
+		)
 	{
 		releaseHook = (RawMemoryPool::hook_t) optional_destructor<TObj>::call;
 	}
 
 	virtual ~TypedMemoryPool() = default;
 
-	void refreshObjects(MemoryMapper& mapper, const std::vector<StableTypeInfo const*>& refreshers) override
+protected:
+	void refreshObjects(const StableTypeInfo& newTypeData, MemoryMapper* remapper) override
 	{
-		auto newHotswap = std::find_if(refreshers.cbegin(), refreshers.cend(), [&](StableTypeInfo const* d) { return d->name == hotswap.name; });
-		if (newHotswap != refreshers.cend())
+		assert(newTypeData.name == hotswap.name); //Ensure same type
+		
+		//Resize if we grew
+		//Must be done before writing to members so writes don't happen in other objects' memory
+		if (newTypeData.size > hotswap.size) resizeObjects(newTypeData.size, remapper);
+
+		//Remap members and write vtable ptrs
+		ObjectPatch patch = ObjectPatch::create(hotswap, newTypeData);
+		for (size_t i = 0; i < mMaxNumObjects; i++)
 		{
-			assert(hotswap.name == (**newHotswap).name); //Ensure same type
-			
-			//Handle changes to size
-			if (hotswap.size != (**newHotswap).size) resizeObjects((**newHotswap).size, &mapper);
-
-			//TODO handle changes to members
-
-			hotswap = **newHotswap;
-
-			//Write vtable ptrs
-			for (size_t i = 0; i < mMaxNumObjects; i++)
-			{
-				TObj* obj = (TObj*) idToPtr(i);
-				if (isAlive(obj)) set_vtable_ptr(obj, hotswap.vtable);
-			}
+			TObj* obj = (TObj*)idToPtr(i);
+			if (isAlive(obj)) patch.apply(obj, remapper); //set_vtable_ptr(obj, hotswap.vtable);
 		}
 
-		//Fix bad dtors
+		//Resize if we shrunk
+		//Must be done after writing to members so we aren't reading other objects' memory
+		if (newTypeData.size < hotswap.size) resizeObjects(newTypeData.size, remapper);
+
+		hotswap = newTypeData;
+
+		//Fix bad dtors - TODO pull from StableTypeInfo
 		releaseHook = (RawMemoryPool::hook_t)optional_destructor<TObj>::call;
 	}
 
+public:
 	//Allocates memory and creates an object.
 	template<typename... TCtorArgs>
 	TObj* emplace(TCtorArgs... ctorArgs)
@@ -72,8 +92,8 @@ public:
 
 	//Pass through
 	inline void release(TObj* obj) { RawMemoryPool::release(obj); }
-protected:
 
+protected:
 	TypedMemoryPool(TypedMemoryPool&&) = default;
 	TypedMemoryPool(const TypedMemoryPool&) = delete;
 };

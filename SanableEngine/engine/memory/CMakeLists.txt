@@ -5,7 +5,8 @@ project("engine-memory")
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_memory_sources)
-add_library("engine-memory" STATIC ${engine_memory_sources})
+declare_dll("engine-memory" "" engine_memory_sources)
+#add_library("engine-memory" STATIC ${engine_memory_sources})
 target_include_directories("engine-memory" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare exports

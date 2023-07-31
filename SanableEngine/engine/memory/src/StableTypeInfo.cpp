@@ -20,6 +20,13 @@ bool ObjectPatch::isValid() const
 	return oldData.isValid() || newData.isValid();
 }
 
+TypeName ObjectPatch::getTypeName() const
+{
+	assert(isValid());
+	if (oldData.isValid()) return oldData.name;
+	else                   return newData.name;
+}
+
 void ObjectPatch::debugLog() const
 {
 	assert(isValid());
@@ -30,4 +37,12 @@ void ObjectPatch::debugLog() const
 	{
 		//TODO print member diff
 	}
+}
+
+ObjectPatch ObjectPatch::create(StableTypeInfo oldData, StableTypeInfo newData)
+{
+	ObjectPatch out;
+	out.oldData = oldData;
+	out.newData = newData;
+	return out;
 }

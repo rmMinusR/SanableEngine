@@ -18,12 +18,12 @@ private:
 	struct PoolRecord
 	{
 		StableTypeInfo poolType;
-		RawMemoryPool* pool;
+		GenericTypedMemoryPool* pool;
 
 		template<typename TObj>
 		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
 			PoolRecord r;
-			r.pool = (RawMemoryPool*)pool;
+			r.pool = pool;
 			r.poolType = StableTypeInfo::blank<TypedMemoryPool<TObj>>();
 			return std::move(r);
 		}
@@ -46,12 +46,14 @@ public:
 	void destroyPool();
 
 private:
-	void init();
-	void cleanup();
+	ENGINEMEM_API void init();
+	ENGINEMEM_API void cleanup();
 	friend class EngineCore;
 
-	void refreshObjects(std::vector<StableTypeInfo const*> refreshers);
 	friend class PluginManager;
+
+	ENGINEMEM_API void ensureFresh();
+	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
 };
 
 
