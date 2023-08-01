@@ -46,3 +46,9 @@ std::unordered_set<TypeName> GlobalTypeRegistry::getDirtyTypes()
 	std::swap(out, dirtyTypes);
 	return out;
 }
+
+void GlobalTypeRegistry::clear()
+{
+	modules.clear();
+	dirtyTypes.clear();
+}

@@ -35,7 +35,7 @@ class MemoryMapper
 
 public:
 	/// <summary>
-	/// Like typelessMove, but calls move ctor first. Undefined behaviour when hot reloading.
+	/// Like rawMove, but calls move ctor first. Undefined behaviour when hot reloading.
 	/// </summary>
 	template<typename T>
 	ENGINEMEM_API void move(T* dst, T* src)

@@ -41,4 +41,6 @@ public:
 	/// Get the names of any types that have been altered via updateModule since last call.
 	/// </summary>
 	[[nodiscard]] ENGINEMEM_API static std::unordered_set<TypeName> getDirtyTypes();
+
+	ENGINEMEM_API static void clear();
 };

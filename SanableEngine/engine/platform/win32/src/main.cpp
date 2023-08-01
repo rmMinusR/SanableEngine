@@ -4,7 +4,6 @@
 
 #include "EngineCore.hpp"
 #include "System_Win32.hpp"
-#include "GlobalTypeRegistry.hpp"
 
 void vendorInit(EngineCore* engine);
 

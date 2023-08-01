@@ -10,6 +10,7 @@
 #include "GameObject.hpp"
 #include "Component.hpp"
 #include "System.hpp"
+#include "GlobalTypeRegistry.hpp"
 
 void EngineCore::applyConcurrencyBuffers()
 {
@@ -117,6 +118,9 @@ void EngineCore::shutdown()
     //Clean up memory, GameObject pool first so components are released
     memoryManager.destroyPool<GameObject>();
     memoryManager.cleanup();
+
+    //Type info shouldn't appear on the straggling allocations report
+    GlobalTypeRegistry::clear();
 
     system->Shutdown();
 }

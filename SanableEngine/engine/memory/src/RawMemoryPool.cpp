@@ -121,6 +121,8 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 		void* newLivingBlock = newMemoryBlock;
 		memcpy_s(newLivingBlock, getLivingListSpaceRequired(), getLivingListBlock(), getLivingListSpaceRequired());
 
+		//Don't bother shuffling members. Assume the caller knows what they're doing.
+
 		if (newSize > mObjectSize)
 		{
 			//Size increased. Move starting from highest address.
@@ -130,13 +132,9 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 				void* dst = ((uint8_t*)     newObjectBlock  ) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
-
-			//TODO shuffle members after moving to new block
 		}
-		else if (newSize > mObjectSize)
+		else if (newSize < mObjectSize)
 		{
-			//TODO shuffle members before moving to new block
-
 			//Size decreased. Move starting from lowest address.
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
