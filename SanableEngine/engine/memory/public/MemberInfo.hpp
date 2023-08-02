@@ -30,11 +30,11 @@ struct FieldInfo : public InstanceMemberInfo
 	ENGINEMEM_API void blitValue(void* objInstance, void* value) const; //Does NOT call copy ctor! FIXME
 };
 
-struct VTableInfo : public InstanceMemberInfo
+struct VTableInfo
 {
 	void* vtable;
 
-	ENGINEMEM_API void set(void* objInstance) const;
+	ENGINEMEM_API void set(void* objInstance) const; //Note: no offset, must cast then call
 };
 
 struct ParentInfo : public InstanceMemberInfo

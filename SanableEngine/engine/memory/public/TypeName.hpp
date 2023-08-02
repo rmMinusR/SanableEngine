@@ -45,6 +45,7 @@ class TypeName
 
 public:
 	ENGINEMEM_API TypeName();
+	ENGINEMEM_API TypeName(const std::string& unwrappedTypeName); //Convenience ctor when not dealin with ptrs
 	ENGINEMEM_API TypeName(const std::string& unwrappedTypeName, int ptrDepth);
 
 	template<typename TRaw>

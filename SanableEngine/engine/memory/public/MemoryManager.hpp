@@ -24,7 +24,7 @@ private:
 		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
 			PoolRecord r;
 			r.pool = pool;
-			r.poolType = TypeInfo::blank<TypedMemoryPool<TObj>>();
+			r.poolType = *TypeName::create<TypedMemoryPool<TObj>>().resolve();
 			return std::move(r);
 		}
 	};

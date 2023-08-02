@@ -14,18 +14,9 @@ class ModuleTypeRegistry
 {
 	std::vector<TypeInfo> types;
 
+	friend class TypeBuilder;
+
 public:
-	/// <summary>
-	/// Register a type, and auto register the corresponding memory pool's type.
-	/// Requires dummy constructor args for a temporary TObj so that its vtable ptr can be extracted.
-	/// </summary>
-	template<typename TObj, typename... TCtorArgs>
-	void registerType(TCtorArgs... ctorArgs)
-	{
-		types.push_back(TypeInfo::build<TObj>(ctorArgs...));
-		types.push_back(TypeInfo::build<TypedMemoryPool<TObj>>(1));
-	}
-	
 	inline TypeInfo const* lookupType(const TypeName& name) const
 	{
 		for (const TypeInfo& i : types) if (i.name == name) return &i;

@@ -1,49 +1,16 @@
 #pragma once
 
-#include <type_traits>
-#include <typeinfo>
 #include <string>
 #include <functional>
+#include <optional>
 
 #include "dllapi.h"
-#include "vtable.h"
+#include "rttiutils.h"
 
 #include "MemberInfo.hpp"
 #include "MemoryMapper.hpp"
 
-#pragma region Destructor type erasure
-
-typedef void (*dtor_t)(void*); //CANNOT be a std::function or lambda because destroying the dtor_t instance would attempt to delete memory from a possibly-unloaded plugin
-
-template<typename T, bool has_destructor = std::is_destructible<T>::value>
-struct dtor_utils
-{
-	dtor_utils() = delete;
-};
-
-template<typename T>
-struct dtor_utils<T, true>
-{
-	inline static void call_dtor(void* obj)
-	{
-		//C++ forbids getting the address of a dtor, but we can still wrap it
-		static_cast<const T*>(obj)->~T();
-	}
-
-	constexpr static dtor_t dtor = &call_dtor;
-};
-
-template<typename T>
-struct dtor_utils<T, false>
-{
-	//Can't call a dtor that doesn't exist
-	constexpr static dtor_t dtor = nullptr;
-};
-
-#pragma endregion
-
 class TypeBuilder;
-
 
 /// <summary>
 /// For cases where we cannot use C++ builtin type_info.
@@ -60,7 +27,7 @@ struct TypeInfo
 
 private:
 	std::vector<FieldInfo> fields; //NO TOUCHY! Use walkFields instead, which will also handle parent recursion.
-	std::vector<VTableInfo> vtables; //EXTREME NO TOUCHY! Use vptrJam instead.
+	std::optional<VTableInfo> vtable; //EXTREME NO TOUCHY! Use vptrJam instead.
 
 	friend class TypeBuilder; //Only thing allowed to touch all member data.
 
@@ -100,8 +67,14 @@ public:
 	/// <summary>
 	/// Update vtable pointers on the given object instance.
 	/// </summary>
-	/// <param name="obj"></param>
+	/// <param name="obj">Object to be updated</param>
 	ENGINEMEM_API void vptrJam(void* obj) const;
+
+	/// <summary>
+	/// Cast to a parent. Returns null if no parent found.
+	/// </summary>
+	/// <param name="obj">Object to cast</param>
+	ENGINEMEM_API void* cast(void* obj, const TypeName& name) const;
 
 	template<typename TObj>
 	void set_vtable(const TObj& obj)
@@ -109,33 +82,14 @@ public:
 		if (std::is_polymorphic_v<TObj>) vtable = get_vtable_ptr(obj);
 		else							 vtable = nullptr;
 	}
-
-	//Factories
-
+	
 	template<typename TObj>
-	static TypeInfo blank()
+	static TypeInfo createDummy()
 	{
 		TypeInfo out;
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
 		out.dtor = dtor_utils<TObj>::dtor;
-		return out;
-	}
-
-	template<typename TObj>
-	static TypeInfo extract(const TObj& obj) //Requires EXACT type
-	{
-		TypeInfo out = blank<TObj>();
-		out.vtable = get_vtable_ptr(&obj);
-		return out;
-	}
-
-	template<typename TObj, typename... TCtorArgs>
-	static TypeInfo build(TCtorArgs... ctorArgs)
-	{
-		TObj* obj = new TObj(ctorArgs...);
-		TypeInfo out = extract(*obj);
-		delete obj;
 		return out;
 	}
 };

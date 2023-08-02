@@ -7,7 +7,9 @@
 
 bool TypeInfo::isValid() const
 {
-	return size != 0 && name.isValid();
+	return size != 0
+		&& name.isValid()
+		&& (!parents.empty() || !fields.empty());
 }
 
 bool TypeInfo::isLoaded() const
@@ -71,5 +73,34 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 
 void TypeInfo::vptrJam(void* obj) const
 {
+	//Set own vtable, if present
+	if (vtable.has_value()) vtable.value().set(obj);
 
+	//Recurse into parents
+	for (const ParentInfo& i : parents)
+	{
+		i.typeName.resolve()->vptrJam(cast(obj, i.typeName));
+	}
+}
+
+void* TypeInfo::cast(void* obj, const TypeName& name) const
+{
+	//Try casting to direct parent
+	for (const ParentInfo& parent : parents)
+	{
+		if (parent.typeName == name)
+		{
+			return ((char*)obj) + parent.offset;
+		}
+	}
+
+	//Try recursing into parents
+	for (const ParentInfo& parent : parents)
+	{
+		void* out = parent.typeName.resolve()->cast(obj, name);
+		if (out) return out;
+	}
+
+	//Not a parent
+	return nullptr;
 }

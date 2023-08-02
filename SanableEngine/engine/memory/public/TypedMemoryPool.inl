@@ -24,7 +24,7 @@ public:
 		GenericTypedMemoryPool(
 			maxNumObjects,
 			getClosestPowerOf2LargerThan( std::max(sizeof(TObj), alignof(TObj)) ),
-			TypeInfo::blank<TObj>()
+			TypeInfo::createDummy<TObj>()
 		)
 	{
 		if (contentsType.tryRefresh()) releaseHook = contentsType.dtor;

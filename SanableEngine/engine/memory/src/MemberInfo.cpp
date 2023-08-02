@@ -19,5 +19,5 @@ void FieldInfo::blitValue(void* objInstance, void* value) const
 
 void VTableInfo::set(void* objInstance) const
 {
-	memcpy(getAddr(objInstance), vtable, sizeof(void*));
+	memcpy(objInstance, vtable, sizeof(void*));
 }

@@ -25,8 +25,13 @@ TypeName::TypeName() :
 {
 }
 
+TypeName::TypeName(const std::string& unwrappedTypeName) :
+    TypeName(unwrappedTypeName, 0)
+{
+}
+
 TypeName::TypeName(const std::string& unwrappedTypeName, int ptrDepth) :
-    unwrappedTypeName(unwrappedTypeName),
+    unwrappedTypeName(unwrappedTypeName), //FIXME unprefix ("class MyClass")
     nameHash(makeHash(unwrappedTypeName)),
     ptrDepth(ptrDepth)
 {

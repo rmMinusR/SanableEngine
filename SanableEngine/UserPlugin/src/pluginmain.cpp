@@ -10,12 +10,6 @@
 #include "ColliderColorChanger.hpp"
 #include "PlayerController.hpp"
 
-PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* types)
-{
-    types->registerType<ColliderColorChanger>(SDL_Color{}, SDL_Color{});
-    types->registerType<PlayerController>();
-}
-
 EngineCore* engine;
 
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)

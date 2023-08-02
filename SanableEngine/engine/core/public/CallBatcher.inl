@@ -3,7 +3,7 @@
 #include <algorithm>
 
 #include "dllapi.h"
-#include "vtable.h"
+#include "rttiutils.h"
 
 template<typename TObj>
 class CallBatcher
