@@ -3,3 +3,7 @@ SanableEngine/build/
 
 #Ignore IDE files
 *.vs
+
+#Ignore python bytecode
+__pycache__/
+*.py[cod]
