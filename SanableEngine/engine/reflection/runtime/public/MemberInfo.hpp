@@ -9,7 +9,7 @@ struct InstanceMemberInfo
 	size_t offset;
 
 protected:
-	ENGINEMEM_API void* getAddr(void* objInstance) const;
+	ENGINE_RTTI_API void* getAddr(void* objInstance) const;
 };
 
 enum class MemberVisibility
@@ -26,15 +26,8 @@ struct FieldInfo : public InstanceMemberInfo
 	std::string name;
 	MemberVisibility visibility;
 
-	ENGINEMEM_API void* getValue(void* objInstance) const;
-	ENGINEMEM_API void blitValue(void* objInstance, void* value) const; //Does NOT call copy ctor! FIXME
-};
-
-struct VTableInfo
-{
-	void* vtable;
-
-	ENGINEMEM_API void set(void* objInstance) const; //Note: no offset, must cast then call
+	ENGINE_RTTI_API void* getValue(void* objInstance) const;
+	ENGINE_RTTI_API void blitValue(void* objInstance, void* value) const; //Does NOT call copy ctor! FIXME
 };
 
 struct ParentInfo : public InstanceMemberInfo

@@ -16,8 +16,3 @@ void FieldInfo::blitValue(void* objInstance, void* value) const
 {
 	memcpy(getAddr(objInstance), value, type.resolve()->size);
 }
-
-void VTableInfo::set(void* objInstance) const
-{
-	memcpy(objInstance, vtable, sizeof(void*));
-}

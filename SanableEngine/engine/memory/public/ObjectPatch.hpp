@@ -2,6 +2,10 @@
 
 #include "TypeInfo.hpp"
 
+#include "dllapi.h"
+
+class MemoryMapper;
+
 struct ObjectPatch
 {
 	TypeInfo oldData;

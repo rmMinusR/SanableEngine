@@ -74,8 +74,8 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 void TypeInfo::vptrJam(void* obj) const
 {
 	//Set own vtable, if present
-	if (vtable.has_value()) vtable.value().set(obj);
-
+	if (vtable) set_vtable_ptr(obj, vtable);
+	
 	//Recurse into parents
 	for (const ParentInfo& i : parents)
 	{

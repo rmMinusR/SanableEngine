@@ -9,6 +9,9 @@ declare_dll("engine-memory" "" engine_memory_sources)
 #add_library("engine-memory" STATIC ${engine_memory_sources})
 target_include_directories("engine-memory" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
+# Declare imports
+target_link_libraries("engine-memory" PUBLIC engine-rtti)
+
 # Declare exports
 target_include_directories("engine-memory" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 

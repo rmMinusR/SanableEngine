@@ -1,6 +1,7 @@
 #include "GlobalTypeRegistry.hpp"
 
 #include <unordered_set>
+#include <cassert>
 
 std::unordered_map<GlobalTypeRegistry::module_key_t, ModuleTypeRegistry> GlobalTypeRegistry::modules;
 std::unordered_set<TypeName> GlobalTypeRegistry::dirtyTypes;

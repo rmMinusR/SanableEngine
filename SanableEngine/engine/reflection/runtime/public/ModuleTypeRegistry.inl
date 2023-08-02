@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "TypeInfo.hpp"
-#include "TypedMemoryPool.inl"
 
 class GlobalTypeRegistry;
 

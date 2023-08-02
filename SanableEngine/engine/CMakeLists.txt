@@ -3,6 +3,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 project("engine-shared")
 
+include ("${CMAKE_CURRENT_LIST_DIR}/reflection/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/memory/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/platform/abstract/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/assets/CMakeLists.txt")

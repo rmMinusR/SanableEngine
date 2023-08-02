@@ -8,7 +8,6 @@
 #include "rttiutils.h"
 
 #include "MemberInfo.hpp"
-#include "MemoryMapper.hpp"
 
 class TypeBuilder;
 
@@ -27,32 +26,32 @@ struct TypeInfo
 
 private:
 	std::vector<FieldInfo> fields; //NO TOUCHY! Use walkFields instead, which will also handle parent recursion.
-	std::optional<VTableInfo> vtable; //EXTREME NO TOUCHY! Use vptrJam instead.
+	vtable_ptr vtable; //EXTREME NO TOUCHY! Use vptrJam instead.
 
 	friend class TypeBuilder; //Only thing allowed to touch all member data.
 
 public:
-	ENGINEMEM_API TypeInfo() = default;
-	ENGINEMEM_API ~TypeInfo() = default;
+	ENGINE_RTTI_API TypeInfo() = default;
+	ENGINE_RTTI_API ~TypeInfo() = default;
 
 	/// <summary>
 	/// Check if this type has data (ie. hasn't been empty-constructed).
 	/// Does NOT indicate whether using instances will cause errors.
 	/// </summary>
 	/// <returns></returns>
-	ENGINEMEM_API bool isValid() const;
+	ENGINE_RTTI_API bool isValid() const;
 
 	/// <summary>
 	/// Check if this type is currently loaded.
 	/// If so, instances can be used without causing errors.
 	/// </summary>
-	ENGINEMEM_API bool isLoaded() const;
+	ENGINE_RTTI_API bool isLoaded() const;
 
 	/// <summary>
 	/// Update from live copy in GlobalTypeRegistry, if one is present.
 	/// </summary>
 	/// <returns>Whether a live copy was present</returns>
-	ENGINEMEM_API bool tryRefresh();
+	ENGINE_RTTI_API bool tryRefresh();
 
 	/// <summary>
 	/// Visit every field in this type matching the given query.
@@ -60,7 +59,7 @@ public:
 	/// <param name="visitor">Function to run on every FieldInfo</param>
 	/// <param name="visibilityFlags">What members/parents should be visible or ignored</param>
 	/// <param name="includeInherited">Include fields inherited from parents?</param>
-	ENGINEMEM_API void walkFields(std::function<void(const FieldInfo&)> visitor,
+	ENGINE_RTTI_API void walkFields(std::function<void(const FieldInfo&)> visitor,
 								  MemberVisibility visibilityFlags = MemberVisibility::Public,
 								  bool includeInherited = true) const;
 
@@ -68,20 +67,13 @@ public:
 	/// Update vtable pointers on the given object instance.
 	/// </summary>
 	/// <param name="obj">Object to be updated</param>
-	ENGINEMEM_API void vptrJam(void* obj) const;
+	ENGINE_RTTI_API void vptrJam(void* obj) const;
 
 	/// <summary>
 	/// Cast to a parent. Returns null if no parent found.
 	/// </summary>
 	/// <param name="obj">Object to cast</param>
-	ENGINEMEM_API void* cast(void* obj, const TypeName& name) const;
-
-	template<typename TObj>
-	void set_vtable(const TObj& obj)
-	{
-		if (std::is_polymorphic_v<TObj>) vtable = get_vtable_ptr(obj);
-		else							 vtable = nullptr;
-	}
+	ENGINE_RTTI_API void* cast(void* obj, const TypeName& name) const;
 	
 	template<typename TObj>
 	static TypeInfo createDummy()

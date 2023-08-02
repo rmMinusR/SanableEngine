@@ -5,6 +5,8 @@ project ("devenv") #Ignore
 include("Utils.cmake") # Include function library
 include("Imports.cmake") # Include libs folder
 
+add_compile_definitions(NOMINMAX) # Come on, MSVC. Don't conflict with standard libraries.
+
 include("engine/CMakeLists.txt") # Shared common code
 
 # YOUR PLUGINS HERE

@@ -1,7 +1,7 @@
 //Common includes
 #include "PluginCore.hpp"
 #include "TypeBuilder.hpp"
-#include "TypedMemoryPool"
+#include "TypedMemoryPool.inl"
 
 //Dependency includes
 #include "ColliderColorChanger.hpp"
@@ -23,5 +23,5 @@ PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* registry)
 
     //types.push_back(TypeInfo::build<TypedMemoryPool<TObj>>(1));
 
-    types->registerType<PlayerController>();
+    //types->registerType<PlayerController>();
 }
