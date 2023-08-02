@@ -27,7 +27,7 @@ void MemoryManager::ensureFresh()
 		if (it != typesToPatch.cend())
 		{
 			TypeInfo const* newTypeInfo = it->resolve();
-			if (newTypeInfo) set_vtable_ptr(p.pool, newTypeInfo->vtable);
+			if (newTypeInfo) newTypeInfo->vptrJam(&p.pool);
 		}
 	}
 

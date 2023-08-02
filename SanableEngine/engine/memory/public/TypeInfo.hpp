@@ -3,17 +3,17 @@
 #include <type_traits>
 #include <typeinfo>
 #include <string>
+#include <functional>
 
 #include "dllapi.h"
 #include "vtable.h"
 
-#include "TypeName.hpp"
+#include "MemberInfo.hpp"
 #include "MemoryMapper.hpp"
 
 #pragma region Destructor type erasure
 
 typedef void (*dtor_t)(void*); //CANNOT be a std::function or lambda because destroying the dtor_t instance would attempt to delete memory from a possibly-unloaded plugin
-
 
 template<typename T, bool has_destructor = std::is_destructible<T>::value>
 struct dtor_utils
@@ -42,6 +42,8 @@ struct dtor_utils<T, false>
 
 #pragma endregion
 
+class TypeBuilder;
+
 
 /// <summary>
 /// For cases where we cannot use C++ builtin type_info.
@@ -51,10 +53,18 @@ struct TypeInfo
 {
 	TypeName name;
 	size_t size = 0;
-	vtable_ptr vtable = nullptr;
 
 	dtor_t dtor; //Not guaranteed to be present, null check before calling
 
+	std::vector<ParentInfo> parents;
+
+private:
+	std::vector<FieldInfo> fields; //NO TOUCHY! Use walkFields instead, which will also handle parent recursion.
+	std::vector<VTableInfo> vtables; //EXTREME NO TOUCHY! Use vptrJam instead.
+
+	friend class TypeBuilder; //Only thing allowed to touch all member data.
+
+public:
 	ENGINEMEM_API TypeInfo() = default;
 	ENGINEMEM_API ~TypeInfo() = default;
 
@@ -76,6 +86,22 @@ struct TypeInfo
 	/// </summary>
 	/// <returns>Whether a live copy was present</returns>
 	ENGINEMEM_API bool tryRefresh();
+
+	/// <summary>
+	/// Visit every field in this type matching the given query.
+	/// </summary>
+	/// <param name="visitor">Function to run on every FieldInfo</param>
+	/// <param name="visibilityFlags">What members/parents should be visible or ignored</param>
+	/// <param name="includeInherited">Include fields inherited from parents?</param>
+	ENGINEMEM_API void walkFields(std::function<void(const FieldInfo&)> visitor,
+								  MemberVisibility visibilityFlags = MemberVisibility::Public,
+								  bool includeInherited = true) const;
+
+	/// <summary>
+	/// Update vtable pointers on the given object instance.
+	/// </summary>
+	/// <param name="obj"></param>
+	ENGINEMEM_API void vptrJam(void* obj) const;
 
 	template<typename TObj>
 	void set_vtable(const TObj& obj)

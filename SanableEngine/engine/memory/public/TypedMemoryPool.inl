@@ -71,9 +71,6 @@ public:
 		//Construct object
 		new (pObj) TObj(ctorArgs...);
 
-		//Extract vtable (if not initted)
-		if (!contentsType.vtable) contentsType.set_vtable(pObj);
-
 		return pObj;
 	}
 
