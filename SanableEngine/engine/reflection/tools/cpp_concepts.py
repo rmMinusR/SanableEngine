@@ -119,7 +119,7 @@ class FieldInfo(Symbol, Ownable):
         return cursor.kind == CursorKind.FIELD_DECL
 
     def renderMain(this):
-        return f'builder.addField(TypeName::create<{this.__declaredType}>(), "{this.relName}");'
+        return f'builder.addField(TypeName::parse("{this.__declaredType}"), "{this.relName}");'
 
 
 class ParentInfo(Symbol, Ownable):

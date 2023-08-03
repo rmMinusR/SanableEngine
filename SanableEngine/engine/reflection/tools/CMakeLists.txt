@@ -2,3 +2,22 @@ cmake_minimum_required (VERSION 3.14)
 set (CMAKE_CXX_STANDARD 17)
 
 project("engine-reflection-tools")
+
+set(REFLECTION_COMMAND python "${CMAKE_CURRENT_LIST_DIR}/rttigen.py")
+
+function(generate_reflection targetName rootDir)
+	#get_target_property(TARGET_SOURCE_DIR ${targetName} SOURCE_DIR)
+	get_target_property(TARGET_INCLUDES ${targetName} INCLUDE_DIRECTORIES)
+	get_target_property(TARGET_DEFINES ${targetName} COMPILE_DEFINITIONS)
+	add_custom_target(
+		${targetName}_RTTI
+		BYPRODUCTS "${rootDir}/src/rtti.generated.cpp"
+		COMMAND ${REFLECTION_COMMAND} --target "${rootDir}" --include $<TARGET_PROPERTY:${targetName},INCLUDE_DIRECTORIES> --define $<TARGET_PROPERTY:${targetName},COMPILE_DEFINITIONS>
+		#COMMAND ${REFLECTION_COMMAND} --target "${rootDir}" --include ${TARGET_INCLUDES} --define ${TARGET_DEFINES}
+	)
+	#add_custom_command(
+		#OUTPUT "${rootDir}/src/rtti.generated.cpp"
+		#COMMAND ${REFLECTION_COMMAND} --target "${rootDir}" --include ${TARGET_INCLUDES} --define ${TARGET_DEFINES}
+	#)
+	add_dependencies(${targetName} ${targetName}_RTTI)
+endfunction()
