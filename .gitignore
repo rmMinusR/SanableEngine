@@ -7,3 +7,6 @@ SanableEngine/build/
 #Ignore python bytecode
 __pycache__/
 *.py[cod]
+
+#Ignore generated files, such as those created by our RTTI scripts
+*.generated*
