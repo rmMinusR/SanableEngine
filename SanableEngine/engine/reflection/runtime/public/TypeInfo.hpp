@@ -81,6 +81,7 @@ public:
 		TypeInfo out;
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
+		//TODO capture alignment as well
 		out.dtor = dtor_utils<TObj>::dtor;
 		return out;
 	}

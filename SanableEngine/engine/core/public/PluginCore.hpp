@@ -17,7 +17,7 @@ class EngineCore;
 PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine);
 PLUGIN_C_API(bool) plugin_init(bool firstRun);
 PLUGIN_C_API(void) plugin_cleanup(bool shutdown);
-PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* report); //Optional, but strongly recommended.
+PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* report); //Most plugins should autogenerate this. You could also write one by hand, or omit it entirely, but it's strongly recommended.
 
 typedef bool (PLUGIN_C_API_SPEC *fp_plugin_preInit)(Plugin* const context, PluginReportedData* report, EngineCore* engine);
 typedef bool (PLUGIN_C_API_SPEC *fp_plugin_init   )(bool firstRun);

@@ -88,7 +88,7 @@ class FuncInfo(Symbol, Ownable):
         ]
 
     def renderMain(this):
-        return "//FuncInfo "+this.rttiHashedName+" = FuncInfo(); // "+this.absName # TODO implement
+        return "//FuncInfo "+this.rttiHashedName+" = FuncInfo(); // "+this.absName # TODO re-implement
 
 
 class VarInfo(Symbol):
@@ -104,7 +104,7 @@ class VarInfo(Symbol):
         return cursor.kind == CursorKind.VAR_DECL
 
     def renderMain(this):
-        return "//VarInfo "+this.rttiHashedName+" = VarInfo(); // "+this.absName # TODO implement
+        return "//VarInfo "+this.rttiHashedName+" = VarInfo(); // "+this.absName # TODO re-implement
 
 
 class FieldInfo(Symbol, Ownable):
@@ -119,7 +119,7 @@ class FieldInfo(Symbol, Ownable):
         return cursor.kind == CursorKind.FIELD_DECL
 
     def renderMain(this):
-        return f'builder.addField(TypeName::parse("{this.__declaredType}"), "{this.relName}");'
+        return f'builder.addField(TypeName::create<{this.__declaredType}>(), "{this.relName}");'
 
 
 class ParentInfo(Symbol, Ownable):
@@ -143,11 +143,12 @@ class TypeInfo(Symbol):
 
         this.__contents = list()
         this.__hasVtable = False
+        this.__sourceFile = cursor.location.file.name
     
     def register(this, obj):
         assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
         log.trace(f"Registering member symbol {obj.absName} of type {obj.astKind}")
-        # TODO if virtual and not overriding, set __hasVtable = True
+        # TODO if virtual method and not overriding, set __hasVtable = True
         this.__contents.append(obj)
     
     @staticmethod
@@ -157,8 +158,12 @@ class TypeInfo(Symbol):
 			CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
         ]
 
+    @property
+    def sourceFile(this) -> str:
+        return this.__sourceFile
+
     def renderMain(this):
-        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>();\n"
+        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>({str(this.__hasVtable).lower()});\n"
         renderedContents = [i.renderMain() for i in this.__contents]
         out += "\n".join([i for i in renderedContents if i != None])
         out += "\nbuilder.registerType(registry);"
@@ -197,19 +202,19 @@ class Module:
 
     @property
     def types(this) -> Generator[TypeInfo, None, None]:
-        for i in this.__contents:
+        for i in this.__contents.values():
             if isinstance(i, TypeInfo):
                 yield i
 
     @property
     def globals(this) -> Generator[VarInfo, None, None]: # NOTE: Includes statics inside classes
-        for i in this.__contents:
+        for i in this.__contents.values():
             if isinstance(i, VarInfo):
                 yield i
 
     @property
     def functions(this) -> Generator[FuncInfo, None, None]:
-        for i in this.__contents:
+        for i in this.__contents.values():
             if isinstance(i, FuncInfo):
                 yield i
 
@@ -219,6 +224,9 @@ class Module:
             this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(','.join([i.rttiHashedName for i in this.__contents.values()]).encode("utf-8")).hexdigest()[:8]
         return this.__cachedRttiHashedName
 
-    def render(this):
+    def renderBody(this) -> str:
         out = "\n\n".join([indent(v.renderMain(), ' '*4) for v in this.__contents.values()])
         return out
+
+    def renderIncludes(this) -> list[str]:
+        return [i.sourceFile for i in this.types]

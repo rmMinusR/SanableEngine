@@ -7,23 +7,17 @@
 
 #pragma region Template helpers
 
-template<typename T, bool isPtr = std::is_pointer<T>::value>
-struct PtrUnwrapper
-{
-	PtrUnwrapper() = delete;
-};
-
 template<typename T>
-struct PtrUnwrapper<T, false>
+struct PtrUnwrapper
 {
 	using RootType = typename std::remove_cv<T>::type;
 	constexpr static size_t ptrDepth = 0;
 };
 
 template<typename T>
-struct PtrUnwrapper<T*, true>
+struct PtrUnwrapper<T*>
 {
-	using RootType = typename PtrUnwrapper<T>::UnwrappedType;
+	using RootType = typename PtrUnwrapper<T>::RootType;
 	constexpr static size_t ptrDepth = PtrUnwrapper<T>::ptrDepth + 1;
 };
 
@@ -47,9 +41,6 @@ public:
 	ENGINE_RTTI_API TypeName();
 	ENGINE_RTTI_API TypeName(const std::string& unwrappedTypeName); //Convenience ctor when not dealing with ptrs
 	ENGINE_RTTI_API TypeName(const std::string& unwrappedTypeName, int ptrDepth);
-
-	//Performs sanitiation such as removing const/volatile and resolving pointer depth
-	ENGINE_RTTI_API static TypeName parse(const std::string& unsafeTypeName);
 
 	template<typename TRaw>
 	static TypeName create()
