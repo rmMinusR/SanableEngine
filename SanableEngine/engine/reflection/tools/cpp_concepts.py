@@ -1,10 +1,9 @@
-﻿from typing import Generator, Iterator
+﻿from types import NoneType
+from typing import Generator, Iterator
 from clang.cindex import *
 from textwrap import indent
 import abc
-import re
-import zlib, hashlib
-
+import hashlib
 
 class log:
     trace = lambda x: print("[TRACE] "+x)
@@ -43,16 +42,13 @@ class Symbol:
         return this.__astRepr.displayname
 
     @property
-    def renderedName(this) -> str:
-        if not hasattr(this, "__cachedRenderedName"):
-            #this.__cachedRenderedName = "__generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName)
-            #this.__cachedRenderedName = "_"+hex(zlib.crc32(this.absName.encode("utf-8")))[2::]+"_generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName) # Fixes variable length limit
-            this.__cachedRenderedName = "__generatedRTTI_"+hashlib.sha256(this.absName.encode("utf-8")).hexdigest()[:8]
-        return this.__cachedRenderedName
+    def rttiHashedName(this) -> str:
+        if not hasattr(this, "__cachedRttiHashedName"):
+            this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(this.absName.encode("utf-8")).hexdigest()[:8]
+        return this.__cachedRttiHashedName
 
-    @abc.abstractmethod
-    def forwardRender(this):
-        return
+    def render(this) -> str | None:
+        return None
 
 
 class Ownable:
@@ -91,11 +87,11 @@ class FuncInfo(Symbol, Ownable):
             CursorKind.FUNCTION_TEMPLATE
         ]
 
-    def forwardRender(this):
-        return "FuncInfo "+this.renderedName+" = FuncInfo(); // "+this.absName # TODO implement
+    def renderMain(this):
+        return "//FuncInfo "+this.rttiHashedName+" = FuncInfo(); // "+this.absName # TODO implement
 
 
-class VarInfo(Symbol, Ownable):
+class VarInfo(Symbol):
     def __init__(this, module, cursor: Cursor):
         Symbol.__init__(this, cursor)
         Ownable.__init__(this, module, cursor)
@@ -105,13 +101,39 @@ class VarInfo(Symbol, Ownable):
 
     @staticmethod
     def matches(cursor: Cursor):
-        return cursor.kind in [
-            CursorKind.FIELD_DECL,
-            CursorKind.VAR_DECL
-        ]
+        return cursor.kind == CursorKind.VAR_DECL
 
-    def forwardRender(this):
-        return "VarInfo "+this.renderedName+" = VarInfo(); // "+this.absName # TODO implement
+    def renderMain(this):
+        return "//VarInfo "+this.rttiHashedName+" = VarInfo(); // "+this.absName # TODO implement
+
+
+class FieldInfo(Symbol, Ownable):
+    def __init__(this, module, cursor: Cursor):
+        Symbol.__init__(this, cursor)
+        Ownable.__init__(this, module, cursor)
+        assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
+        this.__declaredType = cursor.type.spelling
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind == CursorKind.FIELD_DECL
+
+    def renderMain(this):
+        return f'builder.addField(TypeName::parse("{this.__declaredType}"), "{this.relName}");'
+
+
+class ParentInfo(Symbol, Ownable):
+    def __init__(this, module, cursor: Cursor):
+        Symbol.__init__(this, cursor)
+        Ownable.__init__(this, module, cursor)
+        assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return False # TODO
+
+    def renderMain(this):
+        return f'builder.addParent(TypeName::parse("{this.absName}"));'
 
 
 class TypeInfo(Symbol):
@@ -120,10 +142,12 @@ class TypeInfo(Symbol):
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
 
         this.__contents = list()
+        this.__hasVtable = False
     
     def register(this, obj):
         assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
         log.trace(f"Registering member symbol {obj.absName} of type {obj.astKind}")
+        # TODO if virtual and not overriding, set __hasVtable = True
         this.__contents.append(obj)
     
     @staticmethod
@@ -133,19 +157,12 @@ class TypeInfo(Symbol):
 			CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
         ]
 
-    def forwardRender(this):
-        memberFwdDecls = "\n".join([i.forwardRender() for i in this.__contents])
-
-        fmtRef = lambda member, isLast: "&"+member.renderedName+("," if not isLast else " ")+" // "+member.relName
-        memberRefDecls = "\n".join([fmtRef(i, False) for i in this.__contents[:-2]])
-        if len(this.__contents) != 0:
-            memberRefDecls += "\n"+fmtRef(this.__contents[-1], True)
-
-        ownDecl = f"""TypeInfo {this.renderedName} = TypeInfo("{this.relName}", "{this.absName}", typeid({this.absName}), sizeof({this.absName}), (vtable_ptr)nullptr, """+"{\n"
-        ownDecl += indent(memberRefDecls, ' '*4)+"\n"
-        ownDecl += "});"
-
-        return memberFwdDecls + "\n" + ownDecl
+    def renderMain(this):
+        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>();\n"
+        renderedContents = [i.renderMain() for i in this.__contents]
+        out += "\n".join([i for i in renderedContents if i != None])
+        out += "\nbuilder.registerType(registry);"
+        return f"//{this.relName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 
 
 class Module:
@@ -153,7 +170,7 @@ class Module:
         this.__contents = dict()
 
     def parse(this, cursor: Cursor):
-        matchedType = next((i for i in [VarInfo, FuncInfo, TypeInfo] if i.matches(cursor)), None)
+        matchedType = next((i for i in [VarInfo, FuncInfo, TypeInfo, FieldInfo, ParentInfo] if i.matches(cursor)), None)
         if matchedType != None:
             v = matchedType(this, cursor)
 
@@ -197,15 +214,11 @@ class Module:
                 yield i
 
     @property
-    def renderedName(this) -> str:
-        if not hasattr(this, "__cachedRenderedName"):
-            #this.__cachedRenderedName = "__generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName)
-            #this.__cachedRenderedName = "_"+hex(zlib.crc32(this.absName.encode("utf-8")))[2::]+"_generatedRTTI_"+re.sub("[^a-zA-Z0-9_]+", "_", this.absName) # Fixes variable length limit
-            this.__cachedRenderedName = "__generatedRTTI_"+hashlib.sha256(','.join([i.renderedName for i in this.__contents.values()]).encode("utf-8")).hexdigest()[:8]
-        return this.__cachedRenderedName
+    def rttiHashedName(this) -> str:
+        if not hasattr(this, "__cachedRttiHashedName"):
+            this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(','.join([i.rttiHashedName for i in this.__contents.values()]).encode("utf-8")).hexdigest()[:8]
+        return this.__cachedRttiHashedName
 
     def render(this):
-        out = "\n\n".join([v.forwardRender() for v in this.__contents.values()])+"\n\n"
-        out += "Module "+this.renderedName+" = Module({\n"+indent(",\n".join(["&"+i.renderedName for i in this.__contents.values()]), ' '*4)+"\n});"
-        out = "namespace {\n"+indent(out, ' '*4)+"\n}" # Wrap in anonymous namespace
+        out = "\n\n".join([indent(v.renderMain(), ' '*4) for v in this.__contents.values()])
         return out

@@ -48,6 +48,9 @@ public:
 	ENGINE_RTTI_API TypeName(const std::string& unwrappedTypeName); //Convenience ctor when not dealing with ptrs
 	ENGINE_RTTI_API TypeName(const std::string& unwrappedTypeName, int ptrDepth);
 
+	//Performs sanitiation such as removing const/volatile and resolving pointer depth
+	ENGINE_RTTI_API static TypeName parse(const std::string& unsafeTypeName);
+
 	template<typename TRaw>
 	static TypeName create()
 	{

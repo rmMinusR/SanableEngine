@@ -37,6 +37,12 @@ TypeName::TypeName(const std::string& unwrappedTypeName, int ptrDepth) :
 {
 }
 
+TypeName TypeName::parse(const std::string& unsafeTypeName)
+{
+    //TODO implement stub
+    return TypeName(unsafeTypeName);
+}
+
 bool TypeName::isValid() const
 {
     return !unwrappedTypeName.empty();
