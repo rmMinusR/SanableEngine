@@ -1,6 +1,7 @@
 from clang.cindex import *
 import sys, os
 from typing import Generator, Iterator
+from config import logger
 
 index = Index.create()
 fileTypes = {
@@ -16,7 +17,7 @@ def parseAuto(target: str) -> Generator[Cursor, None, None]:
 		if not target.endswith(".generated"):
 			return parseDir(target)
 		else:
-			print(f"[TRACE] Skipping generated file directory ({target})")
+			logger.debug(f"Skipping generated file directory ({target})")
 			return None
 
 	else: # Path refers to file
@@ -25,10 +26,10 @@ def parseAuto(target: str) -> Generator[Cursor, None, None]:
 			if ext in fileTypes.keys():
 				return parseFile(target)
 			else:
-				print(f"[ WARN] Skipping file of unknown type \"{ext}\" ({target})")
+				logger.warning(f"Skipping file of unknown type \"{ext}\" ({target})")
 				return None
 		else:
-			print(f"[TRACE] Skipping generated file ({target})")
+			logger.debug(f"Skipping generated file ({target})")
 			return None
 
 def parseDir(target: str) -> Generator[Cursor, None, None]:
@@ -49,7 +50,7 @@ def parseFile(target: str) -> Generator[Cursor, None, None]:
 				yield i
 		
 	except Exception as e:
-		print(f"Error parsing translation unit for target {target}")
+		logger.critical(f"Error parsing translation unit for target {target}", exc_info=True)
 		raise e
 
 def isOurs(sourceDir: str, i: Cursor):

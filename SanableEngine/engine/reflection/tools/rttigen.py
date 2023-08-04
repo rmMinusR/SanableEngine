@@ -1,11 +1,7 @@
-import read_ast
-import cpp_concepts
-import os.path
-import argparse
-
-
-
 ########################## argparse setup ##########################
+
+import argparse
+import os.path
 
 parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
@@ -17,9 +13,10 @@ parser.add_argument("--target", help="Folder containing entire TU, which must al
 #parser_output.add_argument("--separate", action="store_const", const="separate", dest="format", help="Output a separate (non-binary) file that can be loaded at runtime. Automatic path.")
 #parser_output.add_argument("--format", choices=["embed", "separate"], help="Specify an output format. Automatic path.")
 #parser.add_argument("-o", "--output", help="Specify an output path. If format is not set, detect from file extension.")
-parser.add_argument("-I", "--includes", help="Headers to scan, both from this target and its dependencies. Semicolon-separated list.")
-parser.add_argument("-D", "--defines", help="Preprocessor definition. Semicolon-separated list.")
+parser.add_argument("-I", "--include", dest="includes", help="Headers to scan, both from this target and its dependencies. Semicolon-separated list.")
+parser.add_argument("-D", "--define" , dest="defines" , help="Preprocessor definition. Semicolon-separated list.")
 parser.add_argument("-o", "--output", help="Specify an output folder/file. Default: target/src/rtti.generated.cpp", default=None)
+parser.add_argument("-v", "--verbose", action="store_true")
 parser.add_argument("--", dest="compilerArgs", nargs='*', help="Arguments passed through to the compiler, such as includes and defines")
 
 args = parser.parse_args()
@@ -27,6 +24,11 @@ args = parser.parse_args()
 
 
 ########################## Argument processing and validation ##########################
+
+import config
+
+if args.verbose:
+    config.logger.setLevel(0)
 
 #Process CMake-style lists
 if args.includes != None:
@@ -51,7 +53,10 @@ if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
 
 ########################## Main business logic ##########################
 
-print("Parsing AST...")
+import read_ast
+import cpp_concepts
+
+config.logger.log(100, "Parsing AST...")
 
 targetModule = cpp_concepts.Module()
 for i in read_ast.parseAuto(args.target):
@@ -61,7 +66,7 @@ scriptDir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(scriptDir, "rtti.template.cpp"), "r") as f:
     template = "".join(f.readlines())
 
-print("Rendering...")
+config.logger.log(100, "Rendering...")
 
 def shortestRelPath(absPath):
     global args
@@ -75,9 +80,9 @@ generated = template.replace("GENERATED_RTTI", targetModule.renderBody()) \
                          f'#include "{shortestRelPath(i)}"' for i in targetModule.renderIncludes() \
                     ]))
 
-print(f"Writing to {args.output}...")
+config.logger.log(100, f"Writing to {args.output}...")
 
 with open(args.output, "wt") as f:
     f.write(generated)
 
-print("Done!")
+config.logger.log(100, "Done!")

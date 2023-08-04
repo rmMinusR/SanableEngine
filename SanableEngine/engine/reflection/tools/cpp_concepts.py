@@ -4,12 +4,7 @@ from clang.cindex import *
 from textwrap import indent
 import abc
 import hashlib
-
-class log:
-    trace = lambda x: print("[TRACE] "+x)
-    info  = lambda x: print("[ INFO] "+x)
-    warn  = lambda x: print("[ WARN] "+x)
-    error = lambda x: print("[ERROR] "+x)
+from config import logger
 
 
 def _getAbsName(target: Cursor) -> str:
@@ -54,8 +49,8 @@ class Symbol:
 class Ownable:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(this, module, cursor: Cursor):
-        this.__owner = module.lookup(cursor.semantic_parent) if TypeInfo.matches(cursor.semantic_parent) else None
+    def __init__(this, module, cursor: Cursor, owner):
+        this.__owner = owner
 
     @property
     def isGlobal(this):
@@ -72,9 +67,9 @@ class Ownable:
 
 
 class FuncInfo(Symbol, Ownable):
-    def __init__(this, module, cursor: Cursor):
+    def __init__(this, module, cursor: Cursor, owner=None):
         Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor)
+        Ownable.__init__(this, module, cursor, owner)
         assert FuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
 
         # TODO deduce address
@@ -94,7 +89,6 @@ class FuncInfo(Symbol, Ownable):
 class VarInfo(Symbol):
     def __init__(this, module, cursor: Cursor):
         Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor)
         assert VarInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
 
         # TODO deduce address (global or relative)
@@ -108,9 +102,9 @@ class VarInfo(Symbol):
 
 
 class FieldInfo(Symbol, Ownable):
-    def __init__(this, module, cursor: Cursor):
+    def __init__(this, module, cursor: Cursor, owner):
         Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor)
+        Ownable.__init__(this, module, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
         this.__declaredType = cursor.type.spelling
 
@@ -144,10 +138,19 @@ class TypeInfo(Symbol):
         this.__contents = list()
         this.__hasVtable = False
         this.__sourceFile = cursor.location.file.name
+
+        #Recurse into children
+        for i in cursor.get_children():
+            if FieldInfo.matches(i):
+                this.__contents.append(FieldInfo(module, i, this))
+            elif FuncInfo.matches(i):
+                this.__contents.append(FuncInfo(module, i))
+            elif TypeInfo.matches(i):
+                module.parse(i) # Nested types are funky
     
     def register(this, obj):
         assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
-        log.trace(f"Registering member symbol {obj.absName} of type {obj.astKind}")
+        logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
         # TODO if virtual method and not overriding, set __hasVtable = True
         this.__contents.append(obj)
     
@@ -174,8 +177,8 @@ class Module:
     def __init__(this):
         this.__contents = dict()
 
-    def parse(this, cursor: Cursor):
-        matchedType = next((i for i in [VarInfo, FuncInfo, TypeInfo, FieldInfo, ParentInfo] if i.matches(cursor)), None)
+    def parse(this, cursor: Cursor): 
+        matchedType = next((i for i in [VarInfo, FuncInfo, TypeInfo, ParentInfo] if i.matches(cursor)), None)
         if matchedType != None:
             v = matchedType(this, cursor)
 
@@ -184,15 +187,12 @@ class Module:
             else:
                 v.owner.register(v) # Members
 
-            if isinstance(v, TypeInfo):
-                for i in cursor.get_children():
-                    this.parse(i)
-        else:
-            log.warn(f"Skipping symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
+        elif matchedType not in [CursorKind.CXX_ACCESS_SPEC_DECL]:
+            logger.warning(f"Skipping symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
     def register(this, obj):
         assert obj.absName not in this.__contents.keys(), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
-        log.trace(f"Registering global symbol {obj.absName} of type {obj.astKind}")
+        logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
         this.__contents[obj.absName] = obj
 
     def lookup(this, key: str | Cursor):
