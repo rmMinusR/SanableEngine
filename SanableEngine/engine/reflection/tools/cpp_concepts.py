@@ -71,8 +71,11 @@ class FuncInfo(Symbol, Ownable):
         Symbol.__init__(this, cursor)
         Ownable.__init__(this, module, cursor, owner)
         assert FuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
+        
+        this.__isVirtual = cursor.is_virtual_method() or cursor.is_pure_virtual_method()
+        this.__isOverride = False # Obviously wrong, TODO
 
-        # TODO deduce address
+        # TODO capture address
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -81,6 +84,14 @@ class FuncInfo(Symbol, Ownable):
             CursorKind.FUNCTION_DECL,
             CursorKind.FUNCTION_TEMPLATE
         ]
+
+    @property
+    def isVirtual(this):
+        return this.__isVirtual
+
+    @property
+    def isOverride(this):
+        return this.__isOverride
 
     def renderMain(this):
         return "//FuncInfo "+this.rttiHashedName+" = FuncInfo(); // "+this.absName # TODO re-implement
@@ -117,15 +128,15 @@ class FieldInfo(Symbol, Ownable):
 
 
 class ParentInfo(Symbol, Ownable):
-    def __init__(this, module, cursor: Cursor):
+    def __init__(this, module, cursor: Cursor, owner):
         Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor)
-        assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
+        Ownable.__init__(this, module, cursor, owner)
+        assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
 
     @staticmethod
     def matches(cursor: Cursor):
-        return False # TODO
-
+        return cursor.kind == CursorKind.CXX_BASE_SPECIFIER
+    
     def renderMain(this):
         return f'builder.addParent(TypeName::parse("{this.absName}"));'
 
@@ -136,17 +147,25 @@ class TypeInfo(Symbol):
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
 
         this.__contents = list()
-        this.__hasVtable = False
+        this.__hasNewVtable = False
         this.__sourceFile = cursor.location.file.name
-
+        
         #Recurse into children
         for i in cursor.get_children():
             if FieldInfo.matches(i):
-                this.__contents.append(FieldInfo(module, i, this))
+                this.register(FieldInfo(module, i, this))
             elif FuncInfo.matches(i):
-                this.__contents.append(FuncInfo(module, i))
+                info = FuncInfo(module, i)
+                this.register(info)
+                #Check if a new vtable would be generated for self
+                if info.isVirtual and not info.isOverride:
+                    this.__hasNewVtable = True
             elif TypeInfo.matches(i):
-                module.parse(i) # Nested types are funky
+                module.parse(i) # Nested types are effectively just namespaced. Recurse.
+            elif ParentInfo.matches(i):
+                this.register(ParentInfo(module, i, this))
+            elif i.kind not in ignoredSymbols:
+                logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
     def register(this, obj):
         assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
@@ -166,7 +185,7 @@ class TypeInfo(Symbol):
         return this.__sourceFile
 
     def renderMain(this):
-        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>({str(this.__hasVtable).lower()});\n"
+        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>({str(this.__hasNewVtable).lower()});\n"
         renderedContents = [i.renderMain() for i in this.__contents]
         out += "\n".join([i for i in renderedContents if i != None])
         out += "\nbuilder.registerType(registry);"
@@ -178,7 +197,7 @@ class Module:
         this.__contents = dict()
 
     def parse(this, cursor: Cursor): 
-        matchedType = next((i for i in [VarInfo, FuncInfo, TypeInfo, ParentInfo] if i.matches(cursor)), None)
+        matchedType = next((i for i in allowedGlobalSymbols if i.matches(cursor)), None)
         if matchedType != None:
             v = matchedType(this, cursor)
 
@@ -187,8 +206,8 @@ class Module:
             else:
                 v.owner.register(v) # Members
 
-        elif matchedType not in [CursorKind.CXX_ACCESS_SPEC_DECL]:
-            logger.warning(f"Skipping symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
+        elif matchedType not in ignoredSymbols:
+            logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
     def register(this, obj):
         assert obj.absName not in this.__contents.keys(), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
@@ -230,3 +249,7 @@ class Module:
 
     def renderIncludes(this) -> list[str]:
         return [i.sourceFile for i in this.types]
+
+
+ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL]
+allowedGlobalSymbols = [VarInfo, FuncInfo, TypeInfo]

@@ -23,7 +23,7 @@ args = parser.parse_args()
 
 
 
-########################## Argument processing and validation ##########################
+################### Argument processing and validation ###################
 
 import config
 
@@ -59,7 +59,7 @@ import cpp_concepts
 config.logger.log(100, "Parsing AST...")
 
 targetModule = cpp_concepts.Module()
-for i in read_ast.parseAuto(args.target):
+for i in read_ast.parseAuto(args.target, args.includes):
     targetModule.parse(i)
 
 scriptDir = os.path.dirname(os.path.abspath(__file__))
