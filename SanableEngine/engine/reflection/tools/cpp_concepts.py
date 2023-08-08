@@ -52,16 +52,8 @@ class Member(Symbol):
     def __init__(this, cursor: Cursor, owner):
         Symbol.__init__(this, cursor)
         this.__owner = owner
-        assert this.isMember, f"{this.absName} is a member, but wasn't given an owner'"
-
-    @property
-    def isGlobal(this):
-        return this.__owner == None
-
-    @property
-    def isMember(this):
-        return this.__owner != None
-
+        assert this.__owner != None, f"{this.absName} is a member, but wasn't given an owner'"
+    
     @property
     def owner(this):
         return this.__owner
@@ -82,12 +74,14 @@ class Virtualizable(Member):
             return this.__cachedParent
 
         # Attempt to locate parent member
+        this.__cachedParent = None
         for parentInfo in this.owner.parents:
             parentClass = parentInfo.backingType
             if parentClass != None:
-                this.__cachedParent = parentClass.getMember(this.relName)
+                this.__cachedParent = parentClass.getMember(this.relName, searchParents=True)
                 if this.__cachedParent != None:
-                    return this.__cachedParent
+                    break
+        return this.__cachedParent
 
     @property
     def isVirtual(this):
@@ -239,10 +233,22 @@ class TypeInfo(Symbol):
         logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
         this.__contents.append(obj)
     
-    def getMember(this, relName: str):
+    def getMember(this, relName: str, searchParents=True):
+        # Scan own contents
         for i in this.__contents:
             if i.relName == relName:
                 return i
+
+        # Recurse into parents
+        if searchParents:
+            for pi in this.parents:
+                p = pi.backingType
+                if p != None:
+                    i = p.getMember(relName, searchParents=True)
+                    if i != None:
+                        return i
+
+        # Failed to find anything
         return None
 
     @staticmethod
