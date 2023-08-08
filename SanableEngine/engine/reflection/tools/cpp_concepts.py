@@ -46,11 +46,13 @@ class Symbol:
         return None
 
 
-class Ownable:
+class Member(Symbol):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(this, module, cursor: Cursor, owner):
+    def __init__(this, cursor: Cursor, owner):
+        Symbol.__init__(this, cursor)
         this.__owner = owner
+        assert this.isMember, f"{this.absName} is a member, but wasn't given an owner'"
 
     @property
     def isGlobal(this):
@@ -62,19 +64,63 @@ class Ownable:
 
     @property
     def owner(this):
-        assert this.isMember, f"{this.absName} has no owner"
         return this.__owner
 
+    
+class Virtualizable(Member):
+    def __init__(this, cursor: Cursor, owner):
+        Member.__init__(this, cursor, owner)
+        this.__cursor = cursor
+        
+        # Cache simple checks: search for keywords
+        this.__isExplicitVirtual = cursor.is_virtual_method() or cursor.is_pure_virtual_method()
+        this.__isExplicitOverride = any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in cursor.get_children()])
+    
+    def getParent(this):
+        # Try cached version first
+        if hasattr(this, "__cachedParent"):
+            return this.__cachedParent
 
-class FuncInfo(Symbol, Ownable):
-    def __init__(this, module, cursor: Cursor, owner=None):
-        Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor, owner)
+        # Attempt to locate parent member
+        for parentInfo in this.owner.parents:
+            parentClass = parentInfo.backingType
+            if parentClass != None:
+                this.__cachedParent = parentClass.getMember(this.relName)
+                if this.__cachedParent != None:
+                    return this.__cachedParent
+
+    @property
+    def isVirtual(this):
+        # Try to use simple check value first
+        if this.__isExplicitVirtual:
+            return True
+
+        p = this.getParent()
+        if p != None:
+            # Extensive check: recurse into parents
+            return isinstance(p, Virtualizable) and p.isVirtual
+        else:
+            # Root case of extensive check: cannot recurse with no parent
+            return False
+    
+    @property
+    def isOverride(this):
+        # Try to use simple check value first
+        if this.__isExplicitOverride:
+            return True
+
+        # Try to recurse into parents
+        p = this.getParent()
+        if p != None:
+            return p.isVirtual
+        return False
+
+
+class FuncInfo(Virtualizable):
+    def __init__(this, module, cursor: Cursor, owner):
+        Virtualizable.__init__(this, cursor, owner)
         assert FuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
-        this.__isVirtual = cursor.is_virtual_method() or cursor.is_pure_virtual_method()
-        this.__isOverride = False # Obviously wrong, TODO
-
         # TODO capture address
 
     @staticmethod
@@ -85,16 +131,34 @@ class FuncInfo(Symbol, Ownable):
             CursorKind.FUNCTION_TEMPLATE
         ]
 
-    @property
-    def isVirtual(this):
-        return this.__isVirtual
-
-    @property
-    def isOverride(this):
-        return this.__isOverride
-
     def renderMain(this):
-        return "//FuncInfo "+this.rttiHashedName+" = FuncInfo(); // "+this.absName # TODO re-implement
+        return None
+
+
+class ConstructorInfo(Member):
+    def __init__(this, module, cursor: Cursor, owner):
+        Member.__init__(this, cursor, owner)
+        assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind == CursorKind.CONSTRUCTOR
+    
+    def renderMain(this):
+        return None
+
+
+class DestructorInfo(Virtualizable):
+    def __init__(this, module, cursor: Cursor, owner):
+        Virtualizable.__init__(this, cursor, owner)
+        assert DestructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a destructor"
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind == CursorKind.DESTRUCTOR
+    
+    def renderMain(this):
+        return None
 
 
 class VarInfo(Symbol):
@@ -112,10 +176,9 @@ class VarInfo(Symbol):
         return "//VarInfo "+this.rttiHashedName+" = VarInfo(); // "+this.absName # TODO re-implement
 
 
-class FieldInfo(Symbol, Ownable):
+class FieldInfo(Member):
     def __init__(this, module, cursor: Cursor, owner):
-        Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor, owner)
+        Member.__init__(this, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
         this.__declaredType = cursor.type.spelling
 
@@ -127,15 +190,19 @@ class FieldInfo(Symbol, Ownable):
         return f'builder.addField(TypeName::parse("{this.__declaredType}"), "{this.relName}");'
 
 
-class ParentInfo(Symbol, Ownable):
+class ParentInfo(Member):
     def __init__(this, module, cursor: Cursor, owner):
-        Symbol.__init__(this, cursor)
-        Ownable.__init__(this, module, cursor, owner)
-        assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
+        Member.__init__(this, cursor, owner)
+        this.__module = module
+        assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a parent"
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.CXX_BASE_SPECIFIER
+
+    @property
+    def backingType(this):
+        return this.__module.lookup(this.absName)
     
     def renderMain(this):
         return f'builder.addParent(TypeName::parse("{this.absName}"));'
@@ -144,35 +211,40 @@ class ParentInfo(Symbol, Ownable):
 class TypeInfo(Symbol):
     def __init__(this, module, cursor: Cursor):
         super().__init__(cursor)
+        this.__module = module
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
 
         this.__contents = list()
-        this.__hasNewVtable = False
         this.__sourceFile = cursor.location.file.name
         
         #Recurse into children
         for i in cursor.get_children():
             if FieldInfo.matches(i):
                 this.register(FieldInfo(module, i, this))
-            elif FuncInfo.matches(i):
-                info = FuncInfo(module, i)
-                this.register(info)
-                #Check if a new vtable would be generated for self
-                if info.isVirtual and not info.isOverride:
-                    this.__hasNewVtable = True
-            elif TypeInfo.matches(i):
-                module.parse(i) # Nested types are effectively just namespaced. Recurse.
             elif ParentInfo.matches(i):
                 this.register(ParentInfo(module, i, this))
+            elif ConstructorInfo.matches(i):
+                this.register(ConstructorInfo(module, i, this))
+            elif DestructorInfo.matches(i):
+                this.register(DestructorInfo(module, i, this))
+            elif FuncInfo.matches(i):
+                this.register(FuncInfo(module, i, this))
+            elif TypeInfo.matches(i):
+                module.parse(i) # Nested types are effectively just namespaced. Recurse.
             elif i.kind not in ignoredSymbols:
                 logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
     def register(this, obj):
         assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
         logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
-        # TODO if virtual method and not overriding, set __hasVtable = True
         this.__contents.append(obj)
     
+    def getMember(this, relName: str):
+        for i in this.__contents:
+            if i.relName == relName:
+                return i
+        return None
+
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind in [
@@ -184,8 +256,20 @@ class TypeInfo(Symbol):
     def sourceFile(this) -> str:
         return this.__sourceFile
 
+    @property
+    def parents(this) -> list[ParentInfo]:
+        return [i for i in this.__contents if isinstance(i, ParentInfo)]
+
+    @property
+    def hasNewVtable(this) -> bool:
+        return any([
+            i.isVirtual and not i.isOverride
+            for i in this.__contents
+            if isinstance(i, Virtualizable)
+        ])
+
     def renderMain(this):
-        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>({str(this.__hasNewVtable).lower()});\n"
+        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>({str(this.hasNewVtable).lower()});\n"
         renderedContents = [i.renderMain() for i in this.__contents]
         out += "\n".join([i for i in renderedContents if i != None])
         out += "\nbuilder.registerType(registry);"
@@ -201,7 +285,7 @@ class Module:
         if matchedType != None:
             v = matchedType(this, cursor)
 
-            if not isinstance(v, Ownable) or v.isGlobal:
+            if not isinstance(v, Member) or v.isGlobal:
                 this.register(v) # Global or static
             else:
                 v.owner.register(v) # Members
@@ -217,7 +301,7 @@ class Module:
     def lookup(this, key: str | Cursor):
         if isinstance(key, Cursor):
             key = _getAbsName(key)
-        return this.__contents[key]
+        return this.__contents.get(key)
 
     @property
     def types(this) -> Generator[TypeInfo, None, None]:
