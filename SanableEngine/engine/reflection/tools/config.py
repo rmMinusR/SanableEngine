@@ -7,4 +7,4 @@ consoleHandler.setFormatter(formatter)
 
 logger = logging.Logger("Logger")
 #logger.addHandler(consoleHandler)
-logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.WARNING)

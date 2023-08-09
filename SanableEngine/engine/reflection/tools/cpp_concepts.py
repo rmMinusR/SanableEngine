@@ -110,11 +110,28 @@ class Virtualizable(Member):
         return False
 
 
+class ParameterInfo(Symbol):
+    def __init__(this, module, cursor: Cursor):
+        Symbol.__init__(this, cursor)
+        this.__module = module
+        this.__typeName = cursor.displayname
+        #this.__name = TODO scan file
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind == CursorKind.PARM_DECL
+
+
 class FuncInfo(Virtualizable):
     def __init__(this, module, cursor: Cursor, owner):
         Virtualizable.__init__(this, cursor, owner)
         assert FuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
+        this.__parameters = []
+        for i in cursor.get_children():
+            if ParameterInfo.matches(i):
+                this.__parameters.append(ParameterInfo(module, i))
+
         # TODO capture address
 
     @staticmethod
@@ -125,6 +142,10 @@ class FuncInfo(Virtualizable):
             CursorKind.FUNCTION_TEMPLATE
         ]
 
+    @property
+    def parameters(this):
+        return this.__parameters
+
     def renderMain(this):
         return None
 
@@ -133,10 +154,19 @@ class ConstructorInfo(Member):
     def __init__(this, module, cursor: Cursor, owner):
         Member.__init__(this, cursor, owner)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
+        
+        this.__parameters = []
+        for i in cursor.get_children():
+            if ParameterInfo.matches(i):
+                this.__parameters.append(ParameterInfo(module, i))
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.CONSTRUCTOR
+
+    @property
+    def parameters(this):
+        return this.__parameters
     
     def renderMain(this):
         return None
@@ -213,16 +243,9 @@ class TypeInfo(Symbol):
         
         #Recurse into children
         for i in cursor.get_children():
-            if FieldInfo.matches(i):
-                this.register(FieldInfo(module, i, this))
-            elif ParentInfo.matches(i):
-                this.register(ParentInfo(module, i, this))
-            elif ConstructorInfo.matches(i):
-                this.register(ConstructorInfo(module, i, this))
-            elif DestructorInfo.matches(i):
-                this.register(DestructorInfo(module, i, this))
-            elif FuncInfo.matches(i):
-                this.register(FuncInfo(module, i, this))
+            matchedType = next((t for t in allowedMemberSymbols if t.matches(i)), None)
+            if matchedType != None:
+                this.register(matchedType(module, i, this))
             elif TypeInfo.matches(i):
                 module.parse(i) # Nested types are effectively just namespaced. Recurse.
             elif i.kind not in ignoredSymbols:
@@ -342,4 +365,5 @@ class Module:
 
 
 ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL]
+allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, FuncInfo]
 allowedGlobalSymbols = [VarInfo, FuncInfo, TypeInfo]
