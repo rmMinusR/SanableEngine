@@ -15,11 +15,23 @@ parser.add_argument("--target", help="Folder containing entire TU, which must al
 #parser.add_argument("-o", "--output", help="Specify an output path. If format is not set, detect from file extension.")
 parser.add_argument("-I", "--include", dest="includes", help="Headers to scan, both from this target and its dependencies. Semicolon-separated list.")
 parser.add_argument("-D", "--define" , dest="defines" , help="Preprocessor definition. Semicolon-separated list.")
-parser.add_argument("-o", "--output", help="Specify an output folder/file. Default: target/src/rtti.generated.cpp", default=None)
+parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. Default: target/src/rtti.generated.cpp")
 parser.add_argument("-v", "--verbose", action="store_true")
-parser.add_argument("--", dest="compilerArgs", nargs='*', help="Arguments passed through to the compiler, such as includes and defines")
+parser.add_argument("--", dest="compilerArgs", nargs='*', help="Additional arguments passed through to the compiler. May include already-listed defines and includes.")
 
-args = parser.parse_args()
+# Filter out arguments passed through to the compiler
+import sys
+if "--" in sys.argv:
+    compilerArgsSplitIndex = sys.argv.index("--")
+    compilerArgs = " ".join(sys.argv[compilerArgsSplitIndex+1:])
+    ownArgsList = sys.argv[1:compilerArgsSplitIndex]
+else:
+    compilerArgsSplitIndex = -1
+    compilerArgs = []
+    ownArgsList = sys.argv[1:]
+
+# Parse arguments directed at RTTI generation
+args = parser.parse_args(ownArgsList)
 
 
 
@@ -58,6 +70,7 @@ import cpp_concepts
 
 config.logger.log(100, "Parsing AST...")
 
+read_ast.additionalCompilerOptions = compilerArgs
 targetModule = cpp_concepts.Module()
 for i in read_ast.parseAuto(args.target, args.includes):
     targetModule.parse(i)
@@ -76,9 +89,9 @@ def shortestRelPath(absPath):
     )
 
 generated = template.replace("GENERATED_RTTI", targetModule.renderBody()) \
-                    .replace("INCLUDE_DEPENDENCIES", "\n".join([ \
+                    .replace("INCLUDE_DEPENDENCIES", "\n".join(set([ \
                          f'#include "{shortestRelPath(i)}"' for i in targetModule.renderIncludes() \
-                    ]))
+                    ])))
 
 config.logger.log(100, f"Writing to {args.output}...")
 

@@ -11,6 +11,7 @@ fileTypes = {
 	".c"   : "c++",
 	".cpp" : "c++"
 }
+additionalCompilerOptions = []
 
 def parseAuto(target: str, includePaths: list[str]) -> Generator[Cursor, None, None]:
 	if os.path.isdir(target):
@@ -46,7 +47,9 @@ def parseFile(target: str, includePaths: list[str]) -> Generator[Cursor, None, N
 		cli_args = ["-std=c++17", "--language="+fileType]
 
 		for i in includePaths:
-			cli_args.append('-I'+i) # FIXME not path safe!
+			cli_args.append('-I'+i) # FIXME not space safe!
+
+		cli_args.extend(additionalCompilerOptions)
 
 		tu = index.parse(target, args=cli_args, options=TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
 

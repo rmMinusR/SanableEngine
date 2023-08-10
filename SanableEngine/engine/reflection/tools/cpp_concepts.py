@@ -21,7 +21,7 @@ class Symbol:
 
     def __init__(this, cursor: Cursor):
         this.__astRepr = cursor
-
+    
     @property
     def astKind(this):
         return this.__astRepr.kind
