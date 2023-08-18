@@ -40,7 +40,7 @@ def parseDir(target: str, includePaths: list[str]) -> Generator[Cursor, None, No
 			for i in it:
 				yield i
 
-def parseFile(target: str, includePaths: list[str]) -> Generator[Cursor, None, None]:
+def parseFile(target: str, includePaths: list[str]):
 	ext = os.path.splitext(target)[1]
 	fileType = fileTypes[ext]
 	try:
@@ -54,8 +54,7 @@ def parseFile(target: str, includePaths: list[str]) -> Generator[Cursor, None, N
 		tu = index.parse(target, args=cli_args, options=TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
 
 		for i in tu.cursor.get_children():
-			if isOurs(target, i):
-				yield i
+			yield (i, isOurs(target, i))
 		
 	except Exception as e:
 		logger.critical(f"Error parsing translation unit for target {target}", exc_info=True)

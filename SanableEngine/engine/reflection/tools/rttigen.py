@@ -72,8 +72,11 @@ config.logger.log(100, "Parsing AST...")
 
 read_ast.additionalCompilerOptions = compilerArgs
 targetModule = cpp_concepts.Module()
-for i in read_ast.parseAuto(args.target, args.includes):
-    targetModule.parse(i)
+for (cursor, isOurs) in read_ast.parseAuto(args.target, args.includes):
+    if isOurs:
+        targetModule.parse(cursor)
+    else:
+        targetModule.registerExternal(cursor)
 
 scriptDir = os.path.dirname(os.path.abspath(__file__))
 with open(os.path.join(scriptDir, "rtti.template.cpp"), "r") as f:

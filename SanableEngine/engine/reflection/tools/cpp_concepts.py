@@ -15,6 +15,17 @@ def _getAbsName(target: Cursor) -> str:
 		# Loop case
 		return _getAbsName(target.semantic_parent) + "::" + target.displayname
 
+def cvpUnwrapTypeName(name: str) -> str:
+    # Preprocess name
+    name = name.strip()
+    for symbolToStrip in ["*", "const", "volatile"]:
+        if name.startswith(symbolToStrip):
+            return cvpUnwrapTypeName(name[len(symbolToStrip):])
+        elif name.endswith(symbolToStrip):
+            return cvpUnwrapTypeName(name[:-len(symbolToStrip)])
+
+    # Nothing to strip
+    return name
 
 class Symbol:
     __metaclass__ = abc.ABCMeta
@@ -22,6 +33,10 @@ class Symbol:
     def __init__(this, cursor: Cursor):
         this.__astRepr = cursor
     
+    @property
+    def astRepr(this):
+        return this.__astRepr
+
     @property
     def astKind(this):
         return this.__astRepr.kind
@@ -44,6 +59,9 @@ class Symbol:
 
     def render(this) -> str | None:
         return None
+
+    def getReferencedTypes(this) -> list[str]:
+        return []
 
 
 class Member(Symbol):
@@ -204,14 +222,18 @@ class FieldInfo(Member):
     def __init__(this, module, cursor: Cursor, owner):
         Member.__init__(this, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
-        this.__declaredType = cursor.type.spelling
+        this.__declaredTypeName = cursor.type.spelling
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.FIELD_DECL
 
     def renderMain(this):
-        return f'builder.addField(TypeName::create<{this.__declaredType}>(), "{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
+        return f'builder.addField(TypeName::create<{this.__declaredTypeName}>(), "{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
+
+    def getReferencedTypes(this) -> list[str]:
+        c = cvpUnwrapTypeName(this.__declaredTypeName)
+        return [c]
 
 
 class ParentInfo(Member):
@@ -238,7 +260,7 @@ class TypeInfo(Symbol):
         this.__module = module
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
-        this.__contents = list()
+        this.__contents: list[Member] = list()
         this.__sourceFile = cursor.location.file.name
         
         # Recurse into children
@@ -289,14 +311,6 @@ class TypeInfo(Symbol):
     def parents(this) -> list[ParentInfo]:
         return [i for i in this.__contents if isinstance(i, ParentInfo)]
 
-    @property
-    def hasNewVtable(this) -> bool:
-        return any([
-            i.isVirtual and not i.isOverride
-            for i in this.__contents
-            if isinstance(i, Virtualizable)
-        ])
-
     def renderMain(this):
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
@@ -314,12 +328,26 @@ class TypeInfo(Symbol):
         out += "\nbuilder.registerType(registry);"
         return f"//{this.relName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 
+    def getReferencedTypes(this) -> set[str]:
+        out = set()
+        out.add(this.absName)
+        for i in this.__contents:
+            for t in i.getReferencedTypes():
+                out.add(t)
+        return out
+
 
 class Module:
     def __init__(this):
-        this.__contents = dict()
+        this.__contents: dict[str, Symbol] = dict()
+        this.roots: list[Cursor] = list()
+        this.typeCursorCache: dict[str, Cursor] = dict()
+        
+    def registerExternal(this, cursor: Cursor):
+        this.roots.append(cursor)
 
     def parse(this, cursor: Cursor): 
+        this.roots.append(cursor)
         matchedType = next((i for i in allowedGlobalSymbols if i.matches(cursor)), None)
         if matchedType != None:
             v = matchedType(this, cursor)
@@ -332,7 +360,7 @@ class Module:
         elif matchedType not in ignoredSymbols:
             logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
-    def register(this, obj):
+    def register(this, obj: Symbol):
         assert obj.absName not in this.__contents.keys(), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
         logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
         this.__contents[obj.absName] = obj
@@ -370,9 +398,53 @@ class Module:
         out = "\n\n".join([indent(v.renderMain(), ' '*4) for v in this.__contents.values()])
         return out
 
-    def renderIncludes(this) -> list[str]:
-        return [i.sourceFile for i in this.types]
+    def renderIncludes(this) -> set[str]:
+        out = set()
+        for i in this.types:
+            print(f"{i.absName} references:")
+            for typeName in i.getReferencedTypes():
+                typeCursor = locateTypeCursor(this, typeName)
+                if not isinstance(typeCursor, NoneType):
+                    out.add(typeCursor.canonical.location.file.name)
+                    print(f" - {typeName} @ {typeCursor.canonical.location.file.name}:{typeCursor.canonical.location.line}")
+                else:
+                    print(f" - {typeName} @ (external)")
+                    #logger.warn(f"Failed to locate definition of {typeName}")
+        return out
 
+def locateTypeCursor(target: Module | Cursor, name: str) -> Cursor | None:
+    candidates = locateTypeCursor_impl(target, name)
+    return candidates[0] if len(candidates)>0 else None
+
+def locateTypeCursor_impl(target: Module | Cursor, name: str) -> list[Cursor]:
+    out = []
+
+    # If module, visit child cursors
+    if isinstance(target, Module):
+
+        #Try cache first
+        if name in target.typeCursorCache:
+            out.append(target.typeCursorCache[name])
+        else:
+            for i in target.roots:
+                rv = locateTypeCursor(i, name)
+                if not isinstance(rv, NoneType): # Can't do direct comparison to None...
+                    target.typeCursorCache[name] = rv
+                    out.append(rv)
+    
+    # If cursor, try to match, then try to recurse
+    else:
+        if TypeInfo.matches(target) and _getAbsName(target) == name:
+            out.append(target)
+
+        elif target.kind == CursorKind.NAMESPACE or TypeInfo.matches(target):
+            for i in target.get_children():
+                rv = locateTypeCursor(i, name)
+                if not isinstance(rv, NoneType): # Can't do direct comparison to None...
+                    out.append(rv)
+
+    return out
+    
 
 ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL]
 allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, FuncInfo]

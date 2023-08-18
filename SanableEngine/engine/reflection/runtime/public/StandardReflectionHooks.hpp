@@ -16,5 +16,5 @@ extern "C" SANABLE_REFLECTION_REGISTRATION_POINT;
 								 friend class TypeBuilder;
 
 //Forward declare dependencies
-class CDOImager;
+class TypeBuilder;
 #endif

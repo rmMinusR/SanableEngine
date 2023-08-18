@@ -13,6 +13,9 @@ class TypeBuilder
 	ENGINE_RTTI_API TypeBuilder();
 
 	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t offset); //Order independent
+	ENGINE_RTTI_API void addField_internal(const TypeName& type, const std::string& name, size_t size, size_t offset); //Order independent
+	ENGINE_RTTI_API void captureCDO_internal(const std::initializer_list<void*>& instances);
+
 public:
 	template<typename TObj, typename... TCtorArgs>
 	static TypeBuilder create(TCtorArgs... ctorArgs)
@@ -22,6 +25,31 @@ public:
 		return out;
 	}
 
+	ENGINE_RTTI_API void registerType(ModuleTypeRegistry* registry);
+
+	//Order independent
+	//DO NOT USE for virtual inheritance
+	template<typename TObj, typename TParent>
+	inline void addParent()
+	{
+		//No funny business!
+		static_assert(std::is_base_of<TParent, TObj>::value);
+		assert(TypeName::create<TObj>() == type.name);
+		
+		constexpr TObj* root = nullptr; //Arbitrary
+		constexpr TParent* parent = root;
+		size_t offset = size_t( ((char*)parent) - ((char*)root) );
+		addParent_internal(TypeName::create<TParent>(), offset);
+	}
+
+	//Order independent
+	template<typename TField>
+	inline void addField(const std::string& name, size_t offset)
+	{
+		addField_internal(TypeName::create<TField>(), name, sizeof(TField), offset);
+	}
+
+	//Only call once all fields and parents are registered
 	template<typename TObj, typename... TCtorArgs>
 	void captureCDO(TCtorArgs... ctorArgs)
 	{
@@ -41,29 +69,11 @@ public:
 		TObj* cdo3 = new (mem3) TObj(ctorArgs...);
 
 		//Magic!
-		//captureCDO_internal({ cdo1, cdo2, cdo3 });
+		captureCDO_internal({ cdo1, cdo2, cdo3 });
 
 		//Clean up
 		cdo1->~TObj();
 		cdo2->~TObj();
 		cdo3->~TObj();
 	}
-
-	//Order independent
-	//DO NOT USE for virtual inheritance
-	template<typename TObj, typename TParent>
-	inline void addParent()
-	{
-		//No funny business!
-		static_assert(std::is_base_of<TParent, TObj>::value);
-		assert(TypeName::create<TObj>() == type.name);
-		
-		constexpr TObj* root = nullptr; //Arbitrary
-		constexpr TParent* parent = root;
-		size_t offset = size_t( ((char*)parent) - ((char*)root) );
-		addParent_internal(TypeName::create<TParent>(), offset);
-	}
-
-	ENGINE_RTTI_API void addField(const TypeName& type, const std::string& name, size_t offset); //Order independent
-	ENGINE_RTTI_API void registerType(ModuleTypeRegistry* registry); //Non-const: Make it hard to register if we aren't the mutable original. For the same reason, not on TypeInfo.
 };
