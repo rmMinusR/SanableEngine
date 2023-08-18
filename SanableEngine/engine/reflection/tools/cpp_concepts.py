@@ -211,7 +211,7 @@ class FieldInfo(Member):
         return cursor.kind == CursorKind.FIELD_DECL
 
     def renderMain(this):
-        return f'builder.addField(TypeName::parse("{this.__declaredType}"), "{this.relName}");'
+        return f'builder.addField(TypeName::create<{this.__declaredType}>(), "{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
 
 
 class ParentInfo(Member):
@@ -229,7 +229,7 @@ class ParentInfo(Member):
         return this.__module.lookup(this.absName)
     
     def renderMain(this):
-        return f'builder.addParent(TypeName::parse("{this.absName}"));'
+        return None # Renders as part of first line of type
 
 
 class TypeInfo(Symbol):
@@ -237,11 +237,11 @@ class TypeInfo(Symbol):
         super().__init__(cursor)
         this.__module = module
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
-
+        
         this.__contents = list()
         this.__sourceFile = cursor.location.file.name
         
-        #Recurse into children
+        # Recurse into children
         for i in cursor.get_children():
             matchedType = next((t for t in allowedMemberSymbols if t.matches(i)), None)
             if matchedType != None:
@@ -298,9 +298,19 @@ class TypeInfo(Symbol):
         ])
 
     def renderMain(this):
-        out = f"TypeBuilder builder = TypeBuilder::fromCDO<{this.absName}>({str(this.hasNewVtable).lower()});\n"
-        renderedContents = [i.renderMain() for i in this.__contents]
+        # Render header
+        out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
+
+        # Render parents
+        for i in this.parents:
+            out += f"builder.addParent<{this.absName}, {i.absName}>();\n"
+
+        # Render standard members
+        renderedContents = [i.renderMain() for i in this.__contents if not isinstance(i, ParentInfo)]
         out += "\n".join([i for i in renderedContents if i != None])
+        
+        # Finalize
+        out += f"\nbuilder.captureCDO<{this.absName}>();"
         out += "\nbuilder.registerType(registry);"
         return f"//{this.relName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 

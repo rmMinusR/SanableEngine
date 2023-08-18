@@ -2,6 +2,8 @@
 
 #include <SDL_pixels.h>
 
+#include "StandardReflectionHooks.hpp"
+
 #include "Component.hpp"
 
 class RectangleCollider;
@@ -11,6 +13,8 @@ class ColliderColorChanger :
 	public Component,
 	public IUpdatable
 {
+	SANABLE_REFLECTION_HOOKS
+
 private:
 	SDL_Color normalColor;
 	SDL_Color overlapColor;
@@ -18,6 +22,7 @@ private:
 	RectangleCollider* collider;
 	RectangleRenderer* renderer;
 
+	ColliderColorChanger() = default;
 protected:
 	void BindToGameObject(GameObject* obj) override;
 

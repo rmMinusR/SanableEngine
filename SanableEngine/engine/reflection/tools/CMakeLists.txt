@@ -11,6 +11,7 @@ function(generate_reflection targetName rootDir)
 		${targetName}_RTTI
 		BYPRODUCTS "${rootDir}/src/rtti.generated.cpp"
 		COMMAND ${REFLECTION_COMMAND} --target "${rootDir}" --include $<TARGET_PROPERTY:${targetName},INCLUDE_DIRECTORIES> --define $<TARGET_PROPERTY:${targetName},COMPILE_DEFINITIONS> -- $<TARGET_PROPERTY:${targetName},COMPILE_OPTIONS> $<TARGET_PROPERTY:${targetName},COMPILE_FLAGS> ${COMPILE_OPTIONS} ${COMPILE_FLAGS}
+		COMMENT "Generating embedded RTTI for ${targetName}"
 	)
 	add_dependencies(${targetName} ${targetName}_RTTI)
 endfunction()

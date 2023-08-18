@@ -2,15 +2,19 @@
 
 #include "dllapi.h"
 
+#include "StandardReflectionHooks.hpp"
 #include <vector>
 
 #include "Component.hpp"
 
 class RectangleCollider : public Component
 {
+	SANABLE_REFLECTION_HOOKS
+
 private:
 	float w, h;
 
+	PRIMITIVES_API RectangleCollider() = default;
 public:
 	PRIMITIVES_API RectangleCollider(float w, float h);
 	PRIMITIVES_API ~RectangleCollider();
