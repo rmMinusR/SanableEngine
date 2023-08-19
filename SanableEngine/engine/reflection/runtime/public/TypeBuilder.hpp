@@ -12,9 +12,9 @@ class TypeBuilder
 
 	ENGINE_RTTI_API TypeBuilder();
 
-	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t offset); //Order independent
+	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, size_t offset); //Order independent
 	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset); //Order independent
-	ENGINE_RTTI_API void captureCDO_internal(const std::initializer_list<void*>& instances);
+	ENGINE_RTTI_API void captureCDO_internal(const std::vector<void*>& instances);
 
 public:
 	template<typename TObj>
@@ -39,7 +39,7 @@ public:
 		constexpr TObj* root = nullptr; //Arbitrary
 		constexpr TParent* parent = root;
 		size_t offset = size_t( ((char*)parent) - ((char*)root) );
-		addParent_internal(TypeName::create<TParent>(), offset);
+		addParent_internal(TypeName::create<TParent>(), sizeof(TParent), offset);
 	}
 
 	//Order independent

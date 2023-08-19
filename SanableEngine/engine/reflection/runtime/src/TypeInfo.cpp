@@ -5,11 +5,30 @@
 
 #include "GlobalTypeRegistry.hpp"
 
+TypeInfo::TypeInfo()
+{
+
+}
+
+TypeInfo::~TypeInfo()
+{
+	if (implicitValues)
+	{
+		free(implicitValues);
+		implicitValues = nullptr;
+	}
+
+	if (implicitsMask)
+	{
+		free(implicitsMask);
+		implicitsMask = nullptr;
+	}
+}
+
 bool TypeInfo::isValid() const
 {
 	return size != 0
-		&& name.isValid()
-		&& (!parents.empty() || !fields.empty());
+		&& name.isValid();
 }
 
 bool TypeInfo::isLoaded() const

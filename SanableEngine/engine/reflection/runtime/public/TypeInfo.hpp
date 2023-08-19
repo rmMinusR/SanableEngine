@@ -28,11 +28,15 @@ private:
 	std::vector<FieldInfo> fields; //NO TOUCHY! Use walkFields instead, which will also handle parent recursion.
 	vtable_ptr vtable; //EXTREME NO TOUCHY! Use vptrJam instead.
 
+	//Implicitly generated members (read: vptrs)
+	char* implicitsMask = nullptr;
+	char* implicitValues = nullptr;
+
 	friend class TypeBuilder; //Only thing allowed to touch all member data.
 
 public:
-	ENGINE_RTTI_API TypeInfo() = default;
-	ENGINE_RTTI_API ~TypeInfo() = default;
+	ENGINE_RTTI_API TypeInfo();
+	ENGINE_RTTI_API ~TypeInfo();
 
 	/// <summary>
 	/// Check if this type has data (ie. hasn't been empty-constructed).
