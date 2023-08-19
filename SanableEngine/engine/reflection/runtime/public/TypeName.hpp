@@ -48,9 +48,15 @@ public:
 	static TypeName create()
 	{
 		return TypeName(
+			typeid(TRaw).name(),
+			PtrUnwrapper<TRaw>::ptrDepth
+		);
+		/*
+		return TypeName(
 			typeid(typename PtrUnwrapper<TRaw>::RootType).name(),
 			PtrUnwrapper<TRaw>::ptrDepth
 		);
+		*/
 	}
 
 	ENGINE_RTTI_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.

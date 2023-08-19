@@ -4,6 +4,7 @@
 
 struct InstanceMemberInfo
 {
+	size_t size;
 	size_t offset;
 
 protected:

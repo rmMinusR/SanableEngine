@@ -13,12 +13,12 @@ class TypeBuilder
 	ENGINE_RTTI_API TypeBuilder();
 
 	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t offset); //Order independent
-	ENGINE_RTTI_API void addField_internal(const TypeName& type, const std::string& name, size_t size, size_t offset); //Order independent
+	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset); //Order independent
 	ENGINE_RTTI_API void captureCDO_internal(const std::initializer_list<void*>& instances);
 
 public:
-	template<typename TObj, typename... TCtorArgs>
-	static TypeBuilder create(TCtorArgs... ctorArgs)
+	template<typename TObj>
+	static TypeBuilder create()
 	{
 		TypeBuilder out;
 		out.type = TypeInfo::createDummy<TObj>();

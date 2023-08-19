@@ -4,7 +4,7 @@ from clang.cindex import *
 from textwrap import indent
 import abc
 import hashlib
-from config import logger
+import config
 
 
 def _getAbsName(target: Cursor) -> str:
@@ -229,7 +229,7 @@ class FieldInfo(Member):
         return cursor.kind == CursorKind.FIELD_DECL
 
     def renderMain(this):
-        return f'builder.addField(TypeName::create<{this.__declaredTypeName}>(), "{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
+        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
 
     def getReferencedTypes(this) -> list[str]:
         c = cvpUnwrapTypeName(this.__declaredTypeName)
@@ -271,11 +271,11 @@ class TypeInfo(Symbol):
             elif TypeInfo.matches(i):
                 module.parse(i) # Nested types are effectively just namespaced. Recurse.
             elif i.kind not in ignoredSymbols:
-                logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
+                config.logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
     def register(this, obj):
         assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
-        logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
+        config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
         this.__contents.append(obj)
     
     def getMember(this, relName: str, searchParents=True):
@@ -358,11 +358,11 @@ class Module:
                 v.owner.register(v) # Members
 
         elif matchedType not in ignoredSymbols:
-            logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
+            config.logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
     def register(this, obj: Symbol):
         assert obj.absName not in this.__contents.keys(), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
-        logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
+        config.logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
         this.__contents[obj.absName] = obj
 
     def lookup(this, key: str | Cursor):
@@ -401,15 +401,15 @@ class Module:
     def renderIncludes(this) -> set[str]:
         out = set()
         for i in this.types:
-            print(f"{i.absName} references:")
+            config.logger.debug(f"{i.absName} references:")
             for typeName in i.getReferencedTypes():
                 typeCursor = locateTypeCursor(this, typeName)
                 if not isinstance(typeCursor, NoneType):
                     out.add(typeCursor.canonical.location.file.name)
-                    print(f" - {typeName} @ {typeCursor.canonical.location.file.name}:{typeCursor.canonical.location.line}")
+                    config.logger.debug(f" - {typeName} @ {typeCursor.canonical.location.file.name}:{typeCursor.canonical.location.line}")
                 else:
-                    print(f" - {typeName} @ (external)")
-                    #logger.warn(f"Failed to locate definition of {typeName}")
+                    config.logger.debug(f" - {typeName} @ (external)")
+                    #config.logger.warn(f"Failed to locate definition of {typeName}")
         return out
 
 def locateTypeCursor(target: Module | Cursor, name: str) -> Cursor | None:
