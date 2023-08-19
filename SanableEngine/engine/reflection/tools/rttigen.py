@@ -17,6 +17,7 @@ parser.add_argument("-I", "--include", dest="includes", help="Headers to scan, b
 parser.add_argument("-D", "--define" , dest="defines" , help="Preprocessor definition. Semicolon-separated list.")
 parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. Default: target/src/rtti.generated.cpp")
 parser.add_argument("-v", "--verbose", action="store_true")
+parser.add_argument("--template-file", dest="template_file", default=None)
 parser.add_argument("--", dest="compilerArgs", nargs='*', help="Additional arguments passed through to the compiler. May include already-listed defines and includes.")
 
 # Filter out arguments passed through to the compiler
@@ -53,6 +54,11 @@ if args.defines != None:
 else:
     args.defines = []
 
+#Default template file, if none specified
+if args.template_file == None:
+    scriptDir = os.path.dirname(os.path.abspath(__file__))
+    args.template_file = os.path.join(scriptDir, "rtti.template.cpp")
+
 #Default output folder, if none specified
 if args.output == None:
     args.output = os.path.join(args.target, "src")
@@ -78,8 +84,7 @@ for (cursor, isOurs) in read_ast.parseAuto(args.target, args.includes):
     else:
         targetModule.registerExternal(cursor)
 
-scriptDir = os.path.dirname(os.path.abspath(__file__))
-with open(os.path.join(scriptDir, "rtti.template.cpp"), "r") as f:
+with open(args.template_file, "r") as f:
     template = "".join(f.readlines())
 
 config.logger.log(100, "Rendering...")

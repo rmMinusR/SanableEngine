@@ -33,6 +33,9 @@ class Symbol:
     def __init__(this, cursor: Cursor):
         this.__astRepr = cursor
     
+    def __repr__(this):
+        return this.absName
+
     @property
     def astRepr(this):
         return this.__astRepr
@@ -140,10 +143,10 @@ class ParameterInfo(Symbol):
         return cursor.kind == CursorKind.PARM_DECL
 
 
-class FuncInfo(Virtualizable):
-    def __init__(this, module, cursor: Cursor, owner):
-        Virtualizable.__init__(this, cursor, owner)
-        assert FuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
+class GlobalFuncInfo(Symbol):
+    def __init__(this, module, cursor: Cursor):
+        Symbol.__init__(this, cursor)
+        assert GlobalFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
         this.__parameters = []
         for i in cursor.get_children():
@@ -158,7 +161,35 @@ class FuncInfo(Virtualizable):
             CursorKind.CXX_METHOD,
             CursorKind.FUNCTION_DECL,
             CursorKind.FUNCTION_TEMPLATE
-        ]
+        ] and (cursor.is_static_method() or not TypeInfo.matches(cursor.semantic_parent))
+
+    @property
+    def parameters(this):
+        return this.__parameters
+
+    def renderMain(this):
+        return None
+
+
+class BoundFuncInfo(Virtualizable):
+    def __init__(this, module, cursor: Cursor, owner):
+        Virtualizable.__init__(this, cursor, owner)
+        assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
+        
+        this.__parameters = []
+        for i in cursor.get_children():
+            if ParameterInfo.matches(i):
+                this.__parameters.append(ParameterInfo(module, i))
+
+        # TODO capture address
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind in [
+            CursorKind.CXX_METHOD,
+            CursorKind.FUNCTION_DECL,
+            CursorKind.FUNCTION_TEMPLATE
+        ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
 
     @property
     def parameters(this):
@@ -273,8 +304,8 @@ class TypeInfo(Symbol):
             elif i.kind not in ignoredSymbols:
                 config.logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
-    def register(this, obj):
-        assert not any([obj.absName == i.absName for i in this.__contents]), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
+    def register(this, obj: Member):
+        assert this.getMember(obj.relName, searchParents=False) == None, f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
         config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
         this.__contents.append(obj)
     
@@ -383,9 +414,9 @@ class Module:
                 yield i
 
     @property
-    def functions(this) -> Generator[FuncInfo, None, None]:
+    def functions(this) -> Generator[GlobalFuncInfo, None, None]:
         for i in this.__contents.values():
-            if isinstance(i, FuncInfo):
+            if isinstance(i, GlobalFuncInfo):
                 yield i
 
     @property
@@ -395,7 +426,8 @@ class Module:
         return this.__cachedRttiHashedName
 
     def renderBody(this) -> str:
-        out = "\n\n".join([indent(v.renderMain(), ' '*4) for v in this.__contents.values()])
+        renders = [v.renderMain() for v in this.__contents.values()]
+        out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
 
     def renderIncludes(this) -> set[str]:
@@ -447,5 +479,5 @@ def locateTypeCursor_impl(target: Module | Cursor, name: str) -> list[Cursor]:
     
 
 ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL]
-allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, FuncInfo]
-allowedGlobalSymbols = [VarInfo, FuncInfo, TypeInfo]
+allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo]
+allowedGlobalSymbols = [VarInfo, GlobalFuncInfo, TypeInfo]

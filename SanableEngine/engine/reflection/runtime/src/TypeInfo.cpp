@@ -123,3 +123,10 @@ void* TypeInfo::cast(void* obj, const TypeName& name) const
 	//Not a parent
 	return nullptr;
 }
+
+ENGINE_RTTI_API const FieldInfo* TypeInfo::getField(const std::string& name) const
+{
+	auto it = std::find_if(fields.begin(), fields.end(), [&](const FieldInfo& fi) { return fi.name == name; });
+	if (it != fields.end()) return &(*it);
+	else return nullptr;
+}

@@ -79,6 +79,8 @@ public:
 	/// <param name="obj">Object to cast</param>
 	ENGINE_RTTI_API void* cast(void* obj, const TypeName& name) const;
 	
+	ENGINE_RTTI_API const FieldInfo* getField(const std::string& name) const;
+
 	template<typename TObj>
 	static TypeInfo createDummy()
 	{
