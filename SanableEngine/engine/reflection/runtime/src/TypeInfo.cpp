@@ -43,10 +43,16 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 	this->parents = cpy.parents;
 	this->fields  = cpy.fields;
 
-	this->implicitsMask  = (char*)malloc(this->size);
-	this->implicitValues = (char*)malloc(this->size);
-	memcpy(this->implicitsMask , cpy.implicitsMask , this->size);
-	memcpy(this->implicitValues, cpy.implicitValues, this->size);
+	if (cpy.implicitsMask)
+	{
+		this->implicitsMask = (char*)malloc(this->size);
+		memcpy(this->implicitsMask, cpy.implicitsMask, this->size);
+	}
+	if (cpy.implicitValues)
+	{
+		this->implicitValues = (char*)malloc(this->size);
+		memcpy(this->implicitValues, cpy.implicitValues, this->size);
+	}
 
 	return *this;
 }

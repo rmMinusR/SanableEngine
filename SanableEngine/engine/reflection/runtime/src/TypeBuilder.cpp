@@ -55,7 +55,7 @@ void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
 		{
 			//If we don't match, it's padding
 			type.implicitsMask[byteIndex] &= (
-				type.implicitValues[byteIndex] != cmp[byteIndex]
+				type.implicitValues[byteIndex] == cmp[byteIndex]
 			);
 		}
 	}

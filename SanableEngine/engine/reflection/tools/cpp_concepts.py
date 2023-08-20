@@ -327,6 +327,10 @@ class TypeInfo(Symbol):
         # Failed to find anything
         return None
 
+    @property
+    def isAbstract(this):
+        return this.astRepr.is_abstract_record()
+
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind in [
@@ -341,7 +345,7 @@ class TypeInfo(Symbol):
     @property
     def parents(this) -> list[ParentInfo]:
         return [i for i in this.__contents if isinstance(i, ParentInfo)]
-
+    
     def renderMain(this):
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
@@ -355,7 +359,10 @@ class TypeInfo(Symbol):
         out += "\n".join([i for i in renderedContents if i != None])
         
         # Finalize
-        out += f"\nbuilder.captureCDO<{this.absName}>();"
+        if not this.isAbstract:
+           out += f"\nbuilder.captureCDO<{this.absName}>();"
+        else:
+            out += f"\n//{this.absName} is abstract. Skipping CDO capture."
         out += "\nbuilder.registerType(registry);"
         return f"//{this.relName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 
