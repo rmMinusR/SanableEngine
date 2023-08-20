@@ -23,9 +23,12 @@ void GlobalTypeRegistry::loadModule(module_key_t key, const ModuleTypeRegistry& 
 
 	//Register types
 	auto it = modules.emplace(key, newTypes).first;
-
+	
 	//Mark all known names as dirty
 	for (const TypeInfo& i : newTypes.getTypes()) dirtyTypes.emplace(i.name);
+
+	//Finalize late-binding info
+	it->second.doLateBinding();
 }
 
 void GlobalTypeRegistry::unloadModule(module_key_t key)

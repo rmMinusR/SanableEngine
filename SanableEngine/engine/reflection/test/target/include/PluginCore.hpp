@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ModuleTypeRegistry.inl"
+#include "ModuleTypeRegistry.hpp"
 
 //
 // DUMMY FILE to make generated RTTI play nice

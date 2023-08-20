@@ -84,6 +84,8 @@ public:
 	
 	ENGINE_RTTI_API const FieldInfo* getField(const std::string& name) const;
 
+	ENGINE_RTTI_API void doLateBinding();
+
 	template<typename TObj>
 	static TypeInfo createDummy()
 	{

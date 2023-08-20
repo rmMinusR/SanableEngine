@@ -47,6 +47,8 @@ public:
 	template<typename TRaw>
 	static TypeName create()
 	{
+		//FIXME URGENT!!! Needs something to be able to unwrap pointers/const/volatile
+		//Should treat as void* if root type isn't registered, but try to use root type
 		return TypeName(
 			typeid(TRaw).name(),
 			PtrUnwrapper<TRaw>::ptrDepth

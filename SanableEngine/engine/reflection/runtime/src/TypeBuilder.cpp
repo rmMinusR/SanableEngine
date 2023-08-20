@@ -1,6 +1,6 @@
 #include "TypeBuilder.hpp"
 
-#include "ModuleTypeRegistry.inl"
+#include "ModuleTypeRegistry.hpp"
 
 TypeBuilder::TypeBuilder()
 {
@@ -35,20 +35,11 @@ void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
 	type.implicitsMask = (char*) malloc(type.size); //If false, something is occupying this byte
 	memset(type.implicitsMask, 0xFF, type.size);
 
-	//Mark all fields as used
-	type.walkFields([=](const FieldInfo& fi)
-		{
-			memset(type.implicitsMask+fi.offset, 0x00, fi.size);
-		},
-		MemberVisibility::All,
-		true
-	);
-
 	//Detect constants
 	type.implicitValues = (char*) malloc(type.size);
 	memcpy(type.implicitValues, instances[0], type.size); //First one has no point of comparison
 
-	for (int i = 1; i < instances.size(); ++i) //Scan each additional provided index...
+	for (int i = 1; i < instances.size(); ++i) //Scan each additional provided instance...
 	{
 		char* cmp = (char*)instances[i];
 		for (size_t byteIndex = 0; byteIndex < type.size; ++byteIndex) //... byte by byte...
@@ -59,6 +50,9 @@ void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
 			);
 		}
 	}
+
+	//Normally we'd scan each field and mark them as used, but we defer until we're registered with GlobalTypeRegistry
+	//Otherwise we wouldn't be able to walk parents in the same translation unit
 }
 
 void TypeBuilder::registerType(ModuleTypeRegistry* registry)

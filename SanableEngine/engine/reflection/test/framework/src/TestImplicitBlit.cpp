@@ -9,7 +9,6 @@
 
 TEST_CASE("Implicit capture")
 {
-	/*
 	//Prepare clean state
 	{
 		GlobalTypeRegistry::clear();
@@ -19,8 +18,8 @@ TEST_CASE("Implicit capture")
 	}
 
 	//Setup
-	const TypeInfo* td1 = m.lookupType(TypeName::create<Derived1>());
-	const TypeInfo* td2 = m.lookupType(TypeName::create<Derived2>());
+	const TypeInfo* td1 = TypeName::create<Derived1>().resolve();
+	const TypeInfo* td2 = TypeName::create<Derived2>().resolve();
 	REQUIRE(td1 != nullptr);
 	REQUIRE(td2 != nullptr);
 
@@ -34,5 +33,4 @@ TEST_CASE("Implicit capture")
 	CHECK(obj->identify() == Derived1::identify_s());
 
 	delete obj;
-	// */
 }

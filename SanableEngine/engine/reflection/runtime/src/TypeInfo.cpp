@@ -170,9 +170,24 @@ void* TypeInfo::cast(void* obj, const TypeName& name) const
 	return nullptr;
 }
 
-ENGINE_RTTI_API const FieldInfo* TypeInfo::getField(const std::string& name) const
+const FieldInfo* TypeInfo::getField(const std::string& name) const
 {
 	auto it = std::find_if(fields.begin(), fields.end(), [&](const FieldInfo& fi) { return fi.name == name; });
 	if (it != fields.end()) return &(*it);
 	else return nullptr;
+}
+
+void TypeInfo::doLateBinding()
+{
+	//Deferred from captureCDO: Mark all fields as used
+	if (implicitsMask)
+	{
+		walkFields(
+			[=](const FieldInfo& fi) {
+				memset(implicitsMask+fi.offset, 0x00, fi.size);
+			},
+			MemberVisibility::All,
+			true
+		);
+	}
 }

@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include <string>
 
-#include "ModuleTypeRegistry.inl"
+#include "ModuleTypeRegistry.hpp"
 
 /// <summary>
 /// Reflection(ish) for all types currently in runtime context
