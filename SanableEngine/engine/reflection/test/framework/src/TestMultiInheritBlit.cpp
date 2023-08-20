@@ -1,0 +1,58 @@
+#include "doctest.h"
+
+#include "GlobalTypeRegistry.hpp"
+#include "MemberInfo.hpp"
+#include "PluginCore.hpp"
+
+#include "MultiInheritance.hpp"
+
+TEST_CASE("Implicit capture (multiple inheritance)")
+{
+	//Prepare clean state
+	{
+		GlobalTypeRegistry::clear();
+		ModuleTypeRegistry m;
+		plugin_reportTypes(&m);
+		GlobalTypeRegistry::loadModule("test runner", m);
+	}
+
+	//Setup
+	const TypeInfo* ta = TypeName::create<ImplementerA>().resolve();
+	const TypeInfo* tb = TypeName::create<ImplementerB>().resolve();
+	REQUIRE(ta != nullptr);
+	REQUIRE(tb != nullptr);
+
+	SUBCASE("Transmuting ImplementerA => ImplementerB")
+	{
+		CommonInterface* obj = new ImplementerA();
+		//Default state
+		CHECK(obj->a == 1);
+		CHECK(obj->foo() == 1);
+		CHECK(obj->bar() == 2);
+
+		tb->vptrJam(obj); //Transmute
+		CHECK(obj->a == 1); //Didn't change, since it was already initted
+		CHECK(obj->foo() == 3); //Changed since it's tied to vptr
+		CHECK(obj->bar() == 4);
+
+		//Clean up, using DIFFERENT dtor than we started with!
+		delete obj;
+	}
+
+	SUBCASE("Transmuting ImplementerB => ImplementerA")
+	{
+		CommonInterface* obj = new ImplementerB();
+		//Default state
+		CHECK(obj->a == 2);
+		CHECK(obj->foo() == 3);
+		CHECK(obj->bar() == 4);
+
+		ta->vptrJam(obj); //Transmute
+		CHECK(obj->a == 2); //Didn't change, since it was already initted
+		CHECK(obj->foo() == 1); //Changed since it's tied to vptr
+		CHECK(obj->bar() == 2);
+
+		//Clean up, using DIFFERENT dtor than we started with!
+		delete obj;
+	}
+}

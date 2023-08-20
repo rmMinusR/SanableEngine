@@ -4,10 +4,9 @@
 #include "MemberInfo.hpp"
 #include "PluginCore.hpp"
 
-#include "SimpleStruct.hpp"
 #include "Inheritance.hpp"
 
-TEST_CASE("Implicit capture")
+TEST_CASE("Implicit capture (simple)")
 {
 	//Prepare clean state
 	{
