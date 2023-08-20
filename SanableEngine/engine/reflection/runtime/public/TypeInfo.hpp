@@ -99,10 +99,20 @@ public:
 	ENGINE_RTTI_API const FieldInfo* getField(const std::string& name) const;
 
 	/// <summary>
-	/// INTERNAL USE ONLY. Currently used to finalize CDO mask, since we need to be able to look up our parents' fields.
+	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
 	/// </summary>
-	ENGINE_RTTI_API void doLateBinding();
+	ENGINE_RTTI_INTERNAL( void doLateBinding(); )
 
+private:
+	/// <summary>
+	/// INTERNAL USE ONLY. Currently used to set up byte usage mask.
+	/// </summary>
+	ENGINE_RTTI_API void create_internalFinalize();
+
+public:
+	/// <summary>
+	/// INTERNAL USE ONLY by TypeBuilder and TypedMemoryPool.
+	/// </summary>
 	template<typename TObj>
 	static TypeInfo createDummy()
 	{
@@ -111,8 +121,7 @@ public:
 		out.size = sizeof(TObj);
 		out.align = alignof(TObj);
 		out.dtor = dtor_utils<TObj>::dtor;
-		out.byteUsage = (ByteUsage*)malloc(out.size);
-		memset(out.byteUsage, (uint8_t)ByteUsage::Unknown, out.size);
+		out.create_internalFinalize();
 		return out;
 	}
 };

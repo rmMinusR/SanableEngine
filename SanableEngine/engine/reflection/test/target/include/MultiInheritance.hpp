@@ -2,11 +2,13 @@
 
 struct IFoo
 {
+	virtual ~IFoo() = default;
 	virtual int foo() = 0;
 };
 
 struct IBar
 {
+	virtual ~IBar() = default;
 	virtual int bar() = 0;
 };
 

@@ -3,7 +3,7 @@
 #include "dllapi.h"
 
 #include <vector>
-#include "ModuleTypeRegistry.inl"
+#include "ModuleTypeRegistry.hpp"
 
 struct Plugin;
 struct PluginReportedData;

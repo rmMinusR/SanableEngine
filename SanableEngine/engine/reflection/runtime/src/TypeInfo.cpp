@@ -190,3 +190,9 @@ void TypeInfo::doLateBinding()
 		true
 	);
 }
+
+void TypeInfo::create_internalFinalize()
+{
+	byteUsage = (ByteUsage*)malloc(size);
+	memset(byteUsage, (uint8_t)ByteUsage::Unknown, size);
+}

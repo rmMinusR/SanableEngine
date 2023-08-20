@@ -11,12 +11,14 @@ class GlobalTypeRegistry;
 /// </summary>
 class ModuleTypeRegistry
 {
+public:
+	ENGINE_RTTI_API TypeInfo const* lookupType(const TypeName& name) const;
+	ENGINE_RTTI_API const std::vector<TypeInfo>& getTypes() const;
+	
+private:
 	std::vector<TypeInfo> types;
 	friend class TypeBuilder;
 
 	void doLateBinding();
 	friend class GlobalTypeRegistry;
-public:
-	TypeInfo const* lookupType(const TypeName& name) const;
-	const std::vector<TypeInfo>& getTypes() const;
 };

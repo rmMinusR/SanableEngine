@@ -10,9 +10,9 @@
 #include <cassert>
 
 __thiscall Plugin::Plugin(const std::filesystem::path& path) :
-	path(path),
 	status(Status::NotLoaded),
-	reportedData(nullptr)
+	reportedData(nullptr),
+	path(path)
 {
 	dll = InvalidLibHandle;
 }

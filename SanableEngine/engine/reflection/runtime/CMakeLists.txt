@@ -1,8 +1,6 @@
 cmake_minimum_required (VERSION 3.14)
 set (CMAKE_CXX_STANDARD 17)
 
-project("engine-rtti")
-
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_rtti_sources)
 declare_dll("engine-rtti" "" engine_rtti_sources)
