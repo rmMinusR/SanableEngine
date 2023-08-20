@@ -25,6 +25,46 @@ TypeInfo::~TypeInfo()
 	}
 }
 
+TypeInfo::TypeInfo(const TypeInfo& cpy)
+{
+	*this = cpy; //Defer to operator=
+}
+
+TypeInfo::TypeInfo(TypeInfo&& mov)
+{
+	*this = mov; //Defer to operator=
+}
+
+TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
+{
+	this->name    = cpy.name;
+	this->size    = cpy.size;
+	this->dtor    = cpy.dtor;
+	this->parents = cpy.parents;
+	this->fields  = cpy.fields;
+
+	this->implicitsMask  = (char*)malloc(this->size);
+	this->implicitValues = (char*)malloc(this->size);
+	memcpy(this->implicitsMask , cpy.implicitsMask , this->size);
+	memcpy(this->implicitValues, cpy.implicitValues, this->size);
+
+	return *this;
+}
+
+TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
+{
+	this->name    = std::move(mov.name);
+	this->size    = std::move(mov.size);
+	this->dtor    = std::move(mov.dtor);
+	this->parents = std::move(mov.parents);
+	this->fields  = std::move(mov.fields);
+
+	std::swap(this->implicitsMask , mov.implicitsMask);
+	std::swap(this->implicitValues, mov.implicitValues);
+
+	return *this;
+}
+
 bool TypeInfo::isValid() const
 {
 	return size != 0
@@ -92,13 +132,13 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 
 void TypeInfo::vptrJam(void* obj) const
 {
-	//Set own vtable, if present
-	if (vtable) set_vtable_ptr(obj, vtable);
-	
-	//Recurse into parents
-	for (const ParentInfo& i : parents)
+	if (implicitsMask && implicitValues)
 	{
-		i.typeName.resolve()->vptrJam(cast(obj, i.typeName));
+		//Write captured constants from implicitly generated fields
+		for (size_t i = 0; i < size; ++i)
+		{
+			if (implicitsMask[i]) static_cast<char*>(obj)[i] = implicitValues[i];
+		}
 	}
 }
 

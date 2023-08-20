@@ -22,12 +22,10 @@ struct TypeInfo
 
 	dtor_t dtor; //Not guaranteed to be present, null check before calling
 
-	std::vector<ParentInfo> parents;
-
 private:
+	std::vector<ParentInfo> parents;
 	std::vector<FieldInfo> fields; //NO TOUCHY! Use walkFields instead, which will also handle parent recursion.
-	vtable_ptr vtable; //EXTREME NO TOUCHY! Use vptrJam instead.
-
+	
 	//Implicitly generated members (read: vptrs)
 	char* implicitsMask = nullptr;
 	char* implicitValues = nullptr;
@@ -37,6 +35,11 @@ private:
 public:
 	ENGINE_RTTI_API TypeInfo();
 	ENGINE_RTTI_API ~TypeInfo();
+
+	ENGINE_RTTI_API TypeInfo(const TypeInfo& cpy);
+	ENGINE_RTTI_API TypeInfo(TypeInfo&& mov);
+	ENGINE_RTTI_API TypeInfo& operator=(const TypeInfo& cpy);
+	ENGINE_RTTI_API TypeInfo& operator=(TypeInfo&& mov);
 
 	/// <summary>
 	/// Check if this type has data (ie. hasn't been empty-constructed).

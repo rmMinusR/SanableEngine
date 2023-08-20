@@ -1,4 +1,5 @@
-#include "catch.hpp"
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include "doctest.h"
 
 #include "GlobalTypeRegistry.hpp"
 #include "MemberInfo.hpp"
@@ -14,16 +15,16 @@ TEST_CASE("FieldInfo")
 	plugin_reportTypes(&m);
 
 	const TypeInfo* ti = m.lookupType(TypeName::create<TestMemberRW>());
-	REQUIRE(ti != nullptr);
+	CHECK(ti != nullptr);
 
-	SECTION("getValue (read)")
+	SUBCASE("getValue (read)")
 	{
 		TestMemberRW testClass;
 		const FieldInfo* fi;
-		#define FIELD_VALS_EQ(fieldName) (fi=ti->getField(#fieldName)) && *((decltype(testClass.fieldName)*)fi->getValue(&testClass)) == testClass.fieldName
-		REQUIRE(FIELD_VALS_EQ(a));
-		REQUIRE(FIELD_VALS_EQ(b));
-		REQUIRE(FIELD_VALS_EQ(c));
-		REQUIRE(FIELD_VALS_EQ(d));
+		#define FIELD_VALS_EQ(fieldName) ((fi=ti->getField(#fieldName)) && *((decltype(testClass.fieldName)*)fi->getValue(&testClass)) == testClass.fieldName)
+		CHECK(FIELD_VALS_EQ(a));
+		CHECK(FIELD_VALS_EQ(b));
+		CHECK(FIELD_VALS_EQ(c));
+		CHECK(FIELD_VALS_EQ(d));
 	}
 }

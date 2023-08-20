@@ -6,4 +6,7 @@ struct TestMemberRW
 	char b = 2;
 	short c = 3;
 	long d = 4;
+
+	TestMemberRW();
+	~TestMemberRW();
 };
