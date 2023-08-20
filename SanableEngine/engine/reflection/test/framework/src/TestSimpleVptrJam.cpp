@@ -6,7 +6,7 @@
 
 #include "Inheritance.hpp"
 
-TEST_CASE("Implicit capture (simple)")
+TEST_CASE("Implicit constant capture (simple)")
 {
 	//Prepare clean state
 	{

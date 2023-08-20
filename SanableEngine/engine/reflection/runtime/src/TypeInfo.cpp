@@ -18,10 +18,10 @@ TypeInfo::~TypeInfo()
 		implicitValues = nullptr;
 	}
 
-	if (implicitsMask)
+	if (byteUsage)
 	{
-		free(implicitsMask);
-		implicitsMask = nullptr;
+		free(byteUsage);
+		byteUsage = nullptr;
 	}
 }
 
@@ -43,10 +43,10 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 	this->parents = cpy.parents;
 	this->fields  = cpy.fields;
 
-	if (cpy.implicitsMask)
+	if (cpy.byteUsage)
 	{
-		this->implicitsMask = (char*)malloc(this->size);
-		memcpy(this->implicitsMask, cpy.implicitsMask, this->size);
+		this->byteUsage = (ByteUsage*)malloc(this->size);
+		memcpy(this->byteUsage, cpy.byteUsage, this->size);
 	}
 	if (cpy.implicitValues)
 	{
@@ -65,7 +65,7 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 	this->parents = std::move(mov.parents);
 	this->fields  = std::move(mov.fields);
 
-	std::swap(this->implicitsMask , mov.implicitsMask);
+	std::swap(this->byteUsage     , mov.byteUsage     );
 	std::swap(this->implicitValues, mov.implicitValues);
 
 	return *this;
@@ -138,12 +138,13 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 
 void TypeInfo::vptrJam(void* obj) const
 {
-	if (implicitsMask && implicitValues)
+	assert(byteUsage);
+	if (implicitValues)
 	{
 		//Write captured constants from implicitly generated fields
 		for (size_t i = 0; i < size; ++i)
 		{
-			if (implicitsMask[i]) static_cast<char*>(obj)[i] = implicitValues[i];
+			if (byteUsage[i] == ByteUsage::ImplicitConst) static_cast<char*>(obj)[i] = implicitValues[i];
 		}
 	}
 }
@@ -180,14 +181,12 @@ const FieldInfo* TypeInfo::getField(const std::string& name) const
 void TypeInfo::doLateBinding()
 {
 	//Deferred from captureCDO: Mark all fields as used
-	if (implicitsMask)
-	{
-		walkFields(
-			[=](const FieldInfo& fi) {
-				memset(implicitsMask+fi.offset, 0x00, fi.size);
-			},
-			MemberVisibility::All,
-			true
-		);
-	}
+	assert(byteUsage);
+	walkFields(
+		[=](const FieldInfo& fi) {
+			memset(byteUsage+fi.offset, (uint8_t)ByteUsage::ExplicitField, fi.size);
+		},
+		MemberVisibility::All,
+		true
+	);
 }

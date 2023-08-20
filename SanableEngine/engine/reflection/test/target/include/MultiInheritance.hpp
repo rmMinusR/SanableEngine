@@ -12,26 +12,27 @@ struct IBar
 
 struct ConcreteBase
 {
-	int a;
+	char a; //Let's see what padding shows up...
 	virtual ~ConcreteBase();
 };
 
-struct CommonInterface : public ConcreteBase, public IFoo, public IBar
+struct ImplementerA : public ConcreteBase, public IFoo, public IBar
 {
+	static int numDtorCalls;
 
-};
-
-struct ImplementerA : public CommonInterface
-{
 	ImplementerA();
+	virtual ~ImplementerA();
 
 	virtual int foo() override;
 	virtual int bar() override;
 };
 
-struct ImplementerB : public CommonInterface
+struct ImplementerB : public ConcreteBase, public IFoo, public IBar
 {
+	static int numDtorCalls;
+
 	ImplementerB();
+	virtual ~ImplementerB();
 
 	virtual int foo() override;
 	virtual int bar() override;

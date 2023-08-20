@@ -19,6 +19,7 @@ struct TypeInfo
 {
 	TypeName name;
 	size_t size = 0;
+	size_t align = 0;
 
 	dtor_t dtor; //Not guaranteed to be present, null check before calling
 
@@ -26,9 +27,19 @@ private:
 	std::vector<ParentInfo> parents;
 	std::vector<FieldInfo> fields; //NO TOUCHY! Use walkFields instead, which will also handle parent recursion.
 	
-	//Implicitly generated members (read: vptrs)
-	char* implicitsMask = nullptr;
-	char* implicitValues = nullptr;
+	/// <summary>
+	/// How is each byte used?
+	/// </summary>
+	enum class ByteUsage : uint8_t
+	{
+		Unknown = 0,
+		ExplicitField = 'f',
+		ImplicitConst = 'i',
+		Padding = 'p'
+	};
+
+	ByteUsage* byteUsage = nullptr; //Each byte maps directly onto implicitValues' corresponding byte
+	char* implicitValues = nullptr; //Implicitly generated members (read: vptrs)
 
 	friend class TypeBuilder; //Only thing allowed to touch all member data.
 
@@ -82,8 +93,14 @@ public:
 	/// <param name="obj">Object to cast</param>
 	ENGINE_RTTI_API void* cast(void* obj, const TypeName& name) const;
 	
+	/// <summary>
+	/// Look up a field by name. Returns nullptr if not found. Does NOT check parents.
+	/// </summary>
 	ENGINE_RTTI_API const FieldInfo* getField(const std::string& name) const;
 
+	/// <summary>
+	/// INTERNAL USE ONLY. Currently used to finalize CDO mask, since we need to be able to look up our parents' fields.
+	/// </summary>
 	ENGINE_RTTI_API void doLateBinding();
 
 	template<typename TObj>
@@ -92,8 +109,10 @@ public:
 		TypeInfo out;
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
-		//TODO capture alignment as well
+		out.align = alignof(TObj);
 		out.dtor = dtor_utils<TObj>::dtor;
+		out.byteUsage = (ByteUsage*)malloc(out.size);
+		memset(out.byteUsage, (uint8_t)ByteUsage::Unknown, out.size);
 		return out;
 	}
 };

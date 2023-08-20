@@ -27,14 +27,13 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 
 void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
 {
-	assert(type.implicitsMask == nullptr);
+	assert(type.byteUsage != nullptr);
 	assert(type.implicitValues == nullptr);
 	assert(instances.size() >= 2);
-
+	
 	//A bitset would be more space-efficient, but that's fixed size and probably slower for our purposes
-	type.implicitsMask = (char*) malloc(type.size); //If false, something is occupying this byte
-	memset(type.implicitsMask, 0xFF, type.size);
-
+	memset(type.byteUsage, (uint8_t)TypeInfo::ByteUsage::ImplicitConst, type.size);
+	
 	//Detect constants
 	type.implicitValues = (char*) malloc(type.size);
 	memcpy(type.implicitValues, instances[0], type.size); //First one has no point of comparison
@@ -45,9 +44,10 @@ void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
 		for (size_t byteIndex = 0; byteIndex < type.size; ++byteIndex) //... byte by byte...
 		{
 			//If we don't match, it's padding
-			type.implicitsMask[byteIndex] &= (
-				type.implicitValues[byteIndex] == cmp[byteIndex]
-			);
+			if (type.implicitValues[byteIndex] != cmp[byteIndex])
+			{
+				type.byteUsage[byteIndex] = TypeInfo::ByteUsage::Padding;
+			}
 		}
 	}
 
