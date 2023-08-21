@@ -12,6 +12,7 @@ void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, size_t
 	p.typeName = parent;
 	p.size = size;
 	p.offset = offset;
+	p.visibility = MemberVisibility::Public; //TEMP FIXME
 	type.parents.push_back(p);
 }
 
@@ -22,6 +23,7 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 	f.name = name;
 	f.size = size;
 	f.offset = offset;
+	f.visibility = MemberVisibility::Public; //TEMP FIXME
 	type.fields.push_back(f);
 }
 
