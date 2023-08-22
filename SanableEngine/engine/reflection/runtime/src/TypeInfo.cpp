@@ -94,6 +94,25 @@ bool TypeInfo::tryRefresh()
 	else return false;
 }
 
+const FieldInfo* TypeInfo::getField(const std::string& name, MemberVisibility visibilityFlags, bool includeInherited) const
+{
+	//Search own fields
+	auto it = std::find_if(fields.begin(), fields.end(), [&](const FieldInfo& fi) { return fi.name == name; });
+	if (it != fields.end() && ((int)it->visibility & (int)visibilityFlags)) return &(*it);
+	
+	//Search parent fields
+	if (includeInherited)
+	{
+		for (const ParentInfo& parent : parents)
+		{
+
+		}
+	}
+
+	//Found nothing
+	return nullptr;
+}
+
 void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
 {
 	//Recurse into parents first
@@ -110,13 +129,7 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 					[&](const FieldInfo& rawField)
 					{
 						FieldInfo adjustedField = rawField;
-
 						adjustedField.offset += parent.offset;
-
-						std::ostringstream adjustedName;
-						adjustedName << parent.typeName.as_str() << "::" << rawField.name;
-						adjustedField.name = adjustedName.str();
-
 						visitor(adjustedField);
 					},
 					visibilityFlags,
@@ -149,33 +162,22 @@ void TypeInfo::vptrJam(void* obj) const
 	}
 }
 
-void* TypeInfo::cast(void* obj, const TypeName& name) const
+void* TypeInfo::upcast(void* obj, const TypeName& name) const
 {
-	//Try casting to direct parent
-	for (const ParentInfo& parent : parents)
-	{
-		if (parent.typeName == name)
-		{
-			return ((char*)obj) + parent.offset;
-		}
-	}
+	//If referring to self, nothing to do
+	if (name == this->name) return obj;
 
-	//Try recursing into parents
 	for (const ParentInfo& parent : parents)
 	{
-		void* out = parent.typeName.resolve()->cast(obj, name);
+		void* objAsImmediateParent = ((char*)obj) + parent.offset;
+		
+		//Try matching parent, recursing
+		void* out = parent.typeName.resolve()->upcast(objAsImmediateParent, name);
 		if (out) return out;
 	}
-
+	
 	//Not a parent
 	return nullptr;
-}
-
-const FieldInfo* TypeInfo::getField(const std::string& name) const
-{
-	auto it = std::find_if(fields.begin(), fields.end(), [&](const FieldInfo& fi) { return fi.name == name; });
-	if (it != fields.end()) return &(*it);
-	else return nullptr;
 }
 
 void TypeInfo::doLateBinding()

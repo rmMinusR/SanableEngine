@@ -36,8 +36,9 @@ public:
 		static_assert(std::is_base_of<TParent, TObj>::value);
 		assert(TypeName::create<TObj>() == type.name);
 		
-		constexpr TObj* root = nullptr; //Arbitrary
-		constexpr TParent* parent = root;
+		//Compiler won't optimize if marked volatile
+		volatile TObj* root = (TObj*)0xDEADBEEF; //Arbitrary, but cannot be nullptr
+		volatile TParent* parent = (TParent*)root;
 		size_t offset = size_t( ((char*)parent) - ((char*)root) );
 		addParent_internal(TypeName::create<TParent>(), sizeof(TParent), offset);
 	}

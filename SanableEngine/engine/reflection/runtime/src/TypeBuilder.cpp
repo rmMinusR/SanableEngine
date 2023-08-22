@@ -12,18 +12,19 @@ void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, size_t
 	p.typeName = parent;
 	p.size = size;
 	p.offset = offset;
-	p.visibility = MemberVisibility::Public; //TEMP FIXME
+	p.visibility = MemberVisibility::Public; //TEMP TODO make RTTI generation step
 	type.parents.push_back(p);
 }
 
 void TypeBuilder::addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset)
 {
 	FieldInfo f;
+	f.owner = type.name;
 	f.type = declaredType;
 	f.name = name;
 	f.size = size;
 	f.offset = offset;
-	f.visibility = MemberVisibility::Public; //TEMP FIXME
+	f.visibility = MemberVisibility::Public; //TEMP TODO make RTTI generation step
 	type.fields.push_back(f);
 }
 

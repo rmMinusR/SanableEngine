@@ -1,5 +1,10 @@
 #pragma once
 
+struct GrandparentBase
+{
+	virtual ~GrandparentBase() = default;
+};
+
 struct IFoo
 {
 	virtual ~IFoo() = default;
@@ -12,7 +17,7 @@ struct IBar
 	virtual int bar() = 0;
 };
 
-struct ConcreteBase
+struct ConcreteBase : public GrandparentBase
 {
 	char a; //Let's see what padding shows up...
 	virtual ~ConcreteBase();

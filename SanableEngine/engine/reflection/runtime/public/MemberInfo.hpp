@@ -23,6 +23,7 @@ enum class MemberVisibility
 
 struct FieldInfo : public InstanceMemberInfo
 {
+	TypeName owner;
 	TypeName type;
 	std::string name;
 	MemberVisibility visibility;

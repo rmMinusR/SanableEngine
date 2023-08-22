@@ -72,14 +72,21 @@ public:
 	ENGINE_RTTI_API bool tryRefresh();
 
 	/// <summary>
+	/// Look up a field by name. Returns nullptr if not found.
+	/// </summary>
+	ENGINE_RTTI_API const FieldInfo* getField(const std::string& name,
+											MemberVisibility visibilityFlags = MemberVisibility::Public,
+											bool includeInherited = true) const;
+
+	/// <summary>
 	/// Visit every field in this type matching the given query.
 	/// </summary>
 	/// <param name="visitor">Function to run on every FieldInfo</param>
 	/// <param name="visibilityFlags">What members/parents should be visible or ignored</param>
 	/// <param name="includeInherited">Include fields inherited from parents?</param>
 	ENGINE_RTTI_API void walkFields(std::function<void(const FieldInfo&)> visitor,
-								  MemberVisibility visibilityFlags = MemberVisibility::Public,
-								  bool includeInherited = true) const;
+									MemberVisibility visibilityFlags = MemberVisibility::Public,
+									bool includeInherited = true) const;
 
 	/// <summary>
 	/// Update vtable pointers on the given object instance.
@@ -91,12 +98,7 @@ public:
 	/// Cast to a parent. Returns null if no parent found.
 	/// </summary>
 	/// <param name="obj">Object to cast</param>
-	ENGINE_RTTI_API void* cast(void* obj, const TypeName& name) const;
-	
-	/// <summary>
-	/// Look up a field by name. Returns nullptr if not found. Does NOT check parents.
-	/// </summary>
-	ENGINE_RTTI_API const FieldInfo* getField(const std::string& name) const;
+	ENGINE_RTTI_API void* upcast(void* obj, const TypeName& name) const;
 
 	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
