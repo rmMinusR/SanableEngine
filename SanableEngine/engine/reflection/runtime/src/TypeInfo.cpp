@@ -105,7 +105,11 @@ const FieldInfo* TypeInfo::getField(const std::string& name, MemberVisibility vi
 	{
 		for (const ParentInfo& parent : parents)
 		{
-
+			if ((int)parent.visibility & (int)visibilityFlags)
+			{
+				const FieldInfo* out = parent.typeName.resolve()->getField(name, visibilityFlags, true);
+				if (out) return out;
+			}
 		}
 	}
 
