@@ -127,15 +127,10 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 		{
 			if ((int)parent.visibility & (int)visibilityFlags)
 			{
-				TypeInfo const* parentType = parent.typeName.resolve();
+				const TypeInfo* parentType = parent.typeName.resolve();
 				assert(parentType); //Can't walk what isn't loaded
 				parentType->walkFields(
-					[&](const FieldInfo& rawField)
-					{
-						FieldInfo adjustedField = rawField;
-						adjustedField.offset += parent.offset;
-						visitor(adjustedField);
-					},
+					visitor,
 					visibilityFlags,
 					true
 				);

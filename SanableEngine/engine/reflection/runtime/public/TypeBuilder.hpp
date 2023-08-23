@@ -3,6 +3,7 @@
 #include "TypeInfo.hpp"
 
 #include <cassert>
+#include <functional>
 
 class ModuleTypeRegistry;
 
@@ -12,7 +13,7 @@ class TypeBuilder
 
 	ENGINE_RTTI_API TypeBuilder();
 
-	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, size_t offset); //Order independent
+	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn); //Order independent
 	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset); //Order independent
 	ENGINE_RTTI_API void captureCDO_internal(const std::vector<void*>& instances);
 
@@ -35,12 +36,15 @@ public:
 		//No funny business!
 		static_assert(std::is_base_of<TParent, TObj>::value);
 		assert(TypeName::create<TObj>() == type.name);
-		
-		//Compiler won't optimize if marked volatile
-		volatile TObj* root = (TObj*)0xDEADBEEF; //Arbitrary, but cannot be nullptr
-		volatile TParent* parent = (TParent*)root;
-		size_t offset = size_t( ((char*)parent) - ((char*)root) );
-		addParent_internal(TypeName::create<TParent>(), sizeof(TParent), offset);
+
+		addParent_internal(
+			TypeName::create<TParent>(),
+			sizeof(TParent),
+			[](void* obj)
+			{
+				return (TParent*) reinterpret_cast<TObj*>(obj);
+			}
+		);
 	}
 
 	//Order independent

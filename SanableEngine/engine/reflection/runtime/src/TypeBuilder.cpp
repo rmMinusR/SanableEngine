@@ -6,13 +6,49 @@ TypeBuilder::TypeBuilder()
 {
 }
 
-void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, size_t offset)
+void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, const std::function<void* (void*)>& upcastFn)
 {
 	ParentInfo p;
 	p.typeName = parent;
 	p.size = size;
-	p.offset = offset;
 	p.visibility = MemberVisibility::Public; //TEMP TODO make RTTI generation step
+
+	assert(size < 256); //TEMP measure. Can fix with multiple waves to detect
+	size_t nPossibleAddrs = size / sizeof(void*) + 1;
+	void* virtAddrDetector[nPossibleAddrs];
+	memset(virtAddrDetector, 0, size);
+
+	//Detect offset/virtualness
+	void* parentAddr = upcastFn(virtAddrDetector);
+	p.isVirtual = !( virtAddrDetector <= parentAddr && parentAddr < virtAddrDetector+nPossibleAddrs ); //TODO what about inheritance where the common base's virtuality varies?
+
+	if (!p.isVirtual)
+	{
+		//Simple case: Object is embedded by value
+		p.offset = size_t(((char*)parentAddr) - ((char*)virtAddrDetector));
+	}
+	else
+	{
+		//Complex case: A pointer-to-parent is embedded, scan until we find the right address
+		bool found = false;
+		for (size_t i = 0; i < nPossibleAddrs && !found; ++i)
+		{
+			//Select only one pointer at a time
+			memset(virtAddrDetector, 0, size);
+			virtAddrDetector[i] = (void*)0xDEADBEEF; //Arbitrary, but not nullptr
+
+			if (upcastFn(virtAddrDetector))
+			{
+				//Cast was successful! Calculate relative address.
+				p.offset = size_t(((char*)i) - ((char*)virtAddrDetector));
+				found = true;
+			}
+		}
+
+		assert(found);
+	}
+	
+	//Done
 	type.parents.push_back(p);
 }
 
