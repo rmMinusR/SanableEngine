@@ -93,6 +93,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
 
     memoryManager.init();
     memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module
+    memoryManager.ensureFresh();
 
     mainWindow = new Window(windowName, windowWidth, windowHeight);
     frame = 0;
