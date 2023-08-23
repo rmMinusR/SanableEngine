@@ -17,3 +17,6 @@ target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/publi
 
 # Declare install targets
 install_dll("engine-core" ".")
+
+set_target_properties(engine-core PROPERTIES RTTI_TEMPLATE_FILE "${CMAKE_CURRENT_LIST_DIR}/template/rtti.template.cpp")
+generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})
