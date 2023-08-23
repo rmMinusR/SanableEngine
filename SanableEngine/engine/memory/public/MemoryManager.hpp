@@ -15,21 +15,7 @@ struct PoolSettings<GameObject, 64> {};
 class MemoryManager
 {
 private:
-	struct PoolRecord
-	{
-		TypeInfo poolType;
-		GenericTypedMemoryPool* pool;
-
-		template<typename TObj>
-		static PoolRecord create(TypedMemoryPool<TObj>* pool) {
-			PoolRecord r;
-			r.pool = pool;
-			r.poolType = *TypeName::create<TypedMemoryPool<TObj>>().resolve();
-			return std::move(r);
-		}
-	};
-
-	std::vector<PoolRecord> pools;
+	std::vector<GenericTypedMemoryPool*> pools;
 	//std::unordered_map<std::string, RawMemoryPool*> pools;
 
 public:
@@ -64,18 +50,17 @@ inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate
 	TypedMemoryPool<TObj>* out = nullptr;
 
 	//Search for pool matching typename
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == TypeName::create<TypedMemoryPool<TObj>>(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->contentsType.name == TypeName::create<TObj>(); });
 	if (it != pools.cend())
 	{
-		out = (TypedMemoryPool<TObj>*)it->pool;
-		//assert(dynamic_cast<TypedMemoryPool<TObj>*>(it->second) != nullptr);
+		out = (TypedMemoryPool<TObj>*)*it; //TODO sanity dynamic_cast?
 	}
 	//for (RawMemoryPool* p : pools) if (out = dynamic_cast<TypedMemoryPool<TObj>*>(p)) return out;
 
 	//If set to create on fallback, do so
 	if (!out && fallbackCreate)
 	{
-		pools.push_back(PoolRecord::create<TObj>( out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount) ));
+		pools.push_back( out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount) );
 	}
 
 	return out;
@@ -96,7 +81,7 @@ void MemoryManager::destroy(TObj* obj)
 	//If that fails, search every pool to find owner
 	if (!pool)
 	{
-		for (auto& i : pools) if (i.pool->contains(obj)) { pool = i.pool; break; }
+		for (GenericTypedMemoryPool* i : pools) if (i->contains(obj)) { pool = i; break; }
 	}
 
 	assert(pool);
@@ -108,10 +93,10 @@ void MemoryManager::destroy(TObj* obj)
 template<typename TObj>
 void MemoryManager::destroyPool()
 {
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](const PoolRecord& r) { return r.poolType.name == TypeName::create<TypedMemoryPool<TObj>>(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->contentsType.name == TypeName::create<TObj>(); });
 	if (it != pools.cend())
 	{
-		delete it->pool;
+		delete *it;
 		pools.erase(it);
 	}
 }

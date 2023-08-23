@@ -15,6 +15,7 @@ public:
 
 
 //Strongly typed pointers (recommended)
+//Just a wrapper for GenericTypedMemoryPool. MUST REMAIN NON-VIRTUAL.
 template<typename TObj>
 class TypedMemoryPool : public GenericTypedMemoryPool
 {
@@ -26,10 +27,9 @@ public:
 			TypeInfo::createDummy<TObj>()
 		)
 	{
-		if (contentsType.tryRefresh()) releaseHook = contentsType.dtor;
+		//No need to resolve dummy TypeInfo here. Engine will call refreshObjects after all TypeInfos are registered.
 	}
 
-	virtual ~TypedMemoryPool() = default;
 public:
 	//Allocates memory and creates an object.
 	template<typename... TCtorArgs>
