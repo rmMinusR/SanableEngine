@@ -221,7 +221,7 @@ class VarInfo(Symbol):
         return cursor.kind == CursorKind.VAR_DECL
 
     def renderMain(this):
-        return "//VarInfo "+this.rttiHashedName+" = VarInfo(); // "+this.absName # TODO re-implement
+        return f"//VarInfo: {this.absName}" # TODO re-implement
 
 
 class FieldInfo(Member):
@@ -397,13 +397,7 @@ class Module:
         for i in this.__contents.values():
             if isinstance(i, TypeInfo):
                 yield i
-
-    @property
-    def rttiHashedName(this) -> str:
-        if not hasattr(this, "__cachedRttiHashedName"):
-            this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(','.join([i.rttiHashedName for i in this.__contents.values()]).encode("utf-8")).hexdigest()[:8]
-        return this.__cachedRttiHashedName
-
+                
     def renderBody(this) -> str:
         renders = [v.renderMain() for v in this.__contents.values()]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
