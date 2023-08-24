@@ -16,8 +16,7 @@ void MemoryManager::cleanup()
 void MemoryManager::ensureFresh()
 {
 	std::unordered_set<TypeName> typesToPatch = GlobalTypeRegistry::getDirtyTypes();
-	if (typesToPatch.empty()) return; //Halt early if there's nothing to do
-
+	
 	MemoryMapper remapper;
 
 	//Update the type data for contents of each pool

@@ -31,35 +31,13 @@ class Symbol:
     __metaclass__ = abc.ABCMeta
 
     def __init__(this, cursor: Cursor):
-        this.__astRepr = cursor
+        this.astKind = cursor.kind
+        this.relName = cursor.displayname
+        this.absName = _getAbsName(cursor)
     
     def __repr__(this):
         return this.absName
-
-    @property
-    def astRepr(this):
-        return this.__astRepr
-
-    @property
-    def astKind(this):
-        return this.__astRepr.kind
-        
-    @property
-    def absName(this) -> str:
-        if not hasattr(this, "__cachedAbsName"):
-            this.__cachedAbsName = _getAbsName(this.__astRepr)
-        return this.__cachedAbsName
-
-    @property
-    def relName(this) -> str:
-        return this.__astRepr.displayname
-
-    @property
-    def rttiHashedName(this) -> str:
-        if not hasattr(this, "__cachedRttiHashedName"):
-            this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(this.absName.encode("utf-8")).hexdigest()[:8]
-        return this.__cachedRttiHashedName
-
+    
     def render(this) -> str | None:
         return None
 
@@ -72,12 +50,8 @@ class Member(Symbol):
 
     def __init__(this, cursor: Cursor, owner):
         Symbol.__init__(this, cursor)
-        this.__owner = owner
-        assert this.__owner != None, f"{this.absName} is a member, but wasn't given an owner'"
-    
-    @property
-    def owner(this):
-        return this.__owner
+        this.owner = owner
+        assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
 
     
 class Virtualizable(Member):
@@ -291,6 +265,8 @@ class TypeInfo(Symbol):
         this.__module = module
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
+        this.isAbstract = cursor.is_abstract_record()
+
         this.__contents: list[Member] = list()
         this.__sourceFile = cursor.location.file.name
         
@@ -305,9 +281,11 @@ class TypeInfo(Symbol):
                 config.logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
     def register(this, obj: Member):
-        assert this.getMember(obj.relName, searchParents=False) == None, f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
-        config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
-        this.__contents.append(obj)
+        if this.getMember(obj.relName, searchParents=False) == None:
+            config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
+            this.__contents.append(obj)
+        else:
+            config.logger.warn(f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered! New version will be discarded.")
     
     def getMember(this, relName: str, searchParents=True):
         # Scan own contents
@@ -326,16 +304,13 @@ class TypeInfo(Symbol):
 
         # Failed to find anything
         return None
-
-    @property
-    def isAbstract(this):
-        return this.astRepr.is_abstract_record()
-
+    
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind in [
-            CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
+            CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
 			CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
+            # Removed temporarily: CursorKind.CLASS_TEMPLATE
         ]
 
     @property

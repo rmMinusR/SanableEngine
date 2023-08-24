@@ -71,14 +71,14 @@ if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
 
 ########################## Main business logic ##########################
 
-import read_ast
+import source_discovery
 import cpp_concepts
 
 config.logger.log(100, "Parsing AST...")
 
-read_ast.additionalCompilerOptions = compilerArgs
+source_discovery.additionalCompilerOptions = compilerArgs
 targetModule = cpp_concepts.Module()
-for (cursor, isOurs) in read_ast.parseAuto(args.target, args.includes):
+for (cursor, isOurs) in source_discovery.parseAuto(args.target, args.includes):
     if isOurs:
         targetModule.parse(cursor)
     else:

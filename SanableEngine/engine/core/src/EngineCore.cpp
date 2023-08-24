@@ -80,6 +80,8 @@ EngineCore::~EngineCore()
     assert(!isAlive);
 }
 
+void engine_reportTypes(ModuleTypeRegistry* registry);
+
 void EngineCore::init(char const* windowName, int windowWidth, int windowHeight, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
@@ -90,6 +92,13 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
 
     this->system = &_system;
     system->Init(this);
+
+    //Prepare RTTI
+    {
+        ModuleTypeRegistry m;
+        engine_reportTypes(&m);
+        GlobalTypeRegistry::loadModule("EngineCore", m);
+    }
 
     memoryManager.init();
     memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module
