@@ -24,7 +24,7 @@ parser.add_argument("--", dest="compilerArgs", nargs='*', help="Additional argum
 import sys
 if "--" in sys.argv:
     compilerArgsSplitIndex = sys.argv.index("--")
-    compilerArgs = " ".join(sys.argv[compilerArgsSplitIndex+1:])
+    compilerArgs = sys.argv[compilerArgsSplitIndex+1:]
     ownArgsList = sys.argv[1:compilerArgsSplitIndex]
 else:
     compilerArgsSplitIndex = -1
@@ -72,22 +72,21 @@ if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
 ########################## Main business logic ##########################
 
 import source_discovery
-import cpp_concepts
+source_discovery.additionalCompilerOptions = compilerArgs
 
 config.logger.log(100, "Parsing AST...")
 
-source_discovery.additionalCompilerOptions = compilerArgs
+import cpp_concepts
 targetModule = cpp_concepts.Module()
-for (cursor, isOurs) in source_discovery.parseAuto(args.target, args.includes):
-    if isOurs:
-        targetModule.parse(cursor)
-    else:
-        targetModule.registerExternal(cursor)
+for sourceFile in source_discovery.discoverAll(args.target):
+    sourceFile.includes += args.includes
+    if sourceFile.type != None and not sourceFile.hasError:
+        targetModule.parseFile(sourceFile)
+
+config.logger.log(100, "Rendering...")
 
 with open(args.template_file, "r") as f:
     template = "".join(f.readlines())
-
-config.logger.log(100, "Rendering...")
 
 def shortestRelPath(absPath):
     global args

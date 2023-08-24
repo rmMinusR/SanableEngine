@@ -1,64 +1,70 @@
-from clang.cindex import *
 import sys, os
-from typing import Generator, Iterator
 from config import logger
+from clang.cindex import *
 
 index = Index.create()
-fileTypes = {
-	".h"   : "c++-header",
-	".hpp" : "c++-header",
-	".inl" : "c++-header",
-	".c"   : "c++",
-	".cpp" : "c++"
-}
 additionalCompilerOptions = []
 
-def parseAuto(target: str, includePaths: list[str]) -> Generator[Cursor, None, None]:
-	if os.path.isdir(target):
-		if not target.endswith(".generated"):
-			return parseDir(target, includePaths)
-		else:
-			logger.debug(f"Skipping generated file directory ({target})")
-			return None
+class SourceFile:
+	fileTypes = {
+		".h"   : "c++-header",
+		".hpp" : "c++-header",
+		".inl" : "c++-header",
+		".c"   : "c++",
+		".cpp" : "c++",
 
-	else: # Path refers to file
-		name, ext = os.path.splitext(target)
-		if not name.endswith(".generated"):
-			if ext in fileTypes.keys():
-				return parseFile(target, includePaths)
-			else:
-				logger.warning(f"Skipping file of unknown type \"{ext}\" ({target})")
-				return None
-		else:
-			logger.debug(f"Skipping generated file ({target})")
-			return None
+		".txt" : None,
+		".xml" : None,
+		".yml" : None,
+		".json" : None
+	}
 
-def parseDir(target: str, includePaths: list[str]) -> Generator[Cursor, None, None]:
-	for subpath in os.listdir(target):
-		it = parseAuto(os.path.join(target, subpath), includePaths)
-		if it != None:
-			for i in it:
-				yield i
-
-def parseFile(target: str, includePaths: list[str]):
-	ext = os.path.splitext(target)[1]
-	fileType = fileTypes[ext]
-	try:
-		cli_args = ["-std=c++17", "--language="+fileType]
-
-		for i in includePaths:
-			cli_args.append('-I'+i) # FIXME not space safe!
-
-		cli_args.extend(additionalCompilerOptions)
-
-		tu = index.parse(target, args=cli_args, options=TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
-
-		for i in tu.cursor.get_children():
-			yield (i, isOurs(target, i))
+	def __init__(this, filePath: str):
+		this.path = filePath
+		name, ext = os.path.splitext(this.path)
+		this.isGenerated = name.endswith(".generated")
 		
-	except Exception as e:
-		logger.critical(f"Error parsing translation unit for target {target}", exc_info=True)
-		raise e
+		this.type = SourceFile.fileTypes[ext] \
+			if ext in SourceFile.fileTypes.keys() \
+			else None
 
-def isOurs(sourceDir: str, i: Cursor):
-	return sourceDir == i.location.file.name and i.is_definition()
+		this.hasError = ext not in SourceFile.fileTypes.keys()
+		this.tu: TranslationUnit = None
+		this.includes: list[str] = []
+
+	def __repr__(this):
+		return this.path
+
+	def owns(this, cursor) -> bool:
+		return this.path == cursor.location.file.name and cursor.is_definition()
+
+	def parse(this) -> Cursor:
+		assert not this.hasError
+		assert this.type != None
+
+		if this.tu == None:
+			cli_args = ["-std=c++17", "--language="+this.type]
+			cli_args.extend(['-I'+i for i in this.includes]) # FIXME not space safe!
+			cli_args.extend(additionalCompilerOptions)
+			try:
+				this.tu = index.parse(this.path, args=cli_args, options=TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
+			except Exception:
+				logger.critical(f"Error parsing translation unit for target {this.path}", exc_info=True)
+				raise
+
+		return this.tu.cursor
+	
+def discoverAll(targetPath: str) -> list[SourceFile, None, None]:
+	if os.path.isdir(targetPath):
+		# Recurse
+		out = []
+		for subpath in os.listdir(targetPath):
+			out.extend(discoverAll(os.path.join(targetPath, subpath)))
+			# Propagate isGenerated if in a .generated directory
+			if targetPath.endswith(".generated"):
+				for i in out:
+					i.isGenerated = True
+		return out
+	else:
+		# Path refers to file
+		return [SourceFile(targetPath)]
