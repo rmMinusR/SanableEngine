@@ -22,6 +22,15 @@ TEST_CASE("TypeInfo::upcast (virtual)")
 		REQUIRE(ti != nullptr);
 
 		VirtualInheritedA obj;
-		REQUIRE(ti->upcast(&obj, TypeName::create<VirtualSharedBase>()) == (VirtualSharedBase*)&obj);
+		CHECK(ti->upcast(&obj, TypeName::create<VirtualSharedBase>()) == (VirtualSharedBase*)&obj);
+	}
+
+	SUBCASE("Upcast to diamond virtual")
+	{
+		const TypeInfo* ti = TypeName::create<VirtualDiamond>().resolve();
+		REQUIRE(ti != nullptr);
+
+		VirtualDiamond obj;
+		CHECK(ti->upcast(&obj, TypeName::create<VirtualSharedBase>()) == (VirtualSharedBase*)&obj);
 	}
 }
