@@ -35,6 +35,5 @@ struct FieldInfo : public InstanceMemberInfo
 struct ParentInfo : public InstanceMemberInfo
 {
 	TypeName typeName;
-	bool isVirtual;
 	MemberVisibility visibility;
 };

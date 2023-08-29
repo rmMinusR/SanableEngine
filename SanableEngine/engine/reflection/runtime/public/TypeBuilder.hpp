@@ -1,19 +1,22 @@
 #pragma once
 
 #include "TypeInfo.hpp"
+#include "ParentInfoBuilder.hpp"
 
 #include <cassert>
-#include <functional>
 
 class ModuleTypeRegistry;
 
 class TypeBuilder
 {
+private:
 	TypeInfo type;
 
+	std::vector<ParentInfoBuilder> pendingParents;
+	
 	ENGINE_RTTI_API TypeBuilder();
 
-	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn); //Order independent
+	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn); //Order independent. UpcastFn must be valid when captureCDO or registerType are called.
 	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset); //Order independent
 	ENGINE_RTTI_API void captureCDO_internal(const std::vector<void*>& instances);
 
