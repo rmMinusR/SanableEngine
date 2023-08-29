@@ -45,7 +45,7 @@ public:
 			sizeof(TParent),
 			[](void* obj)
 			{
-				return (TParent*) reinterpret_cast<TObj*>(obj);
+				return static_cast<TParent*>( reinterpret_cast<TObj*>(obj) );
 			}
 		);
 	}
