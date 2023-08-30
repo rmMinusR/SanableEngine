@@ -4,7 +4,6 @@
 
 #include "GenericTypedMemoryPool.hpp"
 #include "MemoryPoolCommon.hpp"
-#include "ObjectPatch.hpp"
 
 
 template<typename T, size_t _maxObjectCount = 32>
@@ -16,6 +15,7 @@ public:
 
 
 //Strongly typed pointers (recommended)
+//Just a wrapper for GenericTypedMemoryPool. MUST REMAIN NON-VIRTUAL.
 template<typename TObj>
 class TypedMemoryPool : public GenericTypedMemoryPool
 {
@@ -27,36 +27,7 @@ public:
 			TypeInfo::createDummy<TObj>()
 		)
 	{
-		if (contentsType.tryRefresh()) releaseHook = contentsType.dtor;
-	}
-
-	virtual ~TypedMemoryPool() = default;
-
-protected:
-	void refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper) override
-	{
-		assert(newTypeData.name == contentsType.name); //Ensure same type
-		
-		//Resize if we grew
-		//Must be done before writing to members so writes don't happen in other objects' memory
-		if (newTypeData.size > contentsType.size) resizeObjects(newTypeData.size, remapper);
-
-		//Remap members and write vtable ptrs
-		ObjectPatch patch = ObjectPatch::create(contentsType, newTypeData);
-		for (size_t i = 0; i < mMaxNumObjects; i++)
-		{
-			TObj* obj = (TObj*)idToPtr(i);
-			if (isAlive(obj)) patch.apply(obj, remapper); //set_vtable_ptr(obj, contentsType.vtable);
-		}
-
-		//Resize if we shrunk
-		//Must be done after writing to members so we aren't reading other objects' memory
-		if (newTypeData.size < contentsType.size) resizeObjects(newTypeData.size, remapper);
-
-		contentsType = newTypeData;
-
-		//Fix bad dtors
-		releaseHook = newTypeData.dtor;
+		//No need to resolve dummy TypeInfo here. Engine will call refreshObjects after all TypeInfos are registered.
 	}
 
 public:

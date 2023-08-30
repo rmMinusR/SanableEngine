@@ -5,7 +5,9 @@
 //Dependency includes
 INCLUDE_DEPENDENCIES
 
-PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* registry)
+void engine_reportTypes(ModuleTypeRegistry* registry)
 {
+	//NOTE: Custom version!
+
 GENERATED_RTTI
 }

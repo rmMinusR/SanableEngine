@@ -5,6 +5,7 @@ from textwrap import indent
 import abc
 import hashlib
 import config
+from source_discovery import SourceFile
 
 
 def _getAbsName(target: Cursor) -> str:
@@ -31,35 +32,13 @@ class Symbol:
     __metaclass__ = abc.ABCMeta
 
     def __init__(this, cursor: Cursor):
-        this.__astRepr = cursor
+        this.astKind = cursor.kind
+        this.relName = cursor.displayname
+        this.absName = _getAbsName(cursor)
     
     def __repr__(this):
         return this.absName
-
-    @property
-    def astRepr(this):
-        return this.__astRepr
-
-    @property
-    def astKind(this):
-        return this.__astRepr.kind
-        
-    @property
-    def absName(this) -> str:
-        if not hasattr(this, "__cachedAbsName"):
-            this.__cachedAbsName = _getAbsName(this.__astRepr)
-        return this.__cachedAbsName
-
-    @property
-    def relName(this) -> str:
-        return this.__astRepr.displayname
-
-    @property
-    def rttiHashedName(this) -> str:
-        if not hasattr(this, "__cachedRttiHashedName"):
-            this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(this.absName.encode("utf-8")).hexdigest()[:8]
-        return this.__cachedRttiHashedName
-
+    
     def render(this) -> str | None:
         return None
 
@@ -72,12 +51,8 @@ class Member(Symbol):
 
     def __init__(this, cursor: Cursor, owner):
         Symbol.__init__(this, cursor)
-        this.__owner = owner
-        assert this.__owner != None, f"{this.absName} is a member, but wasn't given an owner'"
-    
-    @property
-    def owner(this):
-        return this.__owner
+        this.owner = owner
+        assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
 
     
 class Virtualizable(Member):
@@ -144,7 +119,7 @@ class ParameterInfo(Symbol):
 
 
 class GlobalFuncInfo(Symbol):
-    def __init__(this, module, cursor: Cursor):
+    def __init__(this, module, cursor: Cursor, source: SourceFile):
         Symbol.__init__(this, cursor)
         assert GlobalFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
@@ -168,7 +143,7 @@ class GlobalFuncInfo(Symbol):
         return this.__parameters
 
     def renderMain(this):
-        return None
+        return None 
 
 
 class BoundFuncInfo(Virtualizable):
@@ -235,7 +210,7 @@ class DestructorInfo(Virtualizable):
 
 
 class VarInfo(Symbol):
-    def __init__(this, module, cursor: Cursor):
+    def __init__(this, module, cursor: Cursor, source: SourceFile):
         Symbol.__init__(this, cursor)
         assert VarInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
 
@@ -246,7 +221,7 @@ class VarInfo(Symbol):
         return cursor.kind == CursorKind.VAR_DECL
 
     def renderMain(this):
-        return "//VarInfo "+this.rttiHashedName+" = VarInfo(); // "+this.absName # TODO re-implement
+        return f"//VarInfo: {this.absName}" # TODO re-implement
 
 
 class FieldInfo(Member):
@@ -286,11 +261,13 @@ class ParentInfo(Member):
 
 
 class TypeInfo(Symbol):
-    def __init__(this, module, cursor: Cursor):
+    def __init__(this, module, cursor: Cursor, source: SourceFile):
         super().__init__(cursor)
         this.__module = module
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
+        this.isAbstract = cursor.is_abstract_record()
+
         this.__contents: list[Member] = list()
         this.__sourceFile = cursor.location.file.name
         
@@ -300,14 +277,16 @@ class TypeInfo(Symbol):
             if matchedType != None:
                 this.register(matchedType(module, i, this))
             elif TypeInfo.matches(i):
-                module.parse(i) # Nested types are effectively just namespaced. Recurse.
+                module.parseGlobalCursor(i, source) # Nested types are effectively just namespaced. Recurse.
             elif i.kind not in ignoredSymbols:
                 config.logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
     def register(this, obj: Member):
-        assert this.getMember(obj.relName, searchParents=False) == None, f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
-        config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
-        this.__contents.append(obj)
+        if this.getMember(obj.relName, searchParents=False) == None:
+            config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
+            this.__contents.append(obj)
+        else:
+            config.logger.warn(f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered! New version will be discarded.")
     
     def getMember(this, relName: str, searchParents=True):
         # Scan own contents
@@ -326,16 +305,13 @@ class TypeInfo(Symbol):
 
         # Failed to find anything
         return None
-
-    @property
-    def isAbstract(this):
-        return this.astRepr.is_abstract_record()
-
+    
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind in [
-            CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
+            CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
 			CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
+            # Removed temporarily: CursorKind.CLASS_TEMPLATE
         ]
 
     @property
@@ -378,24 +354,32 @@ class TypeInfo(Symbol):
 class Module:
     def __init__(this):
         this.__contents: dict[str, Symbol] = dict()
-        this.roots: list[Cursor] = list()
-        this.typeCursorCache: dict[str, Cursor] = dict()
+        this.nameToFile: dict[str, set[SourceFile]] = dict()
         
-    def registerExternal(this, cursor: Cursor):
-        this.roots.append(cursor)
+    def parseFile(this, source: SourceFile):
+        for cursor in source.parse().get_children():
+            this.parseGlobalCursor(cursor, source)
 
-    def parse(this, cursor: Cursor): 
-        this.roots.append(cursor)
+    def registerName(this, name: str, file: SourceFile):
+        if not name in this.nameToFile.keys():
+            this.nameToFile[name] = set()
+
+        this.nameToFile[name].add(file)
+
+    def parseGlobalCursor(this, cursor: Cursor, source: SourceFile):
+        if not source.owns(cursor):
+            return
+
+        this.registerName(_getAbsName(cursor), source)
+        
+        # Skip deep scan if cursor was #include'd
         matchedType = next((i for i in allowedGlobalSymbols if i.matches(cursor)), None)
         if matchedType != None:
-            v = matchedType(this, cursor)
+            v = matchedType(this, cursor, source)
+            if isinstance(v, Member): v.owner.register(v) # Members
+            else: this.register(v) # Global or static
 
-            if not isinstance(v, Member) or v.isGlobal:
-                this.register(v) # Global or static
-            else:
-                v.owner.register(v) # Members
-
-        elif matchedType not in ignoredSymbols:
+        elif cursor.kind not in ignoredSymbols:
             config.logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
     def register(this, obj: Symbol):
@@ -413,25 +397,7 @@ class Module:
         for i in this.__contents.values():
             if isinstance(i, TypeInfo):
                 yield i
-
-    @property
-    def globals(this) -> Generator[VarInfo, None, None]: # NOTE: Includes statics inside classes
-        for i in this.__contents.values():
-            if isinstance(i, VarInfo):
-                yield i
-
-    @property
-    def functions(this) -> Generator[GlobalFuncInfo, None, None]:
-        for i in this.__contents.values():
-            if isinstance(i, GlobalFuncInfo):
-                yield i
-
-    @property
-    def rttiHashedName(this) -> str:
-        if not hasattr(this, "__cachedRttiHashedName"):
-            this.__cachedRttiHashedName = "__generatedRTTI_"+hashlib.sha256(','.join([i.rttiHashedName for i in this.__contents.values()]).encode("utf-8")).hexdigest()[:8]
-        return this.__cachedRttiHashedName
-
+                
     def renderBody(this) -> str:
         renders = [v.renderMain() for v in this.__contents.values()]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
@@ -442,48 +408,21 @@ class Module:
         for i in this.types:
             config.logger.debug(f"{i.absName} references:")
             for typeName in i.getReferencedTypes():
-                typeCursor = locateTypeCursor(this, typeName)
-                if not isinstance(typeCursor, NoneType):
-                    out.add(typeCursor.canonical.location.file.name)
-                    config.logger.debug(f" - {typeName} @ {typeCursor.canonical.location.file.name}:{typeCursor.canonical.location.line}")
+                typePaths = this.locateType(typeName)
+                if len(typePaths) > 0:
+                    out.update(typePaths)
+                    config.logger.debug(f" - {typeName} @ {typePaths}")
                 else:
                     config.logger.debug(f" - {typeName} @ (external)")
                     #config.logger.warn(f"Failed to locate definition of {typeName}")
         return out
 
-def locateTypeCursor(target: Module | Cursor, name: str) -> Cursor | None:
-    candidates = locateTypeCursor_impl(target, name)
-    return candidates[0] if len(candidates)>0 else None
-
-def locateTypeCursor_impl(target: Module | Cursor, name: str) -> list[Cursor]:
-    out = []
-
-    # If module, visit child cursors
-    if isinstance(target, Module):
-
-        #Try cache first
-        if name in target.typeCursorCache:
-            out.append(target.typeCursorCache[name])
+    def locateType(this, name: str) -> set[str]:
+        if name in this.nameToFile.keys():
+            return set([i.path for i in this.nameToFile[name]])
         else:
-            for i in target.roots:
-                rv = locateTypeCursor(i, name)
-                if not isinstance(rv, NoneType): # Can't do direct comparison to None...
-                    target.typeCursorCache[name] = rv
-                    out.append(rv)
-    
-    # If cursor, try to match, then try to recurse
-    else:
-        if TypeInfo.matches(target) and _getAbsName(target) == name:
-            out.append(target)
+            return set()
 
-        elif target.kind == CursorKind.NAMESPACE or TypeInfo.matches(target):
-            for i in target.get_children():
-                rv = locateTypeCursor(i, name)
-                if not isinstance(rv, NoneType): # Can't do direct comparison to None...
-                    out.append(rv)
-
-    return out
-    
 
 ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL]
 allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo]
