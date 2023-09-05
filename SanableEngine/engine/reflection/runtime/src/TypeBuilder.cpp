@@ -6,9 +6,9 @@ TypeBuilder::TypeBuilder()
 {
 }
 
-void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, const std::function<void* (void*)>& upcastFn)
+void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness)
 {
-	pendingParents.emplace_back(parent, type.size, size, upcastFn);
+	pendingParents.emplace_back(parent, type.size, size, upcastFn, visibility, virtualness);
 }
 
 void TypeBuilder::addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset)

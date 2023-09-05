@@ -16,7 +16,7 @@ private:
 	
 	ENGINE_RTTI_API TypeBuilder();
 
-	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn); //Order independent. UpcastFn must be valid when captureCDO or registerType are called.
+	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness); //Order independent. UpcastFn must be valid when captureCDO or registerType are called.
 	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset); //Order independent
 	ENGINE_RTTI_API void captureCDO_internal(const std::vector<void*>& instances);
 
@@ -32,9 +32,9 @@ public:
 	ENGINE_RTTI_API void registerType(ModuleTypeRegistry* registry);
 
 	//Order independent
-	//DO NOT USE for virtual inheritance
+	//Ok to use for virtual inheritance
 	template<typename TObj, typename TParent>
-	inline void addParent()
+	inline void addParent(MemberVisibility visibility, ParentInfo::Virtualness virtualness)
 	{
 		//No funny business!
 		static_assert(std::is_base_of<TParent, TObj>::value);
@@ -46,7 +46,9 @@ public:
 			[](void* obj)
 			{
 				return static_cast<TParent*>( reinterpret_cast<TObj*>(obj) );
-			}
+			},
+			visibility,
+			virtualness
 		);
 	}
 

@@ -166,6 +166,20 @@ void* TypeInfo::upcast(void* obj, const TypeName& name) const
 	//If referring to self, nothing to do
 	if (name == this->name) return obj;
 
+	//Try inherited virtuals first
+	for (const ParentInfo& parent : parents)
+	{
+		if (parent.virtualness == ParentInfo::Virtualness::VirtualInherited)
+		{
+			void* objAsImmediateParent = ((char*)obj) + parent.offset;
+		
+			//Try matching parent, recursing
+			void* out = parent.typeName.resolve()->upcast(objAsImmediateParent, name);
+			if (out) return out;
+		}
+	}
+
+	//Then try normal inherited
 	for (const ParentInfo& parent : parents)
 	{
 		void* objAsImmediateParent = ((char*)obj) + parent.offset;

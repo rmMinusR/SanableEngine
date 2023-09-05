@@ -1,7 +1,9 @@
 ﻿from types import NoneType
 from typing import Generator, Iterator
+from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
+import copy
 import abc
 import hashlib
 import config
@@ -28,6 +30,7 @@ def cvpUnwrapTypeName(name: str) -> str:
     # Nothing to strip
     return name
 
+
 class Symbol:
     __metaclass__ = abc.ABCMeta
 
@@ -47,6 +50,18 @@ class Symbol:
 
 
 class Member(Symbol):
+    class Visibility:
+        Public    = "MemberVisibility::Public"
+        Protected = "MemberVisibility::Protected"
+        Private   = "MemberVisibility::Private"
+
+        def lookupFromClang(clangRepr: AccessSpecifier):
+            return {
+                AccessSpecifier.PUBLIC   : Member.Visibility.Public,
+                AccessSpecifier.PROTECTED: Member.Visibility.Protected,
+                AccessSpecifier.PRIVATE  : Member.Visibility.Private
+            }[clangRepr]
+
     __metaclass__ = abc.ABCMeta
 
     def __init__(this, cursor: Cursor, owner):
@@ -71,7 +86,7 @@ class Virtualizable(Member):
 
         # Attempt to locate parent member
         this.__cachedParent = None
-        for parentInfo in this.owner.parents:
+        for parentInfo in this.owner.immediateParents:
             parentClass = parentInfo.backingType
             if parentClass != None:
                 this.__cachedParent = parentClass.getMember(this.relName, searchParents=True)
@@ -243,11 +258,25 @@ class FieldInfo(Member):
 
 
 class ParentInfo(Member):
+    class Virtualness:
+        NonVirtual       = "ParentInfo::Virtualness::NonVirtual"
+        VirtualExplicit  = "ParentInfo::Virtualness::VirtualExplicit"
+        VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
+
     def __init__(this, module, cursor: Cursor, owner):
         Member.__init__(this, cursor, owner)
-        this.__module = module
+        this.dynOwner = owner
         assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a parent"
+        
+        this.__module = module
+        this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
 
+        this.isVirtual = any([i.spelling == "virtual" for i in cursor.get_tokens()])
+        if this.isVirtual:
+            this.virtualness = ParentInfo.Virtualness.VirtualExplicit
+        else:
+            this.virtualness = ParentInfo.Virtualness.NonVirtual
+            
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.CXX_BASE_SPECIFIER
@@ -257,7 +286,7 @@ class ParentInfo(Member):
         return this.__module.lookup(this.absName)
     
     def renderMain(this):
-        return None # Renders as part of first line of type
+        return f"builder.addParent<{this.dynOwner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
 
 
 class TypeInfo(Symbol):
@@ -296,7 +325,7 @@ class TypeInfo(Symbol):
 
         # Recurse into parents
         if searchParents:
-            for pi in this.parents:
+            for pi in this.immediateParents:
                 p = pi.backingType
                 if p != None:
                     i = p.getMember(relName, searchParents=True)
@@ -319,19 +348,38 @@ class TypeInfo(Symbol):
         return this.__sourceFile
 
     @property
-    def parents(this) -> list[ParentInfo]:
+    def immediateParents(this) -> list[ParentInfo]:
         return [i for i in this.__contents if isinstance(i, ParentInfo)]
+    
+    @property
+    def allParents(this) -> list[ParentInfo]:
+        out = this.immediateParents
+        for i in this.immediateParents:
+            out.extend(i.backingType.allParents)
+        return out
+
+    @property
+    def implicitlyInheritedVirtualParents(this) -> list[ParentInfo]:
+        out = [copy.copy(i) for i in this.allParents if i.isVirtual and i not in this.immediateParents]
+
+        # Create dummy redirect
+        for i in out:
+            i.virtualness = ParentInfo.Virtualness.VirtualInherited
+            i.dynOwner = this
+
+        # Deduplicate by absName
+        for i in out[::-1]:
+            if [j.absName == i.absName for j in out].count(True) > 1:
+                out.remove(i)
+
+        return out
     
     def renderMain(this):
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
-
-        # Render parents
-        for i in this.parents:
-            out += f"builder.addParent<{this.absName}, {i.absName}>();\n"
-
-        # Render standard members
-        renderedContents = [i.renderMain() for i in this.__contents if not isinstance(i, ParentInfo)]
+        
+        # Render standard members, explicit parents, and implicitly inherited virtual parents
+        renderedContents = [i.renderMain() for i in (this.__contents + this.implicitlyInheritedVirtualParents)]
         out += "\n".join([i for i in renderedContents if i != None])
         
         # Finalize
