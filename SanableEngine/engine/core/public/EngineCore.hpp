@@ -10,16 +10,17 @@
 #include "dllapi.h"
 #include "PluginManager.hpp"
 
+class ModuleTypeRegistry;
 class GameObject;
 class Component;
-
 class IUpdatable;
 class IRenderable;
-
 namespace gpr460 { class System; }
 
 class EngineCore
 {
+    friend void engine_reportTypes(ModuleTypeRegistry* registry);
+
 private:
     bool isAlive;
     SDL_Window* window = nullptr;

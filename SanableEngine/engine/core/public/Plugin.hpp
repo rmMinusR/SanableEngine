@@ -20,12 +20,15 @@ typedef void* LibHandle;
 #include <vector>
 #include <string>
 
+class ModuleTypeRegistry;
 class EngineCore;
 class PluginManager;
 struct PluginReportedData;
 
 struct Plugin
 {
+	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+
 public:
 	enum class Status
 	{

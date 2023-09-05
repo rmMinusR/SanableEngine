@@ -7,7 +7,5 @@ INCLUDE_DEPENDENCIES
 
 void engine_reportTypes(ModuleTypeRegistry* registry)
 {
-	//NOTE: Custom version!
-
 GENERATED_RTTI
 }

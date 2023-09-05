@@ -6,10 +6,13 @@
 
 #include "Plugin.hpp"
 
+class ModuleTypeRegistry;
 class EngineCore;
 
 class PluginManager
 {
+	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+
 private:
 	EngineCore* const engine;
 	std::vector<Plugin*> plugins;

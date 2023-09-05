@@ -6,8 +6,12 @@
 
 #include "Vector3.inl"
 
+class ModuleTypeRegistry;
+
 class Transform
 {
+	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+
 private:
 	Transform* parent;
 	std::vector<Transform*> children;

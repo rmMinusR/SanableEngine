@@ -9,12 +9,15 @@
 #include "MemoryManager.hpp"
 #include "EngineCore.hpp"
 
+class ModuleTypeRegistry;
 class Component;
 class EngineCore;
 struct HotswapTypeData;
 
 class GameObject
 {
+    friend void engine_reportTypes(ModuleTypeRegistry* registry);
+
 protected:
     Transform transform;
 

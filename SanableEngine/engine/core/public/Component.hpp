@@ -4,11 +4,14 @@
 
 #include "GameObject.hpp"
 
+class ModuleTypeRegistry;
 class GameObject;
 class EngineCore;
 
 class Component
 {
+	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+
 protected:
 	GameObject* gameObject;
 
