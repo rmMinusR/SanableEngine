@@ -388,7 +388,7 @@ class TypeInfo(Symbol):
         else:
             out += f"\n//{this.absName} is abstract. Skipping CDO capture."
         out += "\nbuilder.registerType(registry);"
-        return f"//{this.relName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
+        return f"//{this.absName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 
     def getReferencedTypes(this) -> set[str]:
         out = set()
@@ -426,7 +426,9 @@ class Module:
             v = matchedType(this, cursor, source)
             if isinstance(v, Member): v.owner.register(v) # Members
             else: this.register(v) # Global or static
-
+        elif cursor.kind == CursorKind.NAMESPACE:
+            for i in cursor.get_children():
+                this.parseGlobalCursor(i, source)
         elif cursor.kind not in ignoredSymbols:
             config.logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
