@@ -83,6 +83,9 @@ for sourceFile in source_discovery.discoverAll(args.target):
     if sourceFile.type != None and not sourceFile.hasError:
         targetModule.parseFile(sourceFile)
 
+config.logger.log(100, "Finalizing...")
+targetModule.finalize()
+
 config.logger.log(100, "Rendering...")
 
 with open(args.template_file, "r") as f:

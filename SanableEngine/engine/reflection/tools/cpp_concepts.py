@@ -307,14 +307,16 @@ class TypeInfo(Symbol):
             elif TypeInfo.matches(i):
                 module.parseGlobalCursor(i) # Nested types are effectively just namespaced. Recurse.
             elif i.kind not in ignoredSymbols:
-                config.logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
+                absName = _getAbsName(i)
+                if absName != "": config.logger.warning(f"Skipping member symbol {absName} of unhandled type {i.kind}")
     
     def register(this, obj: Member):
-        if this.getMember(obj.relName, searchParents=False) == None:
+        existing = this.getMember(obj.relName, searchParents=False)
+        if existing == None or not existing.isDefinition:
             config.logger.debug(f"Registering member symbol {obj.absName} of type {obj.astKind}")
             this.__contents.append(obj)
         else:
-            config.logger.warn(f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered! New version will be discarded.")
+            config.logger.warn(f"Tried to register {obj.absName} ({obj.astKind}), but a definition was already registered! New version will be discarded.")
     
     def getMember(this, relName: str, searchParents=True):
         # Scan own contents
@@ -429,7 +431,8 @@ class Module:
                 this.register(built)
 
         elif cursor.kind not in ignoredSymbols:
-            config.logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
+            absName = _getAbsName(cursor)
+            if absName != "": config.logger.warning(f"Skipping global symbol {absName} of unhandled type {cursor.kind}")
 
     def register(this, obj: Symbol):
         # Sanity check: No overwriting definitions. Declarations are fine to overwrite though.
@@ -455,6 +458,11 @@ class Module:
             if isinstance(i, TypeInfo):
                 yield i
                 
+    def finalize(this):
+        undefined = [i for i in this._Module__contents.values() if not i.isDefinition]
+        if len(undefined) > 0:
+            config.logger.error(f"Detected {len(undefined)} declared global symbols missing definitions: {undefined}")
+
     def renderBody(this) -> str:
         renders = [v.renderMain() for v in this.__contents.values() if this.owns(v)]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
@@ -475,6 +483,50 @@ class Module:
         return out
 
         
-ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL, CursorKind.UNEXPOSED_DECL, CursorKind.STATIC_ASSERT]
+ignoredSymbols = [
+    # Actually ignored for good reasons
+    CursorKind.CXX_ACCESS_SPEC_DECL,
+    CursorKind.UNEXPOSED_DECL,
+    CursorKind.UNEXPOSED_EXPR,
+    CursorKind.UNEXPOSED_ATTR,
+    CursorKind.STATIC_ASSERT,
+    CursorKind.ALIGNED_ATTR,
+    CursorKind.NAMESPACE_REF, # No point in implementing namespace aliasing
+    CursorKind.FRIEND_DECL, # Note: Might want to implement friend checking before doing codegen, but not now
+
+    # ??? I have no idea what these are
+    CursorKind.CXX_BOOL_LITERAL_EXPR,
+    CursorKind.INTEGER_LITERAL,
+    CursorKind.DECL_REF_EXPR,
+    CursorKind.CALL_EXPR, # Appears to be related to decltype/declval in template parameters?
+    CursorKind.DECL_REF_EXPR,
+
+    # TODO reimplement global variable support
+    CursorKind.VAR_DECL,
+
+    # TODO reimplement function support
+    CursorKind.FUNCTION_DECL,
+    CursorKind.CONVERSION_FUNCTION,
+    CursorKind.CXX_METHOD,
+
+    # TODO implement type alias support
+    CursorKind.TYPEDEF_DECL,
+    CursorKind.USING_DECLARATION,
+    CursorKind.USING_DIRECTIVE,
+    CursorKind.TYPE_ALIAS_DECL,
+
+    # TODO implement enum support
+    CursorKind.ENUM_DECL,
+
+    # TODO implement template support
+    CursorKind.CLASS_TEMPLATE,
+    CursorKind.TYPE_REF,
+    CursorKind.TEMPLATE_REF,
+    CursorKind.TEMPLATE_TYPE_PARAMETER,
+    CursorKind.TEMPLATE_NON_TYPE_PARAMETER,
+    CursorKind.TYPE_ALIAS_TEMPLATE_DECL,
+    CursorKind.FUNCTION_TEMPLATE,
+    CursorKind.PACK_EXPANSION_EXPR
+]
 allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo]
 allowedGlobalSymbols = [TypeInfo] # GlobalVarInfo, GlobalFuncInfo
