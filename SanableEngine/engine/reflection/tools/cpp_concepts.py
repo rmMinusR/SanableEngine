@@ -1,11 +1,10 @@
-﻿from types import NoneType
-from typing import Generator, Iterator
+﻿from enum import Enum
+from typing import Generator
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
 import copy
 import abc
-import hashlib
 import config
 from source_discovery import SourceFile
 
@@ -31,13 +30,17 @@ def cvpUnwrapTypeName(name: str) -> str:
     return name
 
 
+
 class Symbol:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(this, cursor: Cursor):
+    def __init__(this, module: "Module", cursor: Cursor):
+        this.module = module
         this.astKind = cursor.kind
         this.relName = cursor.displayname
         this.absName = _getAbsName(cursor)
+        this.isDefinition = cursor.is_definition()
+        this.sourceFile = SourceFile(cursor.location.file.name)
     
     def __repr__(this):
         return this.absName
@@ -50,6 +53,8 @@ class Symbol:
 
 
 class Member(Symbol):
+    __metaclass__ = abc.ABCMeta
+
     class Visibility:
         Public    = "MemberVisibility::Public"
         Protected = "MemberVisibility::Protected"
@@ -61,19 +66,18 @@ class Member(Symbol):
                 AccessSpecifier.PROTECTED: Member.Visibility.Protected,
                 AccessSpecifier.PRIVATE  : Member.Visibility.Private
             }[clangRepr]
-
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(this, cursor: Cursor, owner):
-        Symbol.__init__(this, cursor)
+    
+    def __init__(this, module: "Module", cursor: Cursor, owner: Symbol):
+        super().__init__(module, cursor)
         this.owner = owner
         assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
 
     
 class Virtualizable(Member):
-    def __init__(this, cursor: Cursor, owner):
-        Member.__init__(this, cursor, owner)
-        this.__cursor = cursor
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(this, module: "Module", cursor: Cursor, owner: Symbol):
+        super().__init__(module, cursor, owner)
         
         # Cache simple checks: search for keywords
         this.__isExplicitVirtual = cursor.is_virtual_method() or cursor.is_pure_virtual_method()
@@ -122,9 +126,8 @@ class Virtualizable(Member):
 
 
 class ParameterInfo(Symbol):
-    def __init__(this, module, cursor: Cursor):
-        Symbol.__init__(this, cursor)
-        this.__module = module
+    def __init__(this, module: "Module", cursor: Cursor):
+        Symbol.__init__(this, module, cursor)
         this.__typeName = cursor.displayname
         #this.__name = TODO scan file
 
@@ -134,16 +137,14 @@ class ParameterInfo(Symbol):
 
 
 class GlobalFuncInfo(Symbol):
-    def __init__(this, module, cursor: Cursor, source: SourceFile):
-        Symbol.__init__(this, cursor)
+    def __init__(this, module: "Module", cursor: Cursor):
+        Symbol.__init__(this, module, cursor)
         assert GlobalFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
         this.__parameters = []
         for i in cursor.get_children():
             if ParameterInfo.matches(i):
                 this.__parameters.append(ParameterInfo(module, i))
-
-        # TODO capture address
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -158,12 +159,27 @@ class GlobalFuncInfo(Symbol):
         return this.__parameters
 
     def renderMain(this):
-        return None 
+        return None # TODO re-implement
+
+    
+class GlobalVarInfo(Symbol):
+    def __init__(this, module: "Module", cursor: Cursor):
+        Symbol.__init__(this, module, cursor)
+        assert GlobalVarInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
+
+        # TODO deduce address (global or relative)
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind == CursorKind.VAR_DECL
+
+    def renderMain(this):
+        return f"//VarInfo: {this.absName}" # TODO re-implement
 
 
 class BoundFuncInfo(Virtualizable):
-    def __init__(this, module, cursor: Cursor, owner):
-        Virtualizable.__init__(this, cursor, owner)
+    def __init__(this, module: "Module", cursor: Cursor, owner):
+        Virtualizable.__init__(this, module, cursor, owner)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
         this.__parameters = []
@@ -190,8 +206,8 @@ class BoundFuncInfo(Virtualizable):
 
 
 class ConstructorInfo(Member):
-    def __init__(this, module, cursor: Cursor, owner):
-        Member.__init__(this, cursor, owner)
+    def __init__(this, module: "Module", cursor: Cursor, owner):
+        Member.__init__(this, module, cursor, owner)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
         
         this.__parameters = []
@@ -212,8 +228,8 @@ class ConstructorInfo(Member):
 
 
 class DestructorInfo(Virtualizable):
-    def __init__(this, module, cursor: Cursor, owner):
-        Virtualizable.__init__(this, cursor, owner)
+    def __init__(this, module: "Module", cursor: Cursor, owner):
+        Virtualizable.__init__(this, module, cursor, owner)
         assert DestructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a destructor"
 
     @staticmethod
@@ -224,24 +240,9 @@ class DestructorInfo(Virtualizable):
         return None
 
 
-class VarInfo(Symbol):
-    def __init__(this, module, cursor: Cursor, source: SourceFile):
-        Symbol.__init__(this, cursor)
-        assert VarInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
-
-        # TODO deduce address (global or relative)
-
-    @staticmethod
-    def matches(cursor: Cursor):
-        return cursor.kind == CursorKind.VAR_DECL
-
-    def renderMain(this):
-        return f"//VarInfo: {this.absName}" # TODO re-implement
-
-
 class FieldInfo(Member):
-    def __init__(this, module, cursor: Cursor, owner):
-        Member.__init__(this, cursor, owner)
+    def __init__(this, module: "Module", cursor: Cursor, owner):
+        Member.__init__(this, module, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
         this.__declaredTypeName = cursor.type.spelling
 
@@ -258,13 +259,13 @@ class FieldInfo(Member):
 
 
 class ParentInfo(Member):
-    class Virtualness:
+    class Virtualness(str, Enum):
         NonVirtual       = "ParentInfo::Virtualness::NonVirtual"
         VirtualExplicit  = "ParentInfo::Virtualness::VirtualExplicit"
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
-    def __init__(this, module, cursor: Cursor, owner):
-        Member.__init__(this, cursor, owner)
+    def __init__(this, module: "Module", cursor: Cursor, owner):
+        Member.__init__(this, module, cursor, owner)
         this.dynOwner = owner
         assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a parent"
         
@@ -290,15 +291,13 @@ class ParentInfo(Member):
 
 
 class TypeInfo(Symbol):
-    def __init__(this, module, cursor: Cursor, source: SourceFile):
-        super().__init__(cursor)
-        this.__module = module
+    def __init__(this, module: "Module", cursor: Cursor):
+        super().__init__(module, cursor)
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
         this.isAbstract = cursor.is_abstract_record()
 
         this.__contents: list[Member] = list()
-        this.__sourceFile = cursor.location.file.name
         
         # Recurse into children
         for i in cursor.get_children():
@@ -306,7 +305,7 @@ class TypeInfo(Symbol):
             if matchedType != None:
                 this.register(matchedType(module, i, this))
             elif TypeInfo.matches(i):
-                module.parseGlobalCursor(i, source) # Nested types are effectively just namespaced. Recurse.
+                module.parseGlobalCursor(i) # Nested types are effectively just namespaced. Recurse.
             elif i.kind not in ignoredSymbols:
                 config.logger.warning(f"Skipping member symbol {_getAbsName(i)} of unhandled type {i.kind}")
     
@@ -340,13 +339,9 @@ class TypeInfo(Symbol):
         return cursor.kind in [
             CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
 			CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
-            # Removed temporarily: CursorKind.CLASS_TEMPLATE
+            # TODO Removed temporarily: CursorKind.CLASS_TEMPLATE
         ]
-
-    @property
-    def sourceFile(this) -> str:
-        return this.__sourceFile
-
+    
     @property
     def immediateParents(this) -> list[ParentInfo]:
         return [i for i in this.__contents if isinstance(i, ParentInfo)]
@@ -402,38 +397,45 @@ class TypeInfo(Symbol):
 class Module:
     def __init__(this):
         this.__contents: dict[str, Symbol] = dict()
-        this.nameToFile: dict[str, set[SourceFile]] = dict()
-        
+        this.__sourceFiles: set[SourceFile] = set()
+
     def parseFile(this, source: SourceFile):
+        assert source not in this.__sourceFiles, f"Tried to parse source file, but it has already been parsed: {source.path}"
+        this.__sourceFiles.add(source)
         for cursor in source.parse().get_children():
-            this.parseGlobalCursor(cursor, source)
-
-    def registerName(this, name: str, file: SourceFile):
-        if not name in this.nameToFile.keys():
-            this.nameToFile[name] = set()
-
-        this.nameToFile[name].add(file)
-
-    def parseGlobalCursor(this, cursor: Cursor, source: SourceFile):
-        if not source.owns(cursor):
+            this.parseGlobalCursor(cursor)
+            
+    def parseGlobalCursor(this, cursor: Cursor):
+        # Stop early if we already have a definition for this symbol
+        existingEntry = this.lookup(cursor)
+        if existingEntry != None and existingEntry.isDefinition:
             return
 
-        this.registerName(_getAbsName(cursor), source)
-        
-        # Skip deep scan if cursor was #include'd
+        # Special case for namespaces: Just walk children
+        if cursor.kind == CursorKind.NAMESPACE:
+            for i in cursor.get_children():
+                this.parseGlobalCursor(i)
+            return
+
+        # Build from factory
         matchedType = next((i for i in allowedGlobalSymbols if i.matches(cursor)), None)
         if matchedType != None:
-            v = matchedType(this, cursor, source)
-            if isinstance(v, Member): v.owner.register(v) # Members
-            else: this.register(v) # Global or static
-        elif cursor.kind == CursorKind.NAMESPACE:
-            for i in cursor.get_children():
-                this.parseGlobalCursor(i, source)
+            built: Symbol = matchedType(this, cursor)
+            assert not isinstance(built, Member) # Sanity: Member registration happens in TypeInfo, except for statics
+            
+            if existingEntry == None or built.isDefinition:
+                this.register(built)
+
         elif cursor.kind not in ignoredSymbols:
             config.logger.warning(f"Skipping global symbol {_getAbsName(cursor)} of unhandled type {cursor.kind}")
 
     def register(this, obj: Symbol):
-        assert obj.absName not in this.__contents.keys(), f"Tried to register {obj.absName} ({obj.astKind}), but it was already registered!"
+        # Sanity check: No overwriting definitions. Declarations are fine to overwrite though.
+        existing = this.lookup(obj.absName)
+        if existing != None:
+            assert not existing.isDefinition, f"Tried to register {obj.absName} ({obj.astKind}), but a definition was already registered!"
+
+        # Do actual registration
         config.logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
         this.__contents[obj.absName] = obj
 
@@ -441,6 +443,9 @@ class Module:
         if isinstance(key, Cursor):
             key = _getAbsName(key)
         return this.__contents.get(key)
+
+    def owns(this, obj: Symbol):
+        return obj.sourceFile in this.__sourceFiles
 
     @property
     def types(this) -> Generator[TypeInfo, None, None]:
@@ -473,7 +478,7 @@ class Module:
         else:
             return set()
 
-
-ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL]
+        
+ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL, CursorKind.UNEXPOSED_DECL, CursorKind.STATIC_ASSERT]
 allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo]
-allowedGlobalSymbols = [VarInfo, GlobalFuncInfo, TypeInfo]
+allowedGlobalSymbols = [TypeInfo] # GlobalVarInfo, GlobalFuncInfo

@@ -30,12 +30,18 @@ class SourceFile:
 
 		this.hasError = ext not in SourceFile.fileTypes.keys()
 		this.tu: TranslationUnit = None
-		this.includes: list[str] = []
+		this.additionalIncludes: list[str] = []
 
 	def __repr__(this):
 		return this.path
 
-	def owns(this, cursor) -> bool:
+	def __eq__(this, other):
+		return isinstance(other, SourceFile) and this.path == other.path
+
+	def __hash__(this):
+		return hash(this.path)
+
+	def owns(this, cursor: Cursor) -> bool:
 		return this.path == cursor.location.file.name and cursor.is_definition()
 
 	def parse(this) -> Cursor:
@@ -44,7 +50,7 @@ class SourceFile:
 
 		if this.tu == None:
 			cli_args = ["-std=c++17", "--language="+this.type]
-			cli_args.extend(['-I'+i for i in this.includes]) # FIXME not space safe!
+			cli_args.extend(['-I'+i for i in this.additionalIncludes]) # FIXME not space safe!
 			cli_args.extend(additionalCompilerOptions)
 			try:
 				this.tu = index.parse(this.path, args=cli_args, options=TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)

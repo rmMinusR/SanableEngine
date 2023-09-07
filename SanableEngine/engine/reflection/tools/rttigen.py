@@ -79,7 +79,7 @@ config.logger.log(100, "Parsing AST...")
 import cpp_concepts
 targetModule = cpp_concepts.Module()
 for sourceFile in source_discovery.discoverAll(args.target):
-    sourceFile.includes += args.includes
+    sourceFile.additionalIncludes += args.includes
     if sourceFile.type != None and not sourceFile.hasError:
         targetModule.parseFile(sourceFile)
 

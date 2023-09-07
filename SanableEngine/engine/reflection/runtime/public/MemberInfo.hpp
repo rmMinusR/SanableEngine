@@ -5,7 +5,7 @@
 struct InstanceMemberInfo
 {
 	size_t size;
-	size_t offset;
+	ptrdiff_t offset;
 
 protected:
 	ENGINE_RTTI_API void* getAddr(void* objInstance) const;
