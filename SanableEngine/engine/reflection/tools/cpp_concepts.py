@@ -1,4 +1,5 @@
-﻿from enum import Enum
+﻿from cgitb import lookup
+from enum import Enum
 from typing import Generator
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
@@ -269,7 +270,6 @@ class ParentInfo(Member):
         this.dynOwner = owner
         assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a parent"
         
-        this.__module = module
         this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
 
         this.isVirtual = any([i.spelling == "virtual" for i in cursor.get_tokens()])
@@ -284,7 +284,7 @@ class ParentInfo(Member):
 
     @property
     def backingType(this):
-        return this.__module.lookup(this.absName)
+        return this.module.lookup(this.absName)
     
     def renderMain(this):
         return f"builder.addParent<{this.dynOwner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
@@ -350,7 +350,9 @@ class TypeInfo(Symbol):
     def allParents(this) -> list[ParentInfo]:
         out = this.immediateParents
         for i in this.immediateParents:
-            out.extend(i.backingType.allParents)
+            p = i.backingType
+            if p != None: out.extend(i.backingType.allParents)
+            else: config.logger.critical(f"Cannot traverse parent: {this.absName} -> {i.absName}. This may result in incorrect cast information.")
         return out
 
     @property
@@ -454,29 +456,23 @@ class Module:
                 yield i
                 
     def renderBody(this) -> str:
-        renders = [v.renderMain() for v in this.__contents.values()]
+        renders = [v.renderMain() for v in this.__contents.values() if this.owns(v)]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
 
     def renderIncludes(this) -> set[str]:
         out = set()
         for i in this.types:
-            config.logger.debug(f"{i.absName} references:")
-            for typeName in i.getReferencedTypes():
-                typePaths = this.locateType(typeName)
-                if len(typePaths) > 0:
-                    out.update(typePaths)
-                    config.logger.debug(f" - {typeName} @ {typePaths}")
-                else:
-                    config.logger.debug(f" - {typeName} @ (external)")
-                    #config.logger.warn(f"Failed to locate definition of {typeName}")
+            if this.owns(i):
+                config.logger.debug(f"{i.absName} references:")
+                for typeName in i.getReferencedTypes():
+                    match = this.lookup(typeName)
+                    if match != None:
+                        out.add(match.sourceFile.path)
+                        config.logger.debug(f" - {typeName} @ {match.sourceFile.path}")
+                    else:
+                        config.logger.debug(f" - {typeName} @ (Failed to locate definition)")
         return out
-
-    def locateType(this, name: str) -> set[str]:
-        if name in this.nameToFile.keys():
-            return set([i.path for i in this.nameToFile[name]])
-        else:
-            return set()
 
         
 ignoredSymbols = [CursorKind.CXX_ACCESS_SPEC_DECL, CursorKind.UNEXPOSED_DECL, CursorKind.STATIC_ASSERT]
