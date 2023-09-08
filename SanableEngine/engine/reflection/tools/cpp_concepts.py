@@ -1,5 +1,4 @@
-﻿from cgitb import lookup
-from enum import Enum
+﻿from enum import Enum
 from typing import Generator
 from clang.cindex import AccessSpecifier
 from clang.cindex import *

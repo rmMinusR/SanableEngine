@@ -8,11 +8,6 @@ parser = argparse.ArgumentParser(
         description="Sanable Engine RTTI generation tool: Embedding RTTI in a C++ binary as a build step"
     )
 parser.add_argument("--target", help="Folder containing entire TU, which must also include headers. Includes outside of this folder will not have RTTI generated.", required=True)
-#parser_output = parser.add_mutually_exclusive_group()
-#parser_output.add_argument("--embed"   , action="store_const", const="embed"   , dest="format", help="Output C++ to be embedded in binary. Automatic path.")
-#parser_output.add_argument("--separate", action="store_const", const="separate", dest="format", help="Output a separate (non-binary) file that can be loaded at runtime. Automatic path.")
-#parser_output.add_argument("--format", choices=["embed", "separate"], help="Specify an output format. Automatic path.")
-#parser.add_argument("-o", "--output", help="Specify an output path. If format is not set, detect from file extension.")
 parser.add_argument("-I", "--include", dest="includes", help="Headers to scan, both from this target and its dependencies. Semicolon-separated list.")
 parser.add_argument("-D", "--define" , dest="defines" , help="Preprocessor definition. Semicolon-separated list.")
 parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. Default: target/src/rtti.generated.cpp")

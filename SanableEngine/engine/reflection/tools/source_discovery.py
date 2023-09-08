@@ -1,4 +1,4 @@
-import sys, os
+import os
 from config import logger
 from clang.cindex import *
 
