@@ -12,7 +12,7 @@ bool TypeName::strip_leading(std::string& str, const std::string& phrase)
     //Does str start with phrase?
     if (!strncmp(str.c_str(), phrase.c_str(), phrase.length()))
     {
-        str = str.substr(phrase.length());
+        str = str.substr(phrase.length(), str.length()-phrase.length());
         return true;
     }
 
@@ -28,7 +28,7 @@ bool TypeName::strip_trailing(std::string& str, const std::string& phrase)
     char const* endPart = str.c_str() + str.length() - phrase.length();
     if (!strncmp(endPart, phrase.c_str(), phrase.length()))
     {
-        str = str.substr(str.length()-phrase.length(), phrase.length());
+        str = str.substr(0, str.length()-phrase.length());
         return true;
     }
 
@@ -73,18 +73,29 @@ TypeName::TypeName() :
 TypeName::TypeName(const std::string& _name)
 {
     name = _name;
-    strip_leading(name, "class ");
-    strip_leading(name, "struct ");
-    strip_leading(name, "enum ");
-
     nameHash = makeHash(name);
 }
 
 std::optional<TypeName> TypeName::cvUnwrap() const
 {
     std::string unwrappedName = name;
-    bool unwrappable = strip(unwrappedName, "const"   , true);
-    unwrappable |=     strip(unwrappedName, "volatile", true);
+    bool unwrappable = false;
+    if (this->dereference().has_value())
+    {
+        //If it's a pointer type, only allow taking trailing symbols
+        //Leading const keyword only applies to innermost type
+
+        //We don't know the order in which const/volatile are arranged
+        unwrappable |= strip_trailing(unwrappedName, " const");
+        unwrappable |= strip_trailing(unwrappedName, " volatile");
+        unwrappable |= strip_trailing(unwrappedName, " const");
+    }
+    else
+    {
+        unwrappable |= strip(unwrappedName, "const", true);
+        unwrappable |= strip(unwrappedName, "volatile", true);
+        unwrappable |= strip(unwrappedName, "const", true);
+    }
     return unwrappable ? std::make_optional(TypeName(unwrappedName)) : std::nullopt;
 }
 
@@ -95,14 +106,16 @@ std::optional<TypeName> TypeName::dereference() const
     size_t index = name.find_last_of("*");
     if (index == std::string::npos) return std::nullopt;
 
-    //Skip const/volatile, but make sure we aren't doing anything funny like going into a template's <>
-    for (size_t i = index; i < name.size(); ++i)
+    //Skip const/volatile/__ptr64, but make sure we aren't doing anything funny like going into a template's <>
+    for (size_t i = index+1; i < name.size(); ++i)
     {
         char c = name.at(i);
-        if (!isalpha(c) && !isspace(c)) return std::nullopt;
+        if (!isalnum(c) && !isspace(c) && c != '_') return std::nullopt;
     }
     
-    return TypeName(name.substr(0, index));
+    std::string unwrappedName = name.substr(0, index);
+    strip_trailing(unwrappedName, " ");
+    return TypeName(unwrappedName);
 }
 
 bool TypeName::isValid() const
