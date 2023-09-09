@@ -24,7 +24,7 @@ def _getAbsName(target: Cursor) -> str:
 def cvpUnwrapTypeName(name: str) -> str:
     # Preprocess name
     name = name.strip()
-    for symbolToStrip in ["*", "const", "volatile"]:
+    for symbolToStrip in ["*", "const", "volatile"]: # FIXME this will also catch typenames starting or ending with const or volatile
         if name.startswith(symbolToStrip):
             return cvpUnwrapTypeName(name[len(symbolToStrip):])
         elif name.endswith(symbolToStrip):
@@ -171,14 +171,12 @@ class GlobalVarInfo(Symbol):
         Symbol.__init__(this, module, cursor)
         assert GlobalVarInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a variable"
 
-        # TODO deduce address (global or relative)
-
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.VAR_DECL
 
     def renderMain(this):
-        return f"//VarInfo: {this.absName}" # TODO re-implement
+        return f"//GlobalVarInfo: {this.absName}" # TODO capture address
 
 
 class BoundFuncInfo(Virtualizable):
@@ -190,8 +188,6 @@ class BoundFuncInfo(Virtualizable):
         for i in cursor.get_children():
             if ParameterInfo.matches(i):
                 this.__parameters.append(ParameterInfo(module, i))
-
-        # TODO capture address
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -206,7 +202,7 @@ class BoundFuncInfo(Virtualizable):
         return this.__parameters
 
     def renderMain(this):
-        return None
+        return f"//BoundFuncInfo: {this.absName}" # TODO capture address
 
 
 class ConstructorInfo(Member):

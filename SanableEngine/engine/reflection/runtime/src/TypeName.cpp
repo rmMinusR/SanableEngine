@@ -4,6 +4,52 @@
 
 #include "GlobalTypeRegistry.hpp"
 
+bool TypeName::strip_leading(std::string& str, const std::string& phrase)
+{
+    //Can't strip if too small
+    if (str.length() < phrase.length()) return false;
+
+    //Does str start with phrase?
+    if (!strncmp(str.c_str(), phrase.c_str(), phrase.length()))
+    {
+        str = str.substr(phrase.length());
+        return true;
+    }
+
+    return false;
+}
+
+bool TypeName::strip_trailing(std::string& str, const std::string& phrase)
+{
+    //Can't strip if too small
+    if (str.length() < phrase.length()) return false;
+
+    //Does str end with phrase?
+    char const* endPart = str.c_str() + str.length() - phrase.length();
+    if (!strncmp(endPart, phrase.c_str(), phrase.length()))
+    {
+        str = str.substr(str.length()-phrase.length(), phrase.length());
+        return true;
+    }
+
+    return false;
+}
+
+bool TypeName::strip(std::string& str, const std::string& phrase, bool spacePadded)
+{
+    constexpr size_t bufSize = 256;
+    assert(bufSize >= phrase.length()+2);
+
+    char phrasePadded[bufSize];
+    phrasePadded[0] = ' ';
+    phrasePadded[phrase.length()+1] = ' ';
+    memcpy(phrasePadded+1, phrase.c_str(), phrase.length());
+
+    bool ret = strip_leading(str, !spacePadded?phrase:std::string(phrasePadded+1, phrase.size()+1));
+    ret |=    strip_trailing(str, !spacePadded?phrase:std::string(phrasePadded  , phrase.size()+1));
+    return ret;
+}
+
 TypeName::hash_t TypeName::makeHash(const std::string& str)
 {
     //DJB2 string hash
@@ -19,33 +65,49 @@ TypeName::hash_t TypeName::makeHash(const std::string& str)
 }
 
 TypeName::TypeName() :
-    unwrappedTypeName(""),
-    nameHash(0),
-    ptrDepth(0)
+    name(""),
+    nameHash(0)
 {
 }
 
-TypeName::TypeName(const std::string& unwrappedTypeName) :
-    TypeName(unwrappedTypeName, 0)
+TypeName::TypeName(const std::string& _name)
 {
+    name = _name;
+    strip_leading(name, "class ");
+    strip_leading(name, "struct ");
+    strip_leading(name, "enum ");
+
+    nameHash = makeHash(name);
 }
 
-TypeName::TypeName(const std::string& unwrappedTypeName, int ptrDepth) :
-    unwrappedTypeName(unwrappedTypeName), //FIXME unprefix ("class MyClass")
-    nameHash(makeHash(unwrappedTypeName)),
-    ptrDepth(ptrDepth)
+std::optional<TypeName> TypeName::cvUnwrap() const
 {
+    std::string unwrappedName = name;
+    bool unwrappable = strip(unwrappedName, "const"   , true);
+    unwrappable |=     strip(unwrappedName, "volatile", true);
+    return unwrappable ? std::make_optional(TypeName(unwrappedName)) : std::nullopt;
 }
 
-TypeName TypeName::parse(const std::string& unsafeName)
+std::optional<TypeName> TypeName::dereference() const
 {
-    //TODO implement stub
-    return TypeName(unsafeName);
+    //FIXME this won't work with function pointers. Too bad!
+
+    size_t index = name.find_last_of("*");
+    if (index == std::string::npos) return std::nullopt;
+
+    //Skip const/volatile, but make sure we aren't doing anything funny like going into a template's <>
+    for (size_t i = index; i < name.size(); ++i)
+    {
+        char c = name.at(i);
+        if (!isalpha(c) && !isspace(c)) return std::nullopt;
+    }
+    
+    return TypeName(name.substr(0, index));
 }
 
 bool TypeName::isValid() const
 {
-    return !unwrappedTypeName.empty();
+    return !name.empty();
 }
 
 TypeInfo const* TypeName::resolve() const
@@ -56,27 +118,25 @@ TypeInfo const* TypeName::resolve() const
 bool TypeName::operator==(const TypeName& other) const
 {
     //Compare the stuff that's easy before doing a full string compare
-    return ptrDepth == other.ptrDepth
-        && nameHash == other.nameHash
-        && unwrappedTypeName == other.unwrappedTypeName;
+    return nameHash == other.nameHash
+        && name == other.name;
 }
 
 bool TypeName::operator!=(const TypeName& other) const
 {
     //Compare the stuff that's easy before doing a full string compare
-    return ptrDepth != other.ptrDepth
-        || nameHash != other.nameHash
-        || unwrappedTypeName != other.unwrappedTypeName;
+    return nameHash != other.nameHash
+        || name != other.name;
 }
 
 const std::string& TypeName::as_str() const
 {
     assert(isValid());
-    return unwrappedTypeName;
+    return name;
 }
 
 char const* TypeName::c_str() const
 {
     assert(isValid());
-    return unwrappedTypeName.c_str();
+    return name.c_str();
 }
