@@ -70,23 +70,23 @@ if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
 import source_discovery
 source_discovery.additionalCompilerOptions = compilerArgs
 
-config.logger.log(100, "Discovering files...")
+config.logger.info("Discovering files")
 projectFiles = source_discovery.discoverAll(args.target)
 sourceFiles = [f for f in projectFiles if f.type != None and not f.hasError]
 for sourceFile in sourceFiles:
     sourceFile.additionalIncludes += args.includes
 
-config.logger.log(100, "Parsing AST...")
+config.logger.log(100, "Parsing...")
 import cpp_concepts
 if args.cache != None: targetModule = cpp_concepts.Module.load(args.cache)
 else: targetModule = cpp_concepts.Module()
 targetModule.parseTU(sourceFiles)
 
-config.logger.log(100, "Finalizing...")
+config.logger.info("Finalizing...")
 targetModule.finalize()
 if args.cache != None: targetModule.save(args.cache)
 
-config.logger.log(100, "Rendering...")
+config.logger.log(100, f"Rendering to {args.output}")
 
 with open(args.template_file, "r") as f:
     template = "".join(f.readlines())
@@ -103,9 +103,9 @@ generated = template.replace("GENERATED_RTTI", targetModule.renderBody()) \
                          f'#include "{shortestRelPath(i)}"' for i in targetModule.renderIncludes() \
                     ])))
 
-config.logger.log(100, f"Writing to {args.output}...")
+config.logger.info(f"Writing to {args.output}")
 
 with open(args.output, "wt") as f:
     f.write(generated)
 
-config.logger.log(100, "Done!")
+config.logger.info("Done!")
