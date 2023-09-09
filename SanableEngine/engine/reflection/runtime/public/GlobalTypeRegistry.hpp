@@ -41,5 +41,8 @@ public:
 	/// </summary>
 	[[nodiscard]] ENGINE_RTTI_API static std::unordered_set<TypeName> getDirtyTypes();
 
+	/// <summary>
+	/// Completely wipe internal state. Useful for shutdown cleanup and unit testing.
+	/// </summary>
 	ENGINE_RTTI_API static void clear();
 };

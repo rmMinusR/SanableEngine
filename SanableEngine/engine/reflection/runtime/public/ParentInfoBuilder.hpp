@@ -1,7 +1,6 @@
 #pragma once
 
-#include "TypeName.hpp"
-#include "MemberInfo.hpp"
+#include "ParentInfo.hpp"
 
 #include <functional>
 

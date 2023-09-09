@@ -2,14 +2,14 @@
 
 #include "TypeInfo.hpp"
 
-void* InstanceMemberInfo::getAddr(void* objInstance) const
+void* MemberInfo::getAddr(void* objInstance) const
 {
 	return ((char*)objInstance) + offset;
 }
 
 void* FieldInfo::getValue(void* objInstance) const
 {
-	return InstanceMemberInfo::getAddr(objInstance);
+	return MemberInfo::getAddr(objInstance);
 }
 
 void FieldInfo::blitValue(void* objInstance, void* value) const

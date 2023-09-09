@@ -7,7 +7,9 @@
 #include "dllapi.h"
 #include "rttiutils.h"
 
-#include "MemberInfo.hpp"
+#include "TypeName.hpp"
+#include "ParentInfo.hpp"
+#include "FieldInfo.hpp"
 
 class TypeBuilder;
 

@@ -31,7 +31,7 @@ function(generate_reflection targetName rootDir)
  									${TEMPLATE_ARG}
  									-- $<TARGET_PROPERTY:${targetName},COMPILE_OPTIONS> $<TARGET_PROPERTY:${targetName},COMPILE_FLAGS> ${COMPILE_OPTIONS} ${COMPILE_FLAGS}
 		VERBATIM
- 		#COMMENT "Generating embedded RTTI for ${targetName}"
+ 		COMMENT "Generating embedded RTTI for ${targetName}"
  	)
 
 	add_dependencies(${targetName} ${targetName}_RTTI)
