@@ -1,6 +1,8 @@
+from functools import cached_property
 import os
 from config import logger
 from clang.cindex import *
+import zlib
 
 index = Index.create()
 additionalCompilerOptions = []
@@ -31,6 +33,7 @@ class SourceFile:
 		this.hasError = ext not in SourceFile.fileTypes.keys()
 		this.tu: TranslationUnit = None
 		this.additionalIncludes: list[str] = []
+		this.__contentsHash = None
 
 	def __repr__(this):
 		return this.path
@@ -41,8 +44,32 @@ class SourceFile:
 	def __hash__(this):
 		return hash(this.path)
 
+	def __getstate__(this):
+		return (this.path, this.isGenerated, this.type, this.hasError, this.__contentsHash)
+
+	def __setstate__(this, d):
+		(this.path, this.isGenerated, this.type, this.hasError, this.__contentsHash) = d
+		this.tu = None
+		this.additionalIncludes = []
+
 	def owns(this, cursor: Cursor) -> bool:
 		return this.path == cursor.location.file.name and cursor.is_definition()
+
+	@cached_property
+	def name(this):
+		return os.path.split(this.path)[-1]
+
+	@cached_property
+	def contents(this):
+		assert os.path.exists(this.path)
+		with open(this.path, "r") as f:
+			return f.read()
+
+	@property
+	def contentsHash(this):
+		if this.__contentsHash == None: 
+			this.__contentsHash = zlib.adler32(this.contents.encode("utf-8"))
+		return this.__contentsHash
 
 	def parse(this) -> Cursor:
 		assert not this.hasError

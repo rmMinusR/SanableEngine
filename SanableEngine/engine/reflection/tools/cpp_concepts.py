@@ -1,10 +1,14 @@
 ﻿from enum import Enum
+import itertools
+import os
 from typing import Generator
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
 import copy
 import abc
+import pickle
+
 import config
 from source_discovery import SourceFile
 
@@ -399,15 +403,31 @@ class TypeInfo(Symbol):
 
 class Module:
     def __init__(this):
-        this.__contents: dict[str, Symbol] = dict()
+        this.__symbols: dict[str, Symbol] = dict()
         this.__sourceFiles: set[SourceFile] = set()
+    
+    def parseTU(this, sources: list[SourceFile]):
+        isUpToDate = lambda file: next(filter(lambda i: i == file, this.__sourceFiles), None).contentsHash == file.contentsHash
+        
+        upToDate = [i for i in sources if i in this.__sourceFiles and isUpToDate(i)]
+        outdated = [i for i in sources if i in this.__sourceFiles and not isUpToDate(i)]
+        new = [i for i in sources if i not in this.__sourceFiles]
+        removed = [i for i in this.__sourceFiles if i not in sources]
 
-    def parseFile(this, source: SourceFile):
-        assert source not in this.__sourceFiles, f"Tried to parse source file, but it has already been parsed: {source.path}"
-        this.__sourceFiles.add(source)
-        for cursor in source.parse().get_children():
-            this.parseGlobalCursor(cursor)
-            
+        config.logger.log(100, f"{len(upToDate)} up-to-date | {len(outdated)} outdated | {len(new)} new | {len(removed)} deleted")
+        
+        for source in outdated+removed:
+            # Do removal
+            symbolsToRemove = [i for i in this.__symbols.values() if i.sourceFile == source]
+            for i in symbolsToRemove:
+                del this.__symbols[i.absName]
+
+        for source in outdated+new:
+            # Do parsing
+            this.__sourceFiles.add(source)
+            for cursor in source.parse().get_children():
+                this.parseGlobalCursor(cursor)
+         
     def parseGlobalCursor(this, cursor: Cursor):
         # Stop early if we already have a definition for this symbol
         existingEntry = this.lookup(cursor)
@@ -426,7 +446,7 @@ class Module:
             built: Symbol = matchedType(this, cursor)
             assert not isinstance(built, Member) # Sanity: Member registration happens in TypeInfo, except for statics
             
-            if existingEntry == None or built.isDefinition:
+            if existingEntry == None or built.isDefinition or (existingEntry.sourceFile == built.sourceFile and existingEntry.sourceFile.contentsHash != built.sourceFile.contentsHash):
                 this.register(built)
 
         elif cursor.kind not in ignoredSymbols:
@@ -441,29 +461,29 @@ class Module:
 
         # Do actual registration
         config.logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
-        this.__contents[obj.absName] = obj
+        this.__symbols[obj.absName] = obj
 
     def lookup(this, key: str | Cursor):
         if isinstance(key, Cursor):
             key = _getAbsName(key)
-        return this.__contents.get(key)
+        return this.__symbols.get(key)
 
     def owns(this, obj: Symbol):
         return obj.sourceFile in this.__sourceFiles
 
     @property
     def types(this) -> Generator[TypeInfo, None, None]:
-        for i in this.__contents.values():
+        for i in this.__symbols.values():
             if isinstance(i, TypeInfo):
                 yield i
                 
     def finalize(this):
-        undefined = [i for i in this._Module__contents.values() if not i.isDefinition]
+        undefined = [i for i in this.__symbols.values() if not i.isDefinition]
         if len(undefined) > 0:
             config.logger.error(f"Detected {len(undefined)} declared global symbols missing definitions: {undefined}")
 
     def renderBody(this) -> str:
-        renders = [v.renderMain() for v in this.__contents.values() if this.owns(v)]
+        renders = [v.renderMain() for v in this.__symbols.values() if this.owns(v)]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
 
@@ -479,6 +499,22 @@ class Module:
                         config.logger.debug(f" - {typeName} @ {match.sourceFile.path}")
                     else:
                         config.logger.debug(f" - {typeName} @ (Failed to locate definition)")
+        return out
+            
+    def save(this, cachePath: str):
+        with open(cachePath, "wb") as file:
+            file.write(pickle.dumps(this))
+
+    def load(cachePath: str) -> "Module":
+        if not os.path.exists(cachePath): return Module()
+        
+        with open(cachePath, "rb") as file: cacheFileRepr = file.read()
+        
+        try: out = pickle.loads(cacheFileRepr)
+        except EOFError: pass # Only happens when we have a blank file. Mundane, safe to ignore.
+        
+        config.logger.info(f"Loaded {len(out.__symbols)} symbols from cache")
+
         return out
 
         

@@ -17,13 +17,15 @@ function(generate_reflection targetName rootDir)
 	#set(OUTPUT_FILE "${rootDir}/src/rtti.generated.cpp")
 	#set(OUTPUT_FILE $<TARGET_PROPERTY:${targetName},BINARY_DIR>/generated/${targetName}_rtti.generated.cpp)
 	get_target_property(OUTPUT_FILE_DIR ${targetName} BINARY_DIR)
-	set(OUTPUT_FILE "${OUTPUT_FILE_DIR}/generated/${targetName}_rtti.generated.cpp")
+	set(OUTPUT_FILE "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}_rtti.generated.cpp")
+	set(CACHE_DIR "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}.rtticache")
 
 	add_custom_target(
 		${targetName}_RTTI
-		BYPRODUCTS "${OUTPUT_FILE}"
+		BYPRODUCTS "${OUTPUT_FILE}" "${CACHE_DIR}"
  		COMMAND ${REFLECTION_COMMAND} --target "${rootDir}"
-									--output ${OUTPUT_FILE}
+									--output "${OUTPUT_FILE}"
+									--cache "${CACHE_DIR}"
  									--include $<TARGET_PROPERTY:${targetName},INCLUDE_DIRECTORIES>
  									--define $<TARGET_PROPERTY:${targetName},COMPILE_DEFINITIONS>
  									${TEMPLATE_ARG}

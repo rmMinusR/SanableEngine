@@ -10,7 +10,8 @@ parser = argparse.ArgumentParser(
 parser.add_argument("--target", help="Folder containing entire TU, which must also include headers. Includes outside of this folder will not have RTTI generated.", required=True)
 parser.add_argument("-I", "--include", dest="includes", help="Headers to scan, both from this target and its dependencies. Semicolon-separated list.")
 parser.add_argument("-D", "--define" , dest="defines" , help="Preprocessor definition. Semicolon-separated list.")
-parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. Default: target/src/rtti.generated.cpp")
+parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. If not specified, defaults to target/src/rtti.generated.cpp")
+parser.add_argument("--cache", default=None, help="If specified, cache results for future runs. Helps improve speed.")
 parser.add_argument("-v", "--verbose", action="store_true")
 parser.add_argument("--template-file", dest="template_file", default=None)
 parser.add_argument("--", dest="compilerArgs", nargs='*', help="Additional arguments passed through to the compiler. May include already-listed defines and includes.")
@@ -69,17 +70,21 @@ if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
 import source_discovery
 source_discovery.additionalCompilerOptions = compilerArgs
 
-config.logger.log(100, "Parsing AST...")
-
-import cpp_concepts
-targetModule = cpp_concepts.Module()
-for sourceFile in source_discovery.discoverAll(args.target):
+config.logger.log(100, "Discovering files...")
+projectFiles = source_discovery.discoverAll(args.target)
+sourceFiles = [f for f in projectFiles if f.type != None and not f.hasError]
+for sourceFile in sourceFiles:
     sourceFile.additionalIncludes += args.includes
-    if sourceFile.type != None and not sourceFile.hasError:
-        targetModule.parseFile(sourceFile)
+
+config.logger.log(100, "Parsing AST...")
+import cpp_concepts
+if args.cache != None: targetModule = cpp_concepts.Module.load(args.cache)
+else: targetModule = cpp_concepts.Module()
+targetModule.parseTU(sourceFiles)
 
 config.logger.log(100, "Finalizing...")
 targetModule.finalize()
+if args.cache != None: targetModule.save(args.cache)
 
 config.logger.log(100, "Rendering...")
 
