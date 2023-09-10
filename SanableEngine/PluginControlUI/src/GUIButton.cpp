@@ -6,14 +6,14 @@
 #include "InputSystem.h"
 #include "GraphicsSystem.h"
 
-GUI::Button::Button(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked) :
+GUI::Button::Button(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked) :
 	Control(theID, relativePosition, size, colorProfile),
 	onClicked(onClicked)
 {
 	panel = new Panel(generateID(), relativePosition, size, colorProfile.normal, gbm);
 }
 
-GUI::Button::Button(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked, std::initializer_list<Element*> labels) :
+GUI::Button::Button(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked, std::initializer_list<Element*> labels) :
 	Control(theID, relativePosition, size, colorProfile),
 	onClicked(onClicked)
 {
@@ -38,13 +38,13 @@ void GUI::Button::draw(GraphicsBuffer* dest)
 	}
 }
 
-void GUI::Button::rebuildAbsoluteTransform(const Vector2D& parentAbsPos)
+void GUI::Button::rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos)
 {
 	Element::rebuildAbsoluteTransform(parentAbsPos);
 	panel->rebuildAbsoluteTransform(parentAbsPos);
 }
 
-void GUI::Button::rebuildRenderTransform(const Vector2D& rootRenderPos)
+void GUI::Button::rebuildRenderTransform(const Vector3<float>& rootRenderPos)
 {
 	Element::rebuildRenderTransform(rootRenderPos);
 	panel->rebuildRenderTransform(rootRenderPos);
@@ -54,7 +54,7 @@ void GUI::Button::handleEvent(const Event& theEvent)
 {
 	if(Element::isActive())
 	{
-		std::optional<Vector2D> mousePos = std::nullopt;
+		std::optional<Vector3<float>> mousePos = std::nullopt;
 
 		if (theEvent.getType() == Event::EventType::MOUSE_MOVE_EVENT)
 		{

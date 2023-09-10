@@ -8,12 +8,12 @@
 
 #include "GraphicsSystem.h"
 
-GUI::Container::Container(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size) :
+GUI::Container::Container(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size) :
 	Element(theID, relativePosition, size)
 {
 }
 
-GUI::Container::Container(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, std::initializer_list<Element*> children) :
+GUI::Container::Container(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, std::initializer_list<Element*> children) :
 	Container(theID, relativePosition, size)
 {
 	addChildren(children);
@@ -56,13 +56,13 @@ void GUI::Container::draw(GraphicsBuffer* dest)
 	for (Element* i : children) i->draw(dest);
 }
 
-void GUI::Container::rebuildAbsoluteTransform(const Vector2D& parentAbsPos)
+void GUI::Container::rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos)
 {
 	Element::rebuildAbsoluteTransform(parentAbsPos);
 	rebuildChildAbsoluteTransforms();
 }
 
-void GUI::Container::rebuildRenderTransform(const Vector2D& rootRenderPos)
+void GUI::Container::rebuildRenderTransform(const Vector3<float>& rootRenderPos)
 {
 	Element::rebuildRenderTransform(rootRenderPos);
 	rebuildChildRenderTransforms();

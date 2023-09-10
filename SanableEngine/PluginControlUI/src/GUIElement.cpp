@@ -15,7 +15,7 @@ GraphicsBufferID GUI::makeGraphicsID(const ControlID& id, const std::string& use
 	return GraphicsBufferID(sout.str());
 }
 
-GUI::Element::Element(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size) :
+GUI::Element::Element(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size) :
 	mID(theID),
 	relativePosition(relativePosition),
 	size(size),
@@ -30,21 +30,21 @@ void GUI::Element::tick(System* system)
 	//Nothing to do here, but children will override
 }
 
-void GUI::Element::rebuildAbsoluteTransform(const Vector2D& parentAbsPos)
+void GUI::Element::rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos)
 {
 	cachedAbsolutePosition = parentAbsPos;
 	cachedAbsolutePosition += relativePosition;
 }
 
-void GUI::Element::rebuildRenderTransform(const Vector2D& rootRenderPos)
+void GUI::Element::rebuildRenderTransform(const Vector3<float>& rootRenderPos)
 {
 	cachedRenderPosition = rootRenderPos;
 	cachedRenderPosition += relativePosition;
 }
 
-bool GUI::Element::intersects(const Vector2D& pos) const
+bool GUI::Element::intersects(const Vector3<float>& pos) const
 {
-	Vector2D relPos = pos - cachedAbsolutePosition;
+	Vector3<float> relPos = pos - cachedAbsolutePosition;
 	return 0 < relPos.getX() && relPos.getX() < size.getX()
 		&& 0 < relPos.getY() && relPos.getY() < size.getY();
 }

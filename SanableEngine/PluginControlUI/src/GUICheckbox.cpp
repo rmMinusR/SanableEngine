@@ -5,7 +5,7 @@
 #include "InterfaceEvents.h"
 #include "GraphicsSystem.h"
 
-GUI::Checkbox::Checkbox(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const bool& isChecked, const float& checkSizeRatio, const ControlColorProfile& colorProfile, const Color& checkColor, callback_func_t&& callback) :
+GUI::Checkbox::Checkbox(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const bool& isChecked, const float& checkSizeRatio, const ControlColorProfile& colorProfile, const Color& checkColor, callback_func_t&& callback) :
 	Control(theID, relativePosition, size, colorProfile),
 	isChecked(isChecked),
 	checkSizeRatio(checkSizeRatio),
@@ -21,8 +21,8 @@ void GUI::Checkbox::draw(GraphicsBuffer* dest)
 
 	if (isChecked)
 	{
-		Vector2D checkSize = size*checkSizeRatio;
-		Vector2D offset = size*(1-checkSizeRatio)/2;
+		Vector3<float> checkSize = size*checkSizeRatio;
+		Vector3<float> offset = size*(1-checkSizeRatio)/2;
 		GraphicsSystem::renderRect(*dest, cachedRenderPosition+offset, (int)checkSize.getX(), (int)checkSize.getY(), checkColor, true);
 	}
 }
@@ -32,7 +32,7 @@ void GUI::Checkbox::handleEvent(const Event& theEvent)
 	if(isActive())
 	{
 
-		std::optional<Vector2D> mousePos = std::nullopt;
+		std::optional<Vector3<float>> mousePos = std::nullopt;
 
 		if (theEvent.getType() == Event::EventType::MOUSE_MOVE_EVENT)
 		{

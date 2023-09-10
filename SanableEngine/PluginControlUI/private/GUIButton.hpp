@@ -20,15 +20,15 @@ namespace GUI
 		Panel* panel; //Both background color and labels
 		
 	public:
-		Button(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked);
-		Button(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked, std::initializer_list<Element*> labels);
+		Button(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked);
+		Button(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const ControlColorProfile& colorProfile, GraphicsBufferManager* gbm, callback_t&& onClicked, std::initializer_list<Element*> labels);
 		virtual ~Button();
 
 		virtual void tick(System* system) override;
 		virtual void draw(GraphicsBuffer* dest) override;
 		
-		virtual void rebuildAbsoluteTransform(const Vector2D& parentAbsPos ) override;
-		virtual void rebuildRenderTransform  (const Vector2D& rootRenderPos) override;
+		virtual void rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos ) override;
+		virtual void rebuildRenderTransform  (const Vector3<float>& rootRenderPos) override;
 
 		void handleEvent(const Event& theEvent) override;
 		

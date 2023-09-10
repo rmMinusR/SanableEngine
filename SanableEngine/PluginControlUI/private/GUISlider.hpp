@@ -15,8 +15,8 @@ namespace GUI {
 	public:
 		typedef std::function<void(const float&)> update_callback_t;
 
-		Slider(ControlID theID, const Vector2D& relativePosition, const Vector2D& size, float fillValue, float lowerBound, float upperBound,                const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate);
-		Slider(ControlID theID, const Vector2D& relativePosition, const Vector2D& size, float fillValue, float lowerBound, float upperBound, float mBase, const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate);
+		Slider(ControlID theID, const Vector3<float>& relativePosition, const Vector3<float>& size, float fillValue, float lowerBound, float upperBound,                const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate);
+		Slider(ControlID theID, const Vector3<float>& relativePosition, const Vector3<float>& size, float fillValue, float lowerBound, float upperBound, float mBase, const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate);
 
 		void draw(GraphicsBuffer* dest) override;
 

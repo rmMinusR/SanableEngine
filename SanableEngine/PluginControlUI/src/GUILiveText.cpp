@@ -1,6 +1,6 @@
 #include "GUILiveText.hpp"
 
-GUI::LiveText::LiveText(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const Color& color, Font* font, const Font::Alignment& alignment, builder_t&& builder) :
+GUI::LiveText::LiveText(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const Color& color, Font* font, const Font::Alignment& alignment, builder_t&& builder) :
 	Text(theID, relativePosition, size, "[LiveText]", color, font, alignment),
 	builder(builder)
 {

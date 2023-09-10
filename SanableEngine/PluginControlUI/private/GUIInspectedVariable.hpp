@@ -18,7 +18,7 @@ namespace GUI
 		void build(std::ostringstream& sout) { sout << label << ": " << *varPtr << units; }
 
 	public:
-		InspectedVariable(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const Color& color, Font* font, const Font::Alignment& alignment, const std::string& label, const T& varRef, const std::string& units) :
+		InspectedVariable(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const Color& color, Font* font, const Font::Alignment& alignment, const std::string& label, const T& varRef, const std::string& units) :
 			LiveText(theID, relativePosition, size, color, font, alignment, nullptr),
 			label(label),
 			varPtr(&varRef),

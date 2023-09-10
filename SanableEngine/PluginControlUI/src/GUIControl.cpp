@@ -2,7 +2,7 @@
 
 #include "EventSystem.h"
 
-GUI::Control::Control(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const ControlColorProfile& colorProfile) :
+GUI::Control::Control(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const ControlColorProfile& colorProfile) :
 	Element(theID, relativePosition, size),
 	colorProfile(colorProfile),
 	currentState(ControlState::NORMAL)

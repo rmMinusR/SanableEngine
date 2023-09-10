@@ -4,7 +4,7 @@
 
 #include "Trackable.h"
 #include "Defines.h"
-#include "Vector2D.h"
+#include "Vector3<float>.h"
 
 #include <System.h>
 
@@ -39,16 +39,16 @@ namespace GUI
 	class Element : public Trackable
 	{
 	public:
-		Element(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size);
+		Element(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size);
 		virtual ~Element() {}
 
 		virtual void tick(System* system);
 		virtual void draw(GraphicsBuffer* dest) = 0;
 
-		virtual void rebuildAbsoluteTransform(const Vector2D& parentAbsPos);
-		virtual void rebuildRenderTransform  (const Vector2D& rootRenderPos);
+		virtual void rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos);
+		virtual void rebuildRenderTransform  (const Vector3<float>& rootRenderPos);
 
-		virtual bool intersects(const Vector2D& pos) const;
+		virtual bool intersects(const Vector3<float>& pos) const;
 
 		void setActive(const bool& active);
 		inline bool isActive() const { return mIsActive; }
@@ -66,13 +66,13 @@ namespace GUI
 		Element* parent;
 		bool mIsActive; //Should we tick and render this object? (And its children if it's a Container)
 
-		Vector2D relativePosition;
+		Vector3<float> relativePosition;
 		
 		//Internal render targets (like Container) require that we split these.
-		Vector2D cachedAbsolutePosition; //Where is our parent, in absolute screen space? Mostly used in mouse event processing
-		Vector2D cachedRenderPosition;   //Where should we render relative to? Mostly used in draw()
+		Vector3<float> cachedAbsolutePosition; //Where is our parent, in absolute screen space? Mostly used in mouse event processing
+		Vector3<float> cachedRenderPosition;   //Where should we render relative to? Mostly used in draw()
 
-		Vector2D size;
+		Vector3<float> size;
 
 	private: //Dirty draw system
 		bool mIsDirty;

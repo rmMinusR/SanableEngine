@@ -1,7 +1,8 @@
 #pragma once
 
 #include "EventListener.h"
-#include "Color.h"
+#include "Vector3.inl"
+#include "Color.hpp"
 
 #include "GUIElement.hpp"
 
@@ -27,7 +28,7 @@ namespace GUI
 	class Control : public Element, public EventListener
 	{
 	public:
-		Control(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const ControlColorProfile& colorProfile);
+		Control(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const ControlColorProfile& colorProfile);
 		virtual ~Control();
 
 		virtual void handleEvent(const Event& theEvent) override = 0;

@@ -18,14 +18,14 @@ namespace GUI
 		GraphicsBufferManager* internalCanvasOwner;
 
 	public:
-		Panel(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const Color& backgroundColor, GraphicsBufferManager* graphicsBufferManager);
-		Panel(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const Color& backgroundColor, GraphicsBufferManager* graphicsBufferManager, std::initializer_list<Element*> children);
+		Panel(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const Color& backgroundColor, GraphicsBufferManager* graphicsBufferManager);
+		Panel(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const Color& backgroundColor, GraphicsBufferManager* graphicsBufferManager, std::initializer_list<Element*> children);
 		virtual ~Panel();
 
 		virtual void draw(GraphicsBuffer* dest) override;
 		
-		virtual void rebuildAbsoluteTransform(const Vector2D& parentAbsPos) override;
-		virtual void rebuildRenderTransform  (const Vector2D& rootRenderPos) override;
+		virtual void rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos) override;
+		virtual void rebuildRenderTransform  (const Vector3<float>& rootRenderPos) override;
 		
 		inline void setBackgroundColor(const Color& col) { backgroundColor = col; }
 

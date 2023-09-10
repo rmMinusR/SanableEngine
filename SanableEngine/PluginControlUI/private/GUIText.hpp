@@ -13,7 +13,7 @@ namespace GUI
 	class Text : public Element
 	{
 	public:
-		Text(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const std::string& text, const Color& color, Font* font, const Font::Alignment& alignment);
+		Text(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const std::string& text, const Color& color, Font* font, const Font::Alignment& alignment);
 
 		virtual void draw(GraphicsBuffer* dest) override;
 

@@ -2,7 +2,7 @@
 
 #include <GraphicsSystem.h>
 
-GUI::Text::Text(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const std::string& text, const Color& color, Font* font, const Font::Alignment& alignment) :
+GUI::Text::Text(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const std::string& text, const Color& color, Font* font, const Font::Alignment& alignment) :
 	Element(theID, relativePosition, size),
 	text(text),
 	color(color),
@@ -16,7 +16,7 @@ void GUI::Text::draw(GraphicsBuffer* dest)
 {
 	if (isActive())
 	{
-		Vector2D anchorPos;
+		Vector3<float> anchorPos;
 		switch (alignment)
 		{
 		case Font::Alignment::LEFT:   anchorPos = cachedRenderPosition             ; break;
@@ -25,7 +25,7 @@ void GUI::Text::draw(GraphicsBuffer* dest)
 		}
 
 		//Compensate for text height
-		anchorPos -= Vector2D(0, font->getSize()/2);
+		anchorPos -= Vector3<float>(0, font->getSize()/2);
 
 		GraphicsSystem::writeText(*dest, anchorPos, *font, color, text, alignment);
 	}

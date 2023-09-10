@@ -15,8 +15,8 @@ namespace GUI
 	class Container : public Element
 	{
 	public:
-		Container(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size);
-		Container(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, std::initializer_list<Element*> children);
+		Container(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size);
+		Container(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, std::initializer_list<Element*> children);
 		virtual ~Container();
 
 		void addChild(Element* child); //NOTE: Container takes ownership of children
@@ -26,8 +26,8 @@ namespace GUI
 		virtual void tick(System* system) override;
 		virtual void draw(GraphicsBuffer* dest) override;
 
-		virtual void rebuildAbsoluteTransform(const Vector2D& parentAbsPos) override;
-		virtual void rebuildRenderTransform  (const Vector2D& rootRenderPos) override;
+		virtual void rebuildAbsoluteTransform(const Vector3<float>& parentAbsPos) override;
+		virtual void rebuildRenderTransform  (const Vector3<float>& rootRenderPos) override;
 		virtual void rebuildChildAbsoluteTransforms();
 		virtual void rebuildChildRenderTransforms();
 

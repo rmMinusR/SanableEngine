@@ -7,12 +7,12 @@
 #include "InputSystem.h"
 #include "GraphicsSystem.h"
 
-GUI::Slider::Slider(ControlID theID, const Vector2D& relativePosition, const Vector2D& size, float fillValue, float lowerBound, float upperBound, const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate) :
+GUI::Slider::Slider(ControlID theID, const Vector3<float>& relativePosition, const Vector3<float>& size, float fillValue, float lowerBound, float upperBound, const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate) :
 	Slider(theID, relativePosition, size, fillValue, lowerBound, upperBound, 1.0f, knobColorProfile, channelColor, onUpdate)
 {
 }
 
-GUI::Slider::Slider(ControlID theID, const Vector2D& relativePosition, const Vector2D& size, float fillValue, float lowerBound, float upperBound, float mBase, const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate) :
+GUI::Slider::Slider(ControlID theID, const Vector3<float>& relativePosition, const Vector3<float>& size, float fillValue, float lowerBound, float upperBound, float mBase, const ControlColorProfile& knobColorProfile, const Color& channelColor, const update_callback_t& onUpdate) :
 	Control(theID, relativePosition, size, knobColorProfile),
 	channelColor(channelColor),
 	onUpdate(onUpdate),
@@ -31,10 +31,10 @@ void GUI::Slider::draw(GraphicsBuffer* dest)
 		float channelWidth = size.getX() - knobSize; //Pad by knobSize/2 on either side
 
 		//Draw channel
-		GraphicsSystem::renderRect(*dest, cachedRenderPosition+Vector2D(knobSize/2, size.getY()/2.0f-channelSize/2.0f), (int)channelWidth, (int)channelSize, channelColor, true);
+		GraphicsSystem::renderRect(*dest, cachedRenderPosition+Vector3<float>(knobSize/2, size.getY()/2.0f-channelSize/2.0f), (int)channelWidth, (int)channelSize, channelColor, true);
 
 		//Draw knob
-		GraphicsSystem::renderRect(*dest, cachedRenderPosition+Vector2D(channelWidth*fillRatio, 0.0f), (int)knobSize, (int)size.getY(), getCurrentColor(), true);
+		GraphicsSystem::renderRect(*dest, cachedRenderPosition+Vector3<float>(channelWidth*fillRatio, 0.0f), (int)knobSize, (int)size.getY(), getCurrentColor(), true);
 	}
 }
 
@@ -43,7 +43,7 @@ void GUI::Slider::handleEvent(const Event& theEvent)
 	if(isActive())
 	{
 
-		std::optional<Vector2D> mousePos = std::nullopt;
+		std::optional<Vector3<float>> mousePos = std::nullopt;
 
 		if (theEvent.getType() == Event::EventType::MOUSE_MOVE_EVENT)
 		{

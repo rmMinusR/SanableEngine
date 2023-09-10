@@ -14,7 +14,7 @@ namespace GUI {
 	public:
 		typedef std::function<void(std::ostringstream&)> builder_t;
 
-		LiveText(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const Color& color, Font* font, const Font::Alignment& alignment, builder_t&& builder);
+		LiveText(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const Color& color, Font* font, const Font::Alignment& alignment, builder_t&& builder);
 
 		void tick(System* system) override;
 

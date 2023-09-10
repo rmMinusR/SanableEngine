@@ -13,7 +13,7 @@ namespace GUI {
 	public:
 		typedef std::function<void(const bool&)> callback_func_t;
 
-		Checkbox(const ControlID& theID, const Vector2D& relativePosition, const Vector2D& size, const bool& isChecked, const float& checkSizeRatio, const ControlColorProfile& colorProfile, const Color& checkColor, callback_func_t&& callback);
+		Checkbox(const ControlID& theID, const Vector3<float>& relativePosition, const Vector3<float>& size, const bool& isChecked, const float& checkSizeRatio, const ControlColorProfile& colorProfile, const Color& checkColor, callback_func_t&& callback);
 		
 		void draw(GraphicsBuffer* dest) override;
 
