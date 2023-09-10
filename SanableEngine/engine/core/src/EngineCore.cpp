@@ -210,6 +210,11 @@ gpr460::System* EngineCore::getSystem()
     return system;
 }
 
+ENGINECORE_API PluginManager* EngineCore::getPluginManager()
+{
+    return &pluginManager;
+}
+
 MemoryManager* EngineCore::getMemoryManager()
 {
     return &memoryManager;

@@ -108,3 +108,8 @@ void PluginManager::reloadAll()
 
     std::cout << "Hot Reload Complete\n";
 }
+
+const std::vector<Plugin*>& PluginManager::getPlugins() const
+{
+	return plugins;
+}

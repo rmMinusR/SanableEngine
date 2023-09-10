@@ -32,4 +32,6 @@ private:
 
 public:
 	//Plugin const* getPlugin(const std::wstring& name);
+
+	ENGINECORE_API const std::vector<Plugin*>& getPlugins() const;
 };

@@ -71,6 +71,7 @@ public:
     ENGINECORE_API static void frameStep(void* arg);
 
     ENGINECORE_API gpr460::System* getSystem();
+    ENGINECORE_API PluginManager* getPluginManager();
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
 };

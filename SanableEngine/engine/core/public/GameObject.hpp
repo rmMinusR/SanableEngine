@@ -35,6 +35,7 @@ public:
     ~GameObject();
 
     inline Transform* getTransform() { return &transform; }
+    inline EngineCore* getEngine() { return engine; }
 
     template<typename T, typename... TCtorArgs>
     inline T* CreateComponent(const TCtorArgs&... ctorArgs)
