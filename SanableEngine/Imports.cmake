@@ -49,3 +49,6 @@ elseif(EMSCRIPTEN)
 else()
     message(ERROR "-> Could not configure SDL2_ttf: Unknown platform")
 endif()
+
+# Delegate doctest configuration
+include("${CMAKE_CURRENT_LIST_DIR}/libs/doctest/CMakeLists.txt")
