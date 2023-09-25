@@ -3,7 +3,6 @@
 #include <stdio.h>
 
 #include "GenericTypedMemoryPool.hpp"
-#include "MemoryPoolCommon.hpp"
 
 
 template<typename T, size_t _maxObjectCount = 32>
@@ -23,7 +22,7 @@ public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
 		GenericTypedMemoryPool(
 			maxNumObjects,
-			getClosestPowerOf2LargerThan( std::max(sizeof(TObj), alignof(TObj)) ),
+			alignof(TObj),
 			TypeInfo::createDummy<TObj>()
 		)
 	{
@@ -31,17 +30,14 @@ public:
 	}
 
 public:
-	//Allocates memory and creates an object.
+	//Allocates memory and creates an object. Returns null if allocation failed.
 	template<typename... TCtorArgs>
 	TObj* emplace(TCtorArgs... ctorArgs)
 	{
 		//Allocate memory
 		TObj* pObj = (TObj*) allocate();
-#ifndef TEST_MEMORY
-		assert(pObj);
-#endif
 
-		//Construct object
+		//Construct object (if allocation was valid)
 		if (pObj) new (pObj) TObj(ctorArgs...);
 
 		return pObj;

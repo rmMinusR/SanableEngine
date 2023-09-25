@@ -18,13 +18,14 @@ protected:
 	ENGINEMEM_API void* idToPtr(id_t id) const;
 	ENGINEMEM_API id_t ptrToId(void* ptr) const;
 	ENGINEMEM_API bool isAliveById(id_t id) const;
+	ENGINEMEM_API void setAlive(id_t id, bool isAlive);
 
 	std::string debugName;
 	ENGINEMEM_API void debugWarnUnreleased() const;
 	ENGINEMEM_API void debugWarnUnreleased(void* obj) const;
 
 private:
-	ENGINEMEM_API RawMemoryPool();
+	RawMemoryPool();
 public:
 	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
 	ENGINEMEM_API virtual ~RawMemoryPool();
@@ -37,7 +38,7 @@ public:
 
 	typedef void (*hook_t)(void*);
 
-	//Allocates raw memory.
+	//Allocates raw memory. Returns null if out of memory.
 	//Set hook if type requires special initialization
 	ENGINEMEM_API void* allocate();
 	hook_t initHook;
@@ -59,16 +60,14 @@ public:
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
 
 protected:
-	void* mMemoryBlock; //One single allocation acts as both our free list and storage for objects. Free list is a dynamically-sized bitset. 1 = alive, 0 = free.
-	ENGINEMEM_API uint8_t* getLivingListBlock() const { return (uint8_t*)mMemoryBlock; }
-	ENGINEMEM_API void* getObjectDataBlock() const { return ((char*)mMemoryBlock)+getLivingListSpaceRequired(); }
+	uint8_t* mLivingListBlock; //Free list is a dynamically-sized bitset. 1 = alive, 0 = free.
+	void* mDataBlock; //Storage for allocated objects
+	ENGINEMEM_API uint8_t* getLivingListBlock() const { return mLivingListBlock; }
+	ENGINEMEM_API void* getObjectDataBlock() const { return mDataBlock; }
 
 	size_t mMaxNumObjects;
 	size_t mNumAllocatedObjects;
-	size_t mObjectSize;
-
-	inline size_t getLivingListSpaceRequired() const { return ceil(mMaxNumObjects / 8.0f); }
-	void setFree(id_t id, bool isFree);
+	size_t mObjectSize; //Note: Doubles as alignment
 
 public:
 	class const_iterator
