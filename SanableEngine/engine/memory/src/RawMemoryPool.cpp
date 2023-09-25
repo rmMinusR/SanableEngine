@@ -152,11 +152,6 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 
 void* RawMemoryPool::allocate()
 {
-	if (mNumAllocatedObjects >= mMaxNumObjects)
-	{
-		return NULL;
-	}
-
 	if (mNumAllocatedObjects < mMaxNumObjects)
 	{
 		mNumAllocatedObjects++;

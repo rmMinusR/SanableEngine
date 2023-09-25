@@ -37,10 +37,12 @@ public:
 	{
 		//Allocate memory
 		TObj* pObj = (TObj*) allocate();
+#ifndef TEST_MEMORY
 		assert(pObj);
+#endif
 
 		//Construct object
-		new (pObj) TObj(ctorArgs...);
+		if (pObj) new (pObj) TObj(ctorArgs...);
 
 		return pObj;
 	}

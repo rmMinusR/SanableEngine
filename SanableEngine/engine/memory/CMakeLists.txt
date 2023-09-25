@@ -17,3 +17,5 @@ target_include_directories("engine-memory" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/pub
 
 # Declare install targets
 install_dll("engine-memory" ".")
+
+include("${CMAKE_CURRENT_LIST_DIR}/test/CMakeLists.txt")
