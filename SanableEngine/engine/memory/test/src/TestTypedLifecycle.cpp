@@ -3,7 +3,7 @@
 #include "TypedMemoryPool.inl"
 #include "LeakTracer.hpp"
 
-TEST_CASE("TypedMemoryPool::emplace")
+TEST_CASE("TypedMemoryPool")
 {
 	//Clean state
 	LeakTracer::numLiving = 0;

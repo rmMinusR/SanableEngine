@@ -2,7 +2,7 @@
 
 #include "TypedMemoryPool.inl"
 
-TEST_CASE("TypedMemoryPool::emplace")
+TEST_CASE("TypedMemoryPool")
 {
 	SUBCASE("Emplace ints")
 	{
