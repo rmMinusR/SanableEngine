@@ -184,20 +184,25 @@ void* RawMemoryPool::allocate()
 void RawMemoryPool::release(void* ptr)
 {
 	//make sure that the address passed in is actually one managed by this pool
-	if (contains(ptr))
-	{
-		if (releaseHook) releaseHook(ptr);
-
-		//add id back to free list
-		setAlive(ptrToId(ptr), false);
-
-		mNumAllocatedObjects--;
-	}
-	else
+	if (!contains(ptr))
 	{
 		cerr << "ERROR: object freed from a pool that doesn't manage it\n";
 		assert(false);
+		return;
 	}
+	
+	//Make sure the specified object is alive
+	if (!isAlive(ptr))
+	{
+		cerr << "ERROR: object freed, but was already dead\n";
+		assert(false);
+		return;
+	}
+
+	//Main business logic
+	if (releaseHook) releaseHook(ptr);
+	setAlive(ptrToId(ptr), false);
+	mNumAllocatedObjects--;
 }
 
 bool RawMemoryPool::contains(void* ptr) const

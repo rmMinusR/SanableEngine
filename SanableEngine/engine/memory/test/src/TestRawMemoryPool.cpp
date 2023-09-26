@@ -70,7 +70,7 @@ TEST_SUITE("RawMemoryPool")
 			//Setup
 			RawMemoryPool pool(1, sizeof(char), alignof(char));
 			pool.initHook = &hookTester;
-
+			
 			//Act
 			void* obj = pool.allocate();
 			REQUIRE(obj);
