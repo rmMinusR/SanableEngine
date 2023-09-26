@@ -55,9 +55,9 @@ public:
 	}
 	ENGINEMEM_API void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
-	inline size_t getMaxObjectSize()  const { return mObjectSize; };
-	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; };
-	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; };
+	inline size_t getMaxObjectSize()  const { return mObjectSize; }
+	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; }
+	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; }
 
 protected:
 	uint8_t* mLivingListBlock; //Free list is a dynamically-sized bitset. 1 = alive, 0 = free.

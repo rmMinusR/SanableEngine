@@ -33,7 +33,7 @@ void RawMemoryPool::setAlive(id_t id, bool isAlive)
 	uint8_t* chunk = getLivingListBlock() + (id / 8);
 	uint8_t bitmask = 1 << (id % 8);
 	if (isAlive) *chunk |= bitmask;
-	else        *chunk &= ~bitmask;
+	else		 *chunk &= ~bitmask;
 }
 
 void RawMemoryPool::debugWarnUnreleased() const
@@ -169,7 +169,7 @@ void* RawMemoryPool::allocate()
 			if (!isAlive(ptr)) break;
 		}
 
-		setAlive(id, false);
+		setAlive(id, true);
 		if (initHook) initHook(ptr);
 		return ptr;
 	}
@@ -186,7 +186,7 @@ void RawMemoryPool::release(void* ptr)
 	{
 		if (releaseHook) releaseHook(ptr);
 
-		//add address back to free list
+		//add id back to free list
 		setAlive(ptrToId(ptr), false);
 
 		mNumAllocatedObjects--;

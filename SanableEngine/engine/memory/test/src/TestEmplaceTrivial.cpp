@@ -8,6 +8,7 @@ TEST_CASE("TypedMemoryPool::emplace")
 	{
 		constexpr int nInts = 4;
 		TypedMemoryPool<int> pool(nInts);
+		
 		int* vals[nInts];
 		for (int i = 0; i < nInts; ++i)
 		{
@@ -33,5 +34,12 @@ TEST_CASE("TypedMemoryPool::emplace")
 
 		//Clean up
 		pool.release(goodAlloc);
+	}
+
+	SUBCASE("Leak ints")
+	{
+		constexpr int nInts = 4;
+		TypedMemoryPool<int> pool(nInts);
+		for (int i = 0; i < nInts; ++i) pool.emplace(i);
 	}
 }

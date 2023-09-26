@@ -15,6 +15,9 @@ public:
 
 	ENGINEMEM_API bool isLoaded() const;
 
+	inline size_t getNumFreeObjects     () const { return RawMemoryPool::getNumFreeObjects(); }
+	inline size_t getNumAllocatedObjects() const { return RawMemoryPool::getNumAllocatedObjects(); }
+
 protected:
 	friend class MemoryManager;
 	ENGINEMEM_API void refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper);
