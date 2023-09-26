@@ -60,11 +60,11 @@ void hookTester(void* obj) { hookedObj = obj; }
 
 TEST_CASE("RawMemoryPool")
 {
+	//Clear state
+	hookedObj = nullptr;
+
 	SUBCASE("Init hook")
 	{
-		//Clear state
-		hookedObj = nullptr;
-
 		//Setup
 		RawMemoryPool pool(1, sizeof(char));
 		pool.initHook = &hookTester;
@@ -79,9 +79,6 @@ TEST_CASE("RawMemoryPool")
 
 	SUBCASE("Release hook (explicit)")
 	{
-		//Clear state
-		hookedObj = nullptr;
-
 		//Setup
 		RawMemoryPool pool(1, sizeof(char));
 		pool.releaseHook = &hookTester;
@@ -96,16 +93,12 @@ TEST_CASE("RawMemoryPool")
 
 	SUBCASE("Release hook (leak)")
 	{
-		//Clear state
-		hookedObj = nullptr;
-		void* obj = nullptr;
-
-		//Setup
+		//Setup pool
 		RawMemoryPool* pool = new RawMemoryPool(1, sizeof(char));
 		pool->releaseHook = &hookTester;
 
-		//More setup
-		obj = pool->allocate();
+		//Setup allocation
+		void* obj = pool->allocate();
 		REQUIRE(obj);
 
 		//Act: leak

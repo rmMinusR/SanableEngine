@@ -7,6 +7,7 @@ GenericTypedMemoryPool::GenericTypedMemoryPool(size_t maxNumObjects, size_t obje
 	contentsType(contentsType)
 {
 	debugName = contentsType.name.as_str();
+	releaseHook = contentsType.dtor;
 }
 
 GenericTypedMemoryPool::~GenericTypedMemoryPool()
