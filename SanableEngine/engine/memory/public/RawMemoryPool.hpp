@@ -27,14 +27,14 @@ protected:
 private:
 	RawMemoryPool();
 public:
-	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize);
+	ENGINEMEM_API RawMemoryPool(size_t maxNumObjects, size_t objectSize, size_t objectAlign);
 	ENGINEMEM_API virtual ~RawMemoryPool();
 
 	//Idiotproofing against myself
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&);
 
-	ENGINEMEM_API void resizeObjects(size_t newSize, MemoryMapper* mapper = nullptr);
+	ENGINEMEM_API void resizeObjects(size_t newSize, size_t newAlign, MemoryMapper* mapper = nullptr);
 
 	typedef void (*hook_t)(void*);
 
@@ -67,7 +67,8 @@ protected:
 
 	size_t mMaxNumObjects;
 	size_t mNumAllocatedObjects;
-	size_t mObjectSize; //Note: Doubles as alignment
+	size_t mObjectSize;
+	size_t mObjectAlign;
 
 public:
 	class const_iterator

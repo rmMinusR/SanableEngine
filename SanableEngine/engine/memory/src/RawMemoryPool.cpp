@@ -57,15 +57,16 @@ RawMemoryPool::RawMemoryPool() :
 {
 }
 
-RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemoryPool()
+RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize, size_t objectAlign) : RawMemoryPool()
 {
 	//Set trivial fields
 	mMaxNumObjects = maxNumObjects;
 	mNumAllocatedObjects = 0;
 	mObjectSize = objectSize;
+	mObjectAlign = objectAlign;
 
 	//Allocate memory blocks
-	mDataBlock = malloc(mObjectSize * mMaxNumObjects);
+	mDataBlock = ALIGNED_ALLOC(mObjectSize * mMaxNumObjects, mObjectAlign);
 
 	size_t livingListSpaceRequired = ceil(mMaxNumObjects / 8.0f);
 	mLivingListBlock = (uint8_t*) malloc(livingListSpaceRequired);
@@ -80,12 +81,12 @@ RawMemoryPool::~RawMemoryPool()
 	free(mLivingListBlock);
 	mLivingListBlock = nullptr;
 
-	free(mDataBlock);
+	ALIGNED_FREE(mDataBlock);
 	mDataBlock = nullptr;
 }
 
 RawMemoryPool::RawMemoryPool(RawMemoryPool&& mov) :
-	RawMemoryPool(mov.mMaxNumObjects, mov.mObjectSize)
+	RawMemoryPool(mov.mMaxNumObjects, mov.mObjectSize, mov.mObjectAlign)
 {
 	this->mLivingListBlock = mov.mLivingListBlock;
 	this->mDataBlock       = mov.mDataBlock      ;
@@ -119,12 +120,12 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
+void RawMemoryPool::resizeObjects(size_t newSize, size_t newAlign, MemoryMapper* mapper)
 {
-	if (newSize != mObjectSize)
+	if (newSize != mObjectSize || newAlign != mObjectAlign)
 	{
 		//Allocate new backing block
-		void* newDataBlock = ALIGNED_ALLOC(mObjectSize*mMaxNumObjects, mObjectSize);
+		void* newDataBlock = ALIGNED_ALLOC(newSize*mMaxNumObjects, newAlign);
 		
 		//Don't bother shuffling members. Assume the caller knows what they're doing.
 
@@ -152,6 +153,7 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 		ALIGNED_FREE(mDataBlock);
 		mDataBlock = newDataBlock;
 		mObjectSize = newSize;
+		mObjectAlign = newAlign;
 	}
 }
 

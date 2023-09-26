@@ -8,9 +8,10 @@ class GenericTypedMemoryPool : protected RawMemoryPool
 {
 protected:
 	TypeInfo contentsType;
+	friend class MemoryManager;
 
 public:
-	ENGINEMEM_API GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, const TypeInfo& contentsType);
+	ENGINEMEM_API GenericTypedMemoryPool(size_t maxNumObjects, const TypeInfo& contentsType);
 	ENGINEMEM_API ~GenericTypedMemoryPool();
 
 	ENGINEMEM_API bool isLoaded() const;
@@ -18,7 +19,6 @@ public:
 	inline size_t getNumFreeObjects     () const { return RawMemoryPool::getNumFreeObjects(); }
 	inline size_t getNumAllocatedObjects() const { return RawMemoryPool::getNumAllocatedObjects(); }
 
-protected:
-	friend class MemoryManager;
+	//INTERNAL USE ONLY
 	ENGINEMEM_API void refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper);
 };

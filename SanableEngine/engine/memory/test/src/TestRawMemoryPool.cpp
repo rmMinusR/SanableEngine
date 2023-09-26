@@ -1,6 +1,5 @@
 #include "doctest.h"
 
-#define TEST_MEMORY
 #include "RawMemoryPool.hpp"
 
 TEST_SUITE("RawMemoryPool")
@@ -10,7 +9,7 @@ TEST_SUITE("RawMemoryPool")
 		SUBCASE("Simple allocate")
 		{
 			//Setup
-			RawMemoryPool pool(1, sizeof(char));
+			RawMemoryPool pool(1, sizeof(char), alignof(char));
 		
 			//Act
 			void* obj = pool.allocate();
@@ -20,7 +19,7 @@ TEST_SUITE("RawMemoryPool")
 		SUBCASE("Overallocate")
 		{
 			//Setup
-			RawMemoryPool pool(1, sizeof(char));
+			RawMemoryPool pool(1, sizeof(char), alignof(char));
 			pool.allocate();
 
 			CHECK(pool.allocate() == nullptr);
@@ -30,13 +29,17 @@ TEST_SUITE("RawMemoryPool")
 		{
 			//Setup
 			constexpr size_t nObjs = 4;
-			RawMemoryPool pool(nObjs, sizeof(char));
+			RawMemoryPool pool(nObjs, sizeof(char), alignof(char));
 			CHECK(pool.getNumAllocatedObjects() == 0);
 			CHECK(pool.getNumFreeObjects() == nObjs);
 
 			//Act 1: allocate
 			void* objs[nObjs];
-			for (int i = 0; i < nObjs; ++i) objs[i] = pool.allocate();
+			for (int i = 0; i < nObjs; ++i)
+			{
+				objs[i] = pool.allocate();
+				REQUIRE(objs[i]);
+			}
 
 			//Check 1
 			CHECK(pool.getNumAllocatedObjects() == nObjs);
@@ -65,7 +68,7 @@ TEST_SUITE("RawMemoryPool")
 		SUBCASE("Init hook")
 		{
 			//Setup
-			RawMemoryPool pool(1, sizeof(char));
+			RawMemoryPool pool(1, sizeof(char), alignof(char));
 			pool.initHook = &hookTester;
 
 			//Act
@@ -79,7 +82,7 @@ TEST_SUITE("RawMemoryPool")
 		SUBCASE("Release hook (explicit release)")
 		{
 			//Setup pool
-			RawMemoryPool pool(1, sizeof(char));
+			RawMemoryPool pool(1, sizeof(char), alignof(char));
 			pool.releaseHook = &hookTester;
 
 			//Setup allocation
@@ -95,7 +98,7 @@ TEST_SUITE("RawMemoryPool")
 		SUBCASE("Release hook (via reset)")
 		{
 			//Setup pool
-			RawMemoryPool pool(1, sizeof(char));
+			RawMemoryPool pool(1, sizeof(char), alignof(char));
 			pool.releaseHook = &hookTester;
 
 			//Setup allocation
@@ -111,7 +114,7 @@ TEST_SUITE("RawMemoryPool")
 		SUBCASE("Release hook (via pool dtor)")
 		{
 			//Setup pool
-			RawMemoryPool* pool = new RawMemoryPool(1, sizeof(char));
+			RawMemoryPool* pool = new RawMemoryPool(1, sizeof(char), alignof(char));
 			pool->releaseHook = &hookTester;
 
 			//Setup allocation

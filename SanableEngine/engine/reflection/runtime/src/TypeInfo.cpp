@@ -39,6 +39,7 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 {
 	this->name    = cpy.name;
 	this->size    = cpy.size;
+	this->align   = cpy.align;
 	this->dtor    = cpy.dtor;
 	this->parents = cpy.parents;
 	this->fields  = cpy.fields;
@@ -61,6 +62,7 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 {
 	this->name    = std::move(mov.name);
 	this->size    = std::move(mov.size);
+	this->align   = std::move(mov.align);
 	this->dtor    = std::move(mov.dtor);
 	this->parents = std::move(mov.parents);
 	this->fields  = std::move(mov.fields);

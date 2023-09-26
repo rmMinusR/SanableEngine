@@ -22,7 +22,6 @@ public:
 	TypedMemoryPool(size_t maxNumObjects = PoolSettings<TObj>::maxObjectCount) :
 		GenericTypedMemoryPool(
 			maxNumObjects,
-			alignof(TObj),
 			TypeInfo::createDummy<TObj>()
 		)
 	{
@@ -45,6 +44,9 @@ public:
 
 	//Pass through
 	inline void release(TObj* obj) { RawMemoryPool::release(obj); }
+
+	//INTERNAL USE ONLY
+	inline GenericTypedMemoryPool* asGeneric() { return this; }
 
 protected:
 	TypedMemoryPool(TypedMemoryPool&&) = default;
