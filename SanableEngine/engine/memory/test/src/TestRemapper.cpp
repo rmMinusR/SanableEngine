@@ -65,11 +65,30 @@ TEST_SUITE("MemoryMapper")
 		}
 	}
 
-	TEST_CASE("GenericTypedMemoryPool resize (MoveTester)")
+	TEST_CASE("TypedMemoryPool object resize (MoveTester)")
 	{
-		//Setup: Memory
+		//Setup: Dummy type with double size/align
+		TypeInfo realType = TypeInfo::createDummy<MoveTester>();
+		TypeInfo dummyType = realType;
+		dummyType.name = TypeName::create<MoveTester>();
+		dummyType.size *= 2;
+		dummyType.align *= 2;
+
+		//Setup: Subcases
+		TypeInfo* startingType = nullptr;
+		TypeInfo* switchType = nullptr;
+		SUBCASE("Increase size") { startingType = &realType ; switchType = &dummyType; }
+		SUBCASE("Decrease size") { startingType = &dummyType; switchType = &realType ; }
+		SUBCASE("Same size"    ) { startingType = &realType ; switchType = &realType ; }
+		REQUIRE(startingType);
+		REQUIRE(switchType);
+
+		//Setup: Memory pool
 		constexpr size_t nObjs = 4;
 		TypedMemoryPool<MoveTester> pool(nObjs);
+		pool.asGeneric()->refreshObjects(*startingType, nullptr);
+
+		//Setup: Objects in memory pool
 		MoveTester* objs[nObjs];
 		for (int i = 0; i < nObjs; ++i)
 		{
@@ -77,16 +96,9 @@ TEST_SUITE("MemoryMapper")
 			REQUIRE(objs[i]);
 		}
 
-		//Setup: Dummy type
-		ModuleTypeRegistry reg;
-		TypeBuilder::create<MoveTester>().registerType(&reg);
-		TypeInfo dummyType = *reg.lookupType(TypeName::create<MoveTester>());
-		dummyType.size *= 2; 
-		dummyType.align *= 2; 
-
-		//Act
+		//Act: Do resize
 		MemoryMapper remapper;
-		pool.asGeneric()->refreshObjects(dummyType, &remapper);
+		pool.asGeneric()->refreshObjects(*switchType, &remapper);
 		MoveTester* remappedObjs[nObjs];
 		for (int i = 0; i < nObjs; ++i)
 		{
