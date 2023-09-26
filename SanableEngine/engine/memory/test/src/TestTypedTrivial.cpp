@@ -6,18 +6,26 @@ TEST_CASE("TypedMemoryPool")
 {
 	SUBCASE("Emplace ints")
 	{
+		//Setup
 		constexpr int nInts = 4;
 		TypedMemoryPool<int> pool(nInts);
 		
+		//Act
 		int* vals[nInts];
 		for (int i = 0; i < nInts; ++i)
 		{
 			vals[i] = pool.emplace(i);
 			REQUIRE(vals[i] != nullptr); //Did allocate
+		}
+
+		//Check
+		for (int i = 0; i < nInts; ++i)
+		{
 			CHECK(*(vals[i]) == i); //Holds correct value
 			CHECK( reinterpret_cast<uint64_t>(vals[i]) % alignof(int) == 0 ); //Is correctly aligned
 		}
 
+		//Cleanup
 		for (int i = 0; i < nInts; ++i) pool.release(vals[i]);
 	}
 

@@ -3,107 +3,125 @@
 #define TEST_MEMORY
 #include "RawMemoryPool.hpp"
 
-
-
-TEST_CASE("RawMemoryPool")
+TEST_SUITE("RawMemoryPool")
 {
-	SUBCASE("Allocate")
+	TEST_CASE("Allocation")
 	{
-		//Setup
-		RawMemoryPool pool(1, sizeof(char));
+		SUBCASE("Simple allocate")
+		{
+			//Setup
+			RawMemoryPool pool(1, sizeof(char));
 		
-		//Act
-		void* obj = pool.allocate();
-		CHECK(obj);
+			//Act
+			void* obj = pool.allocate();
+			CHECK(obj);
+		}
+
+		SUBCASE("Overallocate")
+		{
+			//Setup
+			RawMemoryPool pool(1, sizeof(char));
+			pool.allocate();
+
+			CHECK(pool.allocate() == nullptr);
+		}
+
+		SUBCASE("Allocation tracking (num allocated, free, isAlive)")
+		{
+			//Setup
+			constexpr size_t nObjs = 4;
+			RawMemoryPool pool(nObjs, sizeof(char));
+			CHECK(pool.getNumAllocatedObjects() == 0);
+			CHECK(pool.getNumFreeObjects() == nObjs);
+
+			//Act 1: allocate
+			void* objs[nObjs];
+			for (int i = 0; i < nObjs; ++i) objs[i] = pool.allocate();
+
+			//Check 1
+			CHECK(pool.getNumAllocatedObjects() == nObjs);
+			CHECK(pool.getNumFreeObjects() == 0);
+			for (int i = 0; i < nObjs; ++i) CHECK(pool.isAlive(objs[i]));
+
+			//Act 2: deallocate an arbitrary object
+			pool.release(objs[0]);
+			CHECK(!pool.isAlive(objs[0]));
+
+			//Check 2
+			CHECK(pool.getNumAllocatedObjects() == nObjs-1);
+			CHECK(pool.getNumFreeObjects() == 1);
+		}
 	}
 
-	SUBCASE("Overallocate")
+
+	void* hookedObj = nullptr;
+	void hookTester(void* obj) { hookedObj = obj; }
+
+	TEST_CASE("Hooks")
 	{
-		//Setup
-		RawMemoryPool pool(1, sizeof(char));
-		pool.allocate();
+		//Clear state
+		hookedObj = nullptr;
 
-		CHECK(pool.allocate() == nullptr);
-	}
+		SUBCASE("Init hook")
+		{
+			//Setup
+			RawMemoryPool pool(1, sizeof(char));
+			pool.initHook = &hookTester;
 
-	SUBCASE("Allocation tracking (num allocated, free, isAlive)")
-	{
-		//Setup
-		constexpr size_t nObjs = 4;
-		RawMemoryPool pool(nObjs, sizeof(char));
-		CHECK(pool.getNumAllocatedObjects() == 0);
-		CHECK(pool.getNumFreeObjects() == nObjs);
+			//Act
+			void* obj = pool.allocate();
+			REQUIRE(obj);
+			CHECK(hookedObj == obj);
 
-		//Act 1: allocate
-		void* objs[nObjs];
-		for (int i = 0; i < nObjs; ++i) objs[i] = pool.allocate();
+			pool.release(obj);
+		}
 
-		//Check 1
-		CHECK(pool.getNumAllocatedObjects() == nObjs);
-		CHECK(pool.getNumFreeObjects() == 0);
-		for (int i = 0; i < nObjs; ++i) CHECK(pool.isAlive(objs[i]));
+		SUBCASE("Release hook (explicit release)")
+		{
+			//Setup pool
+			RawMemoryPool pool(1, sizeof(char));
+			pool.releaseHook = &hookTester;
 
-		//Act 2: deallocate an arbitrary object
-		pool.release(objs[0]);
-		CHECK(!pool.isAlive(objs[0]));
+			//Setup allocation
+			void* obj = pool.allocate();
+			REQUIRE(obj);
 
-		//Check 2
-		CHECK(pool.getNumAllocatedObjects() == nObjs-1);
-		CHECK(pool.getNumFreeObjects() == 1);
-	}
-}
+			//Act
+			pool.release(obj);
 
+			CHECK(hookedObj == obj);
+		}
 
+		SUBCASE("Release hook (via reset)")
+		{
+			//Setup pool
+			RawMemoryPool pool(1, sizeof(char));
+			pool.releaseHook = &hookTester;
 
-void* hookedObj = nullptr;
-void hookTester(void* obj) { hookedObj = obj; }
+			//Setup allocation
+			void* obj = pool.allocate();
+			REQUIRE(obj);
 
-TEST_CASE("RawMemoryPool")
-{
-	//Clear state
-	hookedObj = nullptr;
+			//Act
+			pool.reset();
 
-	SUBCASE("Init hook")
-	{
-		//Setup
-		RawMemoryPool pool(1, sizeof(char));
-		pool.initHook = &hookTester;
+			CHECK(hookedObj == obj);
+		}
 
-		//Act
-		void* obj = pool.allocate();
-		REQUIRE(obj);
-		CHECK(hookedObj == obj);
+		SUBCASE("Release hook (via pool dtor)")
+		{
+			//Setup pool
+			RawMemoryPool* pool = new RawMemoryPool(1, sizeof(char));
+			pool->releaseHook = &hookTester;
 
-		pool.release(obj);
-	}
+			//Setup allocation
+			void* obj = pool->allocate();
+			REQUIRE(obj);
 
-	SUBCASE("Release hook (explicit)")
-	{
-		//Setup
-		RawMemoryPool pool(1, sizeof(char));
-		pool.releaseHook = &hookTester;
+			//Act: leak
+			delete pool;
 
-		//Act
-		void* obj = pool.allocate();
-		REQUIRE(obj);
-		pool.release(obj);
-
-		CHECK(hookedObj == obj);
-	}
-
-	SUBCASE("Release hook (leak)")
-	{
-		//Setup pool
-		RawMemoryPool* pool = new RawMemoryPool(1, sizeof(char));
-		pool->releaseHook = &hookTester;
-
-		//Setup allocation
-		void* obj = pool->allocate();
-		REQUIRE(obj);
-
-		//Act: leak
-		delete pool;
-
-		CHECK(hookedObj == obj);
+			CHECK(hookedObj == obj);
+		}
 	}
 }
