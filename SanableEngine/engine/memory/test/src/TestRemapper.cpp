@@ -101,6 +101,7 @@ TEST_SUITE("MemoryMapper")
 			CHECK(remappedObjs[i]->c == 3);
 		}
 
-		//MoveTester is trivially destructible
+		//Cleanup
+		for (int i = 0; i < nObjs; ++i) pool.release(remappedObjs[i]);
 	}
 }
