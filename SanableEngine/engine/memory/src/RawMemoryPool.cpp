@@ -157,6 +157,20 @@ void RawMemoryPool::resizeObjects(size_t newSize, size_t newAlign, MemoryMapper*
 	}
 }
 
+void RawMemoryPool::setMaxNumObjects(size_t newCount, MemoryMapper* mapper)
+{
+	if (newCount != mMaxNumObjects)
+	{
+		//Allocate new backing block
+		void* newDataBlock = ALIGNED_ALLOC(mObjectSize*newCount, mObjectAlign);
+		
+		mapper->rawMove(newDataBlock, mDataBlock, mObjectSize*std::min(mMaxNumObjects, newCount));
+		
+		ALIGNED_FREE(mDataBlock);
+		mDataBlock = newDataBlock;
+	}
+}
+
 void* RawMemoryPool::allocate()
 {
 	if (mNumAllocatedObjects < mMaxNumObjects)

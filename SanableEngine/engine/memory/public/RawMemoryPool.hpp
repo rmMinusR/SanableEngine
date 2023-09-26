@@ -34,7 +34,13 @@ public:
 	RawMemoryPool(const RawMemoryPool&) = delete;
 	RawMemoryPool(RawMemoryPool&&);
 
+	//Resizes individual allocations, moving them as appropriate.
+	//This will break any existing pointers, unless a mapper is used to fix them.
 	ENGINEMEM_API void resizeObjects(size_t newSize, size_t newAlign, MemoryMapper* mapper = nullptr);
+
+	//Changes the maximum object count.
+	//This will break any existing pointers, unless a mapper is used to fix them.
+	ENGINEMEM_API void setMaxNumObjects(size_t newCount, MemoryMapper* mapper = nullptr);
 
 	typedef void (*hook_t)(void*);
 
@@ -56,6 +62,7 @@ public:
 	ENGINEMEM_API void reset();//doesn't reallocate memory but does reset free list and num allocated objects
 
 	inline size_t getMaxObjectSize()  const { return mObjectSize; }
+	inline size_t getMaxNumObjects() const { return mMaxNumObjects; }
 	inline size_t getNumFreeObjects() const { return mMaxNumObjects - mNumAllocatedObjects; }
 	inline size_t getNumAllocatedObjects() const { return mNumAllocatedObjects; }
 

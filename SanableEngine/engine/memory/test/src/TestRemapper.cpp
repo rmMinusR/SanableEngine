@@ -65,6 +65,41 @@ TEST_SUITE("MemoryMapper")
 		}
 	}
 
+	TEST_CASE("RawMemoryPool count change (uint8_t)")
+	{
+		size_t startCount;
+		size_t endCount;
+		SUBCASE("Increase count") { startCount = 4; endCount = 8; }
+		SUBCASE("Decrease count") { startCount = 8; endCount = 4; }
+		SUBCASE("Same count"    ) { startCount = 4; endCount = 4; }
+		size_t nToCreate = std::min(startCount, endCount);
+
+		//Setup
+		RawMemoryPool pool(startCount, sizeof(uint8_t), alignof(uint8_t));
+		uint8_t* objs[nToCreate];
+		for (int i = 0; i < nToCreate; ++i)
+		{
+			objs[i] = (uint8_t*)pool.allocate();
+			REQUIRE(objs[i]);
+			*(objs[i]) = i;
+		}
+
+		//Act
+		MemoryMapper remapper;
+		pool.setMaxNumObjects(endCount, &remapper);
+		uint8_t* remappedObjs[nToCreate];
+		for (int i = 0; i < nToCreate; ++i)
+		{
+			remappedObjs[i] = remapper.transformAddress(objs[i]);
+		}
+
+		//Check
+		for (int i = 0; i < nToCreate; ++i)
+		{
+			CHECK(*(remappedObjs[i]) == i); //Address was remapped correctly
+		}
+	}
+
 	TEST_CASE("TypedMemoryPool object resize (MoveTester)")
 	{
 		//Setup: Dummy type with double size/align
@@ -116,4 +151,6 @@ TEST_SUITE("MemoryMapper")
 		//Cleanup
 		for (int i = 0; i < nObjs; ++i) pool.release(remappedObjs[i]);
 	}
+
+
 }
