@@ -1,7 +1,11 @@
 name: Run all tests
 
 on:
-  push: [main, dev, memory-testing]
+  push:
+    branches:
+    - main
+    - dev
+    - memory-testing
   workflow_dispatch:
 
 permissions:
