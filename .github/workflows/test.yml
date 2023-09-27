@@ -34,8 +34,9 @@ jobs:
     - name: Run tests
       working-directory: SanableEngine/builds/Win64/
       continue-on-error: true
-      matrix:
-        target: [engine-rtti-test, engine-memory-test]
+      strategy:
+        matrix:
+          target: [engine-rtti-test, engine-memory-test]
       run: ${{matrix.target}}.exe --reporters=junit --out=/test-results/${{matrix.target}}.xml
     
     - name: Publish Test Report
