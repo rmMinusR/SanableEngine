@@ -200,16 +200,14 @@ void RawMemoryPool::release(void* ptr)
 	//make sure that the address passed in is actually one managed by this pool
 	if (!contains(ptr))
 	{
-		cerr << "ERROR: object freed from a pool that doesn't manage it\n";
-		assert(false);
+		cerr << "ERROR: object freed from a pool (" << debugName << ") that doesn't manage it\n";
 		return;
 	}
 	
 	//Make sure the specified object is alive
 	if (!isAlive(ptr))
 	{
-		cerr << "ERROR: object freed, but was already dead\n";
-		assert(false);
+		cerr << "ERROR: object freed (" << debugName << "), but was already dead\n";
 		return;
 	}
 

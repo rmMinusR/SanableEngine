@@ -28,6 +28,26 @@ TEST_CASE("TypedMemoryPool")
 		CHECK(LeakTracer::numLiving == 0);
 	}
 
+	SUBCASE("Double-delete LeakTracers")
+	{
+		//Setup
+		TypedMemoryPool<LeakTracer> pool(1);
+		LeakTracer* obj = pool.emplace();
+		REQUIRE(LeakTracer::numLiving == 1);
+
+		//Act 1: first delete
+		pool.release(obj);
+
+		//Verify 1: make sure dtor was called
+		CHECK(LeakTracer::numLiving == 0);
+
+		//Act 2: delete again
+		pool.release(obj);
+		
+		//Verify 2: make sure dtor wasn't called again
+		CHECK(LeakTracer::numLiving == 0);
+	}
+
 	SUBCASE("Leak LeakTracers")
 	{
 		//Setup
