@@ -10,8 +10,17 @@ env:
   CXX: clang++
 
 jobs:
-  test-windows:
+  
+  build-and-test-windows:
     runs-on: windows-latest
+    
+    strategy:
+      max-parallel: 1
+      matrix:
+        environment-config: [
+          { name: "MSVC", setup: "ilammy/msvc-dev-cmd@v1" },
+          { name: "MinGW", setup: "egor-tensin/setup-mingw@v2" }
+        ]
 
     steps:
     - uses: actions/checkout@v3
@@ -19,30 +28,36 @@ jobs:
         submodules: recursive
     
     - uses: lukka/get-cmake@v3.26.1
-
-    - run: mkdir SanableEngine\builds\Win64\
+    
+    # Fix SDL2_image support
+    - uses: ${{matrix.environment-config.setup}}
+    
+    - run: mkdir SanableEngine\builds\Win64-${{matrix.environment-config.name}}
     
     - name: Generate build files
-      working-directory: SanableEngine/builds/Win64/
+      working-directory: SanableEngine/builds/Win64-${{matrix.environment-config.name}}
       run: cmake -S ../../ -B intermediate -G Ninja
     
     - name: Build everything
-      working-directory: SanableEngine/builds/Win64/
-      continue-on-error: true
+      working-directory: SanableEngine/builds/Win64-${{matrix.environment-config.name}}
       run: cmake --build intermediate
     
-    # FIXME use matrix [engine-rtti-test, engine-memory-test]
-    # with run: ${{matrix.target}}.exe --reporters=junit --out=/test-results/${{matrix.target}}.xml
+    - name: Test everything
+      working-directory: SanableEngine/builds/Win64-${{matrix.environment-config.name}}/intermediate
+      run: ctest --output-junit /test-results/Win64-${{matrix.environment-config.name}}.xml
     
-    - name: Test RTTI
-      working-directory: SanableEngine/builds/Win64/
-      continue-on-error: true
-      run: engine-rtti-test.exe --reporters=junit --out=/test-results/engine-rtti-test.xml
+    - name: Upload reports
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: /test-results
+        name: Test-Report-Windows-${{matrix.environment-config.name}}
+  
+  
+  collate:
+    runs-on: windows-latest
     
-    - name: Test memory
-      working-directory: SanableEngine/builds/Win64/
-      continue-on-error: true
-      run: engine-memory-test.exe --reporters=junit --out=/test-results/engine-memory-test.xml
+    - name: Get results
+      uses: actions/download-artifact@v3
     
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v4
