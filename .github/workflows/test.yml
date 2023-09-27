@@ -33,7 +33,7 @@ jobs:
     - run: mkdir SanableEngine\builds\Win64-MSVC
     
     - name: Generate build files
-      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MSVC/intermediate -G Ninja
+      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MSVC/intermediate -G Ninja -DMSVC=YES
     
     - name: Build everything
       run: cmake --build SanableEngine/builds/Win64-MSVC/intermediate
@@ -64,7 +64,7 @@ jobs:
     - run: mkdir SanableEngine\builds\Win64-MinGW
     
     - name: Generate build files
-      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MinGW/intermediate -G Ninja
+      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MinGW/intermediate -G Ninja -DMINGW=YES
     
     - name: Build everything
       run: cmake --build SanableEngine/builds/Win64-MinGW/intermediate
