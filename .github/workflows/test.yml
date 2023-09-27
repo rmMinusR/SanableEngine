@@ -1,0 +1,45 @@
+name: Run all tests
+
+on: push
+
+permissions:
+  contents: read
+
+env:
+  CC: clang
+  CXX: clang++
+
+jobs:
+  test-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - uses: lukka/get-cmake@v3.26.1
+
+    - run: mkdir SanableEngine\builds\Win64\
+    
+    - name: Generate build files
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake -S ../../ -B intermediate -G Ninja
+    
+    - name: Build everything
+      working-directory: SanableEngine/builds/Win64/
+      continue-on-error: true
+      run: cmake --build intermediate
+    
+    - name: Run tests
+      working-directory: SanableEngine/builds/Win64/
+      continue-on-error: true
+      matrix:
+        target: [engine-rtti-test, engine-memory-test]
+      run: ${{matrix.target}}.exe --reporters=junit --out=/test-results/${{matrix.target}}.xml
+    
+    - name: Publish Test Report
+      uses: mikepenz/action-junit-report@v4
+      with:
+        report_paths: '/test-results/*.xml'
+        
