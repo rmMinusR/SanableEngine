@@ -11,7 +11,7 @@ env:
 
 jobs:
   
-  build-and-test-windows-msvc:
+  test-windows-msvc:
     runs-on: windows-latest
     
     steps:
@@ -45,7 +45,7 @@ jobs:
         name: Test-Report-Windows-MSVC
   
   
-  build-and-test-windows-mingw:
+  test-windows-mingw:
     runs-on: windows-latest
     
     steps:
@@ -83,8 +83,8 @@ jobs:
     runs-on: windows-latest
     
     needs: [
-      build-and-test-windows-msvc,
-      build-and-test-windows-mingw
+      test-windows-msvc,
+      test-windows-mingw
     ]
     
     steps:
