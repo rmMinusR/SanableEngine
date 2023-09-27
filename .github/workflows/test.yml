@@ -1,6 +1,12 @@
 name: Run all tests
 
-on: [push, workflow_dispatch]
+on:
+  push: [
+    main,
+    dev,
+    memory-testing
+  ]
+  workflow_dispatch:
 
 permissions:
   contents: read
