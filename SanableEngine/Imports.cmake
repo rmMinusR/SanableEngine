@@ -50,5 +50,10 @@ else()
     message(ERROR "-> Could not configure SDL2_ttf: Unknown platform")
 endif()
 
-# Delegate doctest configuration
-include("${CMAKE_CURRENT_LIST_DIR}/libs/doctest/CMakeLists.txt")
+# Delegate doctest configuration: https://stackoverflow.com/a/72984086
+include(FetchContent)
+FetchContent_Declare(
+    doctest
+    GIT_REPOSITORY "https://github.com/doctest/doctest"
+)
+FetchContent_MakeAvailable(doctest)

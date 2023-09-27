@@ -7,5 +7,4 @@ aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_memory_test_sources)
 add_executable("engine-memory-test" ${engine_memory_test_sources})
 
 target_include_directories("engine-memory-test" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/include")
-
-target_link_libraries("engine-memory-test" PUBLIC doctest engine-memory)
+target_link_libraries("engine-memory-test" PUBLIC engine-memory doctest)
