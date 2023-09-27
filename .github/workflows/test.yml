@@ -1,6 +1,6 @@
 name: Run all tests
 
-on: push
+on: [push, workflow_dispatch]
 
 permissions:
   contents: read
@@ -31,13 +31,18 @@ jobs:
       continue-on-error: true
       run: cmake --build intermediate
     
-    - name: Run tests
+    # FIXME use matrix [engine-rtti-test, engine-memory-test]
+    # with run: ${{matrix.target}}.exe --reporters=junit --out=/test-results/${{matrix.target}}.xml
+    
+    - name: Test RTTI
       working-directory: SanableEngine/builds/Win64/
       continue-on-error: true
-      strategy:
-        matrix:
-          target: [engine-rtti-test, engine-memory-test]
-      run: ${{matrix.target}}.exe --reporters=junit --out=/test-results/${{matrix.target}}.xml
+      run: engine-rtti-test.exe --reporters=junit --out=/test-results/engine-rtti-test.xml
+    
+    - name: Test memory
+      working-directory: SanableEngine/builds/Win64/
+      continue-on-error: true
+      run: engine-memory-test.exe --reporters=junit --out=/test-results/engine-memory-test.xml
     
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v4
