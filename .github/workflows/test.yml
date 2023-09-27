@@ -11,17 +11,9 @@ env:
 
 jobs:
   
-  build-and-test-windows:
+  build-and-test-windows-msvc:
     runs-on: windows-latest
     
-    strategy:
-      max-parallel: 1
-      matrix:
-        environment-config: [
-          { name: "MSVC", setup: "ilammy/msvc-dev-cmd@v1" },
-          { name: "MinGW", setup: "egor-tensin/setup-mingw@v2" }
-        ]
-
     steps:
     - uses: actions/checkout@v3
       with:
@@ -30,31 +22,70 @@ jobs:
     - uses: lukka/get-cmake@v3.26.1
     
     # Fix SDL2_image support
-    - uses: ${{matrix.environment-config.setup}}
+    - uses: ilammy/msvc-dev-cmd@v1
     
-    - run: mkdir SanableEngine\builds\Win64-${{matrix.environment-config.name}}
+    - run: mkdir SanableEngine\builds\Win64-MSVC
     
     - name: Generate build files
-      working-directory: SanableEngine/builds/Win64-${{matrix.environment-config.name}}
+      working-directory: SanableEngine/builds/Win64-MSVC
       run: cmake -S ../../ -B intermediate -G Ninja
     
     - name: Build everything
-      working-directory: SanableEngine/builds/Win64-${{matrix.environment-config.name}}
+      working-directory: SanableEngine/builds/Win64-MSVC
       run: cmake --build intermediate
     
     - name: Test everything
-      working-directory: SanableEngine/builds/Win64-${{matrix.environment-config.name}}/intermediate
-      run: ctest --output-junit /test-results/Win64-${{matrix.environment-config.name}}.xml
+      working-directory: SanableEngine/builds/Win64-MSVC/intermediate
+      run: ctest --output-junit /test-results/Win64-MSVC.xml
     
     - name: Upload reports
       uses: actions/upload-artifact@v3.1.0
       with:
         path: /test-results
-        name: Test-Report-Windows-${{matrix.environment-config.name}}
+        name: Test-Report-Windows-MSVC
+  
+  
+  build-and-test-windows-mingw:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    
+    - uses: lukka/get-cmake@v3.26.1
+    
+    # Fix SDL2_image support
+    - uses: egor-tensin/setup-mingw@v2
+    
+    - run: mkdir SanableEngine\builds\Win64-MinGW
+    
+    - name: Generate build files
+      working-directory: SanableEngine/builds/Win64-MinGW
+      run: cmake -S ../../ -B intermediate -G Ninja
+    
+    - name: Build everything
+      working-directory: SanableEngine/builds/Win64-MinGW
+      run: cmake --build intermediate
+    
+    - name: Test everything
+      working-directory: SanableEngine/builds/Win64-MinGW/intermediate
+      run: ctest --output-junit /test-results/Win64-MinGW.xml
+    
+    - name: Upload reports
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: /test-results
+        name: Test-Report-Windows-MinGW
   
   
   collate:
     runs-on: windows-latest
+    
+    needs: [
+      build-and-test-windows-msvc,
+      build-and-test-windows-mingw
+    ]
     
     steps:
     - name: Get results
