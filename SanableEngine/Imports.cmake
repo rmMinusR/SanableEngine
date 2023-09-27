@@ -57,3 +57,4 @@ FetchContent_Declare(
     GIT_REPOSITORY "https://github.com/doctest/doctest"
 )
 FetchContent_MakeAvailable(doctest)
+include("${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake")
