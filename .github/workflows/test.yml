@@ -63,15 +63,17 @@ jobs:
   test-windows-mingw:
     runs-on: windows-latest
     
+    # Fix SDL2_image support
+    defaults:
+      run:
+        shell: bash
+    
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
     
     - uses: lukka/get-cmake@v3.26.1
-    
-    # Fix SDL2_image support
-    - uses: egor-tensin/setup-mingw@v1
     
     - uses: actions/setup-python@v4
       with:
