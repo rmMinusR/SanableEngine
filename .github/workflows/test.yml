@@ -71,7 +71,7 @@ jobs:
     - uses: lukka/get-cmake@v3.26.1
     
     # Fix SDL2_image support
-    - uses: egor-tensin/setup-mingw@v2
+    - uses: egor-tensin/setup-mingw@v2.2.0
     
     - uses: actions/setup-python@v4
       with:
