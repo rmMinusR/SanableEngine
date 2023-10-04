@@ -12,9 +12,9 @@ template<class TObj>
 class Vector3
 {
 public:
-    Vector3();
-    Vector3(const TObj x, const TObj y, const TObj z);
-    Vector3(const Vector3<TObj>& v);
+    constexpr Vector3();
+    constexpr Vector3(const TObj x, const TObj y, const TObj z);
+    constexpr Vector3(const Vector3<TObj>& v);
     Vector3(const glm::vec3& v);
 
     // utility operations
@@ -69,12 +69,6 @@ public:
     inline void setY(float s) { _v[1] = s; }
     inline void setZ(float s) { _v[2] = s; }
 
-    static constexpr Vector3<float> zero = Vector3<float>(0, 0, 0);
-    static constexpr Vector3<float> one  = Vector3<float>(1, 1, 1);
-    static constexpr Vector3<float> X = Vector3<float>(1, 0, 0);
-    static constexpr Vector3<float> Y = Vector3<float>(0, 1, 0);
-    static constexpr Vector3<float> Z = Vector3<float>(0, 0, 1);
-
 private:
     TObj _v[3];
 };
@@ -101,7 +95,7 @@ inline const Vector3<T> operator^ (const Vector3<T>& v1, const Vector3<T>& v2); 
 
 
 template <class TObj>
-Vector3<TObj>::Vector3()
+constexpr Vector3<TObj>::Vector3()
 {
     _v[0] = 0.0;
     _v[1] = 0.0;
@@ -110,7 +104,7 @@ Vector3<TObj>::Vector3()
 
 
 template <class TObj>
-Vector3<TObj>::Vector3(const Vector3<TObj>& v)
+constexpr Vector3<TObj>::Vector3(const Vector3<TObj>& v)
 {
     _v[0] = v[0];
     _v[1] = v[1];
@@ -126,7 +120,7 @@ Vector3<TObj>::Vector3(const glm::vec3& v)
 }
 
 template <class TObj>
-Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
+constexpr Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
 {
     _v[0] = x;
     _v[1] = y;
@@ -216,7 +210,7 @@ inline const TObj Vector3<TObj>::mgn() const
 template <class TObj>
 Vector3<TObj>& Vector3<TObj>::normalize()
 {
-    TObj n = norm();
+    TObj n = mgn();
     if(n){
       _v[0]/=n;
       _v[1]/=n;
@@ -456,3 +450,15 @@ inline const Vector3<TObj> operator ^ (const Vector3<TObj>& v1, const Vector3<TO
 {
     return v1.cross(v2);
 }
+
+
+template<typename T>
+struct Vector3_consts
+{
+    static constexpr Vector3<T> zero { 0, 0, 0 };
+    static constexpr Vector3<T> one  { 1, 1, 1 };
+    static constexpr Vector3<T> X { 1, 0, 0 };
+    static constexpr Vector3<T> Y { 0, 1, 0 };
+    static constexpr Vector3<T> Z { 0, 0, 1 };
+};
+

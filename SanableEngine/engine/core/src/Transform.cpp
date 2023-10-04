@@ -146,9 +146,9 @@ Vector3<float> Transform::transformVector(Vector3<float> val) const
 
 Vector3<float> Transform::transformNormal(Vector3<float> val) const
 {
-	Vector3<float> cx = val.cross(Vector3<float>::X);
-	Vector3<float> cy = val.cross(Vector3<float>::Y);
-	Vector3<float> cz = val.cross(Vector3<float>::Z);
+	Vector3<float> cx = val.cross(Vector3_consts<float>::X);
+	Vector3<float> cy = val.cross(Vector3_consts<float>::Y);
+	Vector3<float> cz = val.cross(Vector3_consts<float>::Z);
 	float lx = cx.mgnSq();
 	float ly = cx.mgnSq();
 	float lz = cx.mgnSq();
@@ -181,9 +181,9 @@ Vector3<float> Transform::inverseTransformVector(Vector3<float> val) const
 
 Vector3<float> Transform::inverseTransformNormal(Vector3<float> val) const
 {
-	Vector3<float> cx = val.cross(Vector3<float>::X);
-	Vector3<float> cy = val.cross(Vector3<float>::Y);
-	Vector3<float> cz = val.cross(Vector3<float>::Z);
+	Vector3<float> cx = val.cross(Vector3_consts<float>::X);
+	Vector3<float> cy = val.cross(Vector3_consts<float>::Y);
+	Vector3<float> cz = val.cross(Vector3_consts<float>::Z);
 	float lx = cx.mgnSq();
 	float ly = cx.mgnSq();
 	float lz = cx.mgnSq();
