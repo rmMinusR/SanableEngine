@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SDL_video.h>
 #include "dllapi.h"
 #include "Renderer.hpp"
 
@@ -10,13 +11,13 @@ class Window
 {
 private:
 	SDL_Window* handle;
-	SDL_Renderer* renderer;
-
+	SDL_GLContext context;
 	Renderer _interface;
 
+	friend class Renderer;
 public:
 	ENGINEGRAPHICS_API Window(char const* name, int width, int height);
 	ENGINEGRAPHICS_API ~Window();
 
-	ENGINEGRAPHICS_API inline Renderer* getRenderer() { return &_interface; }
+	inline Renderer* getRenderer() { return &_interface; }
 };

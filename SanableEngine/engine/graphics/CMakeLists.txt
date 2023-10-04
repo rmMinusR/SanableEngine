@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.11)
 set (CMAKE_CXX_STANDARD 17)
 
-project("engine-graphics")
+find_package(OpenGL REQUIRED)
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_graphics_sources)

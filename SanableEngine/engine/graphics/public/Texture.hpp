@@ -2,7 +2,9 @@
 
 #include <filesystem>
 
+#include <Windows.h>
 #include <SDL_render.h>
+#include <gl/GL.h>
 
 #include "dllapi.h"
 
@@ -14,11 +16,15 @@ class Renderer;
 class Texture
 {
 	friend class Renderer;
-	SDL_Renderer* renderer;
-	SDL_Surface* cpu;
-	SDL_Texture* gpu;
+
+	GLuint id;
+
+	int width;
+	int height;
+	int nChannels;
+
 public:
-	ENGINEGRAPHICS_API Texture(const std::filesystem::path&, SDL_Renderer* renderer); //FIXME should use own renderer instead?
+	ENGINEGRAPHICS_API Texture(const std::filesystem::path&, SDL_GLContext ctx); //FIXME should use own renderer instead?
 	ENGINEGRAPHICS_API ~Texture();
 
 	ENGINEGRAPHICS_API Texture(const Texture& cpy);

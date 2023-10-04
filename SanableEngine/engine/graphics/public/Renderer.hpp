@@ -1,23 +1,25 @@
 #pragma once
 
 #include <string>
+#include <SDL_video.h>
 #include "dllapi.h"
 
+class Window;
 class Font;
 class Texture;
 
 struct SDL_Color;
 struct SDL_Rect;
-struct SDL_Renderer;
 
 class Renderer
 {
 private:
-	SDL_Renderer* handle;
+	Window* owner;
+	SDL_GLContext context;
 
 public:
 	ENGINEGRAPHICS_API Renderer();
-	ENGINEGRAPHICS_API Renderer(SDL_Renderer*);
+	ENGINEGRAPHICS_API Renderer(Window* owner, const SDL_GLContext& context);
 
 	ENGINEGRAPHICS_API void beginFrame();
 	ENGINEGRAPHICS_API void finishFrame();
