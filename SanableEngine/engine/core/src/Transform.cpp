@@ -41,6 +41,7 @@ void Transform::recompute() const
 	{
 		parent->ensureUpToDate();
 		global.position = parent->transformPoint(local.position);
+		global.rotation = parent->global.rotation * local.rotation;
 	}
 	else
 	{
@@ -87,6 +88,7 @@ void Transform::setParent(Transform* newParent)
 	{
 		parent->ensureUpToDate();
 		local.position = parent->inverseTransformPoint(global.position);
+		local.rotation = global.rotation * glm::inverse(parent->global.rotation); // p = q*p*q^-1
 	}
 	else
 	{
@@ -109,34 +111,91 @@ void Transform::setPosition(Vector3<float> newPos)
 	markDirty(); //FIXME Should we mark children instead, since we're setting global?
 }
 
+glm::quat Transform::getRotation() const
+{
+	ensureUpToDate();
+	return global.rotation;
+}
+
+void Transform::setRotation(glm::quat newRot)
+{
+	ensureUpToDate();
+	global.rotation = newRot;
+	if (parent)
+	{
+		parent->ensureUpToDate();
+		local.rotation = newRot * glm::inverse(parent->global.rotation);
+	}
+	else local.rotation = newRot;
+	markDirty(); //FIXME Should we mark children instead, since we're setting global?
+}
+
 Vector3<float> Transform::transformPoint(Vector3<float> val) const
 {
 	ensureUpToDate();
-	return val + global.position;
+	val = (glm::vec3)val * global.rotation;
+	val += global.position;
+	return val;
 }
 
 Vector3<float> Transform::transformVector(Vector3<float> val) const
 {
-	return val; //TODO stub, revisit for scale/orientation
+	ensureUpToDate();
+	return (glm::vec3)val * global.rotation;
 }
 
 Vector3<float> Transform::transformNormal(Vector3<float> val) const
 {
-	return val; //TODO stub, revisit for scale/orientation
+	Vector3<float> cx = val.cross(Vector3<float>::X);
+	Vector3<float> cy = val.cross(Vector3<float>::Y);
+	Vector3<float> cz = val.cross(Vector3<float>::Z);
+	float lx = cx.mgnSq();
+	float ly = cx.mgnSq();
+	float lz = cx.mgnSq();
+
+	//Pick best option
+	Vector3<float>* tangent;
+	     if (lx > ly && lx > lz) tangent = &cx;
+	else if (ly > lx && ly > lz) tangent = &cy;
+	else /* (lz > lx && lz > ly) */ tangent = &cz;
+	tangent->normalize();
+
+	//Main op
+	Vector3<float> bitangent = val.cross(*tangent);
+	return transformVector(*tangent).cross(transformVector(bitangent));
 }
 
 Vector3<float> Transform::inverseTransformPoint(Vector3<float> val) const
 {
 	ensureUpToDate();
-	return val - global.position;
+	val -= global.position;
+	val = (glm::vec3)val * glm::inverse(global.rotation);
+	return val;
 }
 
 Vector3<float> Transform::inverseTransformVector(Vector3<float> val) const
 {
-	return val; //TODO stub, revisit for scale/orientation
+	ensureUpToDate();
+	return (glm::vec3)val * glm::inverse(global.rotation);
 }
 
 Vector3<float> Transform::inverseTransformNormal(Vector3<float> val) const
 {
-	return val; //TODO stub, revisit for scale/orientation
+	Vector3<float> cx = val.cross(Vector3<float>::X);
+	Vector3<float> cy = val.cross(Vector3<float>::Y);
+	Vector3<float> cz = val.cross(Vector3<float>::Z);
+	float lx = cx.mgnSq();
+	float ly = cx.mgnSq();
+	float lz = cx.mgnSq();
+
+	//Pick best option
+	Vector3<float>* tangent;
+	     if (lx > ly && lx > lz) tangent = &cx;
+	else if (ly > lx && ly > lz) tangent = &cy;
+	else /* (lz > lx && lz > ly) */ tangent = &cz;
+	tangent->normalize();
+
+	//Main op
+	Vector3<float> bitangent = val.cross(*tangent);
+	return inverseTransformVector(*tangent).cross(inverseTransformVector(bitangent));
 }

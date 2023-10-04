@@ -4,6 +4,7 @@
 
 #include "dllapi.h"
 
+#include <glm/gtc/quaternion.hpp>
 #include "Vector3.inl"
 
 class ModuleTypeRegistry;
@@ -17,7 +18,8 @@ private:
 	std::vector<Transform*> children;
 	struct Data
 	{
-		Vector3<float> position = Vector3<float>(0, 0, 0);
+		Vector3<float> position;
+		glm::quat rotation = glm::quat(1, 0, 0, 0);
 	};
 	Data local;
 
@@ -46,6 +48,9 @@ public:
 
 	ENGINECORE_API Vector3<float> getPosition() const;
 	ENGINECORE_API void setPosition(Vector3<float>);
+
+	ENGINECORE_API glm::quat getRotation() const;
+	ENGINECORE_API void setRotation(glm::quat);
 
 	//Utility functions
 

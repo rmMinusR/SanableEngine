@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <glm/glm.hpp>
 
 ///
 /// Template class for three element vectors.
@@ -14,6 +15,7 @@ public:
     Vector3();
     Vector3(const TObj x, const TObj y, const TObj z);
     Vector3(const Vector3<TObj>& v);
+    Vector3(const glm::vec3& v);
 
     // utility operations
     Vector3<TObj>& zero();
@@ -21,7 +23,8 @@ public:
     Vector3<TObj>& normalize();
 
     // math operations
-    const TObj norm() const;
+    const TObj mgn() const;
+    const TObj mgnSq() const;
     const TObj sum() const;
     const TObj dot(const Vector3<TObj>&) const;
     const Vector3<TObj> cross(const Vector3<TObj>&) const;
@@ -29,6 +32,8 @@ public:
 
     // operators
     Vector3<TObj>& operator= (const Vector3<TObj>& v);        // assignment
+    Vector3<TObj>& operator= (const glm::vec3& v);            // assignment (conversion)
+    operator glm::vec3() const;                               // outbound conversion
 
     const TObj operator[] (const int i) const;             // indexing
     TObj& operator[] (const int i);                        // indexing
@@ -63,6 +68,12 @@ public:
 	inline void setX(float s) { _v[0] = s; }
     inline void setY(float s) { _v[1] = s; }
     inline void setZ(float s) { _v[2] = s; }
+
+    static constexpr Vector3<float> zero = Vector3<float>(0, 0, 0);
+    static constexpr Vector3<float> one  = Vector3<float>(1, 1, 1);
+    static constexpr Vector3<float> X = Vector3<float>(1, 0, 0);
+    static constexpr Vector3<float> Y = Vector3<float>(0, 1, 0);
+    static constexpr Vector3<float> Z = Vector3<float>(0, 0, 1);
 
 private:
     TObj _v[3];
@@ -106,6 +117,13 @@ Vector3<TObj>::Vector3(const Vector3<TObj>& v)
     _v[2] = v[2];
 }
 
+template<class TObj>
+Vector3<TObj>::Vector3(const glm::vec3& v)
+{
+    _v[0] = v[0];
+    _v[1] = v[1];
+    _v[2] = v[2];
+}
 
 template <class TObj>
 Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
@@ -183,9 +201,15 @@ inline const Vector3<TObj> Vector3<TObj>::cross(const Vector3<TObj>& v) const
 
 
 template <class TObj>
-inline const TObj Vector3<TObj>::norm() const
+inline const TObj Vector3<TObj>::mgnSq() const
 {
-    return (TObj) sqrt(dot(*this)); // cast to type
+    return dot(*this);
+}
+
+template<class TObj>
+inline const TObj Vector3<TObj>::mgn() const
+{
+    return (TObj) sqrt(mgnSq());
 }
 
 
@@ -211,6 +235,24 @@ Vector3<TObj>& Vector3<TObj>::operator= (const Vector3<TObj>& v)
     return *this;
 }
 
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator= (const glm::vec3& v)
+{
+    _v[0] = v[0];
+    _v[1] = v[1];
+    _v[2] = v[2];
+    return *this;
+}
+
+template<class TObj>
+Vector3<TObj>::operator glm::vec3() const
+{
+    glm::vec3 v;
+    v[0] = _v[0];
+    v[1] = _v[1];
+    v[2] = _v[2];
+    return v;
+}
 
 template <class TObj>
 Vector3<TObj>& Vector3<TObj>::operator += (const Vector3<TObj>& v)
