@@ -9,6 +9,7 @@
 #include "Component.hpp"
 #include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
+#include <Camera.hpp>
 
 void EngineCore::applyConcurrencyBuffers()
 {
@@ -99,7 +100,8 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     }
 
     memoryManager.init();
-    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module
+    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module (avoiding nasty access violation errors)
+    memoryManager.getSpecificPool<Camera>(true); //Same with Camera
     memoryManager.ensureFresh();
 
     mainWindow = new Window(windowName, windowWidth, windowHeight);
@@ -115,11 +117,12 @@ void EngineCore::shutdown()
     assert(isAlive);
     isAlive = false;
 
-    for (GameObject* o : objects) memoryManager.destroy(o);
-    objects.clear();
-
     pluginManager.unhookAll(true);
     pluginManager.unloadAll();
+    applyConcurrencyBuffers();
+
+    for (GameObject* o : objects) destroy(o);
+    applyConcurrencyBuffers();
 
     delete mainWindow;
     mainWindow = nullptr;
