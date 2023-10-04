@@ -34,3 +34,18 @@ Texture::~Texture()
 {
 	glDeleteTextures(1, &id);
 }
+
+Texture::Texture(Texture&& mov)
+{
+	*this = std::move(mov); //Defer
+}
+
+Texture& Texture::operator=(Texture&& mov)
+{
+	this->id = mov.id;
+	mov.id = 0;
+
+	this->width = mov.width;
+	this->height = mov.height;
+	this->nChannels = mov.nChannels;
+}

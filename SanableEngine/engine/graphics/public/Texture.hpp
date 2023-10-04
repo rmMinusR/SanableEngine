@@ -27,8 +27,8 @@ public:
 	ENGINEGRAPHICS_API Texture(const std::filesystem::path&, SDL_GLContext ctx); //FIXME should use own renderer instead?
 	ENGINEGRAPHICS_API ~Texture();
 
-	ENGINEGRAPHICS_API Texture(const Texture& cpy);
 	ENGINEGRAPHICS_API Texture(Texture&& mov);
-	ENGINEGRAPHICS_API Texture& operator=(const Texture& cpy);
 	ENGINEGRAPHICS_API Texture& operator=(Texture&& mov);
+	Texture(const Texture& cpy) = delete;
+	Texture& operator=(const Texture& cpy) = delete;
 };

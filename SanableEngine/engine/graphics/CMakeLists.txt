@@ -10,7 +10,7 @@ target_include_directories("engine-graphics" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/
 
 # Declare imports
 target_include_directories("engine-graphics" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-graphics" PUBLIC ${SDL2_LIBRARIES} engine-memory SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+target_link_libraries("engine-graphics" PUBLIC ${SDL2_LIBRARIES} ${OPENGL_gl_LIBRARY} engine-memory SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
 
 # Declare exports
 target_include_directories("engine-graphics" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
