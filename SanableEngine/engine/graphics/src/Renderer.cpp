@@ -9,6 +9,7 @@
 
 #include "Texture.hpp"
 #include "Window.hpp"
+#include "Camera.hpp"
 
 Renderer::Renderer() :
 	context(nullptr)
@@ -26,9 +27,8 @@ void Renderer::beginFrame()
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, owner->getWidth(), owner->getHeight(), 0, 0, 100);
+	if (Camera::getMain()) Camera::getMain()->setProjectionMatrix();
+	else printf("WARNING: No main camera!");
 }
 
 void Renderer::finishFrame()

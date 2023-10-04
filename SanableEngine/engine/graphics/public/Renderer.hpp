@@ -4,6 +4,7 @@
 #include <SDL_video.h>
 #include "dllapi.h"
 
+class EngineCore;
 class Window;
 class Font;
 class Texture;
@@ -21,10 +22,14 @@ public:
 	ENGINEGRAPHICS_API Renderer();
 	ENGINEGRAPHICS_API Renderer(Window* owner, const SDL_GLContext& context);
 
-	ENGINEGRAPHICS_API void beginFrame();
-	ENGINEGRAPHICS_API void finishFrame();
-
+	inline Window* getOwner() const { return owner; }
+	
 	ENGINEGRAPHICS_API void drawRect(const SDL_Rect& rect, const SDL_Color& color);
 	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, int x, int y, bool highQuality = false);
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y);
+
+private:
+	friend class EngineCore;
+	void beginFrame();
+	void finishFrame();
 };

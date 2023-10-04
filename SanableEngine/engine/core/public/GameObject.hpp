@@ -34,6 +34,8 @@ public:
     GameObject(EngineCore* engine);
     ~GameObject();
 
+    inline EngineCore* getContext() { return engine; }
+
     inline Transform* getTransform() { return &transform; }
 
     template<typename T, typename... TCtorArgs>

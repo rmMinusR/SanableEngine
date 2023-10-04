@@ -9,6 +9,7 @@
 #include "RectangleCollider.hpp"
 #include "ColliderColorChanger.hpp"
 #include "PlayerController.hpp"
+#include "Camera.hpp"
 
 EngineCore* engine;
 
@@ -23,6 +24,7 @@ PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* rep
     return true;
 }
 
+GameObject* camera;
 GameObject* player;
 GameObject* obstacle;
 GameObject* staticObj;
@@ -32,6 +34,10 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
     if (firstRun) {
+        camera = engine->addGameObject();
+        Camera* cc = camera->CreateComponent<Camera>();
+        cc->setGUIProj();
+
         player = engine->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, 0));
         player->CreateComponent<PlayerController>();
@@ -49,7 +55,6 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
     }
 
-
     return true;
 }
 
@@ -59,6 +64,7 @@ PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
+        engine->destroy(camera);
         engine->destroy(player);
         engine->destroy(obstacle);
         engine->destroy(staticObj);

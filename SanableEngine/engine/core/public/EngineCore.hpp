@@ -23,7 +23,6 @@ class EngineCore
 
 private:
     bool isAlive;
-    SDL_Window* window = nullptr;
     gpr460::System* system;
     MemoryManager memoryManager;
     StackAllocator frameAllocator; //Temp memory that will be reset every frame
@@ -73,4 +72,6 @@ public:
     ENGINECORE_API gpr460::System* getSystem();
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
+    ENGINECORE_API Window* getMainWindow();
+    ENGINECORE_API Renderer* getRenderer();
 };

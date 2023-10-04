@@ -217,3 +217,13 @@ StackAllocator* EngineCore::getFrameAllocator()
 {
     return &frameAllocator;
 }
+
+Window* EngineCore::getMainWindow()
+{
+    return mainWindow;
+}
+
+Renderer* EngineCore::getRenderer()
+{
+    return mainWindow->getRenderer();
+}
