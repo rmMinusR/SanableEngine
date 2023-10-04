@@ -25,6 +25,10 @@ void Renderer::beginFrame()
 {
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, owner->getWidth(), owner->getHeight(), 0, 0, 100);
 }
 
 void Renderer::finishFrame()
@@ -35,7 +39,7 @@ void Renderer::finishFrame()
 void Renderer::drawRect(const SDL_Rect& rect, const SDL_Color& color)
 {
 	glBegin(GL_QUADS);
-	glColor4i(color.r, color.g, color.b, color.a);
+	glColor4f(color.r/255.0f, color.g/255.0f, color.b/255.0f, color.a/255.0f);
 	glVertex2i(rect.x       , rect.y       );
 	glVertex2i(rect.x+rect.w, rect.y       );
 	glVertex2i(rect.x+rect.w, rect.y+rect.h);

@@ -36,3 +36,17 @@ Window::~Window()
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 }
+
+int Window::getWidth() const
+{
+    int w;
+    SDL_GetWindowSize(handle, &w, nullptr);
+    return w;
+}
+
+int Window::getHeight() const
+{
+    int h;
+    SDL_GetWindowSize(handle, nullptr, &h);
+    return h;
+}

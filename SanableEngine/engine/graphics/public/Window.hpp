@@ -20,4 +20,7 @@ public:
 	ENGINEGRAPHICS_API ~Window();
 
 	inline Renderer* getRenderer() { return &_interface; }
+
+	ENGINEGRAPHICS_API int getWidth() const;
+	ENGINEGRAPHICS_API int getHeight() const;
 };
