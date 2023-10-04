@@ -49,3 +49,9 @@ elseif(EMSCRIPTEN)
 else()
     message(ERROR "-> Could not configure SDL2_ttf: Unknown platform")
 endif()
+
+# Configure GLM
+message(" > Configuring GLM")
+set(glm_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/glm")
+set(glm_DIR "${glm_BASE_DIR}/cmake/glm")
+find_package(glm REQUIRED)
