@@ -5,8 +5,6 @@
 
 #include <SDL.h>
 
-#include "SDLModule.hpp"
-
 #include "GameObject.hpp"
 #include "Component.hpp"
 #include "System.hpp"
