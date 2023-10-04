@@ -1,12 +1,11 @@
 #include "Window.hpp"
 
-#include <SDL_render.h>
+#include <SDL.h>
 
-#include "SDLModule.hpp"
-
-Window::Window(char const* name, int width, int height) :
-    AssetUser({ &SDLModule::video })
+Window::Window(char const* name, int width, int height)
 {
+    SDL_InitSubSystem(SDL_INIT_VIDEO);
+
     handle = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN);
     renderer = SDL_CreateRenderer(handle, -1, SDL_RENDERER_ACCELERATED);
 
@@ -20,4 +19,6 @@ Window::~Window()
 
     SDL_DestroyWindow(handle);
     handle = nullptr;
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }

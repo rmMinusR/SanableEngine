@@ -5,7 +5,6 @@
 
 class Font;
 class Texture;
-class Sprite;
 
 struct SDL_Color;
 struct SDL_Rect;
@@ -26,5 +25,4 @@ public:
 	ENGINEGRAPHICS_API void drawRect(const SDL_Rect& rect, const SDL_Color& color);
 	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, int x, int y, bool highQuality = false);
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y);
-	ENGINEGRAPHICS_API void drawSprite(const Sprite& sprite, int x, int y);
 };
