@@ -27,7 +27,7 @@ void Renderer::beginFrame()
 	if (Camera::getMain()) Camera::getMain()->beginFrame();
 	else printf("WARNING: No main camera!");
 
-	//glClearColor(0, 0, 0, 1);
+	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -36,18 +36,18 @@ void Renderer::finishFrame()
 	SDL_GL_SwapWindow(owner->handle);
 }
 
-void Renderer::drawRect(const SDL_Rect& rect, const SDL_Color& color)
+void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
 {
 	glBegin(GL_QUADS);
 	glColor4f(color.r/255.0f, color.g/255.0f, color.b/255.0f, color.a/255.0f);
-	glVertex2i(rect.x       , rect.y       );
-	glVertex2i(rect.x+rect.w, rect.y       );
-	glVertex2i(rect.x+rect.w, rect.y+rect.h);
-	glVertex2i(rect.x       , rect.y+rect.h);
+	glVertex3f(center.x-w/2, center.y-h/2, center.z);
+	glVertex3f(center.x+w/2, center.y-h/2, center.z);
+	glVertex3f(center.x+w/2, center.y+h/2, center.z);
+	glVertex3f(center.x-w/2, center.y+h/2, center.z);
 	glEnd();
 }
 
-void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, int x, int y, bool highQuality)
+void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos, bool highQuality)
 {
 	////Render on CPU
 	//SDL_Surface* surf;

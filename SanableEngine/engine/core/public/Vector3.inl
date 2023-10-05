@@ -12,9 +12,9 @@ template<class TObj>
 class Vector3
 {
 public:
-    constexpr Vector3();
-    constexpr Vector3(const TObj x, const TObj y, const TObj z);
-    constexpr Vector3(const Vector3<TObj>& v);
+    Vector3();
+    Vector3(const TObj x, const TObj y, const TObj z);
+    Vector3(const Vector3<TObj>& v);
     Vector3(const glm::vec3& v);
 
     // utility operations
@@ -58,21 +58,20 @@ public:
 
     bool operator == (const Vector3<TObj>& v);             // test vector for equality
     bool operator != (const Vector3<TObj>& v);             // test vector for inequality
-
-    TObj* ptr(){return _v;}                                // return reference to array (use with caution)
-
-    //Getters and setters
-    inline float getX() const { return _v[0]; }
-	inline float getY() const { return _v[1]; }
-	inline float getZ() const { return _v[2]; }
-	inline void setX(float s) { _v[0] = s; }
-    inline void setY(float s) { _v[1] = s; }
-    inline void setZ(float s) { _v[2] = s; }
-
-private:
-    TObj _v[3];
+    
+    union
+    {
+        TObj _v[3];
+        struct
+        {
+            TObj x;
+            TObj y;
+            TObj z;
+        };
+    };
 };
 
+typedef Vector3<float> Vector3f;
 
 //
 // Binary operations
@@ -95,7 +94,7 @@ inline const Vector3<T> operator^ (const Vector3<T>& v1, const Vector3<T>& v2); 
 
 
 template <class TObj>
-constexpr Vector3<TObj>::Vector3()
+Vector3<TObj>::Vector3()
 {
     _v[0] = 0.0;
     _v[1] = 0.0;
@@ -104,7 +103,7 @@ constexpr Vector3<TObj>::Vector3()
 
 
 template <class TObj>
-constexpr Vector3<TObj>::Vector3(const Vector3<TObj>& v)
+Vector3<TObj>::Vector3(const Vector3<TObj>& v)
 {
     _v[0] = v[0];
     _v[1] = v[1];
@@ -120,7 +119,7 @@ Vector3<TObj>::Vector3(const glm::vec3& v)
 }
 
 template <class TObj>
-constexpr Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
+Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
 {
     _v[0] = x;
     _v[1] = y;
@@ -455,10 +454,15 @@ inline const Vector3<TObj> operator ^ (const Vector3<TObj>& v1, const Vector3<TO
 template<typename T>
 struct Vector3_consts
 {
-    static constexpr Vector3<T> zero { 0, 0, 0 };
-    static constexpr Vector3<T> one  { 1, 1, 1 };
-    static constexpr Vector3<T> X { 1, 0, 0 };
-    static constexpr Vector3<T> Y { 0, 1, 0 };
-    static constexpr Vector3<T> Z { 0, 0, 1 };
+    static const Vector3<T> zero;
+    static const Vector3<T> one;
+    static const Vector3<T> X;
+    static const Vector3<T> Y;
+    static const Vector3<T> Z;
 };
 
+template<typename T> const Vector3<T> Vector3_consts<T>::zero { 0, 0, 0 };
+template<typename T> const Vector3<T> Vector3_consts<T>::one  { 1, 1, 1 };
+template<typename T> const Vector3<T> Vector3_consts<T>::X { 1, 0, 0 };
+template<typename T> const Vector3<T> Vector3_consts<T>::Y { 0, 1, 0 };
+template<typename T> const Vector3<T> Vector3_consts<T>::Z { 0, 0, 1 };

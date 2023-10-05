@@ -3,6 +3,7 @@
 #include <string>
 #include <SDL_video.h>
 #include "dllapi.h"
+#include "Vector3.inl"
 
 class EngineCore;
 class Window;
@@ -10,7 +11,6 @@ class Font;
 class Texture;
 
 struct SDL_Color;
-struct SDL_Rect;
 
 class Renderer
 {
@@ -24,8 +24,8 @@ public:
 
 	inline Window* getOwner() const { return owner; }
 	
-	ENGINEGRAPHICS_API void drawRect(const SDL_Rect& rect, const SDL_Color& color);
-	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, int x, int y, bool highQuality = false);
+	ENGINEGRAPHICS_API void drawRect(Vector3f center, float w, float h, const SDL_Color& color);
+	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos, bool highQuality = false);
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y);
 
 private:

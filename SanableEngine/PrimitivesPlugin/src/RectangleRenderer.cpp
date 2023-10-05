@@ -22,12 +22,5 @@ void RectangleRenderer::Render(Renderer* renderer)
 {
 	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 
-	SDL_Rect r = {
-		(int) pos.getX(),
-		(int) pos.getY(),
-		(int) w,
-		(int) h
-	};
-
-	renderer->drawRect(r, color);
+	renderer->drawRect(pos, w, h, color);
 }

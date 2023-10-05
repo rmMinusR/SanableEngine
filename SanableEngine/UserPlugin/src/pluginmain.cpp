@@ -44,24 +44,24 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         //camera->CreateComponent<PlayerController>();
 
         GameObject* o = engine->addGameObject();
-        o->getTransform()->setPosition(Vector3<float>(-10, -10, 15));
+        o->getTransform()->setPosition(Vector3<float>(0, 0, -15));
         o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
 
         player = engine->addGameObject();
-        player->getTransform()->setPosition(Vector3<float>(50, 50, 10));
+        player->getTransform()->setPosition(Vector3<float>(50, 50, -10));
         player->CreateComponent<PlayerController>();
-        player->CreateComponent<RectangleCollider>(100, 100);
-        player->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 255, 0, 0, 255 });
+        player->CreateComponent<RectangleCollider>(10, 10);
+        player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
         player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
 
+        staticObj = engine->addGameObject();
+        staticObj->getTransform()->setPosition(Vector3<float>(350, 210, -20));
+        staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
+
         obstacle = engine->addGameObject();
-        obstacle->getTransform()->setPosition(Vector3<float>(200, 200, 20));
+        obstacle->getTransform()->setPosition(Vector3<float>(225, 225, -15));
         obstacle->CreateComponent<RectangleCollider>(50, 50);
         obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
-
-        staticObj = engine->addGameObject();
-        staticObj->getTransform()->setPosition(Vector3<float>(100, 150, 15));
-        staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
     }
 
     return true;

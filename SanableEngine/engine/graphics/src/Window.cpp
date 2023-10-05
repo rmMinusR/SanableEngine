@@ -10,10 +10,10 @@ Window::Window(char const* name, int width, int height)
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
-    //OpenGL setup: Specify v3.1
+    //OpenGL setup: Specify v3.1 (lastest with fixed-function pipeline)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     //OpenGL setup: Use RGBA8 with 16-bit depth
     SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -28,6 +28,10 @@ Window::Window(char const* name, int width, int height)
     context = SDL_GL_CreateContext(handle);
 
     _interface = Renderer(this, context);
+
+    printf("OpenGL ");
+    printf((char*)glGetString(GL_VERSION));
+    printf("\n");
 }
 
 Window::~Window()
