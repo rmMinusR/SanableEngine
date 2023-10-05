@@ -38,4 +38,5 @@ public:
 
 	//Called by Renderer
 	ENGINEGRAPHICS_API void setProjectionMatrix();
+	ENGINEGRAPHICS_API void beginFrame();
 };

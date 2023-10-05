@@ -24,11 +24,11 @@ Renderer::Renderer(Window* owner, const SDL_GLContext& context) :
 
 void Renderer::beginFrame()
 {
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT);
-
-	if (Camera::getMain()) Camera::getMain()->setProjectionMatrix();
+	if (Camera::getMain()) Camera::getMain()->beginFrame();
 	else printf("WARNING: No main camera!");
+
+	//glClearColor(0, 0, 0, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Renderer::finishFrame()

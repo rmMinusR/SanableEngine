@@ -5,6 +5,7 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <gl/GL.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Renderer.hpp"
 #include "Window.hpp"
@@ -34,7 +35,6 @@ Camera::~Camera()
 void Camera::setGUIProj()
 {
 	mode = Mode::GUI;
-	zNear = 0;
 }
 
 void Camera::setOrtho(float cornerDist)
@@ -58,45 +58,41 @@ void Camera::setProjectionMatrix()
 	float diag = sqrtf(w*w + h*h);
 
 	Vector3<float> pos = gameObject->getTransform()->getPosition();
+	glm::quat rot = gameObject->getTransform()->getRotation();
 
-	switch (mode)
+	//Main matrix
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	if (mode == Mode::GUI)
 	{
-	case Mode::GUI:
-	{
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, w, h, 0, zNear, zFar);
-		break;
+		glOrtho(0, w, h, 0, 0, zFar);
 	}
-
-	case Mode::Ortho:
+	else if (mode == Mode::Ortho)
 	{
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-
 		float scl = size / diag;
 		w *= scl / 2;
 		h *= scl / 2;
-		glOrtho(-w, w, -h, h, zNear, zFar);
-
-		glTranslatef(pos.getX(), pos.getY(), pos.getZ());
-		break;
+		glOrtho(-w, w, h, -h, 0, zFar);
 	}
-
-	case Mode::Persp:
+	else if (mode == Mode::Persp)
 	{
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-
 		float v = tanf(size/2) * zNear;
-		glFrustum(-v*aspectRatio, v*aspectRatio, -v, v, zNear, zFar);
-		
-		glTranslatef(pos.getX(), pos.getY(), pos.getZ());
-		break;
+		glFrustum(-v*aspectRatio, v*aspectRatio, v, -v, zNear, zFar);
 	}
+	else assert(false);
 
-	default:
-		assert(false);
-		break;
+	//Transform unless GUI
+	if (mode != Mode::GUI)
+	{
+		glTranslatef(-pos.getX(), -pos.getY(), -pos.getZ());
+		glMultMatrixf(glm::value_ptr(glm::mat4_cast(rot)));
 	}
+}
+
+void Camera::beginFrame()
+{
+	setProjectionMatrix();
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 }
