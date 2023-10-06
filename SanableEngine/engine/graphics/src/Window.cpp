@@ -1,10 +1,7 @@
 #include "Window.hpp"
 
-#undef WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
 #include <SDL.h>
-#include <gl/GL.h>
+#include <GL/glew.h>
 
 Window::Window(char const* name, int width, int height)
 {
@@ -25,13 +22,18 @@ Window::Window(char const* name, int width, int height)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //Instead of passing SDL_DOUBLEBUF to SDL_SetVideoMode
 
     handle = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-    context = SDL_GL_CreateContext(handle);
+    context = SDL_GL_CreateContext(handle); //Requires window
+    
+    GLenum err = glewInit(); //Requires context - TODO move out to system or something?
+    if (err != GLEW_OK)
+    {
+        printf("Error initializing GLEW: Code %u", err);
+        assert(false);
+    }
 
     _interface = Renderer(this, context);
-
-    printf("OpenGL ");
-    printf((char*)glGetString(GL_VERSION));
-    printf("\n");
+    
+    printf("OpenGL %s\n", (char*)glGetString(GL_VERSION));
 }
 
 Window::~Window()
