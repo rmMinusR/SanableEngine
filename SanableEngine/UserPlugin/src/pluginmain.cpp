@@ -12,7 +12,7 @@
 #include "Camera.hpp"
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
-#include "ShaderFile.hpp"
+#include "ShaderProgram.hpp"
 
 EngineCore* engine;
 
@@ -53,7 +53,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         //mesh->load("resources/bunny.fbx");
         mesh->load("resources/dragon.fbx");
 
-        ShaderFile test("resources/shaders/fresnel.fs.glsl", ShaderFile::Type::Fragment);
+        ShaderProgram test("resources/shaders/fresnel");
         bool success = test.load();
         assert(success);
 

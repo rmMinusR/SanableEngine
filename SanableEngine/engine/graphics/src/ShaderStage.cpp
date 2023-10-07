@@ -1,16 +1,16 @@
-#include "ShaderFile.hpp"
+#include "ShaderStage.hpp"
 
 #include <fstream>
 #include <cassert>
 
-ShaderFile::ShaderFile(const std::filesystem::path& path, Type type) :
+ShaderStage::ShaderStage(const std::filesystem::path& path, Type type) :
 	handle(0),
 	path(path),
 	type(type)
 {
 }
 
-bool ShaderFile::load()
+bool ShaderStage::load()
 {
 	std::ifstream fin(path);
 	if (!fin.good()) return false;
@@ -46,20 +46,26 @@ bool ShaderFile::load()
 	return true;
 }
 
-ShaderFile::~ShaderFile()
+void ShaderStage::unload()
 {
 	if (handle)
 	{
 		glDeleteShader(handle);
+		handle = 0;
 	}
 }
 
-ShaderFile::ShaderFile(ShaderFile&& mov)
+ShaderStage::~ShaderStage()
+{
+	unload();
+}
+
+ShaderStage::ShaderStage(ShaderStage&& mov)
 {
 	*this = std::move(mov);
 }
 
-ShaderFile& ShaderFile::operator=(ShaderFile&& mov)
+ShaderStage& ShaderStage::operator=(ShaderStage&& mov)
 {
 	this->path = mov.path;
 	this->type = mov.type;
