@@ -17,8 +17,8 @@ public:
 	struct Vertex
 	{
 		glm::vec3 position;
-		glm::vec3 normal;
-		glm::vec2 texCoord; //uv (todo: w?)
+		//glm::vec3 normal;
+		//glm::vec2 texCoord; //uv (todo: w?)
 	};
 	std::vector<Vertex> vertices;
 
@@ -29,7 +29,7 @@ public:
 
 
 	//Loading functions
-	ENGINEGRAPHICS_API static void load(Mesh& out, const std::filesystem::path& path);
+	ENGINEGRAPHICS_API static bool load(Mesh& out, const std::filesystem::path& path);
 
 	//Primitives
 	ENGINEGRAPHICS_API static Mesh createCube(float size);

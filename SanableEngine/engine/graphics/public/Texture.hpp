@@ -2,14 +2,10 @@
 
 #include <filesystem>
 
-#include <Windows.h>
 #include <SDL_render.h>
-#include <gl/GL.h>
+#include <GL/glew.h>
 
 #include "dllapi.h"
-
-struct SDL_Renderer;
-struct SDL_Surface;
 
 class Renderer;
 

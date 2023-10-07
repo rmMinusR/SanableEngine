@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Component.hpp"
-#include "Mesh.hpp"
 #include "dllapi.h"
+
+class Mesh;
 
 class MeshRenderer : public Component, public IRenderable
 {

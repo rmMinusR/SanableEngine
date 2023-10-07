@@ -1,11 +1,8 @@
 #include "Renderer.hpp"
 
-#undef WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
 #include <SDL_render.h>
 #include <SDL_pixels.h>
-#include <gl/GL.h>
+#include <GL/glew.h>
 
 #include "Texture.hpp"
 #include "Window.hpp"

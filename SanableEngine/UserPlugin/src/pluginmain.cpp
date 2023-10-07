@@ -10,6 +10,8 @@
 #include "ColliderColorChanger.hpp"
 #include "PlayerController.hpp"
 #include "Camera.hpp"
+#include "Mesh.hpp"
+#include "MeshRenderer.hpp"
 
 EngineCore* engine;
 
@@ -29,6 +31,8 @@ GameObject* player;
 GameObject* obstacle;
 GameObject* staticObj;
 
+Mesh* mesh;
+
 PLUGIN_C_API(bool) plugin_init(bool firstRun)
 {
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
@@ -37,15 +41,20 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         camera = engine->addGameObject();
         Camera* cc = camera->CreateComponent<Camera>();
         cc->zFar = 100;
-        cc->setGUIProj();
+        //cc->setGUIProj();
         //cc->setOrtho(400);
-        //cc->setPersp(135);
+        cc->setOrtho(1);
+        //cc->setPersp(90);
         //camera->getTransform()->setRotation(glm::angleAxis(glm::radians(30.0f), glm::vec3(0, 0, 1)));
         //camera->CreateComponent<PlayerController>();
 
+        mesh = new Mesh();
+        Mesh::load(*mesh, "resources/bunny.fbx");
+
         GameObject* o = engine->addGameObject();
         o->getTransform()->setPosition(Vector3<float>(0, 0, -15));
-        o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
+        //o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
+        o->CreateComponent<MeshRenderer>(mesh);
 
         player = engine->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));
@@ -77,6 +86,8 @@ PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
         engine->destroy(player);
         engine->destroy(obstacle);
         engine->destroy(staticObj);
+
+        delete mesh;
 
         engine->getMemoryManager()->destroyPool<PlayerController>();
         engine->getMemoryManager()->destroyPool<ColliderColorChanger>();

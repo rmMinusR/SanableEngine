@@ -2,12 +2,12 @@
 
 #include <variant>
 
-#undef WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#include <gl/GL.h>
+#include <GL/glew.h>
 
 #include "Renderer.hpp"
 #include "Component.hpp"
+
+#undef main
 
 class Camera : public Component
 {
