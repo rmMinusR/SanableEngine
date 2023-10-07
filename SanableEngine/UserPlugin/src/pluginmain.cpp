@@ -49,8 +49,8 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         //camera->CreateComponent<PlayerController>();
 
         mesh = new Mesh();
-        //Mesh::load(*mesh, "resources/bunny.fbx");
-        Mesh::load(*mesh, "resources/dragon.fbx");
+        //mesh->load("resources/bunny.fbx");
+        mesh->load("resources/dragon.fbx");
 
         GameObject* o = engine->addGameObject();
         o->getTransform()->setPosition(Vector3<float>(0, 0, -15));

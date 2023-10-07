@@ -29,7 +29,7 @@ public:
 
 
 	//Loading functions
-	ENGINEGRAPHICS_API static bool load(Mesh& out, const std::filesystem::path& path);
+	ENGINEGRAPHICS_API bool load(const std::filesystem::path& path);
 
 	//Primitives
 	ENGINEGRAPHICS_API static Mesh createCube(float size);

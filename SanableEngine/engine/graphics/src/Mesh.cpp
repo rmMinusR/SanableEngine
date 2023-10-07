@@ -20,7 +20,7 @@ glm::vec2 toGlm(ofbx::Vec2 _v)
 	return v;
 }
 
-bool Mesh::load(Mesh& out, const std::filesystem::path& path)
+bool Mesh::load(const std::filesystem::path& path)
 {
 	FILE* fp;
 	errno_t err = fopen_s(&fp, path.u8string().c_str(), "rb");
@@ -43,27 +43,28 @@ bool Mesh::load(Mesh& out, const std::filesystem::path& path)
 	delete[] content;
 	fclose(fp);
 
+	vertices.clear();
+	faces.clear();
+
 	//Extract verts
 	const ofbx::Mesh* mesh = scene->getMesh(0);
 	const ofbx::GeometryData& data = mesh->getGeometryData();
 	int vertCount = data.getPositions().count;
 	assert(data.getPositions().count);
-	out.vertices.clear();
-	out.vertices.reserve(vertCount);
+	vertices.reserve(vertCount);
 	for (int i = 0; i < vertCount; ++i)
 	{
 		Vertex vert;
 		                              vert.position = toGlm(data.getPositions().get(i));
 		if (data.getNormals().values) vert.normal   = toGlm(data.getNormals  ().get(i));
 		if (data.getUVs    ().values) vert.texCoord = toGlm(data.getUVs      ().get(i));
-		out.vertices.push_back(vert);
+		vertices.push_back(vert);
 	}
 	
 	//Triangulate
 	int nTris = 0;
 	for (int m = 0; m < data.getPartitionCount(); ++m) nTris += data.getPartition(m).triangles_count;
-	out.faces.clear();
-	out.faces.reserve(nTris);
+	faces.reserve(nTris);
 	for (int m = 0; m < data.getPartitionCount(); ++m)
 	{
 		const ofbx::GeometryPartition& part = data.getPartition(m);
@@ -71,14 +72,14 @@ bool Mesh::load(Mesh& out, const std::filesystem::path& path)
 		{
 			int buf[64];
 			int nToAdd = ofbx::triangulate(data, part.polygons[p], buf);
-			for (int i = 0; i < nToAdd; ++i) out.faces.push_back(buf[i]);
+			for (int i = 0; i < nToAdd; ++i) faces.push_back(buf[i]);
 		}
 	}
 
 	//printf("Verts: %i predicted / %i real\n", vertCount, out.vertices.size());
 	//printf("Tris: %i predicted / %i real\n", nTris, out.faces.size());
 
-	out.uploadToGPU();
+	uploadToGPU();
 
 	return true;
 }
