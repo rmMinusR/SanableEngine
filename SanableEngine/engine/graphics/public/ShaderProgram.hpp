@@ -4,12 +4,26 @@
 
 class ShaderProgram
 {
+public:
+	class Uniform
+	{
+		friend class ShaderProgram;
+		ShaderProgram* owner;
+		int location;
+		std::string name;
+		GLint objSize;
+		GLenum dataType;
+	};
+
+private:
 	std::filesystem::path basePath;
 
 	GLuint handle;
 
 	static constexpr char* vertName = "vert.glsl";
 	static constexpr char* fragName = "frag.glsl";
+
+	std::vector<Uniform> uniforms;
 
 public:
 	ENGINEGRAPHICS_API ShaderProgram(const std::filesystem::path& basePath);

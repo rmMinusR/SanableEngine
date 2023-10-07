@@ -32,8 +32,7 @@ bool ShaderProgram::load()
 	//Load dependencies
 	ShaderStage vertShader(basePath/vertName, ShaderStage::Type::Vertex);
 	ShaderStage fragShader(basePath/fragName, ShaderStage::Type::Fragment);
-	if (!vertShader.load()) return false;
-	if (!fragShader.load()) return false;
+	if (!vertShader.load() | !fragShader.load()) return false;
 
 	//Load and link self
 	handle = glCreateProgram();
@@ -53,7 +52,21 @@ bool ShaderProgram::load()
 		return false;
 	}
 
-	//All good
+	//Capture uniforms
+	GLint nUniforms = 0;
+	glGetProgramiv(handle, GL_ACTIVE_UNIFORMS, &nUniforms);
+	for (int i = 0; i < nUniforms; ++i)
+	{
+		Uniform uniform;
+		uniform.owner = this;
+		constexpr size_t bufSz = 256;
+		char buf[bufSz];
+		GLsizei nRead;
+		glGetActiveUniform(handle, i, bufSz, &nRead, &uniform.objSize, &uniform.dataType, buf);
+		uniform.name = std::string(buf, nRead);
+		uniform.location = glGetUniformLocation(handle, buf);
+	}
+
 	return true;
 }
 
