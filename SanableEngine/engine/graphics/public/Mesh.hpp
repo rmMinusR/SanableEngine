@@ -17,8 +17,8 @@ public:
 	struct Vertex
 	{
 		glm::vec3 position;
-		//glm::vec3 normal;
-		//glm::vec2 texCoord; //uv (todo: w?)
+		glm::vec3 normal;
+		glm::vec2 texCoord; //uv (todo: w?)
 	};
 	std::vector<Vertex> vertices;
 

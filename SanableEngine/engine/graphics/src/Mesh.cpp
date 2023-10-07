@@ -47,17 +47,16 @@ bool Mesh::load(Mesh& out, const std::filesystem::path& path)
 	const ofbx::Mesh* mesh = scene->getMesh(0);
 	const ofbx::GeometryData& data = mesh->getGeometryData();
 	int vertCount = data.getPositions().count;
+	assert(data.getPositions().count);
 	out.vertices.clear();
 	out.vertices.reserve(vertCount);
 	for (int i = 0; i < vertCount; ++i)
 	{
-		out.vertices.push_back(
-			{
-				toGlm(data.getPositions().get(i)),
-				//toGlm(data.getNormals().get(i)),
-				//toGlm(data.getUVs().get(i))
-			}
-		);
+		Vertex vert;
+		                              vert.position = toGlm(data.getPositions().get(i));
+		if (data.getNormals().values) vert.normal   = toGlm(data.getNormals  ().get(i));
+		if (data.getUVs    ().values) vert.texCoord = toGlm(data.getUVs      ().get(i));
+		out.vertices.push_back(vert);
 	}
 	
 	//Triangulate
@@ -76,9 +75,8 @@ bool Mesh::load(Mesh& out, const std::filesystem::path& path)
 		}
 	}
 
-	printf("Verts: %i predicted / %i real\n", vertCount, out.vertices.size());
-	printf("Tris: %i predicted / %i real\n", nTris, out.faces.size());
-	printf("v[0]: %f %f %f\n", out.vertices[0].position.x, out.vertices[0].position.y, out.vertices[0].position.z);
+	//printf("Verts: %i predicted / %i real\n", vertCount, out.vertices.size());
+	//printf("Tris: %i predicted / %i real\n", nTris, out.faces.size());
 
 	out.uploadToGPU();
 
@@ -101,19 +99,21 @@ void Mesh::uploadToGPU()
 	
 	//Positions
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
 	//Normals
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 	//UVs
-	//glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
 
 	glBindVertexArray(0);
 }
 
 void Mesh::render()
 {
+	glColor4f(1, 1, 1, 1);
+
 	//Draw mesh
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, vertices.size(), GL_UNSIGNED_INT, 0);

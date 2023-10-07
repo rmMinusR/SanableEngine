@@ -14,8 +14,5 @@ target_link_libraries("UserGameplayPlugin" "engine-core")
 # Declare exports
 target_include_directories("UserGameplayPlugin" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
-add_custom_command(
-    TARGET UserGameplayPlugin POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            ${CMAKE_CURRENT_LIST_DIR}/resources/bunny.fbx
-            ${CMAKE_CURRENT_BINARY_DIR}/resources/bunny.fbx)
+export_resource(UserGameplayPlugin resources/bunny.fbx)
+export_resource(UserGameplayPlugin resources/dragon.fbx)
