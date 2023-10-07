@@ -24,6 +24,9 @@ public:
 
 	std::vector<unsigned int> faces;
 
+	ENGINEGRAPHICS_API Mesh();
+	ENGINEGRAPHICS_API ~Mesh();
+
 	ENGINEGRAPHICS_API void uploadToGPU();
 	ENGINEGRAPHICS_API void render();
 

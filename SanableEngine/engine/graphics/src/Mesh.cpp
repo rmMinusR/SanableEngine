@@ -20,6 +20,20 @@ glm::vec2 toGlm(ofbx::Vec2 _v)
 	return v;
 }
 
+Mesh::Mesh() :
+	VAO(0),
+	VBO(0),
+	EBO(0)
+{
+}
+
+Mesh::~Mesh()
+{
+	if (VAO) glDeleteVertexArrays(1, &VAO);
+	if (VBO) glDeleteBuffers(1, &VBO);
+	if (EBO) glDeleteBuffers(1, &EBO);
+}
+
 bool Mesh::load(const std::filesystem::path& path)
 {
 	FILE* fp;
