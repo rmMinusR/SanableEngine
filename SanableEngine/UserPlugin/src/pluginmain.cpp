@@ -33,6 +33,7 @@ GameObject* obstacle;
 GameObject* staticObj;
 
 Mesh* mesh;
+ShaderProgram* shader;
 
 PLUGIN_C_API(bool) plugin_init(bool firstRun)
 {
@@ -53,14 +54,13 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         //mesh->load("resources/bunny.fbx");
         mesh->load("resources/dragon.fbx");
 
-        ShaderProgram test("resources/shaders/fresnel");
-        bool success = test.load();
-        assert(success);
+        shader = new ShaderProgram("resources/shaders/fresnel");
+        shader->load();
 
         GameObject* o = engine->addGameObject();
         o->getTransform()->setPosition(Vector3<float>(0, 0, -15));
         //o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
-        o->CreateComponent<MeshRenderer>(mesh);
+        o->CreateComponent<MeshRenderer>(mesh, shader);
 
         player = engine->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));

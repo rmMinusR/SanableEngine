@@ -3,6 +3,13 @@
 #include <fstream>
 #include <cassert>
 
+ShaderStage::ShaderStage():
+	handle(0),
+	path(""),
+	type((Type)0)
+{
+}
+
 ShaderStage::ShaderStage(const std::filesystem::path& path, Type type) :
 	handle(0),
 	path(path),
@@ -19,6 +26,7 @@ bool ShaderStage::load()
 	fin.seekg(0, std::ios_base::end);
 	size_t size = fin.tellg();
 	char* data = new char[size];
+	memset(data, 0, size);
 	
 	//Read
 	fin.seekg(0);
@@ -30,15 +38,17 @@ bool ShaderStage::load()
 	glShaderSource(handle, 1, &data, nullptr);
 	glCompileShader(handle);
 
+	delete[] data;
+
 	//Check compile was good
 	int status;
 	glGetShaderiv(handle, GL_COMPILE_STATUS, &status);
-	if (status != GL_NO_ERROR)
+	if (status != GL_TRUE)
 	{
 		constexpr size_t logSz = 512;
 		char errLog[logSz];
 		glGetShaderInfoLog(handle, logSz, NULL, errLog);
-		printf("Error compiling shader '%s':\n=========\n%s\n=========\n", path.u8string().c_str(), errLog);
+		printf("Compiling shader '%s':\n%s\n", path.u8string().c_str(), errLog);
 		return false;
 	}
 
@@ -67,9 +77,13 @@ ShaderStage::ShaderStage(ShaderStage&& mov)
 
 ShaderStage& ShaderStage::operator=(ShaderStage&& mov)
 {
-	this->path = mov.path;
-	this->type = mov.type;
+	if (this->handle) unload();
 
 	this->handle = mov.handle;
 	mov.handle = 0;
+
+	this->path = mov.path;
+	this->type = mov.type;
+
+	return *this;
 }

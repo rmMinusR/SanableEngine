@@ -4,8 +4,6 @@
 
 class ShaderProgram
 {
-	ShaderStage vertShader;
-	ShaderStage fragShader;
 	std::filesystem::path basePath;
 
 	GLuint handle;
@@ -19,6 +17,9 @@ public:
 
 	ENGINEGRAPHICS_API bool load();
 	ENGINEGRAPHICS_API void unload();
+
+	ENGINEGRAPHICS_API void activate();
+	ENGINEGRAPHICS_API static void clear();
 
 	ENGINEGRAPHICS_API ShaderProgram(ShaderProgram&& mov);
 	ENGINEGRAPHICS_API ShaderProgram& operator=(ShaderProgram&& mov);

@@ -22,6 +22,7 @@ private:
 
 	friend class ShaderProgram;
 
+	ShaderStage();
 public:
 	ENGINEGRAPHICS_API ShaderStage(const std::filesystem::path& path, Type type);
 	ENGINEGRAPHICS_API ~ShaderStage();

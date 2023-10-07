@@ -1,8 +1,8 @@
 #include "ShaderProgram.hpp"
 
+#include <cassert>
+
 ShaderProgram::ShaderProgram(const std::filesystem::path& basePath) :
-	vertShader(basePath/vertName, ShaderStage::Type::Vertex),
-	fragShader(basePath/fragName, ShaderStage::Type::Fragment),
 	basePath(basePath),
 	handle(0)
 {
@@ -13,9 +13,25 @@ ShaderProgram::~ShaderProgram()
 	unload();
 }
 
+ShaderProgram::ShaderProgram(ShaderProgram&& mov)
+{
+	*this = std::move(mov);
+}
+
+ShaderProgram& ShaderProgram::operator=(ShaderProgram&& mov)
+{
+	if (this->handle) unload();
+	this->handle = mov.handle;
+	mov.handle = 0;
+
+	return *this;
+}
+
 bool ShaderProgram::load()
 {
 	//Load dependencies
+	ShaderStage vertShader(basePath/vertName, ShaderStage::Type::Vertex);
+	ShaderStage fragShader(basePath/fragName, ShaderStage::Type::Fragment);
 	if (!vertShader.load()) return false;
 	if (!fragShader.load()) return false;
 
@@ -28,12 +44,12 @@ bool ShaderProgram::load()
 	//Check link/compile was good
 	int status;
 	glGetProgramiv(handle, GL_LINK_STATUS, &status);
-	if (status != GL_NO_ERROR)
+	if (status != GL_TRUE)
 	{
 		constexpr size_t logSz = 512;
 		char errLog[logSz];
 		glGetProgramInfoLog(handle, 512, NULL, errLog);
-		printf("Error linking shader '%s':\n=========\n%s\n=========\n", basePath.u8string().c_str(), errLog);
+		printf("Linking shader program '%s':\n%s\n", basePath.u8string().c_str(), errLog);
 		return false;
 	}
 
@@ -48,7 +64,15 @@ void ShaderProgram::unload()
 		glDeleteProgram(handle);
 		handle = 0;
 	}
+}
 
-	vertShader.unload();
-	fragShader.unload();
+void ShaderProgram::activate()
+{
+	assert(handle);
+	glUseProgram(handle);
+}
+
+void ShaderProgram::clear()
+{
+	glUseProgram(0);
 }
