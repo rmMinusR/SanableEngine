@@ -48,8 +48,7 @@ bool Mesh::load(const std::filesystem::path& path)
 	ofbx::u8* content = new ofbx::u8[file_size];
 	fread(content, 1, file_size, fp);
 
-	ofbx::LoadFlags flags = (ofbx::LoadFlags) ~(ofbx::u16)(ofbx::LoadFlags::IGNORE_MODELS | ofbx::LoadFlags::IGNORE_MESHES | ofbx::LoadFlags::IGNORE_GEOMETRY);
-	ofbx::IScene* scene = ofbx::load((ofbx::u8*)content, file_size, (ofbx::u16)flags);
+	ofbx::IScene* scene = ofbx::load((ofbx::u8*)content, file_size, (ofbx::u16)ofbx::LoadFlags::NONE);
 
 	assert(scene);
 	if (!scene) return false;

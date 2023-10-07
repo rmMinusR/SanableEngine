@@ -12,6 +12,7 @@
 #include "Camera.hpp"
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
+#include "ShaderFile.hpp"
 
 EngineCore* engine;
 
@@ -51,6 +52,10 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         mesh = new Mesh();
         //mesh->load("resources/bunny.fbx");
         mesh->load("resources/dragon.fbx");
+
+        ShaderFile test("resources/shaders/fresnel.fs.glsl", ShaderFile::Type::Fragment);
+        bool success = test.load();
+        assert(success);
 
         GameObject* o = engine->addGameObject();
         o->getTransform()->setPosition(Vector3<float>(0, 0, -15));

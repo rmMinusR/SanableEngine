@@ -14,5 +14,7 @@ target_link_libraries("UserGameplayPlugin" "engine-core")
 # Declare exports
 target_include_directories("UserGameplayPlugin" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
+export_resource(UserGameplayPlugin resources/shaders/fresnel.fs.glsl)
+export_resource(UserGameplayPlugin resources/shaders/fresnel.vs.glsl)
 export_resource(UserGameplayPlugin resources/bunny.fbx)
 export_resource(UserGameplayPlugin resources/dragon.fbx)
