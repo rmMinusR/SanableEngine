@@ -1,7 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <unordered_map>
 #include <SDL_video.h>
+#include <glm/glm.hpp>
 #include "dllapi.h"
 #include "Vector3.inl"
 
@@ -9,6 +12,10 @@ class EngineCore;
 class Window;
 class Font;
 class Texture;
+class Mesh;
+class Material;
+class ShaderProgram;
+class MeshRenderer;
 
 struct SDL_Color;
 
@@ -32,4 +39,17 @@ private:
 	friend class EngineCore;
 	void beginFrame();
 	void finishFrame();
+	
+	friend class MeshRenderer;
+	void delayedDrawMesh(const MeshRenderer* meshRenderer);
+
+	//Shader pass grouping mechanism
+	std::unordered_map<
+		const ShaderProgram*, //Group by shader
+		std::unordered_map<
+			const Material*, //Then by material
+			std::vector<const MeshRenderer*> //FIXME coupling
+		>
+	> bufferedMeshRenderCommands;
+	void processMeshBuffer();
 };

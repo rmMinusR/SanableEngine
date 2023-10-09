@@ -1,5 +1,7 @@
 #pragma once
 
+#include "StandardReflectionHooks.hpp"
+
 #include "Component.hpp"
 
 class PlayerController :
@@ -7,10 +9,13 @@ class PlayerController :
 	public IUpdatable
 {
 private:
-	static constexpr float SPEED = 1;
+	SANABLE_REFLECTION_HOOKS
+
+	float moveSpeed;
 
 public:
 	PlayerController();
+	PlayerController(float moveSpeed);
 
 	void Update() override; //Should this take delta tiem?
 };

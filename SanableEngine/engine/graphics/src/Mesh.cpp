@@ -124,7 +124,7 @@ void Mesh::uploadToGPU()
 	glBindVertexArray(0);
 }
 
-void Mesh::render()
+void Mesh::renderImmediate() const
 {
 	glColor4f(1, 1, 1, 1);
 

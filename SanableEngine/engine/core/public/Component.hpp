@@ -41,9 +41,13 @@ protected:
 };
 
 class Renderer;
+//class ShaderProgram;
+//class Material;
 class IRenderable
 {
 protected:
 	virtual void Render(Renderer*) = 0;
+	//virtual void GetPass(ShaderProgram** shader_out, Material** material_out) = 0;
 	friend class EngineCore;
+	friend class Renderer;
 };

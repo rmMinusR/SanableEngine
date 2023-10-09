@@ -7,6 +7,10 @@
 #include "Texture.hpp"
 #include "Window.hpp"
 #include "Camera.hpp"
+#include "ShaderProgram.hpp"
+#include "Material.hpp"
+#include "Mesh.hpp"
+#include "MeshRenderer.hpp"
 
 Renderer::Renderer() :
 	context(nullptr)
@@ -21,15 +25,21 @@ Renderer::Renderer(Window* owner, const SDL_GLContext& context) :
 
 void Renderer::beginFrame()
 {
+	//Set projection matrix
 	if (Camera::getMain()) Camera::getMain()->beginFrame();
 	else printf("WARNING: No main camera!");
 
+	//Reset screen
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Renderer::finishFrame()
 {
+	//Process buffered objects
+	processMeshBuffer();
+
+	//Swap back buffer
 	SDL_GL_SwapWindow(owner->handle);
 }
 
@@ -75,4 +85,39 @@ void Renderer::drawTexture(const Texture& tex, int x, int y)
 	glTexCoord2i(0, 1); glVertex2i(x          , y+tex.height);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
+}
+
+void Renderer::delayedDrawMesh(const MeshRenderer* meshRenderer)
+{
+	Material* material = meshRenderer->material;
+	ShaderProgram* shader = material ? material->shader : nullptr;
+	bufferedMeshRenderCommands[shader][material].push_back(meshRenderer);
+}
+
+void Renderer::processMeshBuffer()
+{
+	for (const auto& shaderGroup : bufferedMeshRenderCommands)
+	{
+		//Activate shader
+		if (shaderGroup.first) shaderGroup.first->activate();
+		else ShaderProgram::clear();
+
+		for (const auto& materialGroup : shaderGroup.second)
+		{
+			//Activate material
+			if (materialGroup.first) materialGroup.first->writeSharedUniforms(this);
+			assert(materialGroup.first == nullptr || materialGroup.first->shader == shaderGroup.first);
+
+			for (const MeshRenderer* meshRenderer : materialGroup.second)
+			{
+				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(this, meshRenderer);
+
+				assert(meshRenderer->material == materialGroup.first);
+				assert(meshRenderer->material == nullptr || meshRenderer->material->shader == shaderGroup.first);
+				meshRenderer->mesh->renderImmediate();
+			}
+		}
+	}
+
+	bufferedMeshRenderCommands.clear();
 }

@@ -14,8 +14,8 @@ void main()
 	//float angToCamera = acos(cosAngToCamera);
 
     fragColor = vec4(
-        //vec3(cosAngToCamera),
-        1-vec3(cosAngToCamera),
+        vec3(cosAngToCamera),
+        //vec3(1-cosAngToCamera),
         //vec3(angToCamera/PI*2),
         1
     );

@@ -130,6 +130,12 @@ void Transform::setRotation(glm::quat newRot)
 	markDirty(); //FIXME Should we mark children instead, since we're setting global?
 }
 
+Transform::operator glm::mat4() const
+{
+	ensureUpToDate();
+	return glm::translate(glm::mat4_cast(global.rotation), (glm::vec3)global.position);
+}
+
 Vector3<float> Transform::transformPoint(Vector3<float> val) const
 {
 	ensureUpToDate();

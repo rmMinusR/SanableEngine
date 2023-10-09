@@ -1,21 +1,10 @@
 #pragma once
 
 #include "ShaderStage.hpp"
+#include "ShaderUniform.hpp"
 
 class ShaderProgram
 {
-public:
-	class Uniform
-	{
-		friend class ShaderProgram;
-		ShaderProgram* owner;
-		int location;
-		std::string name;
-		GLint objSize;
-		GLenum dataType;
-	};
-
-private:
 	std::filesystem::path basePath;
 
 	GLuint handle;
@@ -23,7 +12,7 @@ private:
 	static constexpr char* vertName = "vert.glsl";
 	static constexpr char* fragName = "frag.glsl";
 
-	std::vector<Uniform> uniforms;
+	std::vector<ShaderUniform> uniforms;
 
 public:
 	ENGINEGRAPHICS_API ShaderProgram(const std::filesystem::path& basePath);
@@ -32,8 +21,10 @@ public:
 	ENGINEGRAPHICS_API bool load();
 	ENGINEGRAPHICS_API void unload();
 
-	ENGINEGRAPHICS_API void activate();
+	ENGINEGRAPHICS_API void activate() const;
 	ENGINEGRAPHICS_API static void clear();
+
+	ENGINEGRAPHICS_API const std::vector<ShaderUniform>& getUniforms() const;
 
 	ENGINEGRAPHICS_API ShaderProgram(ShaderProgram&& mov);
 	ENGINEGRAPHICS_API ShaderProgram& operator=(ShaderProgram&& mov);

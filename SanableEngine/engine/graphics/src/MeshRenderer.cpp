@@ -5,20 +5,21 @@
 
 #include <GL/glew.h>
 
-MeshRenderer::MeshRenderer(Mesh* mesh, ShaderProgram* shader) :
+MeshRenderer::MeshRenderer(Mesh* mesh, Material* material) :
 	mesh(mesh),
-	shader(shader)
+	material(material)
 {
 }
 
 void MeshRenderer::Render(Renderer* renderer)
 {
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	Vector3f pos = gameObject->getTransform()->getPosition();
-	glTranslatef(pos.x, pos.y, pos.z);
+	renderer->delayedDrawMesh(this);
+	//glMatrixMode(GL_MODELVIEW);
+	//glLoadIdentity();
+	//Vector3f pos = gameObject->getTransform()->getPosition();
+	//glTranslatef(pos.x, pos.y, pos.z);
 
-	shader->activate();
-	mesh->render();
-	ShaderProgram::clear();
+	//shader->activate();
+	//mesh->renderImmediate();
+	//ShaderProgram::clear();
 }

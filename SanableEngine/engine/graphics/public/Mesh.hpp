@@ -28,7 +28,7 @@ public:
 	ENGINEGRAPHICS_API ~Mesh();
 
 	ENGINEGRAPHICS_API void uploadToGPU();
-	ENGINEGRAPHICS_API void render();
+	ENGINEGRAPHICS_API void renderImmediate() const;
 
 
 	//Loading functions

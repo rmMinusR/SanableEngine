@@ -63,4 +63,6 @@ public:
 	ENGINECORE_API Vector3<float> inverseTransformPoint(Vector3<float>) const;
 	ENGINECORE_API Vector3<float> inverseTransformVector(Vector3<float>) const;
 	ENGINECORE_API Vector3<float> inverseTransformNormal(Vector3<float>) const;
+
+	ENGINECORE_API operator glm::mat4() const; //GL interop
 };

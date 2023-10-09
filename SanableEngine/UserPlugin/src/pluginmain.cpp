@@ -13,6 +13,7 @@
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
+#include "Material.hpp"
 
 EngineCore* engine;
 
@@ -34,6 +35,7 @@ GameObject* staticObj;
 
 Mesh* mesh;
 ShaderProgram* shader;
+Material* material;
 
 PLUGIN_C_API(bool) plugin_init(bool firstRun)
 {
@@ -45,10 +47,10 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         cc->zFar = 100;
         //cc->setGUIProj();
         //cc->setOrtho(400);
-        cc->setOrtho(1);
-        //cc->setPersp(90);
+        //cc->setOrtho(1);
+        cc->setPersp(90);
         //camera->getTransform()->setRotation(glm::angleAxis(glm::radians(30.0f), glm::vec3(0, 0, 1)));
-        //camera->CreateComponent<PlayerController>();
+        camera->CreateComponent<PlayerController>(0.01f);
 
         mesh = new Mesh();
         //mesh->load("resources/bunny.fbx");
@@ -56,15 +58,21 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
 
         shader = new ShaderProgram("resources/shaders/fresnel");
         shader->load();
+        //TEMP
+        const_cast<ShaderUniform&>(shader->getUniforms()[2]).binding = ShaderUniform::ValueBinding::ViewProjection; //mat4 @bind ViewProjection
+        const_cast<ShaderUniform&>(shader->getUniforms()[1]).binding = ShaderUniform::ValueBinding::Transform;      //mat4 @bind Transform
+        const_cast<ShaderUniform&>(shader->getUniforms()[0]).binding = ShaderUniform::ValueBinding::CameraPosition; //vec3 @bind CameraPosition
+
+        material = new Material(shader);
 
         GameObject* o = engine->addGameObject();
-        o->getTransform()->setPosition(Vector3<float>(0, 0, -15));
+        o->getTransform()->setPosition(Vector3<float>(0, 0, -0.2f));
         //o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
-        o->CreateComponent<MeshRenderer>(mesh, shader);
+        o->CreateComponent<MeshRenderer>(mesh, material);
 
         player = engine->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));
-        player->CreateComponent<PlayerController>();
+        //player->CreateComponent<PlayerController>(1);
         player->CreateComponent<RectangleCollider>(10, 10);
         player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
         player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
