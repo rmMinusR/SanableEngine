@@ -120,6 +120,7 @@ glm::quat Transform::getRotation() const
 void Transform::setRotation(glm::quat newRot)
 {
 	ensureUpToDate();
+	newRot = glm::normalize(newRot);
 	global.rotation = newRot;
 	if (parent)
 	{
