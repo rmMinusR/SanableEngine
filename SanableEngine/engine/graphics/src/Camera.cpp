@@ -74,19 +74,19 @@ void Camera::setProjectionMatrix()
 	glLoadIdentity();
 	if (mode == Mode::GUI)
 	{
-		glOrtho(0, w, h, 0, 0, zFar);
+		glOrtho(0, w, h, 0, 0, zFar); //+Y is down
 	}
 	else if (mode == Mode::Ortho)
 	{
 		float scl = size / diag;
 		w *= scl / 2;
 		h *= scl / 2;
-		glOrtho(-w, w, h, -h, 0, zFar);
+		glOrtho(-w, w, -h, h, 0, zFar); //+Y is up
 	}
 	else if (mode == Mode::Persp)
 	{
 		float v = tanf(size/2) * zNear;
-		glFrustum(-v*aspectRatio, v*aspectRatio, v, -v, zNear, zFar);
+		glFrustum(-v*aspectRatio, v*aspectRatio, -v, v, zNear, zFar); //+Y is up
 	}
 	else assert(false);
 

@@ -45,6 +45,8 @@ void Renderer::finishFrame()
 
 void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
 {
+	ShaderProgram::clear();
+
 	glBegin(GL_QUADS);
 	glColor4f(color.r/255.0f, color.g/255.0f, color.b/255.0f, color.a/255.0f);
 	glVertex3f(center.x-w/2, center.y-h/2, center.z);
@@ -76,6 +78,8 @@ void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wst
 
 void Renderer::drawTexture(const Texture& tex, int x, int y)
 {
+	ShaderProgram::clear();
+
 	glBindTexture(GL_TEXTURE_2D, tex.id);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);

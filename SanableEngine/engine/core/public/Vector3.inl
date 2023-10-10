@@ -20,7 +20,8 @@ public:
     // utility operations
     Vector3<TObj>& zero();
     Vector3<TObj>& set(const TObj x, const TObj y, const TObj z);
-    Vector3<TObj>& normalize();
+    Vector3<TObj>& normalize(); //inline version
+    Vector3<TObj> normalized() const; //copying version
 
     // math operations
     const TObj mgn() const;
@@ -218,6 +219,13 @@ Vector3<TObj>& Vector3<TObj>::normalize()
     return *this;
 }
 
+template<class TObj>
+Vector3<TObj> Vector3<TObj>::normalized() const
+{
+    Vector3<TObj> cpy = *this;
+    cpy.normalize();
+    return cpy;
+}
 
 template <class TObj>
 Vector3<TObj>& Vector3<TObj>::operator= (const Vector3<TObj>& v)

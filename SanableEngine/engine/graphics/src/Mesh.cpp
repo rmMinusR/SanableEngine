@@ -57,7 +57,7 @@ bool Mesh::load(const std::filesystem::path& path)
 	fclose(fp);
 
 	vertices.clear();
-	faces.clear();
+	triangles.clear();
 
 	//Extract verts
 	const ofbx::Mesh* mesh = scene->getMesh(0);
@@ -77,7 +77,7 @@ bool Mesh::load(const std::filesystem::path& path)
 	//Triangulate
 	int nTris = 0;
 	for (int m = 0; m < data.getPartitionCount(); ++m) nTris += data.getPartition(m).triangles_count;
-	faces.reserve(nTris);
+	triangles.reserve(nTris);
 	for (int m = 0; m < data.getPartitionCount(); ++m)
 	{
 		const ofbx::GeometryPartition& part = data.getPartition(m);
@@ -85,7 +85,7 @@ bool Mesh::load(const std::filesystem::path& path)
 		{
 			int buf[64];
 			int nToAdd = ofbx::triangulate(data, part.polygons[p], buf);
-			for (int i = 0; i < nToAdd; ++i) faces.push_back(buf[i]);
+			for (int i = 0; i < nToAdd; ++i) triangles.push_back(buf[i]);
 		}
 	}
 
@@ -109,7 +109,7 @@ void Mesh::uploadToGPU()
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces.size() * sizeof(decltype(faces)::value_type), &faces[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(decltype(triangles)::value_type), &triangles[0], GL_STATIC_DRAW);
 	
 	//Positions
 	glEnableVertexAttribArray(0);
@@ -130,7 +130,7 @@ void Mesh::renderImmediate() const
 
 	//Draw mesh
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, vertices.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_INT, 0);
 
 	//Clear state
 	glBindVertexArray(0);

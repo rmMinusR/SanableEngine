@@ -7,7 +7,7 @@ Window::Window(char const* name, int width, int height)
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
-    //OpenGL setup: Specify v3.1 (lastest with fixed-function pipeline)
+    //OpenGL setup: Specify v3.1 (latest with fixed-function pipeline)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);

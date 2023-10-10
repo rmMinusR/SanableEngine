@@ -22,7 +22,7 @@ public:
 	};
 	std::vector<Vertex> vertices;
 
-	std::vector<unsigned int> faces;
+	std::vector<unsigned int> triangles;
 
 	ENGINEGRAPHICS_API Mesh();
 	ENGINEGRAPHICS_API ~Mesh();
