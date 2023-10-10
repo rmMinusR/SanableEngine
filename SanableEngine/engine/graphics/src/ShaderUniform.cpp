@@ -4,6 +4,7 @@
 
 #include "Camera.hpp"
 #include "MeshRenderer.hpp"
+#include "ShaderProgram.hpp"
 
 const char* ShaderUniform::ValueBinding_getName(ValueBinding binding)
 {
@@ -30,6 +31,29 @@ void ShaderUniform::detectBinding()
 {
 	binding = ShaderUniform::ValueBinding_fromName(name);
 	if (binding == ShaderUniform::ValueBinding::Invalid) binding = ShaderUniform::ValueBinding::Unbound;
+}
+
+ShaderUniform::ShaderUniform() :
+	owner(nullptr),
+	location(-1),
+	name(""),
+	objSize(0),
+	dataType(0),
+	binding(ShaderUniform::ValueBinding::Invalid)
+{
+}
+
+ShaderUniform::ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int location) :
+	owner(owner),
+	location(location)
+{
+	constexpr size_t bufSz = 256;
+	char buf[bufSz];
+	GLsizei nRead;
+	glGetActiveUniform(ownerHandle, location, bufSz, &nRead, &objSize, &dataType, buf);
+	name = std::string(buf, nRead);
+	location = glGetUniformLocation(ownerHandle, buf);
+	detectBinding();
 }
 
 ShaderProgram* ShaderUniform::getOwner() const

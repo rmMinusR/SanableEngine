@@ -55,19 +55,7 @@ bool ShaderProgram::load()
 	//Detect uniforms
 	GLint nUniforms = 0;
 	glGetProgramiv(handle, GL_ACTIVE_UNIFORMS, &nUniforms);
-	for (int i = 0; i < nUniforms; ++i)
-	{
-		ShaderUniform uniform;
-		uniform.owner = this;
-		constexpr size_t bufSz = 256;
-		char buf[bufSz];
-		GLsizei nRead;
-		glGetActiveUniform(handle, i, bufSz, &nRead, &uniform.objSize, &uniform.dataType, buf);
-		uniform.name = std::string(buf, nRead);
-		uniform.location = glGetUniformLocation(handle, buf);
-		uniform.detectBinding();
-		uniforms.push_back(uniform);
-	}
+	for (int i = 0; i < nUniforms; ++i) uniforms.emplace_back(this, handle, i);
 
 	return true;
 }

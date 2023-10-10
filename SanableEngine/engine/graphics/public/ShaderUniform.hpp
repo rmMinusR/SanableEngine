@@ -52,17 +52,19 @@ public:
 		BindInstanced
 	};
 
-//private:
-	friend class ShaderProgram;
+private:
 	ShaderProgram* owner;
 	int location;
 	std::string name;
 	GLint objSize;
 	GLenum dataType;
-	ValueBinding binding = ValueBinding::Unbound;
+	ValueBinding binding;
 	void detectBinding();
 
 public:
+	ENGINEGRAPHICS_API ShaderUniform();
+	ENGINEGRAPHICS_API ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int location);
+
 	ENGINEGRAPHICS_API ShaderProgram* getOwner() const;
 
 	ENGINEGRAPHICS_API void write(float val) const;
