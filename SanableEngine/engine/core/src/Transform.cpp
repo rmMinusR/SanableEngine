@@ -133,7 +133,7 @@ void Transform::setRotation(glm::quat newRot)
 Transform::operator glm::mat4() const
 {
 	ensureUpToDate();
-	return glm::translate(glm::mat4_cast(global.rotation), (glm::vec3)global.position);
+	return glm::translate(glm::identity<glm::mat4>(), (glm::vec3)global.position) * glm::mat4_cast(global.rotation);
 }
 
 Vector3<float> Transform::transformPoint(Vector3<float> val) const

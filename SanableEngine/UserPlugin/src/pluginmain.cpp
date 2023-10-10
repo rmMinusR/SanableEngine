@@ -9,6 +9,7 @@
 #include "RectangleCollider.hpp"
 #include "ColliderColorChanger.hpp"
 #include "PlayerController.hpp"
+#include "ObjectSpinner.hpp"
 #include "Camera.hpp"
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
@@ -61,12 +62,18 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         
         material = new Material(shader);
 
-        for (Vector3f pos(0, 0, -0.2f); pos.y < 1; pos.y += 0.2f) for (pos.x = 0; pos.x < 1; pos.x += 0.2f)
+        for (Vector3f pos(-0.5f, -0.5f, -0.4f); pos.y < 0.5f; pos.y += 0.2f) for (pos.x = -0.5f; pos.x < 0.5f; pos.x += 0.2f)
         {
             GameObject* o = engine->addGameObject();
             o->getTransform()->setPosition(pos);
-            //o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
             o->CreateComponent<MeshRenderer>(mesh, material);
+
+            Vector3f axis;
+            axis.x = (float(rand())/RAND_MAX)*2 - 1;
+            axis.y = (float(rand())/RAND_MAX)*2 - 1;
+            axis.z = (float(rand())/RAND_MAX)*2 - 1;
+            float angle = ((float(rand())/RAND_MAX)*2 - 1) * 0.02f;
+            o->CreateComponent<ObjectSpinner>(glm::angleAxis(angle, (glm::vec3)axis));
         }
 
         player = engine->addGameObject();

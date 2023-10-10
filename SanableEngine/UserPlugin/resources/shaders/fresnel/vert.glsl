@@ -14,8 +14,9 @@ out vec3 camRelCoord;
 
 void main()
 {
-	camRelCoord = (GeometryTransform * vec4(aPos, 1)).xyz - CameraPosition;
-    gl_Position = ViewProjection * GeometryTransform * vec4(aPos, 1);
-    normal = aNormal;
+    vec4 worldPos = GeometryTransform * vec4(aPos, 1);
+	camRelCoord = worldPos.xyz - CameraPosition;
+    gl_Position = ViewProjection * worldPos;
+    normal = (GeometryTransform * vec4(aNormal, 0)).xyz;
     uv = aUv;
 }
