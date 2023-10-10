@@ -93,8 +93,8 @@ void Camera::setProjectionMatrix()
 	//Transform unless GUI
 	if (mode != Mode::GUI)
 	{
-		glTranslatef(-pos.x, -pos.y, -pos.z);
 		glMultMatrixf(glm::value_ptr(glm::mat4_cast(rot)));
+		glTranslatef(-pos.x, -pos.y, -pos.z);
 	}
 }
 

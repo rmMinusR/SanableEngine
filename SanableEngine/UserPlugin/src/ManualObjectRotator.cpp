@@ -20,8 +20,8 @@ void ManualObjectRotator::Update()
 	Uint8 const* keys = SDL_GetKeyboardState(&sz); //Managed by SDL, do not free
 	
 	//Calc input
-	if (keys[SDL_SCANCODE_K]) axis += Vector3<float>(-1, 0, 0);
-	if (keys[SDL_SCANCODE_I]) axis += Vector3<float>( 1, 0, 0);
+	if (keys[SDL_SCANCODE_I]) axis += Vector3<float>(-1, 0, 0);
+	if (keys[SDL_SCANCODE_K]) axis += Vector3<float>( 1, 0, 0);
 	if (keys[SDL_SCANCODE_J]) axis += Vector3<float>(0, -1, 0);
 	if (keys[SDL_SCANCODE_L]) axis += Vector3<float>(0,  1, 0);
 	if (keys[SDL_SCANCODE_U]) axis += Vector3<float>(0, 0, -1);

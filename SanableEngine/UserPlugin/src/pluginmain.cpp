@@ -53,6 +53,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         cc->setPersp(90);
         //camera->getTransform()->setRotation(glm::angleAxis(glm::radians(30.0f), glm::vec3(0, 0, 1)));
         camera->CreateComponent<PlayerController>(0.01f);
+        camera->CreateComponent<ManualObjectRotator>();
 
         mesh = new Mesh();
         //mesh->load("resources/bunny.fbx");

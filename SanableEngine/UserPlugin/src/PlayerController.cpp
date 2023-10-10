@@ -17,16 +17,19 @@ PlayerController::PlayerController(float moveSpeed) :
 
 void PlayerController::Update()
 {
-	Vector3<float> position = getGameObject()->getTransform()->getPosition();
+	Vector3<float> input;
 	
 	int sz;
 	Uint8 const * keys = SDL_GetKeyboardState(&sz); //Managed by SDL, do not free
 	
 	//Move position
-	if (keys[SDL_SCANCODE_A]) position += Vector3<float>(-moveSpeed, 0, 0);
-	if (keys[SDL_SCANCODE_D]) position += Vector3<float>( moveSpeed, 0, 0);
-	if (keys[SDL_SCANCODE_W]) position += Vector3<float>(0,  moveSpeed, 0);
-	if (keys[SDL_SCANCODE_S]) position += Vector3<float>(0, -moveSpeed, 0);
+	if (keys[SDL_SCANCODE_A     ]) input += Vector3<float>(-moveSpeed, 0, 0);
+	if (keys[SDL_SCANCODE_D     ]) input += Vector3<float>( moveSpeed, 0, 0);
+	if (keys[SDL_SCANCODE_W     ]) input += Vector3<float>(0, 0, -moveSpeed);
+	if (keys[SDL_SCANCODE_S     ]) input += Vector3<float>(0, 0,  moveSpeed);
+	if (keys[SDL_SCANCODE_SPACE ]) input += Vector3<float>(0,  moveSpeed, 0);
+	if (keys[SDL_SCANCODE_LSHIFT]) input += Vector3<float>(0, -moveSpeed, 0);
 
-	getGameObject()->getTransform()->setPosition(position);
+	Transform* t = getGameObject()->getTransform();
+	t->setPosition(t->transformVector(input) + t->getPosition());
 }
