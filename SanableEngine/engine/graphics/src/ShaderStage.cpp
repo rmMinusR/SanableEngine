@@ -27,7 +27,7 @@ bool ShaderStage::load()
 	size_t size = fin.tellg();
 	char* data = new char[size];
 	memset(data, 0, size);
-	
+
 	//Read
 	fin.seekg(0);
 	fin.read(data, size);

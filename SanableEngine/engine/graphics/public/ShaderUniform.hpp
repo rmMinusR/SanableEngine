@@ -10,22 +10,39 @@ class ShaderProgram;
 class Renderer;
 class MeshRenderer;
 
+#define ValueBinding_VALUES_SHARED \
+	_X(ViewProjection) \
+	_X(CameraPosition)
+
+#define ValueBinding_VALUES_INSTANCED \
+	_X(GeometryTransform)
+
+#define ValueBinding_VALUES_ALL _X(Unbound) ValueBinding_VALUES_SHARED ValueBinding_VALUES_INSTANCED
+
 class ShaderUniform
 {
 public:
 	enum class ValueBinding
 	{
+		Invalid = -1,
 		Unbound = 0,
 
 		//Shared
-		ViewProjection,
-		CameraPosition,
+		#define _X(val) val,
+		ValueBinding_VALUES_SHARED
+		#undef _X
 
 		__DIVINSTANCED,
 
 		//Instanced
-		Transform
+		#define _X(val) val,
+		ValueBinding_VALUES_INSTANCED
+		#undef _X
+
+		__NUM_VALUES
 	};
+	static const char* ValueBinding_getName(ValueBinding binding);
+	static ValueBinding ValueBinding_fromName(const std::string& name);
 
 	enum class BindingStage
 	{
@@ -43,6 +60,7 @@ public:
 	GLint objSize;
 	GLenum dataType;
 	ValueBinding binding = ValueBinding::Unbound;
+	void detectBinding();
 
 public:
 	ENGINEGRAPHICS_API ShaderProgram* getOwner() const;

@@ -1,8 +1,8 @@
 #version 330 core
 
-uniform mat4 matVP; //@bind ViewProjection
-uniform mat4 matGeo; //@bind Transform
-uniform vec3 camPos; //@bind CameraPosition
+uniform mat4 ViewProjection;
+uniform mat4 GeometryTransform;
+uniform vec3 CameraPosition;
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
@@ -14,8 +14,8 @@ out vec3 camRelCoord;
 
 void main()
 {
-	camRelCoord = (matGeo * vec4(aPos, 1)).xyz - camPos;
-    gl_Position = matVP * matGeo * vec4(aPos, 1);
+	camRelCoord = (GeometryTransform * vec4(aPos, 1)).xyz - CameraPosition;
+    gl_Position = ViewProjection * GeometryTransform * vec4(aPos, 1);
     normal = aNormal;
     uv = aUv;
 }

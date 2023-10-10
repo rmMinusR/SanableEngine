@@ -5,6 +5,33 @@
 #include "Camera.hpp"
 #include "MeshRenderer.hpp"
 
+const char* ShaderUniform::ValueBinding_getName(ValueBinding binding)
+{
+	switch (binding)
+	{
+#define _X(val) case ValueBinding::val: return #val;
+	ValueBinding_VALUES_ALL
+#undef _X
+
+	default: return nullptr;
+	}
+}
+
+ShaderUniform::ValueBinding ShaderUniform::ValueBinding_fromName(const std::string& name)
+{
+#define _X(val) if (std::strncmp(name.c_str(), #val, std::max(name.size(), strlen(#val))) == 0) return ValueBinding::val;
+	ValueBinding_VALUES_ALL
+#undef _X
+
+	return (ValueBinding)-1;
+}
+
+void ShaderUniform::detectBinding()
+{
+	binding = ShaderUniform::ValueBinding_fromName(name);
+	if (binding == ShaderUniform::ValueBinding::Invalid) binding = ShaderUniform::ValueBinding::Unbound;
+}
+
 ShaderProgram* ShaderUniform::getOwner() const
 {
 	return owner;
@@ -68,7 +95,7 @@ void ShaderUniform::tryBindInstanced(Renderer* context, const MeshRenderer* mesh
 
 	switch (binding)
 	{
-	case ValueBinding::Transform:
+	case ValueBinding::GeometryTransform:
 		write((glm::mat4)*meshRenderer->getGameObject()->getTransform()); //Should we be using GL matrices instead of GLM? Does it matter?
 		break;
 

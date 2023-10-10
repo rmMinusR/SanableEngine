@@ -58,17 +58,16 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
 
         shader = new ShaderProgram("resources/shaders/fresnel");
         shader->load();
-        //TEMP
-        const_cast<ShaderUniform&>(shader->getUniforms()[2]).binding = ShaderUniform::ValueBinding::ViewProjection; //mat4 @bind ViewProjection
-        const_cast<ShaderUniform&>(shader->getUniforms()[1]).binding = ShaderUniform::ValueBinding::Transform;      //mat4 @bind Transform
-        const_cast<ShaderUniform&>(shader->getUniforms()[0]).binding = ShaderUniform::ValueBinding::CameraPosition; //vec3 @bind CameraPosition
-
+        
         material = new Material(shader);
 
-        GameObject* o = engine->addGameObject();
-        o->getTransform()->setPosition(Vector3<float>(0, 0, -0.2f));
-        //o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
-        o->CreateComponent<MeshRenderer>(mesh, material);
+        for (Vector3f pos(0, 0, -0.2f); pos.y < 1; pos.y += 0.2f) for (pos.x = 0; pos.x < 1; pos.x += 0.2f)
+        {
+            GameObject* o = engine->addGameObject();
+            o->getTransform()->setPosition(pos);
+            //o->CreateComponent<RectangleRenderer>(100, 100, SDL_Color{ 0, 127, 255, 255 });
+            o->CreateComponent<MeshRenderer>(mesh, material);
+        }
 
         player = engine->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));

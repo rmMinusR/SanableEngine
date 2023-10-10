@@ -65,6 +65,7 @@ bool ShaderProgram::load()
 		glGetActiveUniform(handle, i, bufSz, &nRead, &uniform.objSize, &uniform.dataType, buf);
 		uniform.name = std::string(buf, nRead);
 		uniform.location = glGetUniformLocation(handle, buf);
+		uniform.detectBinding();
 		uniforms.push_back(uniform);
 	}
 
