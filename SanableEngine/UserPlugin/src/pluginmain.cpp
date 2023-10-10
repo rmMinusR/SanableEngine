@@ -77,12 +77,13 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
             float angle = ((float(rand())/RAND_MAX)*2 - 1) * 0.02f;
             o->CreateComponent<ObjectSpinner>(glm::angleAxis(angle, (glm::vec3)axis));
         }
-        /*
-        GameObject* o = engine->addGameObject();
-        o->getTransform()->setPosition(Vector3f(0, 0, -0.4f));
-        o->CreateComponent<MeshRenderer>(mesh, material);
-        o->CreateComponent<ManualObjectRotator>();
-        // */
+        //{
+        //    GameObject* o = engine->addGameObject();
+        //    o->getTransform()->setPosition(Vector3f(0, 0, -0.4f));
+        //    o->getTransform()->setLocalScale(Vector3f(10, 10, 10));
+        //    o->CreateComponent<MeshRenderer>(mesh, material);
+        //    o->CreateComponent<ManualObjectRotator>();
+        //}
 
         player = engine->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));

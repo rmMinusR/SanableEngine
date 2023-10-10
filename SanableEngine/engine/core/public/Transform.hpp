@@ -20,6 +20,7 @@ private:
 	{
 		Vector3<float> position;
 		glm::quat rotation = glm::quat(1, 0, 0, 0);
+		Vector3<float> scale = Vector3<float>(1, 1, 1); //Note: global scale is lossy, and is calculated WAY differently
 	};
 	Data local;
 
@@ -51,6 +52,10 @@ public:
 
 	ENGINECORE_API glm::quat getRotation() const;
 	ENGINECORE_API void setRotation(glm::quat);
+
+	ENGINECORE_API Vector3<float> getLocalScale() const;
+	ENGINECORE_API Vector3<float> getLossyScale() const;
+	ENGINECORE_API void setLocalScale(Vector3<float>);
 
 	//Utility functions
 
