@@ -2,6 +2,7 @@
 
 #include <SDL.h>
 #include <GL/glew.h>
+#include "GLContext.hpp"
 
 Window::Window(char const* name, int width, int height)
 {
@@ -22,15 +23,8 @@ Window::Window(char const* name, int width, int height)
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //Instead of passing SDL_DOUBLEBUF to SDL_SetVideoMode
 
     handle = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
-    context = SDL_GL_CreateContext(handle); //Requires window
+    context = GLContext::create(handle, this);
     
-    GLenum err = glewInit(); //Requires context - TODO move out to system or something?
-    if (err != GLEW_OK)
-    {
-        printf("Error initializing GLEW: Code %u", err);
-        assert(false);
-    }
-
     _interface = Renderer(this, context);
     
     printf("OpenGL %s\n", (char*)glGetString(GL_VERSION));
@@ -38,6 +32,8 @@ Window::Window(char const* name, int width, int height)
 
 Window::~Window()
 {
+    GLContext::release(context, this);
+
     SDL_DestroyWindow(handle);
     handle = nullptr;
 
