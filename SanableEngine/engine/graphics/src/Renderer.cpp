@@ -18,7 +18,7 @@ Renderer::Renderer() :
 {
 }
 
-Renderer::Renderer(Window* owner, const SDL_GLContext& context) :
+Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	owner(owner),
 	context(context)
 {

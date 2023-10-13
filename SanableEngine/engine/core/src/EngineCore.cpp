@@ -9,7 +9,8 @@
 #include "Component.hpp"
 #include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include "GameWindowRenderPipeline.hpp"
+#include "Window.hpp"
+#include "WindowRenderPipeline.hpp"
 #include "Camera.hpp"
 
 void EngineCore::applyConcurrencyBuffers()
@@ -82,7 +83,7 @@ EngineCore::~EngineCore()
 
 void engine_reportTypes(ModuleTypeRegistry* registry);
 
-void EngineCore::init(char const* windowName, int windowWidth, int windowHeight, gpr460::System& _system, UserInitFunc userInitCallback)
+void EngineCore::init(WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -105,7 +106,8 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     memoryManager.getSpecificPool<Camera>(true); //Same with Camera
     memoryManager.ensureFresh();
 
-    mainWindow = new Window(windowName, windowWidth, windowHeight, this, std::make_shared<GameWindowRenderPipeline>(this));
+    mainWindow = mainWindowBuilder.build();
+    windows.push_back(mainWindow);
     frame = 0;
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
@@ -198,7 +200,7 @@ void EngineCore::draw()
 {
     assert(isAlive);
 
-    mainWindow->draw();
+    for (Window* w : windows) w->draw();
 }
 
 gpr460::System* EngineCore::getSystem()
@@ -216,11 +218,6 @@ StackAllocator* EngineCore::getFrameAllocator()
     return &frameAllocator;
 }
 
-Window* EngineCore::getMainWindow()
-{
-    return mainWindow;
-}
-
 const CallBatcher<I3DRenderable>* EngineCore::get3DRenderables()
 {
     return &_3dRenderList;
@@ -229,4 +226,14 @@ const CallBatcher<I3DRenderable>* EngineCore::get3DRenderables()
 Renderer* EngineCore::getRenderer()
 {
     return mainWindow->getRenderer();
+}
+
+Window* EngineCore::getMainWindow()
+{
+    return mainWindow;
+}
+
+WindowBuilder EngineCore::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
+{
+    return WindowBuilder(this, name, width, height, std::move(renderPipeline));
 }

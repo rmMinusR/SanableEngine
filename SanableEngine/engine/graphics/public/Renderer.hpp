@@ -27,7 +27,7 @@ private:
 
 public:
 	ENGINEGRAPHICS_API Renderer();
-	ENGINEGRAPHICS_API Renderer(Window* owner, const SDL_GLContext& context);
+	ENGINEGRAPHICS_API Renderer(Window* owner, SDL_GLContext context);
 
 	inline Window* getOwner() const { return owner; }
 	

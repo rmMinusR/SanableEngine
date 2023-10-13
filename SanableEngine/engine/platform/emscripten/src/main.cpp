@@ -3,9 +3,8 @@
 
 #include <SDL.h>
 #include "EngineCore.hpp"
+#include "GameWindowRenderPipeline.hpp"
 #include "System_Emscripten.hpp"
-
-void vendorInit(EngineCore* engine);
 
 int main(int argc, char* argv[])
 {
@@ -16,7 +15,8 @@ int main(int argc, char* argv[])
 
     //Init
     EngineCore engine;
-    engine.init("Sanable Engine", WIDTH, HEIGHT, system, nullptr);
+    WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&engine));
+    engine.init(mainWindow, system, nullptr);
 
     //Loop
     engine.doMainLoop();

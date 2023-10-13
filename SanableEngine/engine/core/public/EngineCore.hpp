@@ -5,10 +5,10 @@
 #include "CallBatcher.inl"
 #include "MemoryManager.hpp"
 #include "StackAllocator.hpp"
-#include "Window.hpp"
 
 #include "dllapi.h"
 #include "PluginManager.hpp"
+#include "WindowBuilder.hpp"
 
 class ModuleTypeRegistry;
 class GameObject;
@@ -16,6 +16,7 @@ class Component;
 class IUpdatable;
 class I3DRenderable;
 namespace gpr460 { class System; }
+class Renderer;
 
 class EngineCore
 {
@@ -41,6 +42,10 @@ private:
     CallBatcher<I3DRenderable> _3dRenderList;
     friend class GameObject;
 
+    std::vector<Window*> windows;
+    friend class WindowBuilder;
+    Window* mainWindow = nullptr;
+
     void processEvents();
 
     void refreshCallBatchers();
@@ -51,7 +56,6 @@ private:
     void tick();
     void draw();
 
-    Window* mainWindow = nullptr;
 public:
     bool quit = false;
     int frame = 0;
@@ -60,7 +64,7 @@ public:
     ENGINECORE_API ~EngineCore();
 
     typedef void (*UserInitFunc)(EngineCore*);
-    ENGINECORE_API void init(char const* windowName, int windowWidth, int windowHeight, gpr460::System& system, UserInitFunc userInitCallback);
+    ENGINECORE_API void init(WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API GameObject* addGameObject();
@@ -72,7 +76,9 @@ public:
     ENGINECORE_API gpr460::System* getSystem();
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
-    ENGINECORE_API Window* getMainWindow();
     ENGINECORE_API const CallBatcher<I3DRenderable>* get3DRenderables();
     ENGINECORE_API Renderer* getRenderer();
+
+    ENGINECORE_API Window* getMainWindow();
+    ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 };

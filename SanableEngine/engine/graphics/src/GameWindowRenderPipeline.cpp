@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <GL/glew.h>
+#include "Window.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "ShaderProgram.hpp"

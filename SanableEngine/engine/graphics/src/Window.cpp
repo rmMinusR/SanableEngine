@@ -4,10 +4,11 @@
 #include <GL/glew.h>
 #include "GLContext.hpp"
 #include "WindowRenderPipeline.hpp"
+#include "EngineCore.hpp"
 
-Window::Window(char const* name, int width, int height, EngineCore* engine, std::shared_ptr<WindowRenderPipeline> renderPipeline) :
-    context(context),
-    renderPipeline(renderPipeline)
+Window::Window(const std::string& name, int width, int height, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
+    engine(engine),
+    renderPipeline(std::move(renderPipeline))
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
@@ -25,12 +26,12 @@ Window::Window(char const* name, int width, int height, EngineCore* engine, std:
 
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //Instead of passing SDL_DOUBLEBUF to SDL_SetVideoMode
 
-    handle = SDL_CreateWindow(name, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+    handle = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
     context = GLContext::create(handle, this);
     
     _interface = Renderer(this, context);
     
-    printf("Window '%s' - OpenGL %s\n", name, (char*)glGetString(GL_VERSION));
+    printf("Window '%s' - OpenGL %s\n", name.c_str(), (char*)glGetString(GL_VERSION));
 }
 
 Window::~Window()
@@ -41,6 +42,11 @@ Window::~Window()
     handle = nullptr;
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
+}
+
+void Window::move(int x, int y)
+{
+    SDL_SetWindowPosition(handle, x, y);
 }
 
 int Window::getWidth() const
@@ -59,7 +65,8 @@ int Window::getHeight() const
 
 void Window::draw() const
 {
-    //Reset frame, just in case...
+    //Reset to default state
+    SDL_GL_MakeCurrent(handle, context);
     glViewport(0, 0, getWidth(), getHeight());
 
     //Delegate draw
