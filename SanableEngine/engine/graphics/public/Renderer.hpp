@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <SDL_video.h>
 #include <glm/glm.hpp>
+#include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
 #include "Vector3.inl"
 
@@ -21,6 +22,8 @@ struct SDL_Color;
 
 class Renderer
 {
+	SANABLE_REFLECTION_HOOKS
+
 private:
 	Window* owner;
 	SDL_GLContext context;

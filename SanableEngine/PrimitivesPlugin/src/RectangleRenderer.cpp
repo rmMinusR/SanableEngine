@@ -5,6 +5,7 @@
 
 #include "EngineCore.hpp"
 #include "GameObject.hpp"
+#include "Renderer.hpp"
 
 RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
 	Component(),

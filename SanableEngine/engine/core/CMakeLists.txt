@@ -14,6 +14,7 @@ target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} engine-memory engin
 
 # Declare exports
 target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
+target_include_directories("engine-core" INTERFACE "${CMAKE_CURRENT_LIST_DIR}/interface")
 
 # Declare install targets
 install_dll("engine-core" ".")

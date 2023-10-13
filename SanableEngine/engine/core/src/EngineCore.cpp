@@ -81,8 +81,6 @@ EngineCore::~EngineCore()
     assert(!isAlive);
 }
 
-void engine_reportTypes(ModuleTypeRegistry* registry);
-
 void EngineCore::init(WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);

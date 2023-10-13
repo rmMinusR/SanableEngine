@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <EngineCoreReflectionHooks.hpp>
 #include "ShaderUniform.hpp"
 
 class ShaderProgram;
@@ -10,6 +11,9 @@ class I3DRenderable;
 
 class Material
 {
+	SANABLE_REFLECTION_HOOKS
+	Material();
+
 	ShaderProgram* shader;
 
 	std::vector<ShaderUniform> sharedUniforms;

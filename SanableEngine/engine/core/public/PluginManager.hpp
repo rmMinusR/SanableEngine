@@ -3,6 +3,7 @@
 #include "dllapi.h"
 
 #include <vector>
+#include <EngineCoreReflectionHooks.hpp>
 
 #include "Plugin.hpp"
 
@@ -11,7 +12,7 @@ class EngineCore;
 
 class PluginManager
 {
-	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+	SANABLE_REFLECTION_HOOKS
 
 private:
 	EngineCore* const engine;

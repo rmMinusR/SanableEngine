@@ -1,5 +1,6 @@
 #pragma once
 
+#include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
 
 class Window;
@@ -7,6 +8,8 @@ class EngineCore;
 
 class WindowRenderPipeline
 {
+	SANABLE_REFLECTION_HOOKS
+
 public:
 	ENGINEGRAPHICS_API WindowRenderPipeline();
 	ENGINEGRAPHICS_API virtual ~WindowRenderPipeline();

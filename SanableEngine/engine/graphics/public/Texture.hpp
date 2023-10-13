@@ -4,6 +4,7 @@
 
 #include <SDL_render.h>
 #include <GL/glew.h>
+#include <EngineCoreReflectionHooks.hpp>
 
 #include "dllapi.h"
 
@@ -11,6 +12,9 @@ class Renderer;
 
 class Texture
 {
+	SANABLE_REFLECTION_HOOKS
+	Texture();
+
 	friend class Renderer;
 
 	GLuint id;

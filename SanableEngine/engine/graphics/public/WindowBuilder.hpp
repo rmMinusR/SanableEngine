@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
 #include "Vector3.inl"
 #include "WindowRenderPipeline.hpp"
@@ -12,6 +13,8 @@ class Window;
 
 class WindowBuilder
 {
+	SANABLE_REFLECTION_HOOKS
+
 	//Required
 	EngineCore* engine;
 	std::string name;

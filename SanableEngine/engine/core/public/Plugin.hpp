@@ -19,6 +19,7 @@ typedef void* LibHandle;
 #include <filesystem>
 #include <vector>
 #include <string>
+#include <EngineCoreReflectionHooks.hpp>
 
 class ModuleTypeRegistry;
 class EngineCore;
@@ -27,7 +28,7 @@ struct PluginReportedData;
 
 struct Plugin
 {
-	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+	SANABLE_REFLECTION_HOOKS
 
 public:
 	enum class Status

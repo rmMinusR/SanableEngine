@@ -3,6 +3,7 @@
 #include <string>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <EngineCoreReflectionHooks.hpp>
 
 #include "dllapi.h"
 
@@ -21,6 +22,8 @@ class I3DRenderable;
 
 class ShaderUniform
 {
+	SANABLE_REFLECTION_HOOKS
+
 public:
 	enum class ValueBinding
 	{

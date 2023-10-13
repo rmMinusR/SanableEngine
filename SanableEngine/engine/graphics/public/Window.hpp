@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include <SDL_video.h>
+#include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
 #include "Renderer.hpp"
 #include "WindowRenderPipeline.hpp"
@@ -13,6 +14,8 @@ class WindowBuilder;
 
 class Window
 {
+	SANABLE_REFLECTION_HOOKS
+
 private:
 	SDL_Window* handle;
 	SDL_GLContext context;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <EngineCoreReflectionHooks.hpp>
 
 #include "CallBatcher.inl"
 #include "MemoryManager.hpp"
@@ -20,7 +21,7 @@ class Renderer;
 
 class EngineCore
 {
-    friend void engine_reportTypes(ModuleTypeRegistry* registry);
+    SANABLE_REFLECTION_HOOKS
 
 private:
     bool isAlive;

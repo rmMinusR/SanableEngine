@@ -2,12 +2,15 @@
 
 #include <filesystem>
 #include <GL/glew.h>
+#include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
 
 class ShaderProgram;
 
 class ShaderStage
 {
+	SANABLE_REFLECTION_HOOKS
+
 public:
 	enum class Type
 	{

@@ -5,13 +5,14 @@
 #include "dllapi.h"
 
 #include <glm/gtc/quaternion.hpp>
+#include <EngineCoreReflectionHooks.hpp>
 #include "Vector3.inl"
 
 class ModuleTypeRegistry;
 
 class Transform
 {
-	friend void engine_reportTypes(ModuleTypeRegistry* registry);
+	SANABLE_REFLECTION_HOOKS
 
 private:
 	Transform* parent;

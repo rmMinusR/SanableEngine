@@ -7,6 +7,10 @@
 #include "Material.hpp"
 #include "ShaderProgram.hpp"
 
+GameWindowRenderPipeline::GameWindowRenderPipeline()
+{
+}
+
 GameWindowRenderPipeline::GameWindowRenderPipeline(EngineCore* engine) :
 	engine(engine)
 {

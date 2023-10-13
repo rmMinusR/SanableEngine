@@ -1,5 +1,7 @@
 #pragma once
 
+#include <EngineCoreReflectionHooks.hpp>
+
 #include "dllapi.h"
 
 #include "GameObject.hpp"
@@ -10,6 +12,8 @@ class EngineCore;
 
 class Component
 {
+	SANABLE_REFLECTION_HOOKS
+
 	friend void engine_reportTypes(ModuleTypeRegistry* registry);
 
 protected:

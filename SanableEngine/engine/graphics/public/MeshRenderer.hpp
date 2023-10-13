@@ -1,5 +1,6 @@
 #pragma once
 
+#include <EngineCoreReflectionHooks.hpp>
 #include "Component.hpp"
 #include "dllapi.h"
 
@@ -9,6 +10,9 @@ class Renderer;
 
 class MeshRenderer : public Component, public I3DRenderable
 {
+	SANABLE_REFLECTION_HOOKS
+	MeshRenderer();
+
 	Mesh* mesh;
 	Material* material;
 public:
