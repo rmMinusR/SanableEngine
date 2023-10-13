@@ -31,6 +31,10 @@ else()
     message(ERROR "-> Could not configure SDL2_image: Unknown platform")
 endif()
 
+# Configure stb_image
+message(" > Configuring stb_image")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/stb_image")
+
 # Configure SDL2_ttf
 if (MSVC)
     message(" > Configuring SDL2_ttf for MSVC")
