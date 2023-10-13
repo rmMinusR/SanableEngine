@@ -1,14 +1,10 @@
 #include "GLContext.hpp"
 
 #include <cassert>
-#include <unordered_map>
 #include <GL/glew.h>
 
-namespace
-{
-	static std::unordered_map<SDL_GLContext, int> handles; //ptr -> refcount
-	bool glewGood;
-}
+std::unordered_map<SDL_GLContext, int> GLContext::handles; //ptr -> refcount
+bool GLContext::glewGood;
 
 SDL_GLContext GLContext::create(SDL_Window* window, void* who)
 {

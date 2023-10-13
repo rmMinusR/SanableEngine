@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 
     //Init
     EngineCore engine;
-    engine.init("SDL2 Test", WIDTH, HEIGHT, system, vendorInit);
+    engine.init("Sanable Engine", WIDTH, HEIGHT, system, vendorInit);
 
     //Loop
     engine.doMainLoop();

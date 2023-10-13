@@ -27,7 +27,7 @@ Window::Window(char const* name, int width, int height)
     
     _interface = Renderer(this, context);
     
-    printf("OpenGL %s\n", (char*)glGetString(GL_VERSION));
+    printf("Window '%s' - OpenGL %s\n", name, (char*)glGetString(GL_VERSION));
 }
 
 Window::~Window()
