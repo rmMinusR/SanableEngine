@@ -15,3 +15,4 @@ target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} ${OPENGL_gl_LIBRARY
 
 # Declare exports
 target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
+generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})

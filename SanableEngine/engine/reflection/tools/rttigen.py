@@ -7,7 +7,7 @@ parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description="Sanable Engine RTTI generation tool: Embedding RTTI in a C++ binary as a build step"
     )
-parser.add_argument("--target", help="Folder containing entire TU, which must also include headers. Includes outside of this folder will not have RTTI generated.", required=True)
+parser.add_argument("--targets", help="Semicolon list of folders containing entire TU, which must also include headers. Includes not listed will be exluded from RTTI generation.", required=True)
 parser.add_argument("-I", "--include", dest="includes", help="Headers to scan, both from this target and its dependencies. Semicolon-separated list.")
 parser.add_argument("-D", "--define" , dest="defines" , help="Preprocessor definition. Semicolon-separated list.")
 parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. If not specified, defaults to target/src/rtti.generated.cpp")
@@ -40,6 +40,9 @@ if args.verbose:
     config.logger.setLevel(0)
 
 #Process CMake-style lists
+args.targets = [i for i in args.targets.split(";") if len(i) != 0]
+assert len(args.targets) > 0, "Must provide at least one target!"
+
 if args.includes != None:
     args.includes = args.includes.split(";")
 else:
@@ -57,7 +60,7 @@ if args.template_file == None:
 
 #Default output folder, if none specified
 if args.output == None:
-    args.output = os.path.join(args.target, "src")
+    args.output = os.path.join(args.targets[0], "src")
 
 #Default file name within folder, if a folder was specified
 if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
@@ -71,7 +74,7 @@ import source_discovery
 source_discovery.additionalCompilerOptions = compilerArgs
 
 config.logger.info("Discovering files")
-projectFiles = source_discovery.discoverAll(args.target)
+projectFiles = source_discovery.discoverAll(args.targets)
 sourceFiles = [f for f in projectFiles if f.type != None and not f.hasError]
 for sourceFile in sourceFiles:
     sourceFile.additionalIncludes += args.includes
@@ -94,7 +97,10 @@ with open(args.template_file, "r") as f:
 def shortestRelPath(absPath):
     global args
     return min(
-        [os.path.relpath(absPath, os.path.join(args.target, i)) for i in args.includes],
+        [min(
+            [os.path.relpath(absPath, os.path.join(target, i)) for i in args.includes],
+            key=len
+        ) for target in args.targets],
         key=len
     )
 

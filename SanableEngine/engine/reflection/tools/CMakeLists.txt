@@ -14,27 +14,37 @@ function(generate_reflection targetName rootDir)
 		set(TEMPLATE_ARG --template ${TEMPLATE_FILE})
 	endif()
 
-	#set(OUTPUT_FILE "${rootDir}/src/rtti.generated.cpp")
-	#set(OUTPUT_FILE $<TARGET_PROPERTY:${targetName},BINARY_DIR>/generated/${targetName}_rtti.generated.cpp)
-	get_target_property(OUTPUT_FILE_DIR ${targetName} BINARY_DIR)
-	set(OUTPUT_FILE "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}_rtti.generated.cpp")
-	set(CACHE_DIR "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}.rtticache")
+	# Add rootDir to RTTI_ROOT_DIRS (allows more complex directory structure)
+	get_target_property(ROOT_DIRS ${targetName} RTTI_ROOT_DIRS)
+	if (ROOT_DIRS STREQUAL "ROOT_DIRS-NOTFOUND")
+		set(ROOT_DIRS ${rootDir})
+	else()
+		list(APPEND ROOT_DIRS ${rootDir})
+	endif()
+	set_property(TARGET ${targetName} PROPERTY RTTI_ROOT_DIRS ${ROOT_DIRS})
 
-	add_custom_target(
-		${targetName}_RTTI
-		BYPRODUCTS "${OUTPUT_FILE}" "${CACHE_DIR}"
- 		COMMAND ${REFLECTION_COMMAND} --target "${rootDir}"
-									--output "${OUTPUT_FILE}"
-									--cache "${CACHE_DIR}"
- 									--include $<TARGET_PROPERTY:${targetName},INCLUDE_DIRECTORIES>
- 									--define $<TARGET_PROPERTY:${targetName},COMPILE_DEFINITIONS>
- 									${TEMPLATE_ARG}
- 									-- $<TARGET_PROPERTY:${targetName},COMPILE_OPTIONS> $<TARGET_PROPERTY:${targetName},COMPILE_FLAGS> ${COMPILE_OPTIONS} ${COMPILE_FLAGS}
-		VERBATIM
- 		COMMENT "Generating embedded RTTI for ${targetName}"
- 	)
+	# Add RTTI generator target if none exists
+	if (NOT TARGET ${targetName}_RTTI)
+		get_target_property(OUTPUT_FILE_DIR ${targetName} BINARY_DIR)
+		set(OUTPUT_FILE "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}_rtti.generated.cpp")
+		set(CACHE_DIR "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}.rtticache")
 
-	add_dependencies(${targetName} ${targetName}_RTTI)
+		add_custom_target(
+			${targetName}_RTTI
+			BYPRODUCTS "${OUTPUT_FILE}" "${CACHE_DIR}"
+ 			COMMAND ${REFLECTION_COMMAND} --target $<TARGET_PROPERTY:${targetName},RTTI_ROOT_DIRS>
+										--output "${OUTPUT_FILE}"
+										--cache "${CACHE_DIR}"
+ 										--include $<TARGET_PROPERTY:${targetName},INCLUDE_DIRECTORIES>
+ 										--define $<TARGET_PROPERTY:${targetName},COMPILE_DEFINITIONS>
+ 										${TEMPLATE_ARG}
+ 										-- $<TARGET_PROPERTY:${targetName},COMPILE_OPTIONS> $<TARGET_PROPERTY:${targetName},COMPILE_FLAGS> ${COMPILE_OPTIONS} ${COMPILE_FLAGS}
+			VERBATIM
+ 			COMMENT "Generating embedded RTTI for ${targetName}"
+ 		)
 
-	target_sources(${targetName} PRIVATE ${OUTPUT_FILE})
+		add_dependencies(${targetName} ${targetName}_RTTI)
+
+		target_sources(${targetName} PRIVATE ${OUTPUT_FILE})
+	endif()
 endfunction()
