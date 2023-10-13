@@ -3,8 +3,11 @@
 #include <SDL.h>
 #include <GL/glew.h>
 #include "GLContext.hpp"
+#include "WindowRenderPipeline.hpp"
 
-Window::Window(char const* name, int width, int height)
+Window::Window(char const* name, int width, int height, EngineCore* engine, std::shared_ptr<WindowRenderPipeline> renderPipeline) :
+    context(context),
+    renderPipeline(renderPipeline)
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
@@ -52,4 +55,16 @@ int Window::getHeight() const
     int h;
     SDL_GetWindowSize(handle, nullptr, &h);
     return h;
+}
+
+void Window::draw() const
+{
+    //Reset frame, just in case...
+    glViewport(0, 0, getWidth(), getHeight());
+
+    //Delegate draw
+    renderPipeline->render();
+
+    //Swap back buffer
+    SDL_GL_SwapWindow(handle);
 }

@@ -14,7 +14,7 @@ class ModuleTypeRegistry;
 class GameObject;
 class Component;
 class IUpdatable;
-class IRenderable;
+class I3DRenderable;
 namespace gpr460 { class System; }
 
 class EngineCore
@@ -37,8 +37,8 @@ private:
     std::vector<std::pair<Component*, GameObject*>> componentAddBuffer;
     std::vector<Component*> componentDelBuffer;
 
-    CallBatcher<IUpdatable > updateList;
-    CallBatcher<IRenderable> renderList;
+    CallBatcher<IUpdatable   > updateList;
+    CallBatcher<I3DRenderable> _3dRenderList;
     friend class GameObject;
 
     void processEvents();
@@ -73,5 +73,6 @@ public:
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
     ENGINECORE_API Window* getMainWindow();
+    ENGINECORE_API const CallBatcher<I3DRenderable>* get3DRenderables();
     ENGINECORE_API Renderer* getRenderer();
 };

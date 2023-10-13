@@ -6,14 +6,11 @@
 class ShaderProgram;
 class Renderer;
 class MeshRenderer;
+class I3DRenderable;
 
 class Material
 {
 	ShaderProgram* shader;
-
-	friend class Renderer;
-	void writeSharedUniforms(Renderer* context) const;
-	void writeInstanceUniforms(Renderer* context, const MeshRenderer* meshRenderer) const;
 
 	std::vector<ShaderUniform> sharedUniforms;
 	std::vector<ShaderUniform> instanceUniforms;
@@ -22,5 +19,9 @@ class Material
 public:
 	ENGINEGRAPHICS_API Material(ShaderProgram* shader);
 
+	ENGINEGRAPHICS_API const ShaderProgram* getShader() const;
 	//ENGINEGRAPHICS_API const std::vector<ShaderUniform>& getParameters() const;
+
+	void writeSharedUniforms(Renderer* context) const;
+	void writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const;
 };

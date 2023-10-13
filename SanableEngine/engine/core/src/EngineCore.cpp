@@ -9,7 +9,8 @@
 #include "Component.hpp"
 #include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include <Camera.hpp>
+#include "GameWindowRenderPipeline.hpp"
+#include "Camera.hpp"
 
 void EngineCore::applyConcurrencyBuffers()
 {
@@ -51,7 +52,7 @@ void EngineCore::processEvents()
 void EngineCore::refreshCallBatchers()
 {
     updateList.clear();
-    renderList.clear();
+    _3dRenderList.clear();
 
     for (GameObject* go : objects)
     {
@@ -60,8 +61,8 @@ void EngineCore::refreshCallBatchers()
             IUpdatable* u = dynamic_cast<IUpdatable*>(c);
             if (u) updateList.add(u);
 
-            IRenderable* r = dynamic_cast<IRenderable*>(c);
-            if (r) renderList.add(r);
+            I3DRenderable* r = dynamic_cast<I3DRenderable*>(c);
+            if (r) _3dRenderList.add(r);
         }
     }
 }
@@ -104,7 +105,7 @@ void EngineCore::init(char const* windowName, int windowWidth, int windowHeight,
     memoryManager.getSpecificPool<Camera>(true); //Same with Camera
     memoryManager.ensureFresh();
 
-    mainWindow = new Window(windowName, windowWidth, windowHeight);
+    mainWindow = new Window(windowName, windowWidth, windowHeight, this, std::make_shared<GameWindowRenderPipeline>(this));
     frame = 0;
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
@@ -197,13 +198,7 @@ void EngineCore::draw()
 {
     assert(isAlive);
 
-    //Clear screen
-    mainWindow->getRenderer()->beginFrame();
-
-    //Draw objects
-    renderList.memberCall(&IRenderable::Render, mainWindow->getRenderer());
-
-    mainWindow->getRenderer()->finishFrame();
+    mainWindow->draw();
 }
 
 gpr460::System* EngineCore::getSystem()
@@ -224,6 +219,11 @@ StackAllocator* EngineCore::getFrameAllocator()
 Window* EngineCore::getMainWindow()
 {
     return mainWindow;
+}
+
+const CallBatcher<I3DRenderable>* EngineCore::get3DRenderables()
+{
+    return &_3dRenderList;
 }
 
 Renderer* EngineCore::getRenderer()

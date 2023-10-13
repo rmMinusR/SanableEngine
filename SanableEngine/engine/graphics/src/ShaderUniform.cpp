@@ -97,6 +97,10 @@ void ShaderUniform::tryBindShared(Renderer* context) const
 
 	switch (binding)
 	{
+	default: //Unhandled binding
+		assert(false);
+		break;
+
 	case ValueBinding::ViewProjection:
 		glm::mat4 proj;
 		glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(proj));
@@ -106,25 +110,22 @@ void ShaderUniform::tryBindShared(Renderer* context) const
 	case ValueBinding::CameraPosition:
 		write(Camera::getMain()->getGameObject()->getTransform()->getPosition());
 		break;
-
-	default: //Unhandled binding
-		assert(false);
-		break;
 	}
 }
 
-void ShaderUniform::tryBindInstanced(Renderer* context, const MeshRenderer* meshRenderer) const
+void ShaderUniform::tryBindInstanced(Renderer* context, const I3DRenderable* target) const
 {
 	if (getBindingStage() != BindingStage::BindInstanced) return;
 
 	switch (binding)
 	{
-	case ValueBinding::GeometryTransform:
-		write((glm::mat4)*meshRenderer->getGameObject()->getTransform()); //Should we be using GL matrices instead of GLM? Does it matter?
-		break;
-
 	default: //Unhandled binding
 		assert(false);
+		break;
+
+	case ValueBinding::GeometryTransform:
+		Transform* t = dynamic_cast<const Component*>(target)->getGameObject()->getTransform();
+		write((glm::mat4)*t); //Should we be using GL matrices instead of GLM? Does it matter?
 		break;
 	}
 }

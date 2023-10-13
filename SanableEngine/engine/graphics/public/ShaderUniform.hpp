@@ -8,7 +8,7 @@
 
 class ShaderProgram;
 class Renderer;
-class MeshRenderer;
+class I3DRenderable;
 
 #define ValueBinding_VALUES_SHARED \
 	_X(ViewProjection) \
@@ -75,5 +75,5 @@ public:
 	ENGINEGRAPHICS_API BindingStage getBindingStage() const;
 
 	ENGINEGRAPHICS_API void tryBindShared(Renderer* context) const;
-	ENGINEGRAPHICS_API void tryBindInstanced(Renderer* context, const MeshRenderer* meshRenderer) const;
+	ENGINEGRAPHICS_API void tryBindInstanced(Renderer* context, const I3DRenderable* target) const;
 };

@@ -17,8 +17,8 @@ void GameObject::BindComponent(Component* c)
 	IUpdatable* u = dynamic_cast<IUpdatable*>(c);
 	if (u) engine->updateList.add(u);
 
-	IRenderable* r = dynamic_cast<IRenderable*>(c);
-	if (r) engine->renderList.add(r);
+	I3DRenderable* r = dynamic_cast<I3DRenderable*>(c);
+	if (r) engine->_3dRenderList.add(r);
 
 	c->onStart();
 }

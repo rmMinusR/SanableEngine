@@ -40,14 +40,12 @@ protected:
 	friend class EngineCore;
 };
 
-class Renderer;
-//class ShaderProgram;
-//class Material;
-class IRenderable
+class Material;
+class GameWindowRenderPipeline;
+class I3DRenderable
 {
+	virtual Material* getMaterial() const = 0;
 protected:
-	virtual void Render(Renderer*) = 0;
-	//virtual void GetPass(ShaderProgram** shader_out, Material** material_out) = 0;
-	friend class EngineCore;
-	friend class Renderer;
+	virtual void renderImmediate(Renderer*) const = 0;
+	friend class GameWindowRenderPipeline;
 };

@@ -10,9 +10,15 @@ MeshRenderer::MeshRenderer(Mesh* mesh, Material* material) :
 {
 }
 
-void MeshRenderer::Render(Renderer* renderer)
+Material* MeshRenderer::getMaterial() const
 {
-	renderer->delayedDrawMesh(this);
+	return material;
+}
+
+void MeshRenderer::renderImmediate(Renderer* renderer) const
+{
+	//Assumes correct material and shader have already been set up.
+	mesh->renderImmediate();
 	
 	/*
 	material->shader->activate();

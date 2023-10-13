@@ -31,7 +31,12 @@ void Material::writeSharedUniforms(Renderer* context) const
 	for (const ShaderUniform& uniform : userConfigurable) uniform.tryBindShared(context);
 }
 
-void Material::writeInstanceUniforms(Renderer* context, const MeshRenderer* meshRenderer) const
+void Material::writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const
 {
-	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, meshRenderer);
+	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, target);
+}
+
+const ShaderProgram* Material::getShader() const
+{
+	return shader;
 }

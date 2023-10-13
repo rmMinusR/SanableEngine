@@ -18,7 +18,17 @@ RectangleRenderer::~RectangleRenderer()
 {
 }
 
-void RectangleRenderer::Render(Renderer* renderer)
+void RectangleRenderer::SetColor(SDL_Color newColor)
+{
+	color = newColor;
+}
+
+Material* RectangleRenderer::getMaterial() const
+{
+	return nullptr;
+}
+
+void RectangleRenderer::renderImmediate(Renderer* renderer) const
 {
 	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 

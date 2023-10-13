@@ -7,15 +7,15 @@ class Mesh;
 class Material;
 class Renderer;
 
-class MeshRenderer : public Component, public IRenderable
+class MeshRenderer : public Component, public I3DRenderable
 {
 	Mesh* mesh;
 	Material* material;
-
-	friend class Renderer;
 public:
 	ENGINEGRAPHICS_API MeshRenderer(Mesh* mesh, Material* material);
 	ENGINEGRAPHICS_API ~MeshRenderer() = default;
 
-	ENGINEGRAPHICS_API void Render(Renderer* renderer) override;
+	ENGINEGRAPHICS_API Material* getMaterial() const override;
+protected:
+	ENGINEGRAPHICS_API void renderImmediate(Renderer* renderer) const override;
 };
