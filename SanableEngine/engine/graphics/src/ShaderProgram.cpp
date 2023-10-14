@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-ShaderProgram::ShaderProgram()
+ShaderProgram::ShaderProgram() :
+	handle(0)
 {
 }
 
