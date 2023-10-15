@@ -25,10 +25,10 @@ void GameWindowRenderPipeline::setup(Window* window)
 	WindowRenderPipeline::setup(window);
 }
 
-void GameWindowRenderPipeline::render()
+void GameWindowRenderPipeline::render(Rect<float> viewport)
 {
 	//Set projection matrix
-	if (Camera::getMain()) Camera::getMain()->beginFrame();
+	if (Camera::getMain()) Camera::getMain()->beginFrame({ viewport.width, viewport.height, 0 });
 	else printf("WARNING: No main camera!");
 
 	//Reset screen

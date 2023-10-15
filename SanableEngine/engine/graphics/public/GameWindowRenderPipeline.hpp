@@ -19,5 +19,5 @@ public:
 
 protected:
 	ENGINEGRAPHICS_API virtual void setup(Window* window) override;
-	ENGINEGRAPHICS_API virtual void render() override;
+	ENGINEGRAPHICS_API virtual void render(Rect<float> viewport) override;
 };

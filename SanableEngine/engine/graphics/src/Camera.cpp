@@ -58,11 +58,10 @@ void Camera::setPersp(float fovDeg)
 	size = fovDeg;
 }
 
-void Camera::setProjectionMatrix()
+void Camera::setProjectionMatrix(Vector3<float> viewportSize)
 {
-	Window* window = gameObject->getContext()->getMainWindow();
-	float w = window->getWidth();
-	float h = window->getHeight();
+	float w = viewportSize.x;
+	float h = viewportSize.y;
 	float aspectRatio = w / h;
 	float diag = sqrtf(w*w + h*h);
 
@@ -98,12 +97,12 @@ void Camera::setProjectionMatrix()
 	}
 }
 
-void Camera::beginFrame()
+void Camera::beginFrame(Vector3<float> viewportSize)
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	
-	setProjectionMatrix();
+	setProjectionMatrix(viewportSize);
 }
 
 Camera::Camera(Camera&& mov)

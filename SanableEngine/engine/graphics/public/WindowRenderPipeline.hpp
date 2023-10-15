@@ -2,6 +2,7 @@
 
 #include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
+#include "Rect.hpp"
 
 class Window;
 class EngineCore;
@@ -17,6 +18,6 @@ public:
 protected:
 	Window* window;
 	ENGINEGRAPHICS_API virtual void setup(Window* window);
-	virtual void render() = 0;
+	virtual void render(Rect<float> viewport) = 0;
 	friend class Window;
 };

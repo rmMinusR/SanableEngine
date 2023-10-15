@@ -125,7 +125,7 @@ void EngineCore::shutdown()
     for (GameObject* o : objects) destroy(o);
     applyConcurrencyBuffers();
 
-    delete mainWindow;
+    WindowBuilder::destroy(mainWindow);
     mainWindow = nullptr;
     
     //Clean up memory, GameObject pool first so components are released
@@ -219,16 +219,6 @@ StackAllocator* EngineCore::getFrameAllocator()
 const CallBatcher<I3DRenderable>* EngineCore::get3DRenderables()
 {
     return &_3dRenderList;
-}
-
-Renderer* EngineCore::getRenderer()
-{
-    return mainWindow->getRenderer();
-}
-
-Window* EngineCore::getMainWindow()
-{
-    return mainWindow;
 }
 
 WindowBuilder EngineCore::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)

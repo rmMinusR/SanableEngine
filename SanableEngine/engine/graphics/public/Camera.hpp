@@ -5,6 +5,7 @@
 #include <GL/glew.h>
 #include <EngineCoreReflectionHooks.hpp>
 
+#include "Rect.hpp"
 #include "Renderer.hpp"
 #include "Component.hpp"
 
@@ -52,8 +53,8 @@ public:
 	ENGINEGRAPHICS_API void setPersp(float fovDeg);
 
 	//Called by Renderer
-	ENGINEGRAPHICS_API void setProjectionMatrix();
-	ENGINEGRAPHICS_API void beginFrame();
+	ENGINEGRAPHICS_API void setProjectionMatrix(Vector3<float> viewportSize);
+	ENGINEGRAPHICS_API void beginFrame(Vector3<float> viewportSize);
 
 	ENGINEGRAPHICS_API Camera(Camera&& mov);
 	ENGINEGRAPHICS_API Camera& operator=(Camera&& mov);

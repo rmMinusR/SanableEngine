@@ -79,8 +79,6 @@ public:
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
     ENGINECORE_API const CallBatcher<I3DRenderable>* get3DRenderables();
-    ENGINECORE_API Renderer* getRenderer();
 
-    ENGINECORE_API Window* getMainWindow();
     ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 };

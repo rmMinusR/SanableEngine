@@ -56,10 +56,12 @@ void Window::draw() const
 {
     //Reset to default state
     setActiveDrawTarget(this);
-    glViewport(0, 0, getWidth(), getHeight());
+    int width, height;
+    SDL_GetWindowSize(handle, &width, &height);
+    glViewport(0, 0, width, height);
 
     //Delegate draw
-    if (renderPipeline) renderPipeline->render();
+    if (renderPipeline) renderPipeline->render({ 0, 0, (float)width, (float)height });
 
     //Swap back buffer
     SDL_GL_SwapWindow(handle);
