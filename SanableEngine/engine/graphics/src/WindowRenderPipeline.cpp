@@ -1,6 +1,7 @@
 #include "WindowRenderPipeline.hpp"
 
-WindowRenderPipeline::WindowRenderPipeline()
+WindowRenderPipeline::WindowRenderPipeline() :
+	window(nullptr)
 {
 }
 

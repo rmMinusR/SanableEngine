@@ -7,9 +7,10 @@
 #include "EngineCore.hpp"
 #include "GLSettings.hpp"
 
-Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
+Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor) :
     engine(engine),
-    renderPipeline(std::move(renderPipeline))
+    renderPipeline(std::move(renderPipeline)),
+    inputProcessor(std::move(inputProcessor))
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
@@ -72,4 +73,9 @@ void Window::setActiveDrawTarget(const Window* w)
     SDL_GL_MakeCurrent(w->handle, w->context);
     assert(SDL_GL_GetCurrentWindow () == w->handle);
     assert(SDL_GL_GetCurrentContext() == w->context);
+}
+
+void Window::handleEvent(SDL_Event& ev) const
+{
+    if (inputProcessor) inputProcessor->handleEvent(ev);
 }

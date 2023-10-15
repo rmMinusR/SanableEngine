@@ -7,6 +7,7 @@
 #include "dllapi.h"
 #include "Vector3.inl"
 #include "WindowRenderPipeline.hpp"
+#include "WindowInputProcessor.hpp"
 #include "GLSettings.hpp"
 
 class EngineCore;
@@ -26,12 +27,14 @@ class WindowBuilder
 
 	//Optional
 	std::optional<Vector3<int>> position;
+	std::unique_ptr<WindowInputProcessor> inputProcessor;
 	
 	WindowBuilder(EngineCore* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 	friend class EngineCore;
 public:
 	ENGINEGRAPHICS_API ~WindowBuilder();
 
+	ENGINEGRAPHICS_API void setInputProcessor(std::unique_ptr<WindowInputProcessor>&& inputProcessor);
 
 	ENGINEGRAPHICS_API Window* build(); //Caller is responsible for returned ptr.
 	ENGINEGRAPHICS_API static void destroy(Window* window);
