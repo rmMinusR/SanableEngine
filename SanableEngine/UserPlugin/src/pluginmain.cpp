@@ -16,6 +16,7 @@
 #include "MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
+#include "GameWindowRenderPipeline.hpp"
 
 EngineCore* engine;
 
@@ -100,6 +101,8 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         obstacle->getTransform()->setPosition(Vector3<float>(225, 225, -15));
         obstacle->CreateComponent<RectangleCollider>(50, 50);
         obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
+
+        engine->buildWindow("Second window", 640, 480, nullptr).build();
     }
 
     return true;

@@ -11,6 +11,7 @@
 struct SDL_Window;
 struct SDL_Renderer;
 class WindowBuilder;
+struct GLSettings;
 
 class Window
 {
@@ -26,7 +27,7 @@ private:
 	friend class EngineCore;
 	void draw() const;
 
-	Window(const std::string& name, int width, int height, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
+	Window(const std::string& name, int width, int height, const GLSettings& glSettings, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 	friend class WindowBuilder;
 public:
 	ENGINEGRAPHICS_API ~Window();
@@ -37,4 +38,6 @@ public:
 
 	ENGINEGRAPHICS_API int getWidth() const;
 	ENGINEGRAPHICS_API int getHeight() const;
+
+	ENGINEGRAPHICS_API static void setActiveDrawTarget(const Window* w);
 };

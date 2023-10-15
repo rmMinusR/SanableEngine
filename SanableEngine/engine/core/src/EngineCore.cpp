@@ -81,7 +81,7 @@ EngineCore::~EngineCore()
     assert(!isAlive);
 }
 
-void EngineCore::init(WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
+void EngineCore::init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -104,8 +104,8 @@ void EngineCore::init(WindowBuilder& mainWindowBuilder, gpr460::System& _system,
     memoryManager.getSpecificPool<Camera>(true); //Same with Camera
     memoryManager.ensureFresh();
 
+    this->glSettings = glSettings;
     mainWindow = mainWindowBuilder.build();
-    windows.push_back(mainWindow);
     frame = 0;
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
@@ -233,5 +233,5 @@ Window* EngineCore::getMainWindow()
 
 WindowBuilder EngineCore::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
 {
-    return WindowBuilder(this, name, width, height, std::move(renderPipeline));
+    return WindowBuilder(this, name, width, height, glSettings, std::move(renderPipeline));
 }

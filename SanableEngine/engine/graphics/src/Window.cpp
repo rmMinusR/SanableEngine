@@ -5,26 +5,15 @@
 #include "GLContext.hpp"
 #include "WindowRenderPipeline.hpp"
 #include "EngineCore.hpp"
+#include "GLSettings.hpp"
 
-Window::Window(const std::string& name, int width, int height, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
+Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
     engine(engine),
     renderPipeline(std::move(renderPipeline))
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
-    //OpenGL setup: Specify v3.1 (latest with fixed-function pipeline)
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
-    //OpenGL setup: Use RGBA8 with 16-bit depth
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 16);
-
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1); //Instead of passing SDL_DOUBLEBUF to SDL_SetVideoMode
+    glSettings.apply();
 
     handle = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
     context = GLContext::create(handle, this);
@@ -66,12 +55,19 @@ int Window::getHeight() const
 void Window::draw() const
 {
     //Reset to default state
-    SDL_GL_MakeCurrent(handle, context);
+    setActiveDrawTarget(this);
     glViewport(0, 0, getWidth(), getHeight());
 
     //Delegate draw
-    renderPipeline->render();
+    if (renderPipeline) renderPipeline->render();
 
     //Swap back buffer
     SDL_GL_SwapWindow(handle);
+}
+
+void Window::setActiveDrawTarget(const Window* w)
+{
+    SDL_GL_MakeCurrent(w->handle, w->context);
+    assert(SDL_GL_GetCurrentWindow () == w->handle);
+    assert(SDL_GL_GetCurrentContext() == w->context);
 }

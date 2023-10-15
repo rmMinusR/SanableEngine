@@ -3,10 +3,11 @@
 #include "Window.hpp"
 #include "EngineCore.hpp"
 
-WindowBuilder::WindowBuilder(EngineCore* engine, const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
+WindowBuilder::WindowBuilder(EngineCore* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
 	engine(engine),
 	name(name),
 	size(width, height, 0),
+	glSettings(glSettings),
 	renderPipeline(std::move(renderPipeline))
 {
 }
@@ -17,7 +18,7 @@ WindowBuilder::~WindowBuilder()
 
 Window* WindowBuilder::build()
 {
-	Window* window = new Window(name, size.x, size.y, engine, std::move(renderPipeline));
+	Window* window = new Window(name, size.x, size.y, glSettings, engine, std::move(renderPipeline));
 	if (position.has_value()) window->move(position.value().x, position.value().y);
 	engine->windows.push_back(window);
 	return window;

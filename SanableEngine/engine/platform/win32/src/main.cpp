@@ -15,8 +15,9 @@ int main(int argc, char* argv[])
 
     //Init
     EngineCore engine;
+    GLSettings glSettings;
     WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&engine));
-    engine.init(mainWindow, system, nullptr);
+    engine.init(glSettings, mainWindow, system, nullptr);
 
     //Loop
     engine.doMainLoop();

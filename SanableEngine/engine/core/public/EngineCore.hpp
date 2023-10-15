@@ -43,6 +43,7 @@ private:
     CallBatcher<I3DRenderable> _3dRenderList;
     friend class GameObject;
 
+    GLSettings glSettings;
     std::vector<Window*> windows;
     friend class WindowBuilder;
     Window* mainWindow = nullptr;
@@ -65,7 +66,7 @@ public:
     ENGINECORE_API ~EngineCore();
 
     typedef void (*UserInitFunc)(EngineCore*);
-    ENGINECORE_API void init(WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
+    ENGINECORE_API void init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API GameObject* addGameObject();

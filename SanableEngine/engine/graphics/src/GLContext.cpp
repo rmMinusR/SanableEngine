@@ -8,7 +8,7 @@ bool GLContext::glewGood;
 
 SDL_GLContext GLContext::create(SDL_Window* window, void* who)
 {
-	SDL_GLContext ctx = SDL_GL_CreateContext(window); //Can return shared context if same settings are provided
+	SDL_GLContext ctx = SDL_GL_CreateContext(window);
 	handles[ctx]++; //Update refcount. No need to do special handling.
 
 	//Setup GLEW
