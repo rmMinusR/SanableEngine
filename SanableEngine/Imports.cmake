@@ -31,6 +31,10 @@ else()
     message(ERROR "-> Could not configure SDL2_image: Unknown platform")
 endif()
 
+# Configure stb_image
+message(" > Configuring stb_image")
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/stb_image")
+
 # Configure SDL2_ttf
 if (MSVC)
     message(" > Configuring SDL2_ttf for MSVC")
@@ -48,6 +52,36 @@ elseif(EMSCRIPTEN)
     add_link_options("-sUSE_SDL_TTF=2 --use-preload-plugins")
 else()
     message(ERROR "-> Could not configure SDL2_ttf: Unknown platform")
+endif()
+
+# Configure GLM
+message(" > Configuring GLM")
+set(glm_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/glm")
+set(glm_DIR "${glm_BASE_DIR}/cmake/glm")
+find_package(glm REQUIRED)
+
+# Configure OpenFBX
+message(" > Configuring OpenFBX")
+set(OpenFBX_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/OpenFBX")
+# This version of OpenFBX has a CMakeLists that incorrectly depends on miniz. Add target manually.
+add_library(OpenFBX STATIC "${OpenFBX_BASE_DIR}/src/ofbx.cpp" "${OpenFBX_BASE_DIR}/src/libdeflate.c")
+target_include_directories(OpenFBX PUBLIC "${OpenFBX_BASE_DIR}/src/")
+
+# Configure GLEW
+if(WIN32)
+    message(" > Configuring GLEW for Win32")
+    set(GLEW_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/glew")
+    # This version of GLEW has a broken configfile. Add target manually.
+    add_library(glew STATIC "${GLEW_DIR}/src/glew.c")
+    target_compile_definitions(glew PUBLIC GLEW_STATIC)
+    target_compile_definitions(glew PRIVATE GLEW_BUILD)
+    target_include_directories(glew PUBLIC "${GLEW_DIR}/include/")
+elseif(EMSCRIPTEN)
+    message(" > Configuring GLEW for Emscripten")
+    add_compile_options("-sUSE_GLEW=2 --use-preload-plugins")
+    add_link_options("-sUSE_GLEW=2 --use-preload-plugins")
+else()
+    message(ERROR "-> Could not configure GLEW: Unknown platform")
 endif()
 
 # Delegate doctest configuration

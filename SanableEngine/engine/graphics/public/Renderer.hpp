@@ -1,30 +1,40 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <unordered_map>
+#include <SDL_video.h>
+#include <glm/glm.hpp>
+#include <EngineCoreReflectionHooks.hpp>
 #include "dllapi.h"
+#include "Vector3.inl"
 
+class Application;
+class Window;
 class Font;
 class Texture;
-class Sprite;
+class Mesh;
+class Material;
+class ShaderProgram;
+class MeshRenderer;
 
 struct SDL_Color;
-struct SDL_Rect;
-struct SDL_Renderer;
 
 class Renderer
 {
+	SANABLE_REFLECTION_HOOKS
+
 private:
-	SDL_Renderer* handle;
+	Window* owner;
+	SDL_GLContext context;
 
 public:
 	ENGINEGRAPHICS_API Renderer();
-	ENGINEGRAPHICS_API Renderer(SDL_Renderer*);
+	ENGINEGRAPHICS_API Renderer(Window* owner, SDL_GLContext context);
 
-	ENGINEGRAPHICS_API void beginFrame();
-	ENGINEGRAPHICS_API void finishFrame();
-
-	ENGINEGRAPHICS_API void drawRect(const SDL_Rect& rect, const SDL_Color& color);
-	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, int x, int y, bool highQuality = false);
+	inline Window* getOwner() const { return owner; }
+	
+	ENGINEGRAPHICS_API void drawRect(Vector3f center, float w, float h, const SDL_Color& color);
+	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos, bool highQuality = false);
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y);
-	ENGINEGRAPHICS_API void drawSprite(const Sprite& sprite, int x, int y);
 };

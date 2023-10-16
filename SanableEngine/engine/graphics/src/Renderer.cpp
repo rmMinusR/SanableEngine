@@ -1,63 +1,73 @@
 #include "Renderer.hpp"
 
-#include <SDL_image.h>
 #include <SDL_render.h>
 #include <SDL_pixels.h>
+#include <GL/glew.h>
 
-#include <Font.hpp>
-#include <Texture.hpp>
-#include <Sprite.hpp>
+#include "application/Window.hpp"
+#include "Texture.hpp"
+#include "Camera.hpp"
+#include "ShaderProgram.hpp"
+#include "Material.hpp"
+#include "Mesh.hpp"
+#include "MeshRenderer.hpp"
 
 Renderer::Renderer() :
-	Renderer(nullptr)
+	owner(nullptr),
+	context(nullptr)
 {
 }
 
-Renderer::Renderer(SDL_Renderer* handle) :
-	handle(handle)
+Renderer::Renderer(Window* owner, SDL_GLContext context) :
+	owner(owner),
+	context(context)
 {
 }
 
-void Renderer::beginFrame()
+void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
 {
-	SDL_SetRenderDrawColor(handle, 0, 0, 0, SDL_ALPHA_OPAQUE);
-	SDL_RenderClear(handle);
+	ShaderProgram::clear();
+
+	glBegin(GL_QUADS);
+	glColor4f(color.r/255.0f, color.g/255.0f, color.b/255.0f, color.a/255.0f);
+	glVertex3f(center.x-w/2, center.y-h/2, center.z);
+	glVertex3f(center.x+w/2, center.y-h/2, center.z);
+	glVertex3f(center.x+w/2, center.y+h/2, center.z);
+	glVertex3f(center.x-w/2, center.y+h/2, center.z);
+	glEnd();
 }
 
-void Renderer::finishFrame()
+void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos, bool highQuality)
 {
-	SDL_RenderPresent(handle);
-}
-
-void Renderer::drawRect(const SDL_Rect& rect, const SDL_Color& color)
-{
-	SDL_SetRenderDrawColor(handle, color.r, color.g, color.b, color.a);
-	SDL_RenderFillRect(handle, &rect);
-}
-
-void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, int x, int y, bool highQuality)
-{
-	SDL_Surface* surf;
-	if (highQuality) surf = TTF_RenderUNICODE_Blended(font.handle, (uint16_t*)text.c_str(), color);
-	else             surf = TTF_RenderUNICODE_Solid  (font.handle, (uint16_t*)text.c_str(), color);
-
-	SDL_Texture* tex = SDL_CreateTextureFromSurface(handle, surf);
-
-	SDL_Rect dst = { x, y, surf->w, surf->h };
-	SDL_RenderCopy(handle, tex, nullptr, &dst);
-
-	SDL_DestroyTexture(tex);
-	SDL_FreeSurface(surf);
+	////Render on CPU
+	//SDL_Surface* surf;
+	//if (highQuality) surf = TTF_RenderUNICODE_Blended(font.handle, (uint16_t*)text.c_str(), color);
+	//else             surf = TTF_RenderUNICODE_Solid  (font.handle, (uint16_t*)text.c_str(), color);
+	//
+	////Render
+	//glPushMatrix();
+	//glTranslatef(x, y, 0);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, surf->pixels); //Draw using CPU.
+	//
+	//glPopMatrix();
+	//
+	////Cleanup. Note: Does OpenGL need us to keep this around?
+	//SDL_FreeSurface(surf);
 }
 
 void Renderer::drawTexture(const Texture& tex, int x, int y)
 {
-	SDL_Rect dst = { x, y, tex.handle->w, tex.handle->h };
-	SDL_RenderCopy(handle, tex.view, nullptr, &dst);
-}
+	ShaderProgram::clear();
 
-void Renderer::drawSprite(const Sprite& sprite, int x, int y)
-{
-	SDL_Rect dst = { x, y, sprite.bounds.w, sprite.bounds.h };
-	SDL_RenderCopy(handle, sprite.spritesheet->view, &sprite.bounds, &dst);
+	glBindTexture(GL_TEXTURE_2D, tex.id);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2i(0, 0); glVertex2i(x          , y           );
+	glTexCoord2i(1, 0); glVertex2i(x+tex.width, y           );
+	glTexCoord2i(1, 1); glVertex2i(x+tex.width, y+tex.height);
+	glTexCoord2i(0, 1); glVertex2i(x          , y+tex.height);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
 }

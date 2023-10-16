@@ -2,10 +2,11 @@
 
 #include <SDL.h>
 
-#include "EngineCore.hpp"
+#include "application/Application.hpp"
+#include "game/Game.hpp"
+#include "game/GameWindowRenderPipeline.hpp"
+#include "game/GameWindowInputProcessor.hpp"
 #include "System_Win32.hpp"
-
-void vendorInit(EngineCore* engine);
 
 int main(int argc, char* argv[])
 {
@@ -13,10 +14,16 @@ int main(int argc, char* argv[])
     const int HEIGHT = 480;
 
     gpr460::System_Win32 system;
+    Application engine;
+    Game game;
 
     //Init
-    EngineCore engine;
-    engine.init("SDL2 Test", WIDTH, HEIGHT, system, vendorInit);
+    {
+        GLSettings glSettings;
+        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&game));
+        mainWindow.setInputProcessor(std::make_unique<GameWindowInputProcessor>(&game));
+        engine.init(&game, glSettings, mainWindow, system, nullptr);
+    }
 
     //Loop
     engine.doMainLoop();
@@ -29,9 +36,4 @@ int main(int argc, char* argv[])
     system.DebugPause();
     
     return 0;
-}
-
-void vendorInit(EngineCore* engine)
-{
-    //Nothing to do here at the moment
 }

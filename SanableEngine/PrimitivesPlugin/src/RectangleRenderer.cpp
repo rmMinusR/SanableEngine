@@ -3,8 +3,8 @@
 #include <SDL_rect.h>
 #include <SDL_render.h>
 
-#include "EngineCore.hpp"
-#include "GameObject.hpp"
+#include "game/GameObject.hpp"
+#include "Renderer.hpp"
 
 RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
 	Component(),
@@ -18,16 +18,19 @@ RectangleRenderer::~RectangleRenderer()
 {
 }
 
-void RectangleRenderer::Render(Renderer* renderer)
+void RectangleRenderer::SetColor(SDL_Color newColor)
+{
+	color = newColor;
+}
+
+Material* RectangleRenderer::getMaterial() const
+{
+	return nullptr;
+}
+
+void RectangleRenderer::renderImmediate(Renderer* renderer) const
 {
 	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 
-	SDL_Rect r = {
-		(int) pos.getX(),
-		(int) pos.getY(),
-		(int) w,
-		(int) h
-	};
-
-	renderer->drawRect(r, color);
+	renderer->drawRect(pos, w, h, color);
 }

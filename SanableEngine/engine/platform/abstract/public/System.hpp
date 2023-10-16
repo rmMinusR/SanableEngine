@@ -3,7 +3,7 @@
 #include <vector>
 #include <filesystem>
 
-class EngineCore;
+class Application;
 class PluginManager;
 
 namespace gpr460
@@ -13,13 +13,13 @@ namespace gpr460
 	{
 	protected:
 		bool isAlive = false;
-		EngineCore* engine;
+		Application* engine;
 		float targetFps;
 		static constexpr float defaultTargetFps = 60;
 
 	public: //FIXME make protected again
-		friend class EngineCore;
-		virtual void Init(EngineCore*);
+		friend class Application;
+		virtual void Init(Application*);
 		virtual void DoMainLoop() = 0;
 		virtual void Shutdown() = 0;
 		

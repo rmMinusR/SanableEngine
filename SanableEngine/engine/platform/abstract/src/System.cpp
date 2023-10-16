@@ -1,6 +1,6 @@
 #include "System.hpp"
 
-void gpr460::System::Init(EngineCore* engine)
+void gpr460::System::Init(Application* engine)
 {
 	this->engine = engine;
 }

@@ -2,7 +2,7 @@
 
 #include "GlobalTypeRegistry.hpp"
 #include "MemberInfo.hpp"
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 
 #include "Inheritance.hpp"
 

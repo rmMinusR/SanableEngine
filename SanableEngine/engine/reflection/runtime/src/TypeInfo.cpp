@@ -128,12 +128,19 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 			if ((int)parent.visibility & (int)visibilityFlags)
 			{
 				const TypeInfo* parentType = parent.typeName.resolve();
-				assert(parentType); //Can't walk what isn't loaded
-				parentType->walkFields(
-					visitor,
-					visibilityFlags,
-					true
-				);
+				if (parentType)
+				{
+					//Can't walk what isn't loaded
+					parentType->walkFields(
+						visitor,
+						visibilityFlags,
+						true
+					);
+				}
+				else
+				{
+					printf("ERROR: %s (parent of %s) was not loaded. Cannot walk all fields.\n", parent.typeName.c_str(), name.c_str());
+				}
 			}
 		}
 	}

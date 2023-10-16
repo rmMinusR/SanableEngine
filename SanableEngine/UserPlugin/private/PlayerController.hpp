@@ -1,16 +1,21 @@
 #pragma once
 
-#include "Component.hpp"
+#include "StandardReflectionHooks.hpp"
+
+#include "game/Component.hpp"
 
 class PlayerController :
 	public Component,
 	public IUpdatable
 {
 private:
-	static constexpr float SPEED = 1;
+	SANABLE_REFLECTION_HOOKS
+
+	float moveSpeed;
 
 public:
 	PlayerController();
+	PlayerController(float moveSpeed);
 
 	void Update() override; //Should this take delta tiem?
 };

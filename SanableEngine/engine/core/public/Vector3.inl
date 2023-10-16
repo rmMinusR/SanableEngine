@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <glm/glm.hpp>
 
 ///
 /// Template class for three element vectors.
@@ -14,14 +15,17 @@ public:
     Vector3();
     Vector3(const TObj x, const TObj y, const TObj z);
     Vector3(const Vector3<TObj>& v);
+    Vector3(const glm::vec3& v);
 
     // utility operations
     Vector3<TObj>& zero();
     Vector3<TObj>& set(const TObj x, const TObj y, const TObj z);
-    Vector3<TObj>& normalize();
+    Vector3<TObj>& normalize(); //inline version
+    Vector3<TObj> normalized() const; //copying version
 
     // math operations
-    const TObj norm() const;
+    const TObj mgn() const;
+    const TObj mgnSq() const;
     const TObj sum() const;
     const TObj dot(const Vector3<TObj>&) const;
     const Vector3<TObj> cross(const Vector3<TObj>&) const;
@@ -29,6 +33,8 @@ public:
 
     // operators
     Vector3<TObj>& operator= (const Vector3<TObj>& v);        // assignment
+    Vector3<TObj>& operator= (const glm::vec3& v);            // assignment (conversion)
+    operator glm::vec3() const;                               // outbound conversion
 
     const TObj operator[] (const int i) const;             // indexing
     TObj& operator[] (const int i);                        // indexing
@@ -53,21 +59,20 @@ public:
 
     bool operator == (const Vector3<TObj>& v);             // test vector for equality
     bool operator != (const Vector3<TObj>& v);             // test vector for inequality
-
-    TObj* ptr(){return _v;}                                // return reference to array (use with caution)
-
-    //Getters and setters
-    inline float getX() const { return _v[0]; }
-	inline float getY() const { return _v[1]; }
-	inline float getZ() const { return _v[2]; }
-	inline void setX(float s) { _v[0] = s; }
-    inline void setY(float s) { _v[1] = s; }
-    inline void setZ(float s) { _v[2] = s; }
-
-private:
-    TObj _v[3];
+    
+    union
+    {
+        TObj _v[3];
+        struct
+        {
+            TObj x;
+            TObj y;
+            TObj z;
+        };
+    };
 };
 
+typedef Vector3<float> Vector3f;
 
 //
 // Binary operations
@@ -106,6 +111,13 @@ Vector3<TObj>::Vector3(const Vector3<TObj>& v)
     _v[2] = v[2];
 }
 
+template<class TObj>
+Vector3<TObj>::Vector3(const glm::vec3& v)
+{
+    _v[0] = v[0];
+    _v[1] = v[1];
+    _v[2] = v[2];
+}
 
 template <class TObj>
 Vector3<TObj>::Vector3(const TObj x, const TObj y, const TObj z)
@@ -183,16 +195,22 @@ inline const Vector3<TObj> Vector3<TObj>::cross(const Vector3<TObj>& v) const
 
 
 template <class TObj>
-inline const TObj Vector3<TObj>::norm() const
+inline const TObj Vector3<TObj>::mgnSq() const
 {
-    return (TObj) sqrt(dot(*this)); // cast to type
+    return dot(*this);
+}
+
+template<class TObj>
+inline const TObj Vector3<TObj>::mgn() const
+{
+    return (TObj) sqrt(mgnSq());
 }
 
 
 template <class TObj>
 Vector3<TObj>& Vector3<TObj>::normalize()
 {
-    TObj n = norm();
+    TObj n = mgn();
     if(n){
       _v[0]/=n;
       _v[1]/=n;
@@ -201,6 +219,13 @@ Vector3<TObj>& Vector3<TObj>::normalize()
     return *this;
 }
 
+template<class TObj>
+Vector3<TObj> Vector3<TObj>::normalized() const
+{
+    Vector3<TObj> cpy = *this;
+    cpy.normalize();
+    return cpy;
+}
 
 template <class TObj>
 Vector3<TObj>& Vector3<TObj>::operator= (const Vector3<TObj>& v)
@@ -211,6 +236,24 @@ Vector3<TObj>& Vector3<TObj>::operator= (const Vector3<TObj>& v)
     return *this;
 }
 
+template <class TObj>
+Vector3<TObj>& Vector3<TObj>::operator= (const glm::vec3& v)
+{
+    _v[0] = v[0];
+    _v[1] = v[1];
+    _v[2] = v[2];
+    return *this;
+}
+
+template<class TObj>
+Vector3<TObj>::operator glm::vec3() const
+{
+    glm::vec3 v;
+    v[0] = _v[0];
+    v[1] = _v[1];
+    v[2] = _v[2];
+    return v;
+}
 
 template <class TObj>
 Vector3<TObj>& Vector3<TObj>::operator += (const Vector3<TObj>& v)
@@ -414,3 +457,20 @@ inline const Vector3<TObj> operator ^ (const Vector3<TObj>& v1, const Vector3<TO
 {
     return v1.cross(v2);
 }
+
+
+template<typename T>
+struct Vector3_consts
+{
+    static const Vector3<T> zero;
+    static const Vector3<T> one;
+    static const Vector3<T> X;
+    static const Vector3<T> Y;
+    static const Vector3<T> Z;
+};
+
+template<typename T> const Vector3<T> Vector3_consts<T>::zero { 0, 0, 0 };
+template<typename T> const Vector3<T> Vector3_consts<T>::one  { 1, 1, 1 };
+template<typename T> const Vector3<T> Vector3_consts<T>::X { 1, 0, 0 };
+template<typename T> const Vector3<T> Vector3_consts<T>::Y { 0, 1, 0 };
+template<typename T> const Vector3<T> Vector3_consts<T>::Z { 0, 0, 1 };

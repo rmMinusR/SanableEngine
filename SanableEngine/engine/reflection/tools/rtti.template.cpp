@@ -1,5 +1,5 @@
 //Common includes
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 #include "TypeBuilder.hpp"
 
 //Dependency includes
