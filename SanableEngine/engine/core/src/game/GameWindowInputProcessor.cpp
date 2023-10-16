@@ -1,7 +1,7 @@
-#include "GameWindowInputProcessor.hpp"
+#include "game/GameWindowInputProcessor.hpp"
 
-#include "Window.hpp"
-#include "Application.hpp"
+#include "application/Application.hpp"
+#include "game/Game.hpp"
 
 GameWindowInputProcessor::GameWindowInputProcessor()
 {
@@ -13,5 +13,5 @@ GameWindowInputProcessor::~GameWindowInputProcessor()
 
 void GameWindowInputProcessor::handleEvent(SDL_Event& ev)
 {
-	window->getEngine()->getGameInput()->handleEvent(ev);
+	//window->getEngine()->getInput()->handleEvent(ev);
 }

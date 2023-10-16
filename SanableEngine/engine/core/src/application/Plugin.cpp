@@ -1,6 +1,6 @@
-#include "Plugin.hpp"
+#include "application/Plugin.hpp"
 
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 #include "GlobalTypeRegistry.hpp"
 
 #if __EMSCRIPTEN__

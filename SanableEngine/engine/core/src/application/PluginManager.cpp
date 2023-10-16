@@ -1,14 +1,15 @@
-#include "PluginManager.hpp"
+#include "application/PluginManager.hpp"
 
 #include <iostream>
 #include <sstream>
 #include <cassert>
 #include <filesystem>
 
-#include "PluginCore.hpp"
-#include "Application.hpp"
+#include "application/PluginCore.hpp"
+#include "application/Application.hpp"
 #include "System.hpp"
-#include "GameObject.hpp"
+#include "game/Game.hpp"
+#include "game/GameObject.hpp"
 
 PluginManager::PluginManager(Application* engine) :
 	engine(engine)
@@ -87,7 +88,7 @@ void PluginManager::reloadAll()
 
     std::cout << "Removing plugin hooks...\n";
     unhookAll(false);
-    engine->applyConcurrencyBuffers();
+    engine->getGame()->applyConcurrencyBuffers();
 
     std::cout << "Unloading plugin code...\n";
 	for (Plugin* p : plugins) p->unloadDLL();
@@ -104,7 +105,7 @@ void PluginManager::reloadAll()
     hookAll(false);
     
     std::cout << "Refreshing pointers... (call batchers)\n";
-    engine->refreshCallBatchers();
+	engine->getGame()->refreshCallBatchers();
 
     std::cout << "Hot Reload Complete\n";
 }

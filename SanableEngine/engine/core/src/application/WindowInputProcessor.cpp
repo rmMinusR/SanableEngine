@@ -1,4 +1,4 @@
-#include "WindowInputProcessor.hpp"
+#include "application/WindowInputProcessor.hpp"
 
 WindowInputProcessor::WindowInputProcessor() :
 	window(nullptr)

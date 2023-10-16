@@ -1,4 +1,4 @@
-#include "WindowRenderPipeline.hpp"
+#include "application/WindowRenderPipeline.hpp"
 
 WindowRenderPipeline::WindowRenderPipeline() :
 	window(nullptr)

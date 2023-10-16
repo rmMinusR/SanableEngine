@@ -1,8 +1,9 @@
-#include "GameWindowRenderPipeline.hpp"
+#include "game/GameWindowRenderPipeline.hpp"
 
 #include <unordered_map>
 #include <GL/glew.h>
-#include "Window.hpp"
+#include "game/Game.hpp"
+#include "application/Window.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "ShaderProgram.hpp"

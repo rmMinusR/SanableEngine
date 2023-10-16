@@ -1,9 +1,9 @@
-#include "Component.hpp"
+#include "game/Component.hpp"
 
 #include <cassert>
 
-#include "GameObject.hpp"
-#include "Application.hpp"
+#include "application/Application.hpp"
+#include "game/GameObject.hpp"
 
 void Component::BindToGameObject(GameObject* obj)
 {

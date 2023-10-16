@@ -22,7 +22,7 @@ protected:
 	ENGINECORE_API virtual void BindToGameObject(GameObject* obj);
 	friend class GameObject;
 
-	ENGINECORE_API inline Application* getEngine() const { return gameObject->engine; }
+	ENGINECORE_API inline Game* getEngine() const { return gameObject->engine; }
 
 public:
 	ENGINECORE_API Component();
@@ -35,13 +35,13 @@ public:
 
 //Interfaces
 
-class Application;
+class Game;
 
 class IUpdatable
 {
 protected:
 	virtual void Update() = 0;
-	friend class Application;
+	friend class Game;
 };
 
 class Material;

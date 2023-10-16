@@ -1,13 +1,16 @@
-#include "Window.hpp"
+#include "application/Window.hpp"
 
 #include <SDL.h>
 #include <GL/glew.h>
 #include "GLContext.hpp"
-#include "WindowRenderPipeline.hpp"
-#include "Application.hpp"
+#include "application/WindowRenderPipeline.hpp"
+#include "application/Application.hpp"
 #include "GLSettings.hpp"
 
-Window::Window()
+Window::Window() :
+    handle(nullptr),
+    context(nullptr),
+    engine(nullptr)
 {
     //Reflection hooks compat
 }
@@ -31,12 +34,18 @@ Window::Window(const std::string& name, int width, int height, const GLSettings&
 
 Window::~Window()
 {
-    GLContext::release(context, this);
+    if (context)
+    {
+        GLContext::release(context, this);
+        context = nullptr;
+    }
 
-    SDL_DestroyWindow(handle);
-    handle = nullptr;
-
-    SDL_QuitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
+    if (handle)
+    {
+        SDL_DestroyWindow(handle);
+        handle = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
+    }
 }
 
 void Window::move(int x, int y)

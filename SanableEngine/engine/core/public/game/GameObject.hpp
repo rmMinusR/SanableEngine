@@ -12,7 +12,7 @@
 
 class ModuleTypeRegistry;
 class Component;
-class Application;
+class Game;
 struct HotswapTypeData;
 
 class GameObject
@@ -23,19 +23,19 @@ protected:
     Transform transform;
 
     std::vector<Component*> components;
-    friend class Application;
+    friend class Game;
     friend class Component;
 
-    Application* const engine;
+    Game* const engine;
 
     void BindComponent(Component* c);
     void InvokeStart();
 
 public:
-    GameObject(Application* engine);
+    GameObject(Game* engine);
     ~GameObject();
 
-    inline Application* getContext() { return engine; }
+    inline Game* getContext() { return engine; }
 
     inline Transform* getTransform() { return &transform; }
 
@@ -44,8 +44,8 @@ public:
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = engine->getMemoryManager()->create<T>(ctorArgs...);
-        engine->getGame()->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
+        component = engine->getApplication()->getMemoryManager()->create<T>(ctorArgs...);
+        engine->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }
 

@@ -1,15 +1,40 @@
-#include "Game.hpp"
+#include "game/Game.hpp"
 
-#include "InputSystem.hpp"
+#include <cassert>
+
+#include "game/GameObject.hpp"
+#include "game/Component.hpp"
+#include "game/InputSystem.hpp"
 
 Game::Game() :
-    inputSystem(nullptr)
+    application(nullptr),
+    inputSystem(nullptr),
+    isAlive(false)
 {
-    delete inputSystem;
 }
 
 Game::~Game()
 {
+    assert(!isAlive);
+}
+
+void Game::init(Application* application)
+{
+    assert(!isAlive);
+    isAlive = true;
+
+    this->application = application;
+    frame = 0;
+}
+
+void Game::cleanup()
+{
+    assert(isAlive);
+    isAlive = false;
+
+    applyConcurrencyBuffers();
+    for (GameObject* o : objects) destroy(o);
+    applyConcurrencyBuffers();
 }
 
 void Game::applyConcurrencyBuffers()
@@ -52,7 +77,7 @@ void Game::refreshCallBatchers()
 
 GameObject* Game::addGameObject()
 {
-    GameObject* o = memoryManager.create<GameObject>(this);
+    GameObject* o = application->getMemoryManager()->create<GameObject>(this);
     objectAddBuffer.push_back(o);
     return o;
 }
@@ -66,7 +91,7 @@ void Game::destroyImmediate(GameObject* go)
 {
     assert(std::find(objects.cbegin(), objects.cend(), go) != objects.cend());
     objects.erase(std::find(objects.begin(), objects.end(), go));
-    memoryManager.destroy(go);
+    application->getMemoryManager()->destroy(go);
 }
 
 void Game::destroyImmediate(Component* c)
@@ -76,7 +101,7 @@ void Game::destroyImmediate(Component* c)
     auto it = std::find(l.cbegin(), l.cend(), c);
     assert(it != l.cend());
     l.erase(it);
-    memoryManager.destroy(c);
+    application->getMemoryManager()->destroy(c);
 }
 
 void Game::tick()
@@ -85,21 +110,12 @@ void Game::tick()
 
     frame++;
 
-    processEvents();
-
     applyConcurrencyBuffers();
 
     updateList.memberCall(&IUpdatable::Update);
 }
 
-void Game::draw()
-{
-    assert(isAlive);
-
-    for (Window* w : windows) w->draw();
-}
-
-InputSystem* Game::getGameInput()
+InputSystem* Game::getInput()
 {
     return inputSystem;
 }

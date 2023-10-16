@@ -1,4 +1,4 @@
-#include "Application.hpp"
+#include "application/Application.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -7,7 +7,9 @@
 
 #include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include "Window.hpp"
+#include "application/Window.hpp"
+#include "game/Game.hpp"
+#include "Camera.hpp"
 
 void Application::processEvents()
 {
@@ -65,7 +67,7 @@ Application::~Application()
     assert(!isAlive);
 }
 
-void Application::init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
+void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -88,9 +90,11 @@ void Application::init(const GLSettings& glSettings, WindowBuilder& mainWindowBu
     memoryManager.getSpecificPool<Camera>(true); //Same with Camera
     memoryManager.ensureFresh();
 
+    this->game = game;
+    game->init(this);
+
     this->glSettings = glSettings;
     mainWindow = mainWindowBuilder.build();
-    frame = 0;
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
 
@@ -104,12 +108,11 @@ void Application::shutdown()
 
     pluginManager.unhookAll(true);
     pluginManager.unloadAll();
-    applyConcurrencyBuffers();
 
-    for (GameObject* o : objects) destroy(o);
-    applyConcurrencyBuffers();
+    game->cleanup();
 
-    WindowBuilder::destroy(mainWindow);
+    for (Window* w : windows) WindowBuilder::destroy(w);
+    windows.clear();
     mainWindow = nullptr;
     
     //Clean up memory, GameObject pool first so components are released
@@ -132,8 +135,15 @@ void Application::frameStep(void* arg)
     Application* engine = (Application*)arg;
 
     engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
-    engine->tick();
-    engine->draw();
+
+    engine->processEvents();
+    engine->game->tick();
+    for (Window* w : engine->windows) w->draw();
+}
+
+Game* Application::getGame() const
+{
+    return game;
 }
 
 gpr460::System* Application::getSystem()

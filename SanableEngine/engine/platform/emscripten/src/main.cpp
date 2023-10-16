@@ -12,12 +12,15 @@ int main(int argc, char* argv[])
     const int HEIGHT = 480;
 
     gpr460::System_Emscripten system;
+    Application engine;
+    Game game;
 
     //Init
-    Application engine;
-    GLSettings glSettings;
-    WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(engine.getGame()));
-    engine.init(glSettings, mainWindow, system, nullptr);
+    {
+        GLSettings glSettings;
+        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&game));
+        engine.init(&game, glSettings, mainWindow, system, nullptr);
+    }
 
     //Loop
     engine.doMainLoop();

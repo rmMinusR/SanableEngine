@@ -1,7 +1,7 @@
-#include "WindowBuilder.hpp"
+#include "application/WindowBuilder.hpp"
 
-#include "Window.hpp"
-#include "Application.hpp"
+#include "application/Window.hpp"
+#include "application/Application.hpp"
 
 void WindowBuilder::setInputProcessor(std::unique_ptr<WindowInputProcessor>&& inputProcessor)
 {

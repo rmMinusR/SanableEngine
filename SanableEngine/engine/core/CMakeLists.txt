@@ -5,6 +5,9 @@ project("engine-core")
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_core_sources)
+aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src/application" engine_core_application_sources)
+aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src/game" engine_core_game_sources)
+list(APPEND engine_core_sources ${engine_core_application_sources} ${engine_core_game_sources})
 declare_dll("engine-core" "" engine_core_sources)
 target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 

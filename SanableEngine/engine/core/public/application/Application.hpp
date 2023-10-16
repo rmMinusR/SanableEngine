@@ -19,6 +19,8 @@ class Application
     SANABLE_REFLECTION_HOOKS
 
 private:
+    Game* game;
+
     bool isAlive;
     gpr460::System* system;
     MemoryManager memoryManager;
@@ -36,22 +38,21 @@ private:
 
 public:
     bool quit = false;
-    int frame = 0;
 
     ENGINECORE_API Application();
     ENGINECORE_API ~Application();
 
     typedef void (*UserInitFunc)(Application*);
-    ENGINECORE_API void init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
+    ENGINECORE_API void init(Game* game, const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API void doMainLoop();
     ENGINECORE_API static void frameStep(void* arg);
 
+    ENGINECORE_API Game* getGame() const;
     ENGINECORE_API gpr460::System* getSystem();
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
-    ENGINECORE_API Game* getGame() const;
 
     ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 };

@@ -1,10 +1,11 @@
-#include "GameObject.hpp"
+#include "game/GameObject.hpp"
 
 #include <utility>
 #include <cassert>
 
-#include "Application.hpp"
-#include "Component.hpp"
+#include "application/Application.hpp"
+#include "game/Game.hpp"
+#include "game/Component.hpp"
 
 void GameObject::BindComponent(Component* c)
 {
@@ -28,7 +29,7 @@ void GameObject::InvokeStart()
 	for (Component* c : components) c->onStart();
 }
 
-GameObject::GameObject(Application* engine) :
+GameObject::GameObject(Game* engine) :
 	engine(engine)
 {
 }
@@ -37,7 +38,7 @@ GameObject::~GameObject()
 {
 	if (components.size() != 0)
 	{
-		for (Component* c : components) engine->getMemoryManager()->destroy(c);
+		for (Component* c : components) engine->getApplication()->getMemoryManager()->destroy(c);
 		components.clear();
 	}
 }
