@@ -38,6 +38,9 @@ void Application::processEvents()
         //Foward events to appropriate windows
         switch (event.type)
         {
+        case SDL_WINDOWEVENT:
+            forwardToWindow(SDL_GetWindowFromID(event.window.windowID));
+            break;
 
         case SDL_KEYDOWN:
         case SDL_KEYUP:

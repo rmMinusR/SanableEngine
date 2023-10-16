@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "application/Application.hpp"
 #include "game/GameWindowRenderPipeline.hpp"
+#include "game/GameWindowInputProcessor.hpp"
 #include "System_Emscripten.hpp"
 
 int main(int argc, char* argv[])
@@ -19,6 +20,7 @@ int main(int argc, char* argv[])
     {
         GLSettings glSettings;
         WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&game));
+        mainWindow.setInputProcessor(std::make_unique<GameWindowInputProcessor>(&game));
         engine.init(&game, glSettings, mainWindow, system, nullptr);
     }
 

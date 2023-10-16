@@ -1,6 +1,7 @@
 #include "ManualObjectRotator.hpp"
 
-#include <SDL_keyboard.h>
+#include "game/Game.hpp"
+#include "game/InputSystem.hpp"
 
 ManualObjectRotator::ManualObjectRotator() :
 	ManualObjectRotator(0.02f)
@@ -16,20 +17,19 @@ void ManualObjectRotator::Update()
 {
 	Vector3<float> axis;
 	
-	int sz;
-	Uint8 const* keys = SDL_GetKeyboardState(&sz); //Managed by SDL, do not free
-	
+	InputSystem* input = getGameObject()->getContext()->getInput();
+
 	//Calc input
-	if (keys[SDL_SCANCODE_I]) axis += Vector3<float>(-1, 0, 0);
-	if (keys[SDL_SCANCODE_K]) axis += Vector3<float>( 1, 0, 0);
-	if (keys[SDL_SCANCODE_J]) axis += Vector3<float>(0, -1, 0);
-	if (keys[SDL_SCANCODE_L]) axis += Vector3<float>(0,  1, 0);
-	if (keys[SDL_SCANCODE_U]) axis += Vector3<float>(0, 0, -1);
-	if (keys[SDL_SCANCODE_O]) axis += Vector3<float>(0, 0,  1);
+	if (input->getKey(SDL_SCANCODE_I)) axis += Vector3<float>(-1, 0, 0);
+	if (input->getKey(SDL_SCANCODE_K)) axis += Vector3<float>( 1, 0, 0);
+	if (input->getKey(SDL_SCANCODE_J)) axis += Vector3<float>(0, -1, 0);
+	if (input->getKey(SDL_SCANCODE_L)) axis += Vector3<float>(0,  1, 0);
+	if (input->getKey(SDL_SCANCODE_U)) axis += Vector3<float>(0, 0, -1);
+	if (input->getKey(SDL_SCANCODE_O)) axis += Vector3<float>(0, 0,  1);
 
 	//Fast mode
-	if (keys[SDL_SCANCODE_RSHIFT]) axis *= 20;
-
+	if (input->getKey(SDL_SCANCODE_RSHIFT)) axis *= 20;
+	
 	//Apply
 	if (axis.mgnSq() > 0)
 	{

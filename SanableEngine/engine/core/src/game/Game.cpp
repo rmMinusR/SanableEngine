@@ -25,6 +25,8 @@ void Game::init(Application* application)
 
     this->application = application;
     frame = 0;
+
+    this->inputSystem = new InputSystem();
 }
 
 void Game::cleanup()
@@ -35,6 +37,8 @@ void Game::cleanup()
     applyConcurrencyBuffers();
     for (GameObject* o : objects) destroy(o);
     applyConcurrencyBuffers();
+
+    delete inputSystem;
 }
 
 void Game::applyConcurrencyBuffers()
@@ -111,7 +115,7 @@ void Game::tick()
     frame++;
 
     applyConcurrencyBuffers();
-
+    inputSystem->onTick();
     updateList.memberCall(&IUpdatable::Update);
 }
 
