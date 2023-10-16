@@ -1,18 +1,18 @@
 #pragma once
 
-#include "dllapi.h"
+#include "../dllapi.h"
 
 #include <vector>
 #include <cassert>
 #include <EngineCoreReflectionHooks.hpp>
 
-#include "Transform.hpp"
 #include "MemoryManager.hpp"
-#include "EngineCore.hpp"
+#include "application/Application.hpp"
+#include "Transform.hpp"
 
 class ModuleTypeRegistry;
 class Component;
-class EngineCore;
+class Application;
 struct HotswapTypeData;
 
 class GameObject
@@ -23,19 +23,19 @@ protected:
     Transform transform;
 
     std::vector<Component*> components;
-    friend class EngineCore;
+    friend class Application;
     friend class Component;
 
-    EngineCore* const engine;
+    Application* const engine;
 
     void BindComponent(Component* c);
     void InvokeStart();
 
 public:
-    GameObject(EngineCore* engine);
+    GameObject(Application* engine);
     ~GameObject();
 
-    inline EngineCore* getContext() { return engine; }
+    inline Application* getContext() { return engine; }
 
     inline Transform* getTransform() { return &transform; }
 
@@ -45,7 +45,7 @@ public:
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
         component = engine->getMemoryManager()->create<T>(ctorArgs...);
-        engine->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
+        engine->getGame()->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }
 

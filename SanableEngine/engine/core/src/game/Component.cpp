@@ -3,7 +3,7 @@
 #include <cassert>
 
 #include "GameObject.hpp"
-#include "EngineCore.hpp"
+#include "Application.hpp"
 
 void Component::BindToGameObject(GameObject* obj)
 {

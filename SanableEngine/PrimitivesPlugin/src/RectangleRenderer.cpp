@@ -3,8 +3,7 @@
 #include <SDL_rect.h>
 #include <SDL_render.h>
 
-#include "EngineCore.hpp"
-#include "GameObject.hpp"
+#include "game/GameObject.hpp"
 #include "Renderer.hpp"
 
 RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :

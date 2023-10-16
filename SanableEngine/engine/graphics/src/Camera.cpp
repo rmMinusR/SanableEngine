@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Renderer.hpp"
-#include "Window.hpp"
+#include "application/Window.hpp"
 
 
 Camera* Camera::main = nullptr;

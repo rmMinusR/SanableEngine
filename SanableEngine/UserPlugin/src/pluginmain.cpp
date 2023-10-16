@@ -1,10 +1,11 @@
 #include <iostream>
 
-#include "PluginCore.hpp"
-#include "Plugin.hpp"
+#include "application/PluginCore.hpp"
+#include "application/Plugin.hpp"
 
 #include <SDL.h>
-#include "GameObject.hpp"
+#include "game/Game.hpp"
+#include "game/GameObject.hpp"
 #include "RectangleRenderer.hpp"
 #include "RectangleCollider.hpp"
 #include "ColliderColorChanger.hpp"
@@ -16,14 +17,14 @@
 #include "MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
-#include "GameWindowRenderPipeline.hpp"
+#include "game/GameWindowRenderPipeline.hpp"
 
-EngineCore* engine;
+Application* application;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
+PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, Application* application)
 {
     std::cout << "UserPlugin: plugin_preInit() called" << std::endl;
-    ::engine = engine;
+    ::application = application;
 
     report->name = "UserPlugin";
 
@@ -45,7 +46,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
     if (firstRun) {
-        camera = engine->addGameObject();
+        camera = application->getGame()->addGameObject();
         Camera* cc = camera->CreateComponent<Camera>();
         cc->zFar = 100;
         //cc->setGUIProj();
@@ -67,7 +68,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
 
         for (Vector3f pos(-0.5f, -0.5f, -0.4f); pos.y < 0.5f; pos.y += 0.2f) for (pos.x = -0.5f; pos.x < 0.5f; pos.x += 0.2f)
         {
-            GameObject* o = engine->addGameObject();
+            GameObject* o = application->getGame()->addGameObject();
             o->getTransform()->setPosition(pos);
             o->CreateComponent<MeshRenderer>(mesh, material);
 
@@ -86,23 +87,23 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         //    o->CreateComponent<ManualObjectRotator>();
         //}
 
-        player = engine->addGameObject();
+        player = application->getGame()->addGameObject();
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));
         //player->CreateComponent<PlayerController>(1);
         player->CreateComponent<RectangleCollider>(10, 10);
         player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
         player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
 
-        staticObj = engine->addGameObject();
+        staticObj = application->getGame()->addGameObject();
         staticObj->getTransform()->setPosition(Vector3<float>(350, 210, -20));
         staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
 
-        obstacle = engine->addGameObject();
+        obstacle = application->getGame()->addGameObject();
         obstacle->getTransform()->setPosition(Vector3<float>(225, 225, -15));
         obstacle->CreateComponent<RectangleCollider>(50, 50);
         obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
 
-        engine->buildWindow("Second window", 640, 480, nullptr).build();
+        application->buildWindow("Second window", 640, 480, nullptr).build();
     }
 
     return true;
@@ -114,14 +115,14 @@ PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        engine->destroy(camera);
-        engine->destroy(player);
-        engine->destroy(obstacle);
-        engine->destroy(staticObj);
+        application->getGame()->destroy(camera);
+        application->getGame()->destroy(player);
+        application->getGame()->destroy(obstacle);
+        application->getGame()->destroy(staticObj);
 
         delete mesh;
 
-        engine->getMemoryManager()->destroyPool<PlayerController>();
-        engine->getMemoryManager()->destroyPool<ColliderColorChanger>();
+        application->getMemoryManager()->destroyPool<PlayerController>();
+        application->getMemoryManager()->destroyPool<ColliderColorChanger>();
     }
 }

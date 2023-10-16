@@ -5,7 +5,7 @@
 #include "StandardReflectionHooks.hpp"
 #include <vector>
 
-#include "Component.hpp"
+#include "game/Component.hpp"
 
 class RectangleCollider : public Component
 {

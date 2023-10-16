@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dllapi.h"
+#include "../dllapi.h"
 
 #include <vector>
 #include <EngineCoreReflectionHooks.hpp>
@@ -8,14 +8,14 @@
 #include "Plugin.hpp"
 
 class ModuleTypeRegistry;
-class EngineCore;
+class Application;
 
 class PluginManager
 {
 	SANABLE_REFLECTION_HOOKS
 
 private:
-	EngineCore* const engine;
+	Application* const engine;
 	std::vector<Plugin*> plugins;
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder);
@@ -26,10 +26,10 @@ private:
 
 	void reloadAll();
 
-	PluginManager(EngineCore* engine);
+	PluginManager(Application* engine);
 	~PluginManager();
 
-	friend class EngineCore;
+	friend class Application;
 
 public:
 	//Plugin const* getPlugin(const std::wstring& name);

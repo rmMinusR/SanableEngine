@@ -1,7 +1,7 @@
 #include "doctest.h"
 
 #include "GlobalTypeRegistry.hpp"
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 
 #include "MultiInheritance.hpp"
 

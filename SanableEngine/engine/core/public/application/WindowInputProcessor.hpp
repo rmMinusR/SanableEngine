@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dllapi.h"
+#include "../dllapi.h"
 
 #include <SDL_events.h>
 

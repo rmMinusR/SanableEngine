@@ -1,9 +1,9 @@
 #include "ColliderColorChanger.hpp"
 
-#include "GameObject.hpp"
+#include "application/Application.hpp"
+#include "game/GameObject.hpp"
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
-#include "EngineCore.hpp"
 
 void ColliderColorChanger::BindToGameObject(GameObject* obj)
 {

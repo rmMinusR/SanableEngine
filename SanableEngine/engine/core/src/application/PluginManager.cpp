@@ -6,11 +6,11 @@
 #include <filesystem>
 
 #include "PluginCore.hpp"
-#include "EngineCore.hpp"
+#include "Application.hpp"
 #include "System.hpp"
 #include "GameObject.hpp"
 
-PluginManager::PluginManager(EngineCore* engine) :
+PluginManager::PluginManager(Application* engine) :
 	engine(engine)
 {
 }

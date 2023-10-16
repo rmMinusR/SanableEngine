@@ -2,7 +2,7 @@
 
 #include "StandardReflectionHooks.hpp"
 
-#include "Component.hpp"
+#include "game/Component.hpp"
 
 class PlayerController :
 	public Component,

@@ -1,14 +1,14 @@
 #include "WindowBuilder.hpp"
 
 #include "Window.hpp"
-#include "EngineCore.hpp"
+#include "Application.hpp"
 
 void WindowBuilder::setInputProcessor(std::unique_ptr<WindowInputProcessor>&& inputProcessor)
 {
 	this->inputProcessor = std::move(inputProcessor);
 }
 
-WindowBuilder::WindowBuilder(EngineCore* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
+WindowBuilder::WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
 	engine(engine),
 	name(name),
 	size(width, height, 0),

@@ -11,7 +11,7 @@
 #include <chrono>
 #include <thread>
 
-#include "EngineCore.hpp"
+#include "application/Application.hpp"
 
 gpr460::System_Win32::System_Win32()
 {
@@ -27,7 +27,7 @@ gpr460::System_Win32::~System_Win32()
 	assert(!isAlive);
 }
 
-void gpr460::System_Win32::Init(EngineCore* engine)
+void gpr460::System_Win32::Init(Application* engine)
 {
 	System::Init(engine);
 

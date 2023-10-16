@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dllapi.h"
+#include "../dllapi.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -22,7 +22,7 @@ typedef void* LibHandle;
 #include <EngineCoreReflectionHooks.hpp>
 
 class ModuleTypeRegistry;
-class EngineCore;
+class Application;
 class PluginManager;
 struct PluginReportedData;
 
@@ -61,7 +61,7 @@ private:
 	bool _dllGood() const;
 
 	bool loadDLL();
-	bool preInit(EngineCore* engine);
+	bool preInit(Application* engine);
 	void tryRegisterTypes();
 	bool init(bool firstRun);
 	bool cleanup(bool shutdown);

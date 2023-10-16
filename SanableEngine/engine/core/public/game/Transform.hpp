@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "dllapi.h"
+#include "../dllapi.h"
 
 #include <glm/gtc/quaternion.hpp>
 #include <EngineCoreReflectionHooks.hpp>

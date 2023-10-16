@@ -4,8 +4,8 @@
 #include <SDL_pixels.h>
 #include <GL/glew.h>
 
+#include "application/Window.hpp"
 #include "Texture.hpp"
-#include "Window.hpp"
 #include "Camera.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"

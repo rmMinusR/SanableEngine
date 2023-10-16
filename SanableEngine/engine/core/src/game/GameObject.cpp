@@ -3,7 +3,7 @@
 #include <utility>
 #include <cassert>
 
-#include "EngineCore.hpp"
+#include "Application.hpp"
 #include "Component.hpp"
 
 void GameObject::BindComponent(Component* c)
@@ -28,7 +28,7 @@ void GameObject::InvokeStart()
 	for (Component* c : components) c->onStart();
 }
 
-GameObject::GameObject(EngineCore* engine) :
+GameObject::GameObject(Application* engine) :
 	engine(engine)
 {
 }

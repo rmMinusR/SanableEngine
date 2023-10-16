@@ -11,8 +11,8 @@ GameWindowRenderPipeline::GameWindowRenderPipeline()
 {
 }
 
-GameWindowRenderPipeline::GameWindowRenderPipeline(EngineCore* engine) :
-	engine(engine)
+GameWindowRenderPipeline::GameWindowRenderPipeline(Game* game) :
+	game(game)
 {
 }
 
@@ -43,7 +43,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			std::vector<const I3DRenderable*>
 		>
 	> renderables;
-	engine->get3DRenderables()->staticCall([&](I3DRenderable* r)
+	game->get3DRenderables()->staticCall([&](I3DRenderable* r)
 	{
 		Material* material = r->getMaterial();
 		const ShaderProgram* shader = material ? material->getShader() : nullptr;

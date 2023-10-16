@@ -4,13 +4,13 @@
 #include <optional>
 #include <string>
 #include <EngineCoreReflectionHooks.hpp>
-#include "dllapi.h"
+#include "../dllapi.h"
 #include "Vector3.inl"
 #include "WindowRenderPipeline.hpp"
 #include "WindowInputProcessor.hpp"
 #include "GLSettings.hpp"
 
-class EngineCore;
+class Application;
 class Window;
 
 class WindowBuilder
@@ -20,7 +20,7 @@ class WindowBuilder
 	GLSettings glSettings; //Provided by engine. DO NOT MESS WITH outside of platform main.
 
 	//Required
-	EngineCore* engine;
+	Application* engine;
 	std::string name;
 	Vector3<int> size;
 	std::unique_ptr<WindowRenderPipeline> renderPipeline;
@@ -29,8 +29,8 @@ class WindowBuilder
 	std::optional<Vector3<int>> position;
 	std::unique_ptr<WindowInputProcessor> inputProcessor;
 	
-	WindowBuilder(EngineCore* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
-	friend class EngineCore;
+	WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
+	friend class Application;
 public:
 	ENGINEGRAPHICS_API ~WindowBuilder();
 

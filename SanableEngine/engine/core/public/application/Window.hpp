@@ -5,12 +5,10 @@
 #include <SDL_video.h>
 #include <SDL_events.h>
 #include <EngineCoreReflectionHooks.hpp>
-#include "dllapi.h"
+#include "../dllapi.h"
 #include "Renderer.hpp"
 #include "WindowRenderPipeline.hpp"
 
-struct SDL_Window;
-struct SDL_Renderer;
 class WindowBuilder;
 class WindowInputProcessor;
 struct GLSettings;
@@ -18,6 +16,7 @@ struct GLSettings;
 class Window
 {
 	SANABLE_REFLECTION_HOOKS
+	Window();
 
 private:
 	SDL_Window* handle;
@@ -26,12 +25,12 @@ private:
 	std::unique_ptr<WindowRenderPipeline> renderPipeline;
 	std::unique_ptr<WindowInputProcessor> inputProcessor;
 
-	EngineCore* engine;
-	friend class EngineCore;
+	Application* engine;
+	friend class Application;
 	void draw() const;
 	void handleEvent(SDL_Event& ev) const;
 
-	Window(const std::string& name, int width, int height, const GLSettings& glSettings, EngineCore* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor);
+	Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor);
 	friend class WindowBuilder;
 public:
 	ENGINEGRAPHICS_API ~Window();
@@ -39,6 +38,7 @@ public:
 	ENGINEGRAPHICS_API void move(int x, int y);
 
 	inline Renderer* getRenderer() { return &_interface; }
+	inline Application* getEngine() { return engine; }
 
 	ENGINEGRAPHICS_API int getWidth() const;
 	ENGINEGRAPHICS_API int getHeight() const;

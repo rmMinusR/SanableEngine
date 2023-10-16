@@ -1,6 +1,6 @@
 #include "PlayerController.hpp"
 
-#include "GameObject.hpp"
+#include "game/GameObject.hpp"
 
 #include <SDL_keyboard.h>
 

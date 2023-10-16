@@ -1,7 +1,7 @@
 #include "RectangleCollider.hpp"
 
 #include "Vector3.inl"
-#include "GameObject.hpp"
+#include "game/GameObject.hpp"
 
 #undef min
 #undef max

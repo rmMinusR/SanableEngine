@@ -6,7 +6,7 @@
 
 #include <SDL_pixels.h>
 
-#include "Component.hpp"
+#include "game/Component.hpp"
 
 class RectangleRenderer :
 	public Component,

@@ -2,13 +2,13 @@
 
 #include <EngineCoreReflectionHooks.hpp>
 
-#include "dllapi.h"
+#include "../dllapi.h"
 
 #include "GameObject.hpp"
 
 class ModuleTypeRegistry;
 class GameObject;
-class EngineCore;
+class Application;
 
 class Component
 {
@@ -22,7 +22,7 @@ protected:
 	ENGINECORE_API virtual void BindToGameObject(GameObject* obj);
 	friend class GameObject;
 
-	ENGINECORE_API inline EngineCore* getEngine() const { return gameObject->engine; }
+	ENGINECORE_API inline Application* getEngine() const { return gameObject->engine; }
 
 public:
 	ENGINECORE_API Component();
@@ -35,17 +35,18 @@ public:
 
 //Interfaces
 
-class EngineCore;
+class Application;
 
 class IUpdatable
 {
 protected:
 	virtual void Update() = 0;
-	friend class EngineCore;
+	friend class Application;
 };
 
 class Material;
 class GameWindowRenderPipeline;
+class Renderer;
 class I3DRenderable
 {
 	virtual Material* getMaterial() const = 0;

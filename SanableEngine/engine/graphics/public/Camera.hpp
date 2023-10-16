@@ -7,7 +7,7 @@
 
 #include "Rect.hpp"
 #include "Renderer.hpp"
-#include "Component.hpp"
+#include "game/Component.hpp"
 
 #undef main
 

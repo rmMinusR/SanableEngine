@@ -76,7 +76,7 @@ bool Plugin::loadDLL()
 	return true;
 }
 
-bool Plugin::preInit(EngineCore* engine)
+bool Plugin::preInit(Application* engine)
 {
 	if (status != Status::DllLoaded) return status > Status::DllLoaded;
 	assert(_dllGood());

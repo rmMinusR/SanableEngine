@@ -2,8 +2,9 @@
 
 #include <SDL.h>
 
-#include "EngineCore.hpp"
-#include "GameWindowRenderPipeline.hpp"
+#include "application/Application.hpp"
+#include "game/Game.hpp"
+#include "game/GameWindowRenderPipeline.hpp"
 #include "System_Win32.hpp"
 
 int main(int argc, char* argv[])
@@ -14,9 +15,9 @@ int main(int argc, char* argv[])
     gpr460::System_Win32 system;
 
     //Init
-    EngineCore engine;
+    Application engine;
     GLSettings glSettings;
-    WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&engine));
+    WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(engine.getGame()));
     engine.init(glSettings, mainWindow, system, nullptr);
 
     //Loop

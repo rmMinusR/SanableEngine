@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
-class EngineCore;
+class Application;
 
 namespace gpr460
 {
@@ -30,12 +30,12 @@ namespace gpr460
 		HANDLE logFile;
 		const std::wstring logFileName = L"GameErrors.txt";
 
-		friend class EngineCore;
+		friend class Application;
 #ifdef _DEBUG
 		_CrtMemState checkpoint;
 #endif
 	protected:
-		void Init(EngineCore*) override;
+		void Init(Application*) override;
 		void DoMainLoop() override;
 		void Shutdown() override;
 

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Component.hpp"
-
 #include "StandardReflectionHooks.hpp"
 
 #include <glm/glm.hpp>
+
+#include "game/Component.hpp"
 
 class ObjectSpinner : public Component, public IUpdatable
 {

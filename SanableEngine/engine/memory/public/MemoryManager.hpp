@@ -5,7 +5,7 @@
 #include "TypedMemoryPool.inl"
 
 class GameObject;
-class EngineCore;
+class Application;
 struct TypeInfo;
 class PluginManager;
 
@@ -34,7 +34,7 @@ public:
 private:
 	ENGINEMEM_API void init();
 	ENGINEMEM_API void cleanup();
-	friend class EngineCore;
+	friend class Application;
 
 	friend class PluginManager;
 

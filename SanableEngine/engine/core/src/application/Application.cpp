@@ -1,39 +1,15 @@
-#include "EngineCore.hpp"
+#include "Application.hpp"
 
 #include <cassert>
 #include <iostream>
 
 #include <SDL.h>
 
-#include "GameObject.hpp"
-#include "Component.hpp"
 #include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
 #include "Window.hpp"
-#include "WindowRenderPipeline.hpp"
-#include "Camera.hpp"
 
-void EngineCore::applyConcurrencyBuffers()
-{
-    for (Component* c : componentDelBuffer) destroyImmediate(c);
-    componentDelBuffer.clear();
-
-    for (GameObject* go : objectDelBuffer) destroyImmediate(go);
-    objectDelBuffer.clear();
-
-    for (GameObject* go : objectAddBuffer)
-    {
-        objects.push_back(go);
-        go->InvokeStart();
-    }
-    objectAddBuffer.clear();
-
-    for (auto& i : componentAddBuffer) i.second->BindComponent(i.first);
-    for (auto& i : componentAddBuffer) i.first->onStart();
-    componentAddBuffer.clear();
-}
-
-void EngineCore::processEvents()
+void Application::processEvents()
 {
     assert(isAlive);
     
@@ -76,25 +52,7 @@ void EngineCore::processEvents()
     }
 }
 
-void EngineCore::refreshCallBatchers()
-{
-    updateList.clear();
-    _3dRenderList.clear();
-
-    for (GameObject* go : objects)
-    {
-        for (Component* c : go->components)
-        {
-            IUpdatable* u = dynamic_cast<IUpdatable*>(c);
-            if (u) updateList.add(u);
-
-            I3DRenderable* r = dynamic_cast<I3DRenderable*>(c);
-            if (r) _3dRenderList.add(r);
-        }
-    }
-}
-
-EngineCore::EngineCore() :
+Application::Application() :
     isAlive(false),
     system(nullptr),
     pluginManager(this),
@@ -102,12 +60,12 @@ EngineCore::EngineCore() :
 {
 }
 
-EngineCore::~EngineCore()
+Application::~Application()
 {
     assert(!isAlive);
 }
 
-void EngineCore::init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
+void Application::init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -122,7 +80,7 @@ void EngineCore::init(const GLSettings& glSettings, WindowBuilder& mainWindowBui
     {
         ModuleTypeRegistry m;
         engine_reportTypes(&m);
-        GlobalTypeRegistry::loadModule("EngineCore", m);
+        GlobalTypeRegistry::loadModule("Application", m);
     }
 
     memoryManager.init();
@@ -139,7 +97,7 @@ void EngineCore::init(const GLSettings& glSettings, WindowBuilder& mainWindowBui
     if (userInitCallback) (*userInitCallback)(this);
 }
 
-void EngineCore::shutdown()
+void Application::shutdown()
 {
     assert(isAlive);
     isAlive = false;
@@ -164,90 +122,36 @@ void EngineCore::shutdown()
     system->Shutdown();
 }
 
-GameObject* EngineCore::addGameObject()
-{
-    GameObject* o = memoryManager.create<GameObject>(this);
-    objectAddBuffer.push_back(o);
-    return o;
-}
-
-void EngineCore::destroy(GameObject* go)
-{
-    objectDelBuffer.push_back(go);
-}
-
-void EngineCore::destroyImmediate(GameObject* go)
-{
-    assert(std::find(objects.cbegin(), objects.cend(), go) != objects.cend());
-    objects.erase(std::find(objects.begin(), objects.end(), go));
-    memoryManager.destroy(go);
-}
-
-void EngineCore::destroyImmediate(Component* c)
-{
-    assert(std::find(objects.cbegin(), objects.cend(), c->getGameObject()) != objects.cend());
-    auto& l = c->getGameObject()->components;
-    auto it = std::find(l.cbegin(), l.cend(), c);
-    assert(it != l.cend());
-    l.erase(it);
-    memoryManager.destroy(c);
-}
-
-void EngineCore::doMainLoop()
+void Application::doMainLoop()
 {
     system->DoMainLoop();
 }
 
-void EngineCore::frameStep(void* arg)
+void Application::frameStep(void* arg)
 {
-    EngineCore* engine = (EngineCore*)arg;
+    Application* engine = (Application*)arg;
 
     engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
     engine->tick();
     engine->draw();
 }
 
-void EngineCore::tick()
-{
-    assert(isAlive);
-
-    frame++;
-
-    processEvents();
-
-    applyConcurrencyBuffers();
-
-    updateList.memberCall(&IUpdatable::Update);
-}
-
-void EngineCore::draw()
-{
-    assert(isAlive);
-
-    for (Window* w : windows) w->draw();
-}
-
-gpr460::System* EngineCore::getSystem()
+gpr460::System* Application::getSystem()
 {
     return system;
 }
 
-MemoryManager* EngineCore::getMemoryManager()
+MemoryManager* Application::getMemoryManager()
 {
     return &memoryManager;
 }
 
-StackAllocator* EngineCore::getFrameAllocator()
+StackAllocator* Application::getFrameAllocator()
 {
     return &frameAllocator;
 }
 
-const CallBatcher<I3DRenderable>* EngineCore::get3DRenderables()
-{
-    return &_3dRenderList;
-}
-
-WindowBuilder EngineCore::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
+WindowBuilder Application::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
 {
     return WindowBuilder(this, name, width, height, glSettings, std::move(renderPipeline));
 }

@@ -1,25 +1,20 @@
 #pragma once
 
 #include <vector>
-#include <EngineCoreReflectionHooks.hpp>
 
-#include "CallBatcher.inl"
 #include "MemoryManager.hpp"
 #include "StackAllocator.hpp"
 
-#include "dllapi.h"
-#include "PluginManager.hpp"
-#include "WindowBuilder.hpp"
+#include "../dllapi.h"
 
-class ModuleTypeRegistry;
-class GameObject;
-class Component;
-class IUpdatable;
-class I3DRenderable;
+#include <EngineCoreReflectionHooks.hpp>
+#include "application/PluginManager.hpp"
+#include "application/WindowBuilder.hpp"
+
 namespace gpr460 { class System; }
-class Renderer;
+class Game;
 
-class EngineCore
+class Application
 {
     SANABLE_REFLECTION_HOOKS
 
@@ -32,17 +27,6 @@ private:
     PluginManager pluginManager;
     friend class PluginManager;
 
-    std::vector<GameObject*> objects;
-    void applyConcurrencyBuffers();
-    std::vector<GameObject*> objectAddBuffer;
-    std::vector<GameObject*> objectDelBuffer;
-    std::vector<std::pair<Component*, GameObject*>> componentAddBuffer;
-    std::vector<Component*> componentDelBuffer;
-
-    CallBatcher<IUpdatable   > updateList;
-    CallBatcher<I3DRenderable> _3dRenderList;
-    friend class GameObject;
-
     GLSettings glSettings;
     std::vector<Window*> windows;
     friend class WindowBuilder;
@@ -50,27 +34,16 @@ private:
 
     void processEvents();
 
-    void refreshCallBatchers();
-
-    void destroyImmediate(GameObject* go);
-    void destroyImmediate(Component* c);
-
-    void tick();
-    void draw();
-
 public:
     bool quit = false;
     int frame = 0;
 
-    ENGINECORE_API EngineCore();
-    ENGINECORE_API ~EngineCore();
+    ENGINECORE_API Application();
+    ENGINECORE_API ~Application();
 
-    typedef void (*UserInitFunc)(EngineCore*);
+    typedef void (*UserInitFunc)(Application*);
     ENGINECORE_API void init(const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
     ENGINECORE_API void shutdown();
-
-    ENGINECORE_API GameObject* addGameObject();
-    ENGINECORE_API void destroy(GameObject* go);
 
     ENGINECORE_API void doMainLoop();
     ENGINECORE_API static void frameStep(void* arg);
@@ -78,7 +51,7 @@ public:
     ENGINECORE_API gpr460::System* getSystem();
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
-    ENGINECORE_API const CallBatcher<I3DRenderable>* get3DRenderables();
+    ENGINECORE_API Game* getGame() const;
 
     ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 };

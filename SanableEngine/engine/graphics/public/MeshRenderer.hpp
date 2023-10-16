@@ -1,7 +1,7 @@
 #pragma once
 
 #include <EngineCoreReflectionHooks.hpp>
-#include "Component.hpp"
+#include "game/Component.hpp"
 #include "dllapi.h"
 
 class Mesh;

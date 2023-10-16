@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Component.hpp"
-
 #include "StandardReflectionHooks.hpp"
+
+#include "game/Component.hpp"
 
 class ManualObjectRotator : public Component, public IUpdatable
 {

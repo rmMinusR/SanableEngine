@@ -9,7 +9,7 @@
 #include "dllapi.h"
 #include "Vector3.inl"
 
-class EngineCore;
+class Application;
 class Window;
 class Font;
 class Texture;
