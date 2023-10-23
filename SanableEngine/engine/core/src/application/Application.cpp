@@ -35,7 +35,7 @@ void Application::processEvents()
             if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
         }
 
-        //Foward events to appropriate windows
+        //Forward events to appropriate windows
         switch (event.type)
         {
         case SDL_WINDOWEVENT:
