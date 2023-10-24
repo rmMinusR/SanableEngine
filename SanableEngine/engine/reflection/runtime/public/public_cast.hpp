@@ -32,6 +32,7 @@ namespace public_cast
 	struct _caster
 	{
 		static inline M m{};
+		//_type_lut<M>::t = decltype(M);
 	};
 
 	template<typename Secret, auto M>
@@ -40,14 +41,20 @@ namespace public_cast
 		static const inline auto m = _caster<decltype(M), Secret>::m = M;
 	};
 
+	template<typename Secret>
+	struct _type_lut {};
+	
 	#define PUBLIC_CAST_KEY(TClass, name) __PUBLIC_CAST_KEY__##TClass##__##name
-	#define DO_PUBLIC_CAST_RAW(TClass, memberType, name) ::public_cast::_caster<memberType, PUBLIC_CAST_KEY(TClass, name)>::m
-
-	#define DO_PUBLIC_CAST(TClass, memberType, name) DO_PUBLIC_CAST_RAW(TClass, memberType TClass::*, name)
-	#define DO_PUBLIC_CAST_MEMFN(TClass, returnType, args, name) DO_PUBLIC_CAST(TClass, ::public_cast::_mem_fns<TClass, returnType, args>::ptr_t, name)
+	#define DO_PUBLIC_CAST(TClass, name) ::public_cast::_caster<::public_cast::_type_lut<PUBLIC_CAST_KEY(TClass, name)>::ptr_t, PUBLIC_CAST_KEY(TClass, name)>::m
 
 	//Source file only
-	#define PUBLIC_CAST_GIVE_ACCESS(TClass, name) \
-		struct PUBLIC_CAST_KEY(TClass, name) {};\
-		template struct ::public_cast::_access_giver<PUBLIC_CAST_KEY(TClass, name), &TClass::name>
+	#define PUBLIC_CAST_GIVE_ACCESS(TClass, memberTypePtr, name) \
+		struct PUBLIC_CAST_KEY(TClass, name) {}; \
+		template struct ::public_cast::_access_giver<PUBLIC_CAST_KEY(TClass, name), &TClass::name>; \
+		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY(TClass, name)> { using ptr_t = memberTypePtr; };
+
+	#define PUBLIC_CAST_PTR_TO_FIELD(TClass, memberType) memberType TClass::*
+	#define PUBLIC_CAST_PTR_TO_STATIC_VAR(TClass, memberType) memberType*
+	#define PUBLIC_CAST_PTR_TO_BOUND_FN(TClass, returnType, /*args*/...) returnType (TClass::*)(__VA_ARGS__)
+	#define PUBLIC_CAST_PTR_TO_STATIC_FN(TClass, returnType, /*args*/...) returnType (*)(__VA_ARGS__)
 }
