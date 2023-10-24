@@ -105,6 +105,7 @@ def shortestRelPath(absPath):
     )
 
 generated = template.replace("GENERATED_RTTI", targetModule.renderBody()) \
+                    .replace("PUBLIC_CAST_DECLS", targetModule.renderPreDecls()) \
                     .replace("INCLUDE_DEPENDENCIES", "\n".join(set([ \
                          f'#include "{shortestRelPath(i)}"' for i in targetModule.renderIncludes() \
                     ])))

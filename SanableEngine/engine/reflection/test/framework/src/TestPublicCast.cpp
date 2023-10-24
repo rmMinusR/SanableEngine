@@ -34,9 +34,9 @@ public:
 };
 
 //Test rig: grant access to members
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, PUBLIC_CAST_PTR_TO_FIELD    (PublicCastTester, int), priv);
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, PUBLIC_CAST_PTR_TO_STATIC_FN(PublicCastTester, int), privateFn);
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, PUBLIC_CAST_PTR_TO_BOUND_FN (PublicCastTester, int), privateMemFn);
+PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, priv, PUBLIC_CAST_PTR_TO_FIELD(PublicCastTester, int));
+PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, privateFn, PUBLIC_CAST_PTR_TO_STATIC_FN(PublicCastTester, int));
+PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, privateMemFn, PUBLIC_CAST_PTR_TO_BOUND_FN(PublicCastTester, int));
 
 TEST_CASE("public_cast")
 {
@@ -51,10 +51,6 @@ TEST_CASE("public_cast")
 		PublicCastTester* tester = nullptr;
 		ptrdiff_t diff = (char*)std::addressof(tester->*DO_PUBLIC_CAST(PublicCastTester, priv)) - (char*)tester;
 		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
-		
-		//auto good = DO_PUBLIC_CAST(PublicCastTester, int, priv);
-		//auto bad = DO_PUBLIC_CAST(PublicCastTester, float, priv);
-		//auto crash = tester->*DO_PUBLIC_CAST(PublicCastTester, float, priv);
 	}
 
 	SUBCASE("Static function")

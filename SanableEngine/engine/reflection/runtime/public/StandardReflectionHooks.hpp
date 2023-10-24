@@ -1,4 +1,9 @@
 
+#define SANABLE_REFLECTION_REGISTRATION_POINT
+#define SANABLE_REFLECTION_HOOKS
+
+/*
+
 class ModuleTypeRegistry;
 
 #ifndef SANABLE_REFLECTION_REGISTRATION_POINT
@@ -15,3 +20,5 @@ extern "C" SANABLE_REFLECTION_REGISTRATION_POINT;
 //Forward declare dependencies
 class TypeBuilder;
 #endif
+
+*/

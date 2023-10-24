@@ -49,7 +49,10 @@ class Symbol:
     def __repr__(this):
         return this.absName
     
-    def render(this) -> str | None:
+    def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
+        return []
+
+    def renderMain(this) -> str | None:
         return None
 
     def getReferencedTypes(this) -> list[str]:
@@ -249,9 +252,14 @@ class FieldInfo(Member):
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.FIELD_DECL
+    
+    def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
+        return [f'PUBLIC_CAST_GIVE_ACCESS({this.owner.absName}, {this.relName}, {this.__declaredTypeName} {this.owner.absName}::*);']
 
     def renderMain(this):
-        return f'builder.addField<decltype({this.owner.absName}::{this.relName})>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
+        # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
+        # f'builder.addField<decltype({this.owner.absName}::{this.relName})>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
+        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF({this.owner.absName}, {this.relName}));'
 
     def getReferencedTypes(this) -> list[str]:
         c = cvpUnwrapTypeName(this.__declaredTypeName)
@@ -372,6 +380,12 @@ class TypeInfo(Symbol):
 
         return out
     
+    def renderPreDecls(this) -> list[str]:
+        out = []
+        for i in this.__contents:
+            out.extend(i.renderPreDecls())
+        return out
+
     def renderMain(this):
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
@@ -482,6 +496,13 @@ class Module:
         renders = [v.renderMain() for v in this.__symbols.values() if this.owns(v)]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
+
+    def renderPreDecls(this) -> str:
+        out = []
+        for i in this.__symbols.values():
+            if this.owns(i):
+                out.extend(i.renderPreDecls())
+        return "\n".join(out)
 
     def renderIncludes(this) -> set[str]:
         out = set()

@@ -70,6 +70,8 @@ Application::~Application()
     assert(!isAlive);
 }
 
+void engine_reportTypes(ModuleTypeRegistry* registry);
+
 void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
