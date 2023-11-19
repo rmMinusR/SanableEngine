@@ -24,10 +24,19 @@ def _getAbsName(target: Cursor) -> str:
 def cvpUnwrapTypeName(name: str) -> str:
     # Preprocess name
     name = name.strip()
-    for symbolToStrip in ["*", "const", "volatile"]: # FIXME this will also catch typenames starting or ending with const or volatile
+
+    # Pointers
+    if name.endswith("*"):
+        return cvpUnwrapTypeName(name[:-1])
+
+    # const/volatile qualifiers (before name)
+    for symbolToStrip in ["const ", "volatile "]:
         if name.startswith(symbolToStrip):
             return cvpUnwrapTypeName(name[len(symbolToStrip):])
-        elif name.endswith(symbolToStrip):
+
+    # const/volatile qualifiers (after name)
+    for symbolToStrip in [" const", " volatile"]:
+        if name.endswith(symbolToStrip):
             return cvpUnwrapTypeName(name[:-len(symbolToStrip)])
 
     # Nothing to strip
