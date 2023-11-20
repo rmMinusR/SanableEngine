@@ -14,12 +14,67 @@ from source_discovery import SourceFile
 
 
 def _getAbsName(target: Cursor) -> str:
-	if type(target.semantic_parent) == type(None) or target.semantic_parent.kind == CursorKind.TRANSLATION_UNIT:
-		# Root case: Drop translation unit name
-		return target.displayname
-	else:
-		# Loop case
-		return _getAbsName(target.semantic_parent) + "::" + target.displayname
+    if type(target) == type(None) or target.kind == CursorKind.TRANSLATION_UNIT:
+        # Root case: Translation unit has no name
+        return ""
+    else:
+        # Loop case
+        return _getAbsName(target.semantic_parent) + "::" + target.displayname
+
+def _isTemplate(kind: CursorKind):
+    return kind in [
+        CursorKind.CLASS_TEMPLATE,
+        CursorKind.FUNCTION_TEMPLATE
+    ]
+
+def _typeGetAbsName(target: Type) -> str:
+    out: str
+
+    # Resolve namespaces
+    pointedToType: Type = target.get_pointee()
+    if pointedToType.kind != TypeKind.INVALID:
+        # Pointer case: unwrap and abs-ify pointed-to type
+        out = _typeGetAbsName(pointedToType)+"*"
+
+    else:
+        # Main case: Try to resolve
+        mainDecl: Cursor = target.get_declaration()
+        out = mainDecl.spelling
+        hasMainDecl = (len(out) != 0)
+        if not hasMainDecl: # Primitive types
+            out = target.spelling
+
+        # Recurse over template args
+        templateArgs = [target.get_template_argument_type(i) for i in range(target.get_num_template_arguments())]
+        templateArgStr = ", ".join([_typeGetAbsName(i) for i in templateArgs])
+
+        if len(templateArgs) != 0:
+            out = out.split("<")[0]
+            out += "<"+templateArgStr+">"
+    
+        # Abs-ify name
+        if hasMainDecl:
+            out = _getAbsName(mainDecl.semantic_parent) + "::" + out
+            if out.startswith("::::"): out = out[2:]
+
+    # Resolve qualifiers
+    def addQualifier(s: str, qual: str):
+        baseName = s.split("<")[0] + (s.split(">")[1] if ">" in s else "")
+        alreadyHasQualifier = (baseName.find("*") < baseName.find(qual))
+        if not alreadyHasQualifier:
+            s += " "+qual
+        return s
+
+    if target.is_const_qualified():
+        out = addQualifier(out, "const")
+    if target.is_volatile_qualified():
+        out = addQualifier(out, "volatile")
+    if target.is_restrict_qualified():
+        out = addQualifier(out, "restrict")
+
+    print(f"Abs-ifying type: {target.spelling} -> {out}")
+    return out
+
 
 def cvpUnwrapTypeName(name: str) -> str:
     # Preprocess name
@@ -256,7 +311,7 @@ class FieldInfo(Member):
     def __init__(this, module: "Module", cursor: Cursor, owner):
         Member.__init__(this, module, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
-        this.__declaredTypeName = cursor.type.spelling
+        this.__declaredTypeName = _typeGetAbsName(cursor.type)
 
     @staticmethod
     def matches(cursor: Cursor):
