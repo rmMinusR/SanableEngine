@@ -44,16 +44,15 @@ namespace public_cast
 	template<typename Secret>
 	struct _type_lut {};
 	
-	#define PUBLIC_CAST_KEY(TClass, name) __PUBLIC_CAST_KEY__##TClass##__##name
-	#define DO_PUBLIC_CAST(TClass, name) ::public_cast::_caster<::public_cast::_type_lut<PUBLIC_CAST_KEY(TClass, name)>::ptr_t, PUBLIC_CAST_KEY(TClass, name)>::m
-	#define DO_PUBLIC_CAST_OFFSETOF(TClass, name) ((char*)std::addressof(((TClass*)nullptr)->*DO_PUBLIC_CAST(TClass, name)) - (char*)nullptr)
+	#define DO_PUBLIC_CAST(key) ::public_cast::_caster<::public_cast::_type_lut<__PUBLIC_CAST_KEY__##key>::ptr_t, __PUBLIC_CAST_KEY__##key>::m
+	#define DO_PUBLIC_CAST_OFFSETOF(key, TClass) ((char*)std::addressof(((TClass*)nullptr)->*DO_PUBLIC_CAST(key)) - (char*)nullptr)
 	
 	//Source file only
 	//NOTE: memberTypePtr must be passed as __VA_ARGS__ since the C preprocessor will mess up templates otherwise
-	#define PUBLIC_CAST_GIVE_ACCESS(TClass, name, /*memberTypePtr*/...) \
-		struct PUBLIC_CAST_KEY(TClass, name) {}; \
-		template struct ::public_cast::_access_giver<PUBLIC_CAST_KEY(TClass, name), &TClass::name>; \
-		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY(TClass, name)> { using ptr_t = __VA_ARGS__; };
+	#define PUBLIC_CAST_GIVE_ACCESS(key, TClass, name, /*memberTypePtr*/...) \
+		struct __PUBLIC_CAST_KEY__##key {}; \
+		template struct ::public_cast::_access_giver<__PUBLIC_CAST_KEY__##key, &TClass::name>; \
+		template<> struct ::public_cast::_type_lut<__PUBLIC_CAST_KEY__##key> { using ptr_t = __VA_ARGS__; };
 
 	//Convenience macros. NOTE: Completely broken with templates, which should be done by hand.
 	#define PUBLIC_CAST_PTR_TO_FIELD(TClass, memberType) memberType TClass::*

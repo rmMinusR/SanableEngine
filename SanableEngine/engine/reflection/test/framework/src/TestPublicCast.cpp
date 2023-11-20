@@ -34,28 +34,34 @@ public:
 };
 
 //Test rig: grant access to members
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, priv, PUBLIC_CAST_PTR_TO_FIELD(PublicCastTester, int));
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, privateFn, PUBLIC_CAST_PTR_TO_STATIC_FN(PublicCastTester, int));
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester, privateMemFn, PUBLIC_CAST_PTR_TO_BOUND_FN(PublicCastTester, int));
+PUBLIC_CAST_GIVE_ACCESS(PublicCastTester_priv        , PublicCastTester, priv        , PUBLIC_CAST_PTR_TO_FIELD(PublicCastTester, int));
+PUBLIC_CAST_GIVE_ACCESS(PublicCastTester_privateFn   , PublicCastTester, privateFn   , PUBLIC_CAST_PTR_TO_STATIC_FN(PublicCastTester, int));
+PUBLIC_CAST_GIVE_ACCESS(PublicCastTester_privateMemFn, PublicCastTester, privateMemFn, PUBLIC_CAST_PTR_TO_BOUND_FN(PublicCastTester, int));
 
 TEST_CASE("public_cast")
 {
 	SUBCASE("Basic assignment")
 	{
 		PublicCastTester tester;
-		tester.*DO_PUBLIC_CAST(PublicCastTester, priv) = 2;
+		tester.*DO_PUBLIC_CAST(PublicCastTester_priv) = 2;
 	}
 
-	SUBCASE("Offsetof member variable")
+	SUBCASE("Offsetof member variable (manual)")
 	{
-		PublicCastTester* tester = nullptr;
-		ptrdiff_t diff = (char*)std::addressof(tester->*DO_PUBLIC_CAST(PublicCastTester, priv)) - (char*)tester;
+		PublicCastTester* tester = reinterpret_cast<PublicCastTester*>(0xDEADBEEF);
+		ptrdiff_t diff = (char*)std::addressof(tester->*DO_PUBLIC_CAST(PublicCastTester_priv)) - (char*)tester;
+		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+	}
+
+	SUBCASE("Offsetof member variable (macroed)")
+	{
+		ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF(PublicCastTester_priv, PublicCastTester);
 		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
 	}
 
 	SUBCASE("Static function")
 	{
-		auto fnPtr = DO_PUBLIC_CAST(PublicCastTester, privateFn);
+		auto fnPtr = DO_PUBLIC_CAST(PublicCastTester_privateFn);
 		REQUIRE(fnPtr == PublicCastTester::get_privateFn());
 		int res = fnPtr();
 		CHECK(res == 123);
@@ -64,7 +70,7 @@ TEST_CASE("public_cast")
 	SUBCASE("Member function")
 	{
 		PublicCastTester tester;
-		auto fp = DO_PUBLIC_CAST(PublicCastTester, privateMemFn);
+		auto fp = DO_PUBLIC_CAST(PublicCastTester_privateMemFn);
 		REQUIRE(fp == PublicCastTester::get_privateMemFn());
 		int res = (tester.*fp)();
 		CHECK(res == 456);

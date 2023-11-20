@@ -142,6 +142,13 @@ class Member(Symbol):
         super().__init__(module, cursor)
         this.owner = owner
         assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
+    
+    @property
+    def pubCastKey(this):
+        invalidTokens = ["::", "<", ">", "*", " "]
+        out = this.absName
+        for i in invalidTokens: out = out.replace(i, "_")
+        return out
 
     
 class Virtualizable(Member):
@@ -308,7 +315,7 @@ class DestructorInfo(Virtualizable):
 
 
 class FieldInfo(Member):
-    def __init__(this, module: "Module", cursor: Cursor, owner):
+    def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         Member.__init__(this, module, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
         this.__declaredTypeName = _typeGetAbsName(cursor.type)
@@ -318,12 +325,12 @@ class FieldInfo(Member):
         return cursor.kind == CursorKind.FIELD_DECL
     
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
-        return [f'PUBLIC_CAST_GIVE_ACCESS({this.owner.absName}, {this.relName}, {this.__declaredTypeName} {this.owner.absName}::*);']
+        return [f'PUBLIC_CAST_GIVE_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {this.__declaredTypeName} {this.owner.absName}::*);']
 
     def renderMain(this):
         # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
         # f'builder.addField<decltype({this.owner.absName}::{this.relName})>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
-        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF({this.owner.absName}, {this.relName}));'
+        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF({this.pubCastKey}, {this.owner.absName}));'
 
     def getReferencedTypes(this) -> list[str]:
         c = cvpUnwrapTypeName(this.__declaredTypeName)
