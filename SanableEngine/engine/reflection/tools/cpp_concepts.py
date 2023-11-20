@@ -325,7 +325,14 @@ class FieldInfo(Member):
         return cursor.kind == CursorKind.FIELD_DECL
     
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
-        return [f'PUBLIC_CAST_GIVE_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {this.__declaredTypeName} {this.owner.absName}::*);']
+        # These can't start with ::, otherwise we risk the lexer thinking it's one big token
+        declaredTypeName = this.__declaredTypeName
+        if declaredTypeName.startswith("::"): declaredTypeName = declaredTypeName[2:]
+
+        ownerName = this.owner.absName
+        if ownerName.startswith("::"): ownerName = ownerName[2:]
+
+        return [f'PUBLIC_CAST_GIVE_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName} {ownerName}::*);']
 
     def renderMain(this):
         # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
