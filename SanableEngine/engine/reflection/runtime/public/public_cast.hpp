@@ -44,6 +44,9 @@ namespace public_cast
 	template<typename Secret>
 	struct _type_lut {};
 	
+	//Where accessing: myObject->myVar
+	//The following is equivalent: myObject->*DO_PUBLIC_CAST(keyToMyVar)
+	//Which is fully equivalent, and is both lvalue and rvalue
 	#define DO_PUBLIC_CAST(key) ::public_cast::_caster<::public_cast::_type_lut<__PUBLIC_CAST_KEY__##key>::ptr_t, __PUBLIC_CAST_KEY__##key>::m
 	#define DO_PUBLIC_CAST_OFFSETOF(key, TClass) ((char*)std::addressof(((TClass*)nullptr)->*DO_PUBLIC_CAST(key)) - (char*)nullptr)
 	

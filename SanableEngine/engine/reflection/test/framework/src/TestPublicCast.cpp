@@ -59,6 +59,19 @@ TEST_CASE("public_cast")
 		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
 	}
 
+	/*
+	//Disabled: Experimental and unproven. Must be regarded as unreliable.
+	SUBCASE("Offsetof member variable (by reinterpret)")
+	{
+		auto boundPtr = DO_PUBLIC_CAST(PublicCastTester_priv);
+
+		uint16_t raw;
+		memcpy(&raw, &boundPtr, sizeof(raw));
+
+		CHECK(raw == PublicCastTester::builtin_offsetof_priv());
+	}
+	*/
+
 	SUBCASE("Static function")
 	{
 		auto fnPtr = DO_PUBLIC_CAST(PublicCastTester_privateFn);
