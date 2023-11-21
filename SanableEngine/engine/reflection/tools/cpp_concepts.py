@@ -30,27 +30,39 @@ def _isTemplate(kind: CursorKind):
 def _typeGetAbsName(target: Type) -> str:
     out: str
 
+    mainDecl: Cursor = target.get_declaration()
+    hasMainDecl = (len(mainDecl.spelling) != 0)
+
     # Resolve namespaces
     pointedToType: Type = target.get_pointee()
     if pointedToType.kind != TypeKind.INVALID:
         # Pointer case: unwrap and abs-ify pointed-to type
         out = _typeGetAbsName(pointedToType)+"*"
 
+    elif not hasMainDecl:
+        # Primitive types
+        out = target.spelling
+
     else:
-        # Main case: Try to resolve
-        mainDecl: Cursor = target.get_declaration()
-        out = mainDecl.spelling
-        hasMainDecl = (len(out) != 0)
-        if not hasMainDecl: # Primitive types
-            out = target.spelling
+        if mainDecl.kind == CursorKind.TYPEDEF_DECL:
+            # Typedefs can't be templated. Don't bother following them.
+            out = mainDecl.spelling
 
-        # Recurse over template args
-        templateArgs = [target.get_template_argument_type(i) for i in range(target.get_num_template_arguments())]
-        templateArgStr = ", ".join([_typeGetAbsName(i) for i in templateArgs])
+        else:
+            # Main case: Try to resolve
+            if mainDecl.kind == CursorKind.TYPE_ALIAS_DECL:
+                # Using statements ("using Ty = ...")
+                out = mainDecl.type.get_canonical().get_declaration().spelling
+            else:
+                out = mainDecl.spelling
 
-        if len(templateArgs) != 0:
-            out = out.split("<")[0]
-            out += "<"+templateArgStr+">"
+            # Recurse over template args
+            templateArgs = [target.get_template_argument_type(i) for i in range(target.get_num_template_arguments())]
+            templateArgStr = ", ".join([_typeGetAbsName(i) for i in templateArgs])
+
+            if len(templateArgs) != 0:
+                out = out.split("<")[0]
+                out += "<"+templateArgStr+">"
     
         # Abs-ify name
         if hasMainDecl:
