@@ -86,3 +86,26 @@ endif()
 
 # Delegate doctest configuration
 include("${CMAKE_CURRENT_LIST_DIR}/libs/doctest/CMakeLists.txt")
+
+# Configure Capstone disassembly engine
+set(SANABLE_DISASSEMBLER "Capstone")
+if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
+    message(" > Configuring Capstone disassembler for ${CMAKE_SYSTEM_PROCESSOR}")
+    set(CAPSTONE_BUILD_DIET ON)
+
+    # Enable only our architecture
+    #set(CAPSTONE_ARCHITECTURE_DEFAULT OFF) # Broken
+    set(SUPPORTED_ARCHITECTURES ARM ARM64 M68K MIPS PPC SPARC SYSZ XCORE X86 TMS320C64X M680X EVM MOS65XX WASM BPF RISCV SH TRICORE)
+    foreach(supported_architecture ${SUPPORTED_ARCHITECTURES})
+        set("CAPSTONE_${supported_architecture}_SUPPORT" OFF)
+    endforeach()
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+        set(CAPSTONE_X86_SUPPORT ON)
+    else()
+        message(FATAL_ERROR "-> Could not configure Capstone: Unknown processor")
+    endif()
+    
+    add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/libs/capstone/")
+else()
+    message(FATAL_ERROR "-> Could not find a valid disassembler")
+endif()

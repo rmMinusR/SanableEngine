@@ -4,3 +4,6 @@
 [submodule "SanableEngine/libs/OpenFBX"]
 	path = SanableEngine/libs/OpenFBX
 	url = https://github.com/nem0/OpenFBX.git
+[submodule "SanableEngine/libs/capstone"]
+	path = SanableEngine/libs/capstone
+	url = https://github.com/capstone-engine/capstone.git
