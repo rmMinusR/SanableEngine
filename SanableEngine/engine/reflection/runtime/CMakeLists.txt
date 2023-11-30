@@ -8,6 +8,9 @@ declare_dll("engine-rtti" "" engine_rtti_sources)
 target_include_directories("engine-rtti" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
 # Declare exports
+target_link_libraries("engine-rtti" PRIVATE capstone)
+
+# Declare exports
 target_include_directories("engine-rtti" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
 # Declare install targets
