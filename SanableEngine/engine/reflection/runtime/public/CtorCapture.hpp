@@ -2,20 +2,25 @@
 
 #include "dllapi.h"
 
-ENGINE_RTTI_API void scanForVtables(void(*thunk)());
+ENGINE_RTTI_API void scanForVtables(void(*ctorThunk)());
 
 template<typename T, typename... Args>
-struct ctor_thunk
+struct ctor_utils
 {
-	static T* newOnHeap(Args... args)
+	static void newOnStack(Args... args)
 	{
-		return new T(args...);
+		T v(args...);
 	}
 
+	static void newOnHeap(Args... args)
+	{
+		new T(args...);
+	}
+	
 	static void newInPlace(T* ptr, Args... args)
 	{
-		return new(ptr) T(args...);
+		new(ptr) T(args...);
 	}
 
-	ctor_thunk() = delete;
+	ctor_utils() = delete;
 };

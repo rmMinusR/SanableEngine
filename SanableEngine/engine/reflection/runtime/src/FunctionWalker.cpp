@@ -2,11 +2,16 @@
 
 #include "CapstoneWrapper.hpp"
 
-FunctionWalker::FunctionWalker(void(*fn)())
+FunctionWalker::FunctionWalker(const uint8_t* data)
 {
-	codeCursor = reinterpret_cast<uint8_t*>(fn);
+	codeCursor = data;
 	insn = cs_malloc(capstone_get_instance());
 	furthestKnownJump = nullptr;
+}
+
+FunctionWalker::FunctionWalker(void(*fn)()) :
+	FunctionWalker(reinterpret_cast<uint8_t*>(fn))
+{
 }
 
 FunctionWalker::~FunctionWalker()

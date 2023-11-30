@@ -8,6 +8,7 @@ private:
 	const uint8_t* furthestKnownJump;
 
 public:
+	FunctionWalker(const uint8_t* data);
 	FunctionWalker(void(*fn)());
 	~FunctionWalker();
 
