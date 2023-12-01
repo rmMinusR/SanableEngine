@@ -22,7 +22,7 @@ struct FunctionUtil
 };
 
 
-class FunctionInfo
+class GenericFunction
 {
 public:
 	enum class CallConv
@@ -33,12 +33,12 @@ public:
 		ThisCall
 	};
 
-	ENGINE_RTTI_API FunctionInfo();
-	ENGINE_RTTI_API ~FunctionInfo();
-	ENGINE_RTTI_API FunctionInfo(const FunctionInfo& cpy);
-	ENGINE_RTTI_API FunctionInfo& operator=(const FunctionInfo& cpy);
-	ENGINE_RTTI_API FunctionInfo(FunctionInfo&& mov);
-	ENGINE_RTTI_API FunctionInfo& operator=(FunctionInfo&& mov);
+	ENGINE_RTTI_API GenericFunction();
+	ENGINE_RTTI_API ~GenericFunction();
+	ENGINE_RTTI_API GenericFunction(const GenericFunction& cpy);
+	ENGINE_RTTI_API GenericFunction& operator=(const GenericFunction& cpy);
+	ENGINE_RTTI_API GenericFunction(GenericFunction&& mov);
+	ENGINE_RTTI_API GenericFunction& operator=(GenericFunction&& mov);
 
 	ENGINE_RTTI_API bool isValid() const;
 	ENGINE_RTTI_API CallConv getCallConv() const;
@@ -62,46 +62,46 @@ private:
 	template<int _, typename Head, typename... Tail>
 	inline static void identifyArgs(std::vector<TypeName>& out)
 	{
-		out.push_back(TypeName::create<Head>()))
-		identifyArgs<_, Tail...>(out);
+		out.push_back(TypeName::create<Head>());
+		identifyArgs<0, Tail...>(out);
 	}
 	template<int _>
 	inline static void identifyArgs(std::vector<TypeName>& out) { }
 
 	template<typename TRet, typename... TArgs>
-	static FunctionInfo captureCommon()
+	static GenericFunction captureCommon()
 	{
-		FunctionInfo out;
+		GenericFunction out;
 		out.returnType = TypeName::create<TRet>();
 		identifyArgs<0, TArgs...>(out.args);
 		return out;
 	}
 public:
 	template<typename TRet, typename... TArgs>
-	static FunctionInfo captureCDecl(TRet(__cdecl* fn)(TArgs...))
+	static GenericFunction captureCDecl(TRet(__cdecl* fn)(TArgs...))
 	{
-		FunctionInfo out = captureCommon<TRet, TArgs...>();
+		GenericFunction out = captureCommon<TRet, TArgs...>();
 		out.callConv = CallConv::CDecl;
 		assert(out.isValid());
 		return out;
 	}
 
 	template<typename TRet, typename... TArgs>
-	static FunctionInfo captureStdCall(TRet(__stdcall* fn)(TArgs...))
+	static GenericFunction captureStdCall(TRet(__stdcall* fn)(TArgs...))
 	{
-		FunctionInfo out = captureCommon<TRet, TArgs...>();
+		GenericFunction out = captureCommon<TRet, TArgs...>();
 		out.callConv = CallConv::StdCall;
 		assert(out.isValid());
 		return out;
 	}
 
 	template<typename TOwner, typename TRet, typename... TArgs>
-	static FunctionInfo captureThisCall(TRet(__thiscall TOwner::*fn)(TArgs...))
+	static GenericFunction captureThisCall(TRet(__thiscall TOwner::*fn)(TArgs...))
 	{
-		static_assert(false); //TODO fix storage: Member ptrs are sometimes wider
-		FunctionInfo out = captureCommon<TRet, TArgs...>();
+		//TODO fix storage: Member ptrs are sometimes wider
+		GenericFunction out = captureCommon<TRet, TArgs...>();
 		out.owningType = TypeName::create<TOwner>();
-		out.callConv = CallConv::StdCall;
+		out.callConv = CallConv::ThisCall;
 		assert(out.isValid());
 		return out;
 	}

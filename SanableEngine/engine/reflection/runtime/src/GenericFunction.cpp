@@ -1,27 +1,27 @@
-#include "FunctionInfo.hpp"
+#include "GenericFunction.hpp"
 
-FunctionInfo::FunctionInfo() :
+GenericFunction::GenericFunction() :
 	callConv(CallConv::Invalid)
 {
 }
 
-FunctionInfo::~FunctionInfo()
+GenericFunction::~GenericFunction()
 {
 }
 
-FunctionInfo::FunctionInfo(const FunctionInfo& cpy) :
-	FunctionInfo()
+GenericFunction::GenericFunction(const GenericFunction& cpy) :
+	GenericFunction()
 {
 	*this = cpy;
 }
 
-FunctionInfo::FunctionInfo(FunctionInfo&& mov) :
-	FunctionInfo()
+GenericFunction::GenericFunction(GenericFunction&& mov) :
+	GenericFunction()
 {
 	*this = std::move(mov);
 }
 
-FunctionInfo& FunctionInfo::operator=(const FunctionInfo& cpy)
+GenericFunction& GenericFunction::operator=(const GenericFunction& cpy)
 {
 	this->returnType = cpy.returnType;
 	this->args       = cpy.args;
@@ -30,7 +30,7 @@ FunctionInfo& FunctionInfo::operator=(const FunctionInfo& cpy)
 	return *this;
 }
 
-FunctionInfo& FunctionInfo::operator=(FunctionInfo&& mov)
+GenericFunction& GenericFunction::operator=(GenericFunction&& mov)
 {
 	this->returnType = std::move(mov.returnType);
 	this->args       = std::move(mov.args      );
@@ -45,45 +45,45 @@ FunctionInfo& FunctionInfo::operator=(FunctionInfo&& mov)
 	return *this;
 }
 
-bool FunctionInfo::isValid() const
+bool GenericFunction::isValid() const
 {
 	return returnType.isValid()
 		&& callConv != CallConv::Invalid
 		&& (owningType.isValid() == (callConv == CallConv::ThisCall));
 }
 
-FunctionInfo::CallConv FunctionInfo::getCallConv() const
+GenericFunction::CallConv GenericFunction::getCallConv() const
 {
 	assert(isValid());
 	return callConv;
 }
 
-TypeName FunctionInfo::getReturnType() const
+TypeName GenericFunction::getReturnType() const
 {
 	assert(isValid());
 	return returnType;
 }
 
-size_t FunctionInfo::getArgCount() const
+size_t GenericFunction::getArgCount() const
 {
 	assert(isValid());
 	return args.size();
 }
 
-TypeName FunctionInfo::getArg(size_t index) const
+TypeName GenericFunction::getArg(size_t index) const
 {
 	assert(isValid());
 	assert(index < args.size());
 	return args[index];
 }
 
-bool FunctionInfo::isMemberFunction() const
+bool GenericFunction::isMemberFunction() const
 {
 	assert(isValid());
 	return owningType.isValid();
 }
 
-TypeName FunctionInfo::getOwner() const
+TypeName GenericFunction::getOwner() const
 {
 	assert(isValid());
 	return owningType;

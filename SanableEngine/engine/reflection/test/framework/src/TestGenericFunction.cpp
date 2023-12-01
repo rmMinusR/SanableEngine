@@ -1,36 +1,36 @@
 #include "doctest.h"
 
-#include "FunctionInfo.hpp"
+#include "GenericFunction.hpp"
 
 #include "Callables.hpp"
 
-TEST_CASE("FunctionInfo")
+TEST_CASE("GenericFunction")
 {
 	SUBCASE("Blank")
 	{
-		FunctionInfo fi;
+		GenericFunction fi;
 		CHECK(!fi.isValid());
 	}
 
 	SUBCASE("Parity")
 	{
-		auto checkArgs_myFunc1 = [](const FunctionInfo& fi)
+		auto checkArgs_myFunc1 = [](const GenericFunction& fi)
 		{
 			CHECK(fi.getReturnType() == TypeName::create<long>());
 			CHECK(fi.getArgCount() == 0);
 		};
-		auto checkArgs_myFunc2 = [](const FunctionInfo& fi)
+		auto checkArgs_myFunc2 = [](const GenericFunction& fi)
 		{
 			CHECK(fi.getReturnType() == TypeName::create<void>());
 			CHECK(fi.getArgCount() == 0);
 		};
-		auto checkArgs_myFunc3 = [](const FunctionInfo& fi)
+		auto checkArgs_myFunc3 = [](const GenericFunction& fi)
 		{
 			CHECK(fi.getReturnType() == TypeName::create<void>());
 			REQUIRE(fi.getArgCount() == 1);
 			CHECK(fi.getArg(0) == TypeName::create<int>());
 		};
-		auto checkArgs_myFunc4 = [](const FunctionInfo& fi)
+		auto checkArgs_myFunc4 = [](const GenericFunction& fi)
 		{
 			CHECK(fi.getReturnType() == TypeName::create<void>());
 			REQUIRE(fi.getArgCount() == 2);
@@ -41,9 +41,9 @@ TEST_CASE("FunctionInfo")
 #define DECL_FN_TEST_ONE(group, accessDecl, enumDecl, isMember, accessPrefix) \
 		SUBCASE(#accessPrefix "::" #group "_" #accessDecl) \
 		{ \
-			FunctionInfo fi = FunctionInfo::capture##enumDecl(&accessPrefix::group##_##accessDecl); \
+			GenericFunction fi = GenericFunction::capture##enumDecl(&accessPrefix::group##_##accessDecl); \
 			REQUIRE(fi.isValid()); \
-			CHECK(fi.getCallConv() == FunctionInfo::CallConv::enumDecl); \
+			CHECK(fi.getCallConv() == GenericFunction::CallConv::enumDecl); \
 			checkArgs_##group(fi); \
 			CHECK(fi.isMemberFunction() == isMember); \
 		}
