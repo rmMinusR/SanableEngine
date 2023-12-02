@@ -23,8 +23,8 @@ bool carray_contains(T1* arr, size_t arrSize, T2 match)
 
 
 typedef void(*void_func_ptr)(); //Cannot directly return a function ptr, must use a typedef otherwise lexer gets confused
-void* platform_getRelAddr(const cs_insn& insn);
 void_func_ptr platform_getRelFunc(const cs_insn& insn);
+void* platform_getRelAddr(const cs_insn& insn);
 
 
 #if INTPTR_MAX == INT64_MAX
@@ -43,19 +43,13 @@ struct DetectedConstants
 	std::vector<uint8_t> bytes;
 	std::vector<bool> usage;
 
-	inline void resize(size_t sz)
-	{
-		//Wipe previous data
-		bytes.clear();
-		usage.clear();
+	DetectedConstants() = default;
+	~DetectedConstants() = default;
+	DetectedConstants(size_t sz);
+	void resize(size_t sz);
 
-		//Set up for new data
-		bytes.resize(sz);
-		usage.resize(sz);
-	}
-
-	inline DetectedConstants() {}
-	inline ~DetectedConstants() {}
-	inline DetectedConstants(size_t sz) : DetectedConstants() { resize(sz); }
+	//Keeps our detected constants only if our counterpart has also
+	//detected the same constant. Used for vtable detection.
+	void merge(const DetectedConstants& other);
 };
 DetectedConstants platform_captureConstants(size_t objSize, void(*ctor)());
