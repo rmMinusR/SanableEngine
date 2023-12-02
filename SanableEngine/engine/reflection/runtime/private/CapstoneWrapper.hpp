@@ -17,6 +17,8 @@ bool carray_contains(T1* arr, size_t arrSize, T2 match)
 	return false;
 }
 
+void* platform_getRelAddr(const cs_insn& insn);
+
 #if INTPTR_MAX == INT64_MAX
 typedef uint64_t uint_addr_t;
 #elif INTPTR_MAX == INT32_MAX

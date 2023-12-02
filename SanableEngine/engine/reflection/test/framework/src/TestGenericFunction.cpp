@@ -43,7 +43,7 @@ TEST_CASE("GenericFunction")
 		{ \
 			GenericFunction fi = GenericFunction::capture##enumDecl(&accessPrefix::group##_##accessDecl); \
 			REQUIRE(fi.isValid()); \
-			CHECK(fi.getCallConv() == GenericFunction::CallConv::enumDecl); \
+			CHECK(fi.getCallConv() == CallConv::enumDecl); \
 			checkArgs_##group(fi); \
 			CHECK(fi.isMemberFunction() == isMember); \
 		}

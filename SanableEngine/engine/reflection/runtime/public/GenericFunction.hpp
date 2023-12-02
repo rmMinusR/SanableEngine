@@ -82,7 +82,7 @@ private:
 	{
 		GenericFunction out;
 		out.returnType = TypeName::create<TRet>();
-		identifyArgs<0, TArgs...>(out.args);
+		FunctionUtil::identifyArgs<0, TArgs...>(out.args);
 		return out;
 	}
 
