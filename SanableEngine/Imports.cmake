@@ -93,15 +93,25 @@ if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
     message(" > Configuring Capstone disassembler for ${CMAKE_SYSTEM_PROCESSOR}")
     set(CAPSTONE_BUILD_DIET ON)
 
-    # Enable only our architecture
+    # Disable all architectures
     #set(CAPSTONE_ARCHITECTURE_DEFAULT OFF) # Broken
     set(SUPPORTED_ARCHITECTURES ARM ARM64 M68K MIPS PPC SPARC SYSZ XCORE X86 TMS320C64X M680X EVM MOS65XX WASM BPF RISCV SH TRICORE)
     foreach(supported_architecture ${SUPPORTED_ARCHITECTURES})
         set("CAPSTONE_${supported_architecture}_SUPPORT" OFF)
     endforeach()
+
+    # Detect our architecture
     if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
-        set(CAPSTONE_X86_SUPPORT ON)
-        add_definitions(-DCS_ARCH_OURS=CS_ARCH_X86)
+        set (TARGET_ARCH_GROUP X86)
+    else()
+        set (TARGET_ARCH_GROUP ${CMAKE_SYSTEM_PROCESSOR})
+    endif()
+
+    # Enable our architecture and set flags
+    if (${TARGET_ARCH_GROUP} IN_LIST SUPPORTED_ARCHITECTURES)
+        set(CAPSTONE_${TARGET_ARCH_GROUP}_SUPPORT ON)
+        add_definitions(-DCS_ARCH_OURS=CS_ARCH_${TARGET_ARCH_GROUP})
+        message(" >> Detected family ${TARGET_ARCH_GROUP}")
     else()
         message(FATAL_ERROR "-> Could not configure Capstone: Unknown processor")
     endif()

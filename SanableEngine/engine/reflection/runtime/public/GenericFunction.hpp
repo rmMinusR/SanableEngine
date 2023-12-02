@@ -2,37 +2,55 @@
 
 #include <vector>
 #include <cassert>
+#include <functional>
 
 #include "dllapi.h"
 #include "TypeName.hpp"
+#include "TypeInfo.hpp"
 
 
-template<typename TRet, typename... TArgs>
 struct FunctionUtil
 {
-	typedef TRet(__cdecl *fnptr_cdecl)(TArgs...);
-	typedef TRet(__stdcall *fnptr_stdcall)(TArgs...);
+	//Type erasure mechanism
 
-	template<typename TOwner>
-	struct Member
+	//Name-only version
+	template<int _, typename Head, typename... Tail>
+	inline static void identifyArgs(std::vector<TypeName>& out)
 	{
-		typedef TRet(__thiscall TOwner::*fnptr_thiscall)(TArgs...);
-		//TODO deal with functions where "this" is const
-	};
+		out.push_back(TypeName::create<Head>());
+		identifyArgs<0, Tail...>(out);
+	}
+	template<int _>
+	inline static void identifyArgs(std::vector<TypeName>& out) { }
+
+	//Shallow-detail version
+	template<int _, typename Head, typename... Tail>
+	inline static void identifyArgs(std::vector<TypeInfo>& out)
+	{
+		out.push_back(TypeInfo::createDummy<Head>());
+		identifyArgs<0, Tail...>(out);
+	}
+	template<int _>
+	inline static void identifyArgs(std::vector<TypeInfo>& out) { }
+
+};
+
+class VM;
+
+enum class CallConv
+{
+	Invalid = 0,
+	CDecl,
+	StdCall,
+	ThisCall
 };
 
 
 class GenericFunction
 {
-public:
-	enum class CallConv
-	{
-		Invalid = 0,
-		CDecl,
-		StdCall,
-		ThisCall
-	};
+	friend class VM;
 
+public:
 	ENGINE_RTTI_API GenericFunction();
 	ENGINE_RTTI_API ~GenericFunction();
 	ENGINE_RTTI_API GenericFunction(const GenericFunction& cpy);
@@ -58,15 +76,6 @@ private:
 	#pragma region Capture functions and helpers
 
 private:
-	//Type erasure mechanism
-	template<int _, typename Head, typename... Tail>
-	inline static void identifyArgs(std::vector<TypeName>& out)
-	{
-		out.push_back(TypeName::create<Head>());
-		identifyArgs<0, Tail...>(out);
-	}
-	template<int _>
-	inline static void identifyArgs(std::vector<TypeName>& out) { }
 
 	template<typename TRet, typename... TArgs>
 	static GenericFunction captureCommon()
@@ -76,7 +85,22 @@ private:
 		identifyArgs<0, TArgs...>(out.args);
 		return out;
 	}
+
+	//ENGINE_RTTI_API CallConv deduceCallConv(void(*thunk)(), const std::vector<TypeName> args) const;
 public:
+
+	/// Due to template shortcomings, the caller is responsible for correctly selecting cdecl/stdcall
+
+	//template<typename TRet, typename... TArgs>
+	//static GenericFunction capture(TRet(*fn)(TArgs...))
+	//{
+	//	GenericFunction out = captureCommon<TRet, TArgs...>();
+	//	auto lambda = [=](TArgs... args) { fn(args...); };
+	//	out.callConv = deduceCallConv((void(*)())&lambda.operator(), out.args);
+	//	assert(out.isValid());
+	//	return out;
+	//}
+
 	template<typename TRet, typename... TArgs>
 	static GenericFunction captureCDecl(TRet(__cdecl* fn)(TArgs...))
 	{

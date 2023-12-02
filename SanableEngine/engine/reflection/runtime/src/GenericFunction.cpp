@@ -52,7 +52,7 @@ bool GenericFunction::isValid() const
 		&& (owningType.isValid() == (callConv == CallConv::ThisCall));
 }
 
-GenericFunction::CallConv GenericFunction::getCallConv() const
+CallConv GenericFunction::getCallConv() const
 {
 	assert(isValid());
 	return callConv;
