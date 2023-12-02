@@ -30,11 +30,11 @@ public:
 		public:
 			static inline DetectedVtables captureVtables()
 			{
-				return _captureVtablesInternal(
+				return _captureVtablesInternal({
 					&thunk_newOnStack,
 					&thunk_newOnHeap,
 					&thunk_newInPlace
-				);
+				});
 			}
 		};
 	};

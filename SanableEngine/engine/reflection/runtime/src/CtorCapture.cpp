@@ -20,7 +20,7 @@ DetectedVtables capture_utils::_captureVtablesInternal(std::initializer_list<voi
 		{
 			if (carray_contains(thunkWalker.insn->detail->groups, thunkWalker.insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
 			{
-				calls.push_back( reinterpret_cast<void(*)()>(platform_getRelAddr(*thunkWalker.insn)) );
+				calls.push_back( platform_getRelFunc(*thunkWalker.insn) );
 			}
 		}
 

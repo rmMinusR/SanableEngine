@@ -17,7 +17,10 @@ bool carray_contains(T1* arr, size_t arrSize, T2 match)
 	return false;
 }
 
+typedef void(*void_func_ptr)(); //Cannot directly return a function ptr, must use a typedef or lexer gets confused
+
 void* platform_getRelAddr(const cs_insn& insn);
+void_func_ptr platform_getRelFunc(const cs_insn& insn);
 
 #if INTPTR_MAX == INT64_MAX
 typedef uint64_t uint_addr_t;
