@@ -1,31 +1,34 @@
-#include "FunctionWalker.hpp"
+#include "FunctionBytecodeWalker.hpp"
+
+#include <cassert>
 
 #include "CapstoneWrapper.hpp"
 
-FunctionWalker::FunctionWalker(const uint8_t* data)
+FunctionBytecodeWalker::FunctionBytecodeWalker(const uint8_t* data)
 {
 	codeCursor = data;
 	insn = cs_malloc(capstone_get_instance());
 	furthestKnownJump = nullptr;
 }
 
-FunctionWalker::FunctionWalker(void(*fn)()) :
-	FunctionWalker(reinterpret_cast<uint8_t*>(fn))
+FunctionBytecodeWalker::FunctionBytecodeWalker(void(*fn)()) :
+	FunctionBytecodeWalker(reinterpret_cast<uint8_t*>(fn))
 {
 }
 
-FunctionWalker::~FunctionWalker()
+FunctionBytecodeWalker::~FunctionBytecodeWalker()
 {
 	cs_free(insn, 1);
 	insn = nullptr;
 }
 
-bool FunctionWalker::advance()
+bool FunctionBytecodeWalker::advance()
 {
 	//Advance cursor and interpret next
 	uint64_t addr = (uint64_t)reinterpret_cast<uint_addr_t>(codeCursor);
 	size_t allowedToProcess = 32; //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
-	cs_disasm_iter(capstone_get_instance(), &codeCursor, &allowedToProcess, &addr, insn);
+	bool status = cs_disasm_iter(capstone_get_instance(), &codeCursor, &allowedToProcess, &addr, insn);
+	assert(status);
 
 	//If it's a JUMP, record that we can go further in this function
 	if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_JUMP)

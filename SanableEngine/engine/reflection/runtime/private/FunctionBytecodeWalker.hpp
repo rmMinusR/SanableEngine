@@ -2,15 +2,15 @@
 
 #include "capstone/capstone.h"
 
-class FunctionWalker
+class FunctionBytecodeWalker
 {
 private:
 	const uint8_t* furthestKnownJump;
 
 public:
-	FunctionWalker(const uint8_t* data);
-	FunctionWalker(void(*fn)());
-	~FunctionWalker();
+	FunctionBytecodeWalker(const uint8_t* data);
+	FunctionBytecodeWalker(void(*fn)());
+	~FunctionBytecodeWalker();
 
 	bool advance();
 
