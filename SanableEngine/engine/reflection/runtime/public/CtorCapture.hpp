@@ -1,17 +1,12 @@
 #pragma once
 
 #include "dllapi.h"
-
-#include <cstdint>
-#include <vector>
-#include <optional>
-
-typedef std::vector<std::optional<uint8_t>> DetectedVtables;
+#include "CapstoneWrapper.hpp"
 
 struct capture_utils
 {
 private:
-	ENGINE_RTTI_API static DetectedVtables _captureVtablesInternal(std::initializer_list<void(*)()> thunks);
+	ENGINE_RTTI_API static DetectedConstants _captureVtablesInternal(size_t objSize, std::initializer_list<void(*)()> thunks);
 
 public:
 	capture_utils() = delete;
@@ -28,9 +23,9 @@ public:
 			static void thunk_newInPlace(T* ptr, Args... args) { new(ptr) T  (args...); }
 
 		public:
-			static inline DetectedVtables captureVtables()
+			static inline DetectedConstants captureVtables()
 			{
-				return _captureVtablesInternal({
+				return _captureVtablesInternal(sizeof(T), {
 					&thunk_newOnStack,
 					&thunk_newOnHeap,
 					&thunk_newInPlace

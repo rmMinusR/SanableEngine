@@ -5,9 +5,7 @@
 #include "CapstoneWrapper.hpp"
 #include "FunctionBytecodeWalker.hpp"
 
-DetectedVtables platform_captureVtables(void(*ctor)());
-
-DetectedVtables capture_utils::_captureVtablesInternal(std::initializer_list<void(*)()> thunks)
+DetectedConstants capture_utils::_captureVtablesInternal(size_t objSize, std::initializer_list<void(*)()> thunks)
 {
 	//Find CALLs shared by all thunks
 	std::vector<void(*)()> possibleCtors;
@@ -41,5 +39,5 @@ DetectedVtables capture_utils::_captureVtablesInternal(std::initializer_list<voi
 
 	//Expect one call each to the thunks calls to the same address, which will be our ctor
 	assert(possibleCtors.size() == 1);
-	return platform_captureVtables(possibleCtors[0]);
+	return platform_captureConstants(objSize, possibleCtors[0]);
 }
