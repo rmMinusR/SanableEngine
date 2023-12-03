@@ -25,13 +25,23 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM
 	MachineState state;
-	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(~uint64_t(0), sizeof(void*)); //TODO: This is also a magic value, and should not be treated as a known quantity
+	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(-1, sizeof(void*)); //TODO: This is also a magic value, and should not be treated as a known quantity
 	(*state.registers[X86_REG_ECX]) = SemanticThisPtr(); //__thiscall: caller puts address of class object in eCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 	
 	//Simulate function, one op at a time
-	FunctionBytecodeWalker walker(ctor);
-	while (walker.advance())
+	std::vector<FunctionBytecodeWalker> callstack;
+	callstack.emplace_back(ctor);
+	while (callstack.size() > 0)
 	{
+		FunctionBytecodeWalker& walker = callstack[callstack.size()-1];
+		bool endOfFunction = !walker.advance();
+		(*state.registers[X86_REG_RIP]) = SemanticKnownConst((uint_addr_t)walker.codeCursor, sizeof(void*)); //Ensure RIP is up to date
+
+		for (int i = 0; i < callstack.size()-1; ++i) printf("    ");
+		printf("%s %s\n", walker.insn->mnemonic, walker.insn->op_str);
+
+		//Execute current call frame, one opcode at a time
+
 		if (walker.insn->id == x86_insn::X86_INS_LEA)
 		{
 			state.setMemory(state.getOperand(walker.insn, 0), state.getOperand(walker.insn, 1), sizeof(void*));
@@ -39,6 +49,32 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 		else if (walker.insn->id == x86_insn::X86_INS_MOV)
 		{
 			state.setOperand(walker.insn, 0, state.getOperand(walker.insn, 1));
+		}
+		else if (carray_contains(walker.insn->detail->groups, walker.insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
+		{
+			auto fp = state.getOperand(walker.insn, 0);
+			if (std::holds_alternative<SemanticKnownConst>(fp)) callstack.emplace_back( (void(*)()) std::get<SemanticKnownConst>(fp).value );
+			else
+			{
+				printf("WARNING: Could not deduce CALL location\n");
+				printf("\t@%p:", (void*)walker.insn->address);
+				for (size_t i = 0; i < walker.insn->size; ++i) printf(" %2x", (uint32_t)walker.insn->bytes[i]);
+				printf("   ; %s %s\n", walker.insn->mnemonic, walker.insn->op_str);
+			}
+		}
+		else if (walker.insn->id == x86_insn::X86_INS_PUSH)
+		{
+			size_t opSize = walker.insn->detail->x86.operands[0].size;
+			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+			rsp.value -= opSize; //Make space on stack
+			state.setMemory((void*)rsp.value, state.getOperand(walker.insn, 0), opSize); //Write to stack
+		}
+		else if (walker.insn->id == x86_insn::X86_INS_POP)
+		{
+			size_t opSize = walker.insn->detail->x86.operands[0].size;
+			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+			state.setOperand(walker.insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
+			rsp.value += opSize; //Reclaim space on stack
 		}
 		else if (walker.insn->id == x86_insn::X86_INS_XCHG)
 		{
@@ -69,6 +105,16 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 		{
 			//Do nothing
 		}
+		else if (carray_contains(walker.insn->detail->groups, walker.insn->detail->groups_count, cs_group_type::CS_GRP_RET))
+		{
+			if (walker.insn->detail->x86.op_count != 0)
+			{
+				size_t opSize = std::get<SemanticKnownConst>(state.getOperand(walker.insn, 0)).value;
+				SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+				state.setOperand(walker.insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
+				rsp.value += opSize; //Reclaim space on stack
+			}
+		}
 		else
 		{
 			//Unhandled operation: Just invalidate all relevant register state
@@ -78,6 +124,17 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 				regsRead   , &nRegsRead,
 				regsWritten, &nRegsWritten);
 			for (int i = 0; i < nRegsWritten; ++i) *(state.registers[regsWritten[i]]) = SemanticUnknown();
+		}
+
+		if (!std::holds_alternative<SemanticKnownConst>(*state.registers[X86_REG_RSP]))
+		{
+			printf("WARNING: Lost track of RSP! This should never happen!\n");
+		}
+
+		if (endOfFunction)
+		{
+			//We returned, remove current call frame
+			callstack.pop_back();
 		}
 	}
 
