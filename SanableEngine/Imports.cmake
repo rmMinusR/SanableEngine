@@ -91,7 +91,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/libs/doctest/CMakeLists.txt")
 set(SANABLE_DISASSEMBLER "Capstone")
 if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
     message(" > Configuring Capstone disassembler for ${CMAKE_SYSTEM_PROCESSOR}")
-    set(CAPSTONE_BUILD_DIET ON)
+    #set(CAPSTONE_BUILD_DIET ON) # Don't disable, we need this in X86 mode
 
     # Disable all architectures
     #set(CAPSTONE_ARCHITECTURE_DEFAULT OFF) # Broken

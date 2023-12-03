@@ -38,31 +38,3 @@ void capstone_cleanup_instance()
 		capstone_check_error(status);
 	}
 }
-
-DetectedConstants::DetectedConstants(size_t sz)
-{
-	resize(sz);
-}
-
-void DetectedConstants::resize(size_t sz)
-{
-	//Wipe previous data
-	bytes.clear();
-	usage.clear();
-
-	//Set up for new data
-	bytes.resize(sz);
-	usage.resize(sz);
-}
-
-void DetectedConstants::merge(const DetectedConstants& other)
-{
-	assert(other.bytes.size() == this->bytes.size());
-
-	for (int i = 0; i < usage.size(); ++i)
-	{
-		this->usage[i] = this->usage[i]
-				&& other.usage[i] //Ensure other has also identified it as const
-				&& (other.bytes[i] == this->bytes[i]); //Ensure that our values match
-	}
-}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "dllapi.h"
-#include "CapstoneWrapper.hpp"
+#include "DetectedConstants.hpp"
 
 struct capture_utils
 {
@@ -26,9 +26,9 @@ public:
 			static inline DetectedConstants captureVtables()
 			{
 				return _captureVtablesInternal(sizeof(T), {
-					&thunk_newOnStack,
-					&thunk_newOnHeap,
-					&thunk_newInPlace
+					(void(*)()) &thunk_newOnStack,
+					(void(*)()) &thunk_newOnHeap,
+					(void(*)()) &thunk_newInPlace
 				});
 			}
 		};

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <vector>
-
 #include "capstone/capstone.h"
+
 
 void capstone_check_error(cs_err code);
 
@@ -14,10 +13,14 @@ void capstone_cleanup_instance();
 template<typename T1, typename T2>
 bool carray_contains(T1* arr, size_t arrSize, T2 match)
 {
-	for (size_t i = 0; i < arrSize; ++i)
-	{
-		if (arr[i] == match) return true;
-	}
+	for (size_t i = 0; i < arrSize; ++i) if (arr[i] == match) return true;
+	return false;
+}
+
+template<typename T1, typename TMatchFunc>
+bool carray_contains_if(T1* arr, size_t arrSize, TMatchFunc matchFunc)
+{
+	for (size_t i = 0; i < arrSize; ++i) if (matchFunc(arr[i])) return true;
 	return false;
 }
 
@@ -36,20 +39,3 @@ typedef uint16_t uint_addr_t;
 #else
 #error Unknown address space
 #endif
-
-
-struct DetectedConstants
-{
-	std::vector<uint8_t> bytes;
-	std::vector<bool> usage;
-
-	DetectedConstants() = default;
-	~DetectedConstants() = default;
-	DetectedConstants(size_t sz);
-	void resize(size_t sz);
-
-	//Keeps our detected constants only if our counterpart has also
-	//detected the same constant. Used for vtable detection.
-	void merge(const DetectedConstants& other);
-};
-DetectedConstants platform_captureConstants(size_t objSize, void(*ctor)());
