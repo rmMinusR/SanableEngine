@@ -48,12 +48,12 @@ GeneralValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 	//Special case: LEA (relative addresses)
 	if (insn->id == x86_insn::X86_INS_LEA && index == 1)
 	{
-		return SemanticKnownConst(X86_REL_ADDR(*insn), sizeof(void*));
+		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), sizeof(void*));
 	}
 	//Special case: jmp aka branch (relative addresses)
 	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
 	{
-		return SemanticKnownConst(X86_REL_ADDR(*insn), sizeof(void*));
+		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), sizeof(void*));
 	}
 	
 	//General case
@@ -113,6 +113,7 @@ GeneralValue MachineState::getMemory(void* _location, size_t size) const
 		it = memory.find(location+i);
 		if (it == memory.end()) return SemanticUnknown(); //Some bytes missing. Abort!
 		if (dummy.index() != it->second.index()) return SemanticUnknown(); //Some bytes were mismatched types. Abort!
+		if (std::holds_alternative<SemanticThisPtr>(dummy) && std::get<SemanticThisPtr>(dummy).offset != std::get<SemanticThisPtr>(it->second).offset) return SemanticUnknown(); //Something went *very* wrong, since we're shearing offsets on a magic value
 	}
 
 	if (std::holds_alternative<SemanticKnownConst>(it->second))
@@ -151,6 +152,7 @@ GeneralValue MachineState::getMemory(SemanticThisPtr _location, size_t size) con
 		it = thisMemory.find(location+i);
 		if (it == thisMemory.end()) return SemanticUnknown(); //Some bytes missing. Abort!
 		if (dummy.index() != it->second.index()) return SemanticUnknown(); //Some bytes were mismatched types. Abort!
+		if (std::holds_alternative<SemanticThisPtr>(dummy) && std::get<SemanticThisPtr>(dummy).offset != std::get<SemanticThisPtr>(it->second).offset) return SemanticUnknown(); //Something went *very* wrong, since we're shearing offsets on a magic value
 	}
 
 	if (std::holds_alternative<SemanticKnownConst>(it->second))
@@ -205,7 +207,7 @@ void MachineState::setMemory(void* _location, GeneralValue value, size_t size)
 	else if (std::holds_alternative<SemanticThisPtr>(value))
 	{
 		//Just hope there's no shearing
-		for (size_t i = 0; i < sizeof(void*); ++i) memory.insert_or_assign(location+i, SemanticThisPtr());
+		for (size_t i = 0; i < sizeof(void*); ++i) memory.insert_or_assign(location+i, std::get<SemanticThisPtr>(value));
 	}
 	else
 	{
@@ -226,7 +228,7 @@ void MachineState::setMemory(SemanticThisPtr _location, GeneralValue value, size
 	else if (std::holds_alternative<SemanticThisPtr>(value))
 	{
 		//Just hope there's no shearing
-		for (size_t i = 0; i < sizeof(void*); ++i) thisMemory.insert_or_assign(location+i, SemanticThisPtr());
+		for (size_t i = 0; i < sizeof(void*); ++i) thisMemory.insert_or_assign(location+i, std::get<SemanticThisPtr>(value));
 	}
 	else
 	{

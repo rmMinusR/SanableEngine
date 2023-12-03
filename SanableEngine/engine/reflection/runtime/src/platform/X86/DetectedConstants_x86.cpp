@@ -21,30 +21,76 @@ GeneralValue doMathOp(GeneralValue arg1, GeneralValue arg2,
 	}
 }
 
+int debugPrintSignedHex(int64_t val)
+{
+	if (val >= 0) return printf("+0x%llx", val);
+	else          return printf("-0x%llx", 1+(~uint64_t(0)-uint64_t(val)));
+}
+
+void debugPrint(GeneralValue val)
+{
+	int nWritten = 0;
+	     if (std::holds_alternative<SemanticKnownConst>(val)) nWritten = debugPrintSignedHex(std::get<SemanticKnownConst>(val).value);
+	else if (std::holds_alternative<SemanticThisPtr>(val)) nWritten = printf("this") + debugPrintSignedHex(std::get<SemanticThisPtr>(val).offset);
+	else if (std::holds_alternative<SemanticUnknown>(val)) nWritten = printf("(unknown)");
+	else assert(false);
+
+	int nToPad = 9-nWritten;
+	if (nToPad > 0) printf("%*c", nToPad, ' ');
+}
+
 DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM
 	MachineState state;
-	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(-1, sizeof(void*)); //TODO: This is also a magic value, and should not be treated as a known quantity
-	(*state.registers[X86_REG_ECX]) = SemanticThisPtr(); //__thiscall: caller puts address of class object in eCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
+	(*state.registers[X86_REG_RBP]) = (*state.registers[X86_REG_RSP]) = SemanticKnownConst(0, sizeof(void*)); //TODO: This is also a magic value, and should not be treated as a known quantity
+	(*state.registers[X86_REG_ECX]) = SemanticThisPtr(0); //__thiscall: caller puts address of class object in eCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 	
 	//Simulate function, one op at a time
 	std::vector<FunctionBytecodeWalker> callstack;
 	callstack.emplace_back(ctor);
 	while (callstack.size() > 0)
 	{
-		FunctionBytecodeWalker& walker = callstack[callstack.size()-1];
+		FunctionBytecodeWalker& walker = callstack[callstack.size() - 1];
 		bool endOfFunction = !walker.advance();
 		(*state.registers[X86_REG_RIP]) = SemanticKnownConst((uint_addr_t)walker.codeCursor, sizeof(void*)); //Ensure RIP is up to date
+		
+		//DEBUG
+		{
+			printf(" rcx=");
+			debugPrint(*state.registers[X86_REG_RCX]);
+			printf(" | rax=");
+			debugPrint(*state.registers[X86_REG_RAX]);
+			printf(" | rsp=");
+			debugPrint(*state.registers[X86_REG_RSP]);
+			//printf(" | rbp=");
+			//debugPrint(*state.registers[X86_REG_RBP]);
+			printf(" |> ");
 
-		for (int i = 0; i < callstack.size()-1; ++i) printf("    ");
-		printf("%s %s\n", walker.insn->mnemonic, walker.insn->op_str);
+			for (int i = 0; i < callstack.size()-1; ++i) printf(" |  "); //Indent
+			//printf("%p: ", (void*)walker.insn->address); //Write address
+			for (int i = 0; i < walker.insn->size; ++i) printf(" %02x", walker.insn->bytes[i]); //Write raw bytes
+			for (int i = 0; i < 8-walker.insn->size; ++i) printf("   "); //Pad
+			printf("    %s %s", walker.insn->mnemonic, walker.insn->op_str); //Write disassembly
+
+			if (walker.insn->id == x86_insn::X86_INS_LEA)
+			{
+				auto dst = state.getOperand(walker.insn, 0);
+				auto value = state.getOperand(walker.insn, 1);
+				printf(" ;   *("); debugPrint(dst);
+				printf(") := "); debugPrint(value);
+			}
+
+			printf("\n");
+		}
 
 		//Execute current call frame, one opcode at a time
-
+		
 		if (walker.insn->id == x86_insn::X86_INS_LEA)
 		{
-			state.setMemory(state.getOperand(walker.insn, 0), state.getOperand(walker.insn, 1), sizeof(void*));
+			auto dst = state.getOperand(walker.insn, 0);
+			auto addr = state.getOperand(walker.insn, 1);
+			state.setMemory(dst, addr, sizeof(void*));
 		}
 		else if (walker.insn->id == x86_insn::X86_INS_MOV)
 		{
@@ -86,19 +132,19 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 		else if (walker.insn->id == x86_insn::X86_INS_SUB)
 		{
 			state.setOperand(walker.insn, 0, doMathOp(state.getOperand(walker.insn, 0), state.getOperand(walker.insn, 1),
-				[](const SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value-arg2.value, std::min(arg1.size, arg2.size)); },
-				[](const SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); },
-				[](const SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.value }; },
-				[](const SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset-arg2.offset, sizeof(void*)); }
+				[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value-arg2.value, std::min(arg1.size, arg2.size)); },
+				[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); },
+				[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.value }; },
+				[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*)); }
 			));
 		}
 		else if (walker.insn->id == x86_insn::X86_INS_ADD)
 		{
 			state.setOperand(walker.insn, 0, doMathOp(state.getOperand(walker.insn, 0), state.getOperand(walker.insn, 1),
-				[](const SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value+arg2.value, std::min(arg1.size, arg2.size)); },
-				[](const SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.value + arg2.offset }; },
-				[](const SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.value }; },
-				[](const SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); }
+				[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value+arg2.value, std::min(arg1.size, arg2.size)); },
+				[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.value + arg2.offset }; },
+				[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.value }; },
+				[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); }
 			));
 		}
 		else if (walker.insn->id == x86_insn::X86_INS_NOP)

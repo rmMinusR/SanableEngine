@@ -32,7 +32,7 @@ public:
 						(void(*)()) &thunk_newOnHeap,
 						(void(*)()) &thunk_newInPlace
 					},
-					{ (void(*)()) &memset }, //Some compilers will pre-zero, especially in debug mode. Don't catch that.
+					{ (void(*)()) &memset }, //Some compilers will pre-zero, especially in debug mode. Don't catch that. NOTE: &memset will be unique per-module.
 					wasPreZeroed_out_optional
 				);
 			}

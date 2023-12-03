@@ -51,11 +51,13 @@ bool FunctionBytecodeWalker::advance()
 
 FunctionBytecodeWalker::FunctionBytecodeWalker(const FunctionBytecodeWalker& cpy)
 {
+	this->insn = nullptr;
 	*this = cpy;
 }
 
 FunctionBytecodeWalker::FunctionBytecodeWalker(FunctionBytecodeWalker&& mov)
 {
+	this->insn = nullptr;
 	*this = mov;
 }
 
@@ -63,7 +65,10 @@ FunctionBytecodeWalker& FunctionBytecodeWalker::operator=(const FunctionBytecode
 {
 	this->furthestKnownJump = cpy.furthestKnownJump;
 	this->codeCursor = cpy.codeCursor;
+
+	if (this->insn) cs_free(this->insn, 1);
 	this->insn = cs_malloc(capstone_get_instance()); //Note that this instruction will be invalid until the next time advance() is called
+
 	return *this;
 }
 
@@ -71,6 +76,8 @@ FunctionBytecodeWalker& FunctionBytecodeWalker::operator=(FunctionBytecodeWalker
 {
 	this->furthestKnownJump = mov.furthestKnownJump;
 	this->codeCursor        = mov.codeCursor;
+
+	if (this->insn) cs_free(this->insn, 1);
 	this->insn              = mov.insn;
 
 	mov.furthestKnownJump = nullptr;

@@ -8,6 +8,7 @@
 #include "capstone/capstone.h"
 
 
+struct SemanticUnknown {};
 struct SemanticKnownConst
 {
 	uint64_t value = 0; //We don't need to support registers bigger than 64 bits right now
@@ -20,8 +21,11 @@ struct SemanticKnownConst
 		return reinterpret_cast<uint8_t*>(&value)[index];
 	}
 };
-struct SemanticUnknown {};
-struct SemanticThisPtr { size_t offset = 0; }; //Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
+struct SemanticThisPtr //Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
+{
+	size_t offset = 0;
+	inline SemanticThisPtr(size_t offset) : offset(offset) {}
+}; 
 using GeneralValue = std::variant<SemanticUnknown, SemanticKnownConst, SemanticThisPtr>;
 
 
