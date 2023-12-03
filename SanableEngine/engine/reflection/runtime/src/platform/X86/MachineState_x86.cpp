@@ -33,7 +33,7 @@ void MachineState::reset()
 
 uint8_t* decodeMemAddr(x86_op_mem mem, GeneralValue* const* const registers)
 {
-	uint8_t* addr = nullptr;
+	uint8_t* addr = nullptr; //TODO: Return GeneralValue, account for ThisPtr
 	if (mem.base    != X86_REG_INVALID) if (GeneralValue reg = *registers[mem.base ]; std::holds_alternative<SemanticKnownConst>(reg)) addr += std::get<SemanticKnownConst>(reg).value;
 	if (mem.index   != X86_REG_INVALID) if (GeneralValue reg = *registers[mem.index]; std::holds_alternative<SemanticKnownConst>(reg)) addr += std::get<SemanticKnownConst>(reg).value * mem.scale;
 	assert(mem.segment == X86_REG_INVALID); //FIXME: I'm not dealing with that right now
@@ -43,44 +43,48 @@ uint8_t* decodeMemAddr(x86_op_mem mem, GeneralValue* const* const registers)
 
 GeneralValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 {
-	//Special case: LEA/BRANCH (relative addresses)
-	if (insn->id == x86_insn::X86_INS_LEA || carray_contains(insn->detail->groups, insn->detail->groups_count, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
+	assert(index < insn->detail->x86.op_count);
+	
+	//Special case: LEA (relative addresses)
+	if (insn->id == x86_insn::X86_INS_LEA && index == 1)
 	{
-		assert(index < 1);
+		return SemanticKnownConst(X86_REL_ADDR(*insn), sizeof(void*));
+	}
+	//Special case: jmp aka branch (relative addresses)
+	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
+	{
 		return SemanticKnownConst(X86_REL_ADDR(*insn), sizeof(void*));
 	}
 	
 	//General case
-	else
+	cs_x86_op op = insn->detail->x86.operands[index];
+	switch (op.type)
 	{
-		assert(index < 8);
+	case x86_op_type::X86_OP_REG:
+		return *registers[op.reg];
 
-		cs_x86_op op = insn->detail->x86.operands[index];
+	case x86_op_type::X86_OP_IMM:
+		return SemanticKnownConst(op.imm, op.size); //Completely legal: every machine out there stores negatives as two's compliment
 
-		switch (op.type)
-		{
-		case x86_op_type::X86_OP_REG:
-			return *registers[op.reg];
+	case x86_op_type::X86_OP_MEM:
+		return getMemory(decodeMemAddr(op.mem, registers), op.size);
 
-		case x86_op_type::X86_OP_IMM:
-			return SemanticKnownConst(op.imm, op.size); //Completely legal: every machine out there stores negatives as two's compliment
-
-		case x86_op_type::X86_OP_MEM:
-			return getMemory(decodeMemAddr(op.mem, registers), op.size);
-
-		default:
-			assert(false);
-			return GeneralValue();
-		}
+	default:
+		assert(false);
+		return GeneralValue();
 	}
 }
 
 void MachineState::setOperand(const cs_insn* insn, size_t index, GeneralValue value)
 {
-	assert(index < 8);
+	assert(index < insn->detail->x86.op_count);
 	
 	cs_x86_op op = insn->detail->x86.operands[index];
 
+	//Special case where operand should be treated as a pointer
+	assert(!(insn->id == x86_insn::X86_INS_LEA && index == 0));
+
+	//General case
 	switch (op.type)
 	{
 	case x86_op_type::X86_OP_REG:

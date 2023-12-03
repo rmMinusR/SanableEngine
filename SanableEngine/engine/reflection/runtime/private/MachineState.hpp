@@ -21,7 +21,7 @@ struct SemanticKnownConst
 	}
 };
 struct SemanticUnknown {};
-struct SemanticThisPtr { size_t offset = 0; }; //Represents the "this" keyword plus some offset. Typically lives in eAX/rAX/AX.
+struct SemanticThisPtr { size_t offset = 0; }; //Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
 using GeneralValue = std::variant<SemanticUnknown, SemanticKnownConst, SemanticThisPtr>;
 
 
