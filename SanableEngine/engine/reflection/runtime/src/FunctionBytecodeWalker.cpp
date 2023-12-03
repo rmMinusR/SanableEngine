@@ -18,8 +18,11 @@ FunctionBytecodeWalker::FunctionBytecodeWalker(void(*fn)()) :
 
 FunctionBytecodeWalker::~FunctionBytecodeWalker()
 {
-	cs_free(insn, 1);
-	insn = nullptr;
+	if (insn)
+	{
+		cs_free(insn, 1);
+		insn = nullptr;
+	}
 }
 
 bool FunctionBytecodeWalker::advance()
@@ -44,4 +47,35 @@ bool FunctionBytecodeWalker::advance()
 	}
 	//Normal instructions: just continue parsing
 	else return true;
+}
+
+FunctionBytecodeWalker::FunctionBytecodeWalker(const FunctionBytecodeWalker& cpy)
+{
+	*this = cpy;
+}
+
+FunctionBytecodeWalker::FunctionBytecodeWalker(FunctionBytecodeWalker&& mov)
+{
+	*this = mov;
+}
+
+FunctionBytecodeWalker& FunctionBytecodeWalker::operator=(const FunctionBytecodeWalker& cpy)
+{
+	this->furthestKnownJump = cpy.furthestKnownJump;
+	this->codeCursor = cpy.codeCursor;
+	this->insn = cs_malloc(capstone_get_instance()); //Note that this instruction will be invalid until the next time advance() is called
+	return *this;
+}
+
+FunctionBytecodeWalker& FunctionBytecodeWalker::operator=(FunctionBytecodeWalker&& mov)
+{
+	this->furthestKnownJump = mov.furthestKnownJump;
+	this->codeCursor        = mov.codeCursor;
+	this->insn              = mov.insn;
+
+	mov.furthestKnownJump = nullptr;
+	mov.codeCursor = nullptr;
+	mov.insn = nullptr;
+
+	return *this;
 }

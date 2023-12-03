@@ -16,4 +16,9 @@ public:
 
 	const uint8_t* codeCursor; //RIP equivalent
 	cs_insn* insn; //Last-parsed instruction
+
+	FunctionBytecodeWalker(const FunctionBytecodeWalker& cpy);
+	FunctionBytecodeWalker(FunctionBytecodeWalker&& mov);
+	FunctionBytecodeWalker& operator=(const FunctionBytecodeWalker& cpy);
+	FunctionBytecodeWalker& operator=(FunctionBytecodeWalker&& mov);
 };
