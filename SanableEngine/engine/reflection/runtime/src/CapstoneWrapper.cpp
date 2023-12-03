@@ -25,6 +25,9 @@ csh capstone_get_instance()
 			&capstone_instance
 		);
 		capstone_check_error(status);
+
+		status = cs_option(capstone_instance, cs_opt_type::CS_OPT_DETAIL, cs_opt_value::CS_OPT_ON);
+		capstone_check_error(status);
 	}
 
 	return capstone_instance;

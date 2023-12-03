@@ -23,6 +23,6 @@ struct DetectedConstants
 	ENGINE_RTTI_API DetectedConstants(DetectedConstants&& mov);
 	ENGINE_RTTI_API DetectedConstants& operator=(const DetectedConstants& cpy);
 	ENGINE_RTTI_API DetectedConstants& operator=(DetectedConstants&& mov);
+	
+	ENGINE_RTTI_API static DetectedConstants captureCtor(size_t objSize, void(*ctor)());
 };
-
-DetectedConstants platform_captureConstants(size_t objSize, void(*ctor)());

@@ -102,6 +102,7 @@ GeneralValue MachineState::getMemory(void* _location, size_t size) const
 
 	//Sanity check first: Entire byte-string is present and same type
 	auto it = memory.find(location);
+	if (it == memory.end()) return SemanticUnknown(); //Nothing found. Abort!
 	GeneralValue dummy = it->second;
 	for (size_t i = 0; i < size; ++i)
 	{
@@ -139,6 +140,7 @@ GeneralValue MachineState::getMemory(SemanticThisPtr _location, size_t size) con
 
 	//Sanity check first: Entire byte-string is present and same type
 	auto it = thisMemory.find(location);
+	if (it == thisMemory.end()) return SemanticUnknown(); //Nothing found. Abort!
 	GeneralValue dummy = it->second;
 	for (size_t i = 0; i < size; ++i)
 	{

@@ -5,7 +5,7 @@
 #include "FunctionBytecodeWalker.hpp"
 #include "MachineState.hpp"
 
-DetectedConstants platform_captureConstants(size_t objSize, void(*ctor)())
+DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM, __thiscall format
 	MachineState state;
