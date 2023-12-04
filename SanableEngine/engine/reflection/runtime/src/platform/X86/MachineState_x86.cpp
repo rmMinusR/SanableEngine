@@ -1,6 +1,7 @@
 #include "MachineState.hpp"
 
 #include <cassert>
+#include <optional>
 
 #include "CapstoneWrapper.hpp"
 
@@ -31,14 +32,15 @@ void MachineState::reset()
 	for (auto& reg : __registerStorage) reg = SemanticUnknown();
 }
 
-uint8_t* decodeMemAddr(x86_op_mem mem, GeneralValue* const* const registers)
+GeneralValue decodeMemAddr(x86_op_mem mem, GeneralValue* const* const registers)
 {
-	uint8_t* addr = nullptr; //TODO: Return GeneralValue, account for ThisPtr
-	if (mem.base    != X86_REG_INVALID) if (GeneralValue reg = *registers[mem.base ]; std::holds_alternative<SemanticKnownConst>(reg)) addr += std::get<SemanticKnownConst>(reg).value;
-	if (mem.index   != X86_REG_INVALID) if (GeneralValue reg = *registers[mem.index]; std::holds_alternative<SemanticKnownConst>(reg)) addr += std::get<SemanticKnownConst>(reg).value * mem.scale;
+	std::optional<GeneralValue> addr; //TODO: Return GeneralValue, account for ThisPtr
+#define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*))) + (val))
+	if (mem.base  != X86_REG_INVALID) addValue( *registers[mem.base] );
+	if (mem.index != X86_REG_INVALID) addValue( *registers[mem.index] * SemanticKnownConst(mem.scale, sizeof(void*)) );
 	assert(mem.segment == X86_REG_INVALID); //FIXME: I'm not dealing with that right now
-	addr += mem.disp;
-	return addr;
+	addValue( SemanticKnownConst(mem.disp, sizeof(void*)) );
+	return addr.value();
 }
 
 GeneralValue MachineState::getOperand(const cs_insn* insn, size_t index) const
@@ -80,9 +82,6 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, GeneralValue va
 	assert(index < insn->detail->x86.op_count);
 	
 	cs_x86_op op = insn->detail->x86.operands[index];
-
-	//Special case where operand should be treated as a pointer
-	assert(!(insn->id == x86_insn::X86_INS_LEA && index == 0));
 
 	//General case
 	switch (op.type)

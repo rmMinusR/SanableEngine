@@ -1,25 +1,10 @@
 #include "DetectedConstants.hpp"
 
-#include "CapstoneWrapper.hpp"
+#include <functional>
 
+#include "CapstoneWrapper.hpp"
 #include "FunctionBytecodeWalker.hpp"
 #include "MachineState.hpp"
-
-template<typename T1, typename T2, typename T3, typename T4>
-GeneralValue doMathOp(GeneralValue arg1, GeneralValue arg2,
-	T1 funcConstConst, T2 funcConstThis, T3 funcThisConst, T4 funcThisThis)
-{
-		 if (std::holds_alternative<SemanticUnknown   >(arg1) || std::holds_alternative<SemanticUnknown   >(arg2)) return SemanticUnknown();
-	else if (std::holds_alternative<SemanticKnownConst>(arg1) && std::holds_alternative<SemanticKnownConst>(arg2)) return funcConstConst(std::get<SemanticKnownConst>(arg1), std::get<SemanticKnownConst>(arg2));
-	else if (std::holds_alternative<SemanticKnownConst>(arg1) && std::holds_alternative<SemanticThisPtr   >(arg2)) return funcConstThis (std::get<SemanticKnownConst>(arg1), std::get<SemanticThisPtr   >(arg2));
-	else if (std::holds_alternative<SemanticThisPtr   >(arg1) && std::holds_alternative<SemanticKnownConst>(arg2)) return funcThisConst (std::get<SemanticThisPtr   >(arg1), std::get<SemanticKnownConst>(arg2));
-	else if (std::holds_alternative<SemanticThisPtr   >(arg1) && std::holds_alternative<SemanticThisPtr   >(arg2)) return funcThisThis  (std::get<SemanticThisPtr   >(arg1), std::get<SemanticThisPtr   >(arg2));
-	else
-	{
-		assert(false);
-		return GeneralValue();
-	}
-}
 
 #pragma region Debugging prints
 
@@ -85,16 +70,145 @@ int printLEA(const MachineState& state, const cs_insn* insn)
 
 void pad(int& charsPrinted, int desiredWidth)
 {
-	assert(charsPrinted < desiredWidth);
-	printf("%*c", desiredWidth-charsPrinted, ' ');
-	charsPrinted = desiredWidth;
+	if (charsPrinted < desiredWidth)
+	{
+		printf("%*c", desiredWidth-charsPrinted, ' ');
+		charsPrinted = desiredWidth;
+	}
 }
 
 #pragma endregion
 
-void tickVM(MachineState& state, const cs_insn* insn)
+void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack)
 {
+	if (insn->id == x86_insn::X86_INS_LEA)
+	{
+		auto dst = state.getOperand(insn, 0);
+		auto addr = state.getOperand(insn, 1);
+		//state.setMemory(dst, addr, sizeof(void*));
+		state.setOperand(insn, 0, addr);
+	}
+	else if (insn->id == x86_insn::X86_INS_MOV)
+	{
+		state.setOperand(insn, 0, state.getOperand(insn, 1));
+	}
+	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
+	{
+		//Requires target address to be a known const. Will crash otherwise
+		assert(std::holds_alternative<SemanticKnownConst>(state.getOperand(insn, 0)));
 
+		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+		GeneralValue      & rbp = *state.registers[X86_REG_RBP];
+		SemanticKnownConst& rip = std::get<SemanticKnownConst>(*state.registers[X86_REG_RIP]);
+		SemanticKnownConst fp = std::get<SemanticKnownConst>(state.getOperand(insn, 0));
+
+		//Push return address to stack
+		rsp.value -= rip.size; state.setMemory((void*)rsp.value, rip, rip.size);
+
+		//Push previous RBP to stack
+		rsp.value -= sizeof(void*); state.setMemory((void*)rsp.value, rbp, sizeof(void*));
+
+		//Mark new RBP
+		rbp = rsp;
+
+		//Jump to new function
+		rip.value = fp.value;
+
+		pushCallStack((uint8_t*)rip.value); //Sanity check. Also no ROP nonsense
+	}
+	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_RET))
+	{
+		//Cannot pop to an indeterminate address
+		if (std::holds_alternative<SemanticKnownConst>(*state.registers[X86_REG_RBP]))
+		{
+			//Pop previous stack frame (return address and RBP) from stack
+			SemanticKnownConst& rbp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RBP]);
+			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+			GeneralValue oldRbp     = state.getMemory((void*)(rbp.value              ), sizeof(void*));
+			GeneralValue returnAddr = state.getMemory((void*)(rbp.value+sizeof(void*)), sizeof(void*));
+			rsp.value += 2*sizeof(void*);
+
+			*state.registers[X86_REG_RIP] = returnAddr; //Jump to return address
+			*state.registers[X86_REG_RBP] = oldRbp; //Pop rbp
+
+			//If given an operand, pop that many bytes from the stack
+			if (insn->detail->x86.op_count == 1)
+			{
+				size_t opSize = std::get<SemanticKnownConst>(state.getOperand(insn, 0)).value;
+				SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+				state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
+				rsp.value += opSize; //Reclaim space on stack
+			}
+
+			//Sanity check. Also no ROP nonsense
+			void* poppedReturnAddr = popCallStack();
+			assert(poppedReturnAddr == (void*)std::get<SemanticKnownConst>(returnAddr).value);
+		}
+		else
+		{
+			//Invalidate state
+			*state.registers[X86_REG_RIP] = SemanticUnknown();
+			*state.registers[X86_REG_RBP] = SemanticUnknown();
+
+			//Pop from stack
+			std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]).value += 2*sizeof(void*);
+				
+			//If given an operand, pop that many bytes from the stack
+			if (insn->detail->x86.op_count == 1)
+			{
+				size_t opSize = std::get<SemanticKnownConst>(state.getOperand(insn, 0)).value;
+				SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+				state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
+				rsp.value += opSize; //Reclaim space on stack
+			}
+
+			//Pop from our sanity checker
+			popCallStack();
+		}
+	}
+	else if (insn->id == x86_insn::X86_INS_PUSH)
+	{
+		size_t opSize = insn->detail->x86.operands[0].size;
+		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+		rsp.value -= opSize; //Make space on stack
+		state.setMemory((void*)rsp.value, state.getOperand(insn, 0), opSize); //Write to stack
+	}
+	else if (insn->id == x86_insn::X86_INS_POP)
+	{
+		size_t opSize = insn->detail->x86.operands[0].size;
+		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+		state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
+		rsp.value += opSize; //Reclaim space on stack
+	}
+	else if (insn->id == x86_insn::X86_INS_XCHG)
+	{
+		auto val1 = state.getOperand(insn, 0);
+		auto val2 = state.getOperand(insn, 1);
+		state.setOperand(insn, 0, val2);
+		state.setOperand(insn, 1, val1);
+	}
+	else if (insn->id == x86_insn::X86_INS_SUB)
+	{
+		state.setOperand(insn, 0, state.getOperand(insn, 0)-state.getOperand(insn, 1));
+	}
+	else if (insn->id == x86_insn::X86_INS_ADD)
+	{
+		state.setOperand(insn, 0, state.getOperand(insn, 0)+state.getOperand(insn, 1));
+	}
+	else if (insn->id == x86_insn::X86_INS_NOP)
+	{
+		//Do nothing
+	}
+	else
+	{
+		//Unhandled operation: Just invalidate all relevant register state
+		cs_regs regsRead   ; uint8_t nRegsRead;
+		cs_regs regsWritten; uint8_t nRegsWritten;
+		cs_regs_access(capstone_get_instance(), insn,
+			regsRead   , &nRegsRead,
+			regsWritten, &nRegsWritten);
+		for (int i = 0; i < nRegsWritten; ++i) *(state.registers[regsWritten[i]]) = SemanticUnknown();
+	}
 }
 
 DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
@@ -103,7 +217,7 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 	MachineState state;
 	(*state.registers[X86_REG_RBP]) = SemanticUnknown(); //Caller is indeterminate
 	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(-2*sizeof(void*), sizeof(void*)); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
-	(*state.registers[X86_REG_ECX]) = SemanticThisPtr(0); //__thiscall: caller puts address of class object in eCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
+	(*state.registers[X86_REG_RCX]) = SemanticThisPtr(0); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 	
 	//Simulate function, one op at a time
 	std::vector<FunctionBytecodeWalker> callstack;
@@ -122,147 +236,18 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 		}
 
 		//Execute current call frame, one opcode at a time
+		stepVM(state, walker.insn,
+			[&](void* func)
+			{
+				callstack.emplace_back((uint8_t*)func);
+			},
+			[&]()
+			{
+				callstack.pop_back();
+				return callstack.size()>0 ? (void*)callstack[callstack.size()-1].codeCursor : nullptr;
+			}
+		);
 		
-		if (walker.insn->id == x86_insn::X86_INS_LEA)
-		{
-			auto dst = state.getOperand(walker.insn, 0);
-			auto addr = state.getOperand(walker.insn, 1);
-			state.setMemory(dst, addr, sizeof(void*));
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_MOV)
-		{
-			state.setOperand(walker.insn, 0, state.getOperand(walker.insn, 1));
-		}
-		else if (carray_contains(walker.insn->detail->groups, walker.insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
-		{
-			//Requires target address to be a known const. Will crash otherwise
-			assert(std::holds_alternative<SemanticKnownConst>(state.getOperand(walker.insn, 0)));
-
-			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-			GeneralValue      & rbp = *state.registers[X86_REG_RBP];
-			SemanticKnownConst& rip = std::get<SemanticKnownConst>(*state.registers[X86_REG_RIP]);
-			SemanticKnownConst fp = std::get<SemanticKnownConst>(state.getOperand(walker.insn, 0));
-
-			//Push return address to stack
-			rsp.value -= rip.size; state.setMemory((void*)rsp.value, rip, rip.size);
-
-			//Push previous RBP to stack
-			rsp.value -= sizeof(void*); state.setMemory((void*)rsp.value, rbp, sizeof(void*));
-
-			//Mark new RBP
-			rbp = rsp;
-
-			//Jump to new function
-			rip.value = fp.value;
-
-			callstack.emplace_back((uint8_t*)rip.value); //Sanity check. Also no ROP nonsense
-		}
-		else if (carray_contains(walker.insn->detail->groups, walker.insn->detail->groups_count, cs_group_type::CS_GRP_RET))
-		{
-			if (callstack.size() > 1)
-			{
-				//Cannot pop to an indeterminate address.
-				assert(std::holds_alternative<SemanticKnownConst>(*state.registers[X86_REG_RBP]));
-
-				//Pop previous stack frame (return address and RBP) from stack
-				SemanticKnownConst& rbp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RBP]);
-				SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-				GeneralValue oldRbp     = state.getMemory((void*)(rbp.value              ), sizeof(void*));
-				GeneralValue returnAddr = state.getMemory((void*)(rbp.value+sizeof(void*)), sizeof(void*));
-				rsp.value += 2*sizeof(void*);
-
-				*state.registers[X86_REG_RIP] = returnAddr; //Jump to return address
-				*state.registers[X86_REG_RBP] = oldRbp; //Pop rbp
-
-				//If given an operand, pop that many bytes from the stack
-				if (walker.insn->detail->x86.op_count == 1)
-				{
-					size_t opSize = std::get<SemanticKnownConst>(state.getOperand(walker.insn, 0)).value;
-					SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-					state.setOperand(walker.insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
-					rsp.value += opSize; //Reclaim space on stack
-				}
-
-				//Sanity check. Also no ROP nonsense
-				callstack.pop_back();
-				assert(callstack[callstack.size()-1].codeCursor == (void*)std::get<SemanticKnownConst>(returnAddr).value);
-			}
-			else
-			{
-				//Invalidate state
-				*state.registers[X86_REG_RIP] = SemanticUnknown();
-				*state.registers[X86_REG_RBP] = SemanticUnknown();
-
-				//Pop from stack
-				std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]).value += 2*sizeof(void*);
-				
-				//If given an operand, pop that many bytes from the stack
-				if (walker.insn->detail->x86.op_count == 1)
-				{
-					size_t opSize = std::get<SemanticKnownConst>(state.getOperand(walker.insn, 0)).value;
-					SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-					state.setOperand(walker.insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
-					rsp.value += opSize; //Reclaim space on stack
-				}
-
-				//Pop from our sanity checker
-				callstack.pop_back();
-			}
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_PUSH)
-		{
-			size_t opSize = walker.insn->detail->x86.operands[0].size;
-			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-			rsp.value -= opSize; //Make space on stack
-			state.setMemory((void*)rsp.value, state.getOperand(walker.insn, 0), opSize); //Write to stack
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_POP)
-		{
-			size_t opSize = walker.insn->detail->x86.operands[0].size;
-			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-			state.setOperand(walker.insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
-			rsp.value += opSize; //Reclaim space on stack
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_XCHG)
-		{
-			auto val1 = state.getOperand(walker.insn, 0);
-			auto val2 = state.getOperand(walker.insn, 1);
-			state.setOperand(walker.insn, 0, val2);
-			state.setOperand(walker.insn, 1, val1);
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_SUB)
-		{
-			state.setOperand(walker.insn, 0, doMathOp(state.getOperand(walker.insn, 0), state.getOperand(walker.insn, 1),
-				[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value-arg2.value, std::min(arg1.size, arg2.size)); },
-				[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); },
-				[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.value }; },
-				[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*)); }
-			));
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_ADD)
-		{
-			state.setOperand(walker.insn, 0, doMathOp(state.getOperand(walker.insn, 0), state.getOperand(walker.insn, 1),
-				[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value+arg2.value, std::min(arg1.size, arg2.size)); },
-				[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.value + arg2.offset }; },
-				[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.value }; },
-				[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); }
-			));
-		}
-		else if (walker.insn->id == x86_insn::X86_INS_NOP)
-		{
-			//Do nothing
-		}
-		else
-		{
-			//Unhandled operation: Just invalidate all relevant register state
-			cs_regs regsRead   ; uint8_t nRegsRead;
-			cs_regs regsWritten; uint8_t nRegsWritten;
-			cs_regs_access(capstone_get_instance(), walker.insn,
-				regsRead   , &nRegsRead,
-				regsWritten, &nRegsWritten);
-			for (int i = 0; i < nRegsWritten; ++i) *(state.registers[regsWritten[i]]) = SemanticUnknown();
-		}
-
 		{
 			int charsPrinted = 0;
 			charsPrinted += printf(" < ");

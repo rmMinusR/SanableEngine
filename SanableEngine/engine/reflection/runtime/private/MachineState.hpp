@@ -27,6 +27,9 @@ struct SemanticThisPtr //Represents the "this" keyword plus some offset. Typical
 	inline SemanticThisPtr(size_t offset) : offset(offset) {}
 }; 
 using GeneralValue = std::variant<SemanticUnknown, SemanticKnownConst, SemanticThisPtr>;
+GeneralValue operator+(const GeneralValue& lhs, const GeneralValue& rhs);
+GeneralValue operator-(const GeneralValue& lhs, const GeneralValue& rhs);
+GeneralValue operator*(const GeneralValue& lhs, const GeneralValue& rhs);
 
 
 struct MachineState

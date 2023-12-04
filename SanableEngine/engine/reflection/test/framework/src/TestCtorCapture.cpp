@@ -34,9 +34,7 @@ TEST_CASE("Ctor capture: Multiple case")
 {
 	//Complex case: Multiple inheritance
 	SUBCASE("ConcreteBase") { testCtorCaptureV2<ConcreteBase>(); }
-	SUBCASE("ImplementerA") {
-		testCtorCaptureV2<ImplementerA>();
-	}
+	SUBCASE("ImplementerA") { testCtorCaptureV2<ImplementerA>(); }
 	SUBCASE("ImplementerB") { testCtorCaptureV2<ImplementerB>(); }
 }
 
@@ -72,10 +70,12 @@ void testCtorCaptureV2()
 	{
 		for (uint8_t fill : { 0x00, 0x88, 0xFF })
 		{
+			const TypeInfo* ty = TypeName::create<T>().resolve();
+
 			//Baseline
 			uint8_t dummy[sizeof(T)];
 			memset(dummy, fill, sizeof(T));
-			TypeName::create<T>().resolve()->vptrJam(dummy);
+			ty->vptrJam(dummy);
 
 			for (size_t i = 0; i < sizeof(T); ++i) printf("%02x ", (uint32_t)dummy[i]);
 			printf("\n");
@@ -83,6 +83,14 @@ void testCtorCaptureV2()
 			//New version
 			bool wasPreZeroed = false;
 			DetectedConstants vtables = capture_utils::type<T>::template ctor<>::captureVtables(&wasPreZeroed);
+
+			//Unmark explicit fields
+			ty->walkFields(
+				[&](const FieldInfo& fi)
+				{
+					for (int i = 0; i < fi.size; ++i) vtables.usage[fi.offset + i] = false;
+				}
+			);
 			
 			for (size_t i = 0; i < sizeof(T); ++i) if (vtables.usage[i]) printf("%02x ", (uint32_t)vtables.bytes[i]); else printf(".. ");
 			printf("\n");
