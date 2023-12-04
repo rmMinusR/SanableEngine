@@ -25,3 +25,13 @@ std::string Derived2::identify_s()
 {
 	return "Derived2";
 }
+
+std::string GrandchildOfBase::identify() const
+{
+	return GrandchildOfBase::identify_s();
+}
+
+std::string GrandchildOfBase::identify_s()
+{
+	return "GrandchildOfBase";
+}

@@ -24,6 +24,10 @@ TEST_CASE("Ctor capture: Simple case")
 	//Simple case
 	SUBCASE("Derived1") { testCtorCaptureV2<Derived1>(); }
 	SUBCASE("Derived2") { testCtorCaptureV2<Derived2>(); }
+	SUBCASE("GrandchildOfBase")
+	{ 
+		testCtorCaptureV2<GrandchildOfBase>();
+	}
 }
 
 TEST_CASE("Ctor capture: Multiple case")
