@@ -32,7 +32,7 @@ void MachineState::reset()
 	for (auto& reg : __registerStorage) reg = SemanticUnknown();
 }
 
-GeneralValue decodeMemAddr(x86_op_mem mem, GeneralValue* const* const registers)
+GeneralValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 {
 	std::optional<GeneralValue> addr; //TODO: Return GeneralValue, account for ThisPtr
 #define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*))) + (val))
@@ -66,10 +66,10 @@ GeneralValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 		return *registers[op.reg];
 
 	case x86_op_type::X86_OP_IMM:
-		return SemanticKnownConst(op.imm, op.size); //Completely legal: every machine out there stores negatives as two's compliment
+		return SemanticKnownConst(op.imm, op.size); //Completely legal: almost every machine out there stores negatives as two's compliment
 
 	case x86_op_type::X86_OP_MEM:
-		return getMemory(decodeMemAddr(op.mem, registers), op.size);
+		return getMemory(decodeMemAddr(op.mem), op.size);
 
 	default:
 		assert(false);
@@ -91,7 +91,7 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, GeneralValue va
 		return;
 
 	case x86_op_type::X86_OP_MEM:
-		setMemory(decodeMemAddr(op.mem, registers), value, op.size);
+		setMemory(decodeMemAddr(op.mem), value, op.size);
 		return;
 	
 	default:

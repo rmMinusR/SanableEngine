@@ -43,6 +43,7 @@ private:
 public:
 	//Safety: Redefine registers as immutable
 	GeneralValue* const* const registers = __registerMappings;
+	GeneralValue decodeMemAddr(const x86_op_mem&) const;
 
 private:
 	std::map<uint8_t*, GeneralValue> memory; //Will never be SemanticUnknown
