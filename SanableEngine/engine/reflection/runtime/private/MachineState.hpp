@@ -1,35 +1,11 @@
 #pragma once
 
 #include <cstdint>
-#include <cassert>
-#include <variant>
 #include <map>
 
 #include "capstone/capstone.h"
 
-
-struct SemanticUnknown {};
-struct SemanticKnownConst
-{
-	uint64_t value = 0; //We don't need to support registers bigger than 64 bits right now
-	size_t size = 0;
-	inline SemanticKnownConst(uint64_t v, size_t s) : value(v), size(s) {}
-
-	inline uint8_t& byte(size_t index)
-	{
-		assert(index < size);
-		return reinterpret_cast<uint8_t*>(&value)[index];
-	}
-};
-struct SemanticThisPtr //Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
-{
-	size_t offset = 0;
-	inline SemanticThisPtr(size_t offset) : offset(offset) {}
-}; 
-using GeneralValue = std::variant<SemanticUnknown, SemanticKnownConst, SemanticThisPtr>;
-GeneralValue operator+(const GeneralValue& lhs, const GeneralValue& rhs);
-GeneralValue operator-(const GeneralValue& lhs, const GeneralValue& rhs);
-GeneralValue operator*(const GeneralValue& lhs, const GeneralValue& rhs);
+#include "SemanticValue.hpp"
 
 
 struct MachineState

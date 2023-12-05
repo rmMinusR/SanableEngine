@@ -1,5 +1,6 @@
 #include "DetectedConstants.hpp"
 
+#include <cassert>
 #include <functional>
 
 #include "CapstoneWrapper.hpp"
