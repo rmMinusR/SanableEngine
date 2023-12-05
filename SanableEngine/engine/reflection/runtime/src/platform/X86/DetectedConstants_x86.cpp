@@ -48,24 +48,15 @@ int printInstructionCursor(const cs_insn* insn, int callLevel)
 	int bytesWritten = 0;
 	for (int i = 0; i < callLevel   ; ++i) bytesWritten += printf(" |  "); //Indent
 	//                                     bytesWritten += printf("%p: ", (void*)walker.insn->address); //Write address
-	for (int i = 0; i < insn->size  ; ++i) bytesWritten += printf(" %02x", insn->bytes[i]); //Write raw bytes
-	for (int i = 0; i < 8-insn->size; ++i) bytesWritten += printf("   "); //Pad
-	                                       bytesWritten += printf("    %s %s", insn->mnemonic, insn->op_str); //Write disassembly
+	//for (int i = 0; i < insn->size  ; ++i) bytesWritten += printf(" %02x", insn->bytes[i]); //Write raw bytes
+	//for (int i = 0; i < 8-insn->size; ++i) bytesWritten += printf("   "); //Pad
+	                                       bytesWritten += printf("%s %s", insn->mnemonic, insn->op_str); //Write disassembly
 	return bytesWritten;
 }
 
 int printLEA(const MachineState& state, const cs_insn* insn)
 {
-	assert(insn->id == x86_insn::X86_INS_LEA);
-
-	int bytesWritten = 0;
-
-	auto dst = state.getOperand(insn, 0);
-	auto value = state.getOperand(insn, 1);
-	bytesWritten += printf("*("); bytesWritten += debugPrintValue(dst);
-	bytesWritten += printf(") := "); bytesWritten += debugPrintValue(value);
-
-	return bytesWritten;
+	return printf(":= ") + debugPrintValue(state.getOperand(insn, 1));
 }
 
 void pad(int& charsPrinted, int desiredWidth)
@@ -232,7 +223,8 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 		{
 			int charsPrinted = 0;
 			charsPrinted += printInstructionCursor(walker.insn, callstack.size() - 1);
-			pad(charsPrinted, 70);
+			//pad(charsPrinted, 70);
+			pad(charsPrinted, 40);
 		}
 
 		//Execute current call frame, one opcode at a time
