@@ -18,7 +18,7 @@ uint8_t& SemanticKnownConst::byte(size_t index)
 
 
 template<typename T1, typename T2, typename T3, typename T4>
-GeneralValue GeneralValue_doMathOp(GeneralValue arg1, GeneralValue arg2,
+SemanticValue SemanticValue_doMathOp(SemanticValue arg1, SemanticValue arg2,
 	T1 funcConstConst, T2 funcConstThis, T3 funcThisConst, T4 funcThisThis)
 {
 		 if (std::holds_alternative<SemanticUnknown   >(arg1) || std::holds_alternative<SemanticUnknown   >(arg2)) return SemanticUnknown();
@@ -32,12 +32,12 @@ GeneralValue GeneralValue_doMathOp(GeneralValue arg1, GeneralValue arg2,
 	else if (std::holds_alternative<SemanticKnownConst>(arg1) && std::holds_alternative<SemanticThisPtr   >(arg2)) return funcConstThis (std::get<SemanticKnownConst>(arg1), std::get<SemanticThisPtr   >(arg2));
 	else if (std::holds_alternative<SemanticThisPtr   >(arg1) && std::holds_alternative<SemanticKnownConst>(arg2)) return funcThisConst (std::get<SemanticThisPtr   >(arg1), std::get<SemanticKnownConst>(arg2));
 	else if (std::holds_alternative<SemanticThisPtr   >(arg1) && std::holds_alternative<SemanticThisPtr   >(arg2)) return funcThisThis  (std::get<SemanticThisPtr   >(arg1), std::get<SemanticThisPtr   >(arg2));
-	else { assert(false); return GeneralValue(); }
+	else { assert(false); return SemanticValue(); }
 }
 
-GeneralValue operator+(const GeneralValue& lhs, const GeneralValue& rhs)
+SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs)
 {
-	return GeneralValue_doMathOp(lhs, rhs,
+	return SemanticValue_doMathOp(lhs, rhs,
 		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value + arg2.value, arg1.size); },
 		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.value + arg2.offset }; },
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.value }; },
@@ -45,9 +45,9 @@ GeneralValue operator+(const GeneralValue& lhs, const GeneralValue& rhs)
 	);
 }
 
-GeneralValue operator-(const GeneralValue& lhs, const GeneralValue& rhs)
+SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 {
-	return GeneralValue_doMathOp(lhs, rhs,
+	return SemanticValue_doMathOp(lhs, rhs,
 		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value - arg2.value, arg1.size); },
 		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); },
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.value }; },
@@ -55,9 +55,9 @@ GeneralValue operator-(const GeneralValue& lhs, const GeneralValue& rhs)
 	);
 }
 
-GeneralValue operator*(const GeneralValue& lhs, const GeneralValue& rhs)
+SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs)
 {
-	return GeneralValue_doMathOp(lhs, rhs,
+	return SemanticValue_doMathOp(lhs, rhs,
 		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value * arg2.value, arg1.size); },
 		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticUnknown(); },
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticUnknown(); },

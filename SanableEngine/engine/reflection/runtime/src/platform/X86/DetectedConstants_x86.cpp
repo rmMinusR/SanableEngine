@@ -15,7 +15,7 @@ int debugPrintSignedHex(int64_t val)
 	else          return printf("-0x%llx", 1+(~uint64_t(0)-uint64_t(val)));
 }
 
-int debugPrintValue(GeneralValue val)
+int debugPrintValue(SemanticValue val)
 {
 	int nWritten = 0;
 
@@ -90,7 +90,7 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 		assert(std::holds_alternative<SemanticKnownConst>(state.getOperand(insn, 0)));
 
 		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-		GeneralValue      & rbp = *state.registers[X86_REG_RBP];
+		SemanticValue      & rbp = *state.registers[X86_REG_RBP];
 		SemanticKnownConst& rip = std::get<SemanticKnownConst>(*state.registers[X86_REG_RIP]);
 		SemanticKnownConst fp = std::get<SemanticKnownConst>(state.getOperand(insn, 0));
 
@@ -116,8 +116,8 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 			//Pop previous stack frame (return address and RBP) from stack
 			SemanticKnownConst& rbp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RBP]);
 			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-			GeneralValue oldRbp     = state.getMemory((void*)(rbp.value              ), sizeof(void*));
-			GeneralValue returnAddr = state.getMemory((void*)(rbp.value+sizeof(void*)), sizeof(void*));
+			SemanticValue oldRbp     = state.getMemory((void*)(rbp.value              ), sizeof(void*));
+			SemanticValue returnAddr = state.getMemory((void*)(rbp.value+sizeof(void*)), sizeof(void*));
 			rsp.value += 2*sizeof(void*);
 
 			*state.registers[X86_REG_RIP] = returnAddr; //Jump to return address
@@ -263,7 +263,7 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 	DetectedConstants out(objSize);
 	for (size_t i = 0; i < objSize; ++i)
 	{
-		GeneralValue byte = state.getMemory(SemanticThisPtr{ i }, 1);
+		SemanticValue byte = state.getMemory(SemanticThisPtr{ i }, 1);
 		if (std::holds_alternative<SemanticKnownConst>(byte))
 		{
 			out.usage[i] = true;

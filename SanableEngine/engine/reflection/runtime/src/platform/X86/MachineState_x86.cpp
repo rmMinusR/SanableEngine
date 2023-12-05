@@ -32,9 +32,9 @@ void MachineState::reset()
 	for (auto& reg : __registerStorage) reg = SemanticUnknown();
 }
 
-GeneralValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
+SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 {
-	std::optional<GeneralValue> addr; //TODO: Return GeneralValue, account for ThisPtr
+	std::optional<SemanticValue> addr; //TODO: Return GeneralValue, account for ThisPtr
 #define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*))) + (val))
 	if (mem.base  != X86_REG_INVALID) addValue( *registers[mem.base] );
 	if (mem.index != X86_REG_INVALID) addValue( *registers[mem.index] * SemanticKnownConst(mem.scale, sizeof(void*)) );
@@ -43,7 +43,7 @@ GeneralValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 	return addr.value();
 }
 
-GeneralValue MachineState::getOperand(const cs_insn* insn, size_t index) const
+SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 {
 	assert(index < insn->detail->x86.op_count);
 	
@@ -73,11 +73,11 @@ GeneralValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 
 	default:
 		assert(false);
-		return GeneralValue();
+		return SemanticValue();
 	}
 }
 
-void MachineState::setOperand(const cs_insn* insn, size_t index, GeneralValue value)
+void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue value)
 {
 	assert(index < insn->detail->x86.op_count);
 	

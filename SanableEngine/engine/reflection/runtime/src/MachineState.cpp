@@ -2,14 +2,14 @@
 
 #include <cassert>
 
-GeneralValue MachineState::getMemory(void* _location, size_t size) const
+SemanticValue MachineState::getMemory(void* _location, size_t size) const
 {
 	uint8_t* location = (uint8_t*)_location;
 
 	//Sanity check first: Entire byte-string is present and same type
 	auto it = memory.find(location);
 	if (it == memory.end()) return SemanticUnknown(); //Nothing found. Abort!
-	GeneralValue dummy = it->second;
+	SemanticValue dummy = it->second;
 	for (size_t i = 0; i < size; ++i)
 	{
 		it = memory.find(location+i);
@@ -41,14 +41,14 @@ GeneralValue MachineState::getMemory(void* _location, size_t size) const
 	}
 }
 
-GeneralValue MachineState::getMemory(SemanticThisPtr _location, size_t size) const
+SemanticValue MachineState::getMemory(SemanticThisPtr _location, size_t size) const
 {
 	size_t location = _location.offset;
 
 	//Sanity check first: Entire byte-string is present and same type
 	auto it = thisMemory.find(location);
 	if (it == thisMemory.end()) return SemanticUnknown(); //Nothing found. Abort!
-	GeneralValue dummy = it->second;
+	SemanticValue dummy = it->second;
 	for (size_t i = 0; i < size; ++i)
 	{
 		it = thisMemory.find(location+i);
@@ -80,12 +80,12 @@ GeneralValue MachineState::getMemory(SemanticThisPtr _location, size_t size) con
 	}
 }
 
-GeneralValue MachineState::getMemory(SemanticKnownConst location, size_t size) const
+SemanticValue MachineState::getMemory(SemanticKnownConst location, size_t size) const
 {
 	return getMemory((uint8_t*)location.value, size);
 }
 
-GeneralValue MachineState::getMemory(GeneralValue _location, size_t size) const
+SemanticValue MachineState::getMemory(SemanticValue _location, size_t size) const
 {
 	     if (std::holds_alternative<SemanticUnknown   >(_location)) return SemanticUnknown();
 	else if (std::holds_alternative<SemanticKnownConst>(_location)) return getMemory(std::get<SemanticKnownConst>(_location), size);
@@ -93,11 +93,11 @@ GeneralValue MachineState::getMemory(GeneralValue _location, size_t size) const
 	else
 	{
 		assert(false);
-		return GeneralValue();
+		return SemanticValue();
 	}
 }
 
-void MachineState::setMemory(void* _location, GeneralValue value, size_t size)
+void MachineState::setMemory(void* _location, SemanticValue value, size_t size)
 {
 	uint8_t* location = (uint8_t*)_location;
 
@@ -118,7 +118,7 @@ void MachineState::setMemory(void* _location, GeneralValue value, size_t size)
 	}
 }
 
-void MachineState::setMemory(SemanticThisPtr _location, GeneralValue value, size_t size)
+void MachineState::setMemory(SemanticThisPtr _location, SemanticValue value, size_t size)
 {
 	size_t location = _location.offset;
 
@@ -139,12 +139,12 @@ void MachineState::setMemory(SemanticThisPtr _location, GeneralValue value, size
 	}
 }
 
-void MachineState::setMemory(SemanticKnownConst location, GeneralValue value, size_t size)
+void MachineState::setMemory(SemanticKnownConst location, SemanticValue value, size_t size)
 {
 	setMemory((uint8_t*)location.value, value, size);
 }
 
-void MachineState::setMemory(GeneralValue _location, GeneralValue value, size_t size)
+void MachineState::setMemory(SemanticValue _location, SemanticValue value, size_t size)
 {
 	//if (std::holds_alternative<SemanticUnknown   >(_location)) return;
 	     if (std::holds_alternative<SemanticKnownConst>(_location)) setMemory(std::get<SemanticKnownConst>(_location), value, size);

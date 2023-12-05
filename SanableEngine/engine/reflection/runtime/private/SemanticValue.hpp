@@ -17,7 +17,7 @@ struct SemanticThisPtr //Represents the "this" keyword plus some offset. Typical
 	size_t offset = 0;
 	inline SemanticThisPtr(size_t offset) : offset(offset) {}
 };
-using GeneralValue = std::variant<SemanticUnknown, SemanticKnownConst, SemanticThisPtr>;
-GeneralValue operator+(const GeneralValue& lhs, const GeneralValue& rhs);
-GeneralValue operator-(const GeneralValue& lhs, const GeneralValue& rhs);
-GeneralValue operator*(const GeneralValue& lhs, const GeneralValue& rhs);
+using SemanticValue = std::variant<SemanticUnknown, SemanticKnownConst, SemanticThisPtr>;
+SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs);
+SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs);
+SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs);
