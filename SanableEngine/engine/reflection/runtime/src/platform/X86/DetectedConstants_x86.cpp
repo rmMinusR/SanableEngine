@@ -209,6 +209,9 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(-2*sizeof(void*), sizeof(void*)); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
 	(*state.registers[X86_REG_RCX]) = SemanticThisPtr(0); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 	
+	printMachineState(state);
+	printf("\n");
+
 	//Simulate function, one op at a time
 	std::vector<FunctionBytecodeWalker> callstack;
 	callstack.emplace_back(ctor);

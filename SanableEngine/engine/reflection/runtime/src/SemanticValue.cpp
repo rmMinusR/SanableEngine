@@ -21,6 +21,19 @@ uint8_t& SemanticKnownConst::byte(size_t index)
 	return reinterpret_cast<uint8_t*>(&value)[index];
 }
 
+uint64_t SemanticKnownConst::bound() const
+{
+	     if (size == 1) return (uint8_t )value;
+	else if (size == 2) return (uint16_t)value;
+	else if (size == 4) return (uint32_t)value;
+	else if (size == 8) return (uint64_t)value;
+	else
+	{
+		assert(false);
+		return 0;
+	}
+}
+
 SemanticThisPtr::SemanticThisPtr(size_t offset) :
 	offset(offset)
 {
@@ -34,7 +47,7 @@ SemanticValue::Type SemanticValue::getType() const
 
 size_t SemanticValue::getSize() const
 {
-	return asUnknown.size;
+	return size;
 }
 
 bool SemanticValue::isUnknown() const
@@ -65,7 +78,6 @@ const SemanticThisPtr* SemanticValue::tryGetThisPtr() const
 	if (valueType == Type::ThisPtr) return &asThisPtr;
 	else return nullptr;
 }
-
 
 
 #pragma region Overhead (boring)
@@ -125,9 +137,9 @@ SemanticValue SemanticValue_doMathOp(SemanticValue arg1, SemanticValue arg2,
 SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs)
 {
 	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value + arg2.value, arg1.size); },
-		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.value + arg2.offset }; },
-		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.value }; },
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() + arg2.bound(), arg1.size); },
+		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.bound() + arg2.offset}; },
+		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.bound() }; },
 		nullptr //this + this
 	);
 }
@@ -135,9 +147,9 @@ SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs)
 SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 {
 	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value - arg2.value, arg1.size); },
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() - arg2.bound(), arg1.size); },
 		nullptr, //const - this
-		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.value }; },
+		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.bound() }; },
 		[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*)); }
 	);
 }
@@ -145,7 +157,7 @@ SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs)
 {
 	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.value * arg2.value, arg1.size); },
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() * arg2.bound(), arg1.size); },
 		nullptr, //const * this
 		nullptr, //this * const
 		nullptr //this * this

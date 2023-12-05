@@ -14,6 +14,7 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 
 	SemanticKnownConst(uint64_t v, size_t s);
 	uint8_t& byte(size_t index);
+	uint64_t bound() const;
 };
 struct SemanticThisPtr /// Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
 {
@@ -35,6 +36,7 @@ public:
 private:
 	union
 	{
+		size_t size;
 		SemanticUnknown    asUnknown;
 		SemanticKnownConst asKnownConst;
 		SemanticThisPtr    asThisPtr;
