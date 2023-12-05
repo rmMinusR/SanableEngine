@@ -19,9 +19,9 @@ int debugPrintValue(SemanticValue val)
 {
 	int nWritten = 0;
 
-	     if (std::holds_alternative<SemanticKnownConst>(val)) nWritten = debugPrintSignedHex(std::get<SemanticKnownConst>(val).value);
-	else if (std::holds_alternative<SemanticThisPtr>(val)) nWritten = printf("this") + debugPrintSignedHex(std::get<SemanticThisPtr>(val).offset);
-	else if (std::holds_alternative<SemanticUnknown>(val)) nWritten = printf("(unknown)");
+	     if (SemanticKnownConst* _val = val.tryGetKnownConst()) nWritten = debugPrintSignedHex(_val->value);
+	else if (SemanticThisPtr   * _val = val.tryGetThisPtr   ()) nWritten = printf("this") + debugPrintSignedHex(_val->offset);
+	else if (val.isUnknown()) nWritten = printf("(unknown)");
 	else assert(false);
 
 	int nToPad = 9-nWritten;
@@ -87,12 +87,10 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
 	{
 		//Requires target address to be a known const. Will crash otherwise
-		assert(std::holds_alternative<SemanticKnownConst>(state.getOperand(insn, 0)));
-
-		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
-		SemanticValue      & rbp = *state.registers[X86_REG_RBP];
-		SemanticKnownConst& rip = std::get<SemanticKnownConst>(*state.registers[X86_REG_RIP]);
-		SemanticKnownConst fp = std::get<SemanticKnownConst>(state.getOperand(insn, 0));
+		SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
+		SemanticValue     & rbp = *state.registers[X86_REG_RBP];
+		SemanticKnownConst& rip = *state.registers[X86_REG_RIP]->tryGetKnownConst();
+		SemanticKnownConst  fp  = *state.getOperand(insn, 0).tryGetKnownConst();
 
 		//Push return address to stack
 		rsp.value -= rip.size; state.setMemory((void*)rsp.value, rip, rip.size);
@@ -111,11 +109,11 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_RET))
 	{
 		//Cannot pop to an indeterminate address
-		if (std::holds_alternative<SemanticKnownConst>(*state.registers[X86_REG_RBP]))
+		if (state.registers[X86_REG_RBP]->tryGetKnownConst())
 		{
 			//Pop previous stack frame (return address and RBP) from stack
-			SemanticKnownConst& rbp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RBP]);
-			SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+			SemanticKnownConst& rbp = *state.registers[X86_REG_RBP]->tryGetKnownConst();
+			SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
 			SemanticValue oldRbp     = state.getMemory((void*)(rbp.value              ), sizeof(void*));
 			SemanticValue returnAddr = state.getMemory((void*)(rbp.value+sizeof(void*)), sizeof(void*));
 			rsp.value += 2*sizeof(void*);
@@ -126,30 +124,30 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 			//If given an operand, pop that many bytes from the stack
 			if (insn->detail->x86.op_count == 1)
 			{
-				size_t opSize = std::get<SemanticKnownConst>(state.getOperand(insn, 0)).value;
-				SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+				size_t opSize = state.getOperand(insn, 0).tryGetKnownConst()->value;
+				SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
 				state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
 				rsp.value += opSize; //Reclaim space on stack
 			}
 
 			//Sanity check. Also no ROP nonsense
 			void* poppedReturnAddr = popCallStack();
-			assert(poppedReturnAddr == (void*)std::get<SemanticKnownConst>(returnAddr).value);
+			assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
 		}
 		else
 		{
 			//Invalidate state
-			*state.registers[X86_REG_RIP] = SemanticUnknown();
-			*state.registers[X86_REG_RBP] = SemanticUnknown();
+			*state.registers[X86_REG_RIP] = SemanticUnknown(sizeof(void*));
+			*state.registers[X86_REG_RBP] = SemanticUnknown(sizeof(void*));
 
 			//Pop from stack
-			std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]).value += 2*sizeof(void*);
+			state.registers[X86_REG_RSP]->tryGetKnownConst()->value += 2 * sizeof(void*);
 				
 			//If given an operand, pop that many bytes from the stack
 			if (insn->detail->x86.op_count == 1)
 			{
-				size_t opSize = std::get<SemanticKnownConst>(state.getOperand(insn, 0)).value;
-				SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+				size_t opSize = state.getOperand(insn, 0).tryGetKnownConst()->value;
+				SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
 				state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
 				rsp.value += opSize; //Reclaim space on stack
 			}
@@ -161,14 +159,14 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 	else if (insn->id == x86_insn::X86_INS_PUSH)
 	{
 		size_t opSize = insn->detail->x86.operands[0].size;
-		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+		SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
 		rsp.value -= opSize; //Make space on stack
 		state.setMemory((void*)rsp.value, state.getOperand(insn, 0), opSize); //Write to stack
 	}
 	else if (insn->id == x86_insn::X86_INS_POP)
 	{
 		size_t opSize = insn->detail->x86.operands[0].size;
-		SemanticKnownConst& rsp = std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]);
+		SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
 		state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
 		rsp.value += opSize; //Reclaim space on stack
 	}
@@ -199,7 +197,7 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 		cs_regs_access(capstone_get_instance(), insn,
 			regsRead   , &nRegsRead,
 			regsWritten, &nRegsWritten);
-		for (int i = 0; i < nRegsWritten; ++i) *(state.registers[regsWritten[i]]) = SemanticUnknown();
+		for (int i = 0; i < nRegsWritten; ++i) *(state.registers[regsWritten[i]]) = SemanticUnknown(sizeof(void*));
 	}
 }
 
@@ -207,7 +205,7 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM
 	MachineState state;
-	(*state.registers[X86_REG_RBP]) = SemanticUnknown(); //Caller is indeterminate
+	(*state.registers[X86_REG_RBP]) = SemanticUnknown(sizeof(void*)); //Caller is indeterminate. TODO: 32-bit-on-64 support?
 	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(-2*sizeof(void*), sizeof(void*)); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
 	(*state.registers[X86_REG_RCX]) = SemanticThisPtr(0); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 	
@@ -250,24 +248,26 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 			charsPrinted += printf("\n");
 		}
 
-		if (!std::holds_alternative<SemanticKnownConst>(*state.registers[X86_REG_RSP]))
+		if (!state.registers[X86_REG_RSP]->tryGetKnownConst())
 		{
 			printf("WARNING: Lost track of RSP! This should never happen!\n");
 		}
 	}
 
-	assert(std::holds_alternative<SemanticKnownConst>(*state.registers[X86_REG_RSP])
-		&& std::get<SemanticKnownConst>(*state.registers[X86_REG_RSP]).value == 0);
+	{
+		auto* rsp = state.registers[X86_REG_RSP]->tryGetKnownConst();
+		assert(rsp && rsp->value == 0);
+	}
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);
 	for (size_t i = 0; i < objSize; ++i)
 	{
-		SemanticValue byte = state.getMemory(SemanticThisPtr{ i }, 1);
-		if (std::holds_alternative<SemanticKnownConst>(byte))
+		SemanticValue _byte = state.getMemory(SemanticThisPtr{ i }, 1);
+		if (auto* byte = _byte.tryGetKnownConst())
 		{
 			out.usage[i] = true;
-			out.bytes[i] = std::get<SemanticKnownConst>(byte).value;
+			out.bytes[i] = byte->value;
 		}
 	}
 	return out;

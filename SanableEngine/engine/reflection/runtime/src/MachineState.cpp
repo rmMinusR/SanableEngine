@@ -7,37 +7,47 @@ SemanticValue MachineState::getMemory(void* _location, size_t size) const
 	uint8_t* location = (uint8_t*)_location;
 
 	//Sanity check first: Entire byte-string is present and same type
-	auto it = memory.find(location);
-	if (it == memory.end()) return SemanticUnknown(); //Nothing found. Abort!
-	SemanticValue dummy = it->second;
-	for (size_t i = 0; i < size; ++i)
+	SemanticValue::Type type;
 	{
-		it = memory.find(location+i);
-		if (it == memory.end()) return SemanticUnknown(); //Some bytes missing. Abort!
-		if (dummy.index() != it->second.index()) return SemanticUnknown(); //Some bytes were mismatched types. Abort!
-		if (std::holds_alternative<SemanticThisPtr>(dummy) && std::get<SemanticThisPtr>(dummy).offset != std::get<SemanticThisPtr>(it->second).offset) return SemanticUnknown(); //Something went *very* wrong, since we're shearing offsets on a magic value
+		//If any bytes are missing, abort
+		for (size_t i = 0; i < size; ++i) if (memory.find(location+i) == memory.end()) return SemanticUnknown(size);
+
+		type = memory.at(location).getType();
+
+		//If bytes are different types, abort
+		for (size_t i = 1; i < size; ++i) if (type != memory.at(location+i).getType()) return SemanticUnknown(size);
+
+		//If ThisPtr, ensure same offset
+		if (type == SemanticValue::Type::ThisPtr)
+		{
+			decltype(SemanticThisPtr::offset) expectedOffset = memory.at(location).tryGetThisPtr()->offset;
+			for (size_t i = 1; i < size; ++i)
+			{
+				auto* pThis = memory.at(location+i).tryGetThisPtr();
+				if (pThis->offset != expectedOffset) return SemanticUnknown(size); //Something went *very* wrong, since we're shearing offsets on a magic value
+			}
+		}
 	}
 
-	if (std::holds_alternative<SemanticKnownConst>(it->second))
+	if (type == SemanticValue::Type::KnownConst)
 	{
 		//Try to load value at address, if it is fully present as a constant
 		SemanticKnownConst knownConst(0, size);
 		for (size_t i = 0; i < size; ++i)
 		{
-			knownConst.byte(i) = std::get<SemanticKnownConst>(memory.at(location+i)).value;
+			knownConst.byte(i) = memory.at(location+i).tryGetKnownConst()->value;
 		}
 		return knownConst;
 	}
-	else if (std::holds_alternative<SemanticThisPtr>(it->second))
+	else if (type == SemanticValue::Type::ThisPtr)
 	{
-		//Just hope there's no shearing
-		return std::get<SemanticThisPtr>(it->second);
+		return SemanticThisPtr(memory.at(location).tryGetThisPtr()->offset);
 	}
 	else
 	{
 		//Something went very, very wrong
 		assert(false);
-		return SemanticUnknown();
+		return SemanticUnknown(size);
 	}
 }
 
@@ -46,37 +56,47 @@ SemanticValue MachineState::getMemory(SemanticThisPtr _location, size_t size) co
 	size_t location = _location.offset;
 
 	//Sanity check first: Entire byte-string is present and same type
-	auto it = thisMemory.find(location);
-	if (it == thisMemory.end()) return SemanticUnknown(); //Nothing found. Abort!
-	SemanticValue dummy = it->second;
-	for (size_t i = 0; i < size; ++i)
+	SemanticValue::Type type;
 	{
-		it = thisMemory.find(location+i);
-		if (it == thisMemory.end()) return SemanticUnknown(); //Some bytes missing. Abort!
-		if (dummy.index() != it->second.index()) return SemanticUnknown(); //Some bytes were mismatched types. Abort!
-		if (std::holds_alternative<SemanticThisPtr>(dummy) && std::get<SemanticThisPtr>(dummy).offset != std::get<SemanticThisPtr>(it->second).offset) return SemanticUnknown(); //Something went *very* wrong, since we're shearing offsets on a magic value
+		//If any bytes are missing, abort
+		for (size_t i = 0; i < size; ++i) if (thisMemory.find(location+i) == thisMemory.end()) return SemanticUnknown(size);
+
+		type = thisMemory.at(location).getType();
+
+		//If bytes are different types, abort
+		for (size_t i = 1; i < size; ++i) if (type != thisMemory.at(location+i).getType()) return SemanticUnknown(size);
+
+		//If ThisPtr, ensure same offset
+		if (type == SemanticValue::Type::ThisPtr)
+		{
+			decltype(SemanticThisPtr::offset) expectedOffset = thisMemory.at(location).tryGetThisPtr()->offset;
+			for (size_t i = 1; i < size; ++i)
+			{
+				auto* pThis = thisMemory.at(location+i).tryGetThisPtr();
+				if (pThis->offset != expectedOffset) return SemanticUnknown(size); //Something went *very* wrong, since we're shearing offsets on a magic value
+			}
+		}
 	}
 
-	if (std::holds_alternative<SemanticKnownConst>(it->second))
+	if (type == SemanticValue::Type::KnownConst)
 	{
 		//Try to load value at address, if it is fully present as a constant
 		SemanticKnownConst knownConst(0, size);
 		for (size_t i = 0; i < size; ++i)
 		{
-			knownConst.byte(i) = std::get<SemanticKnownConst>(thisMemory.at(location+i)).value;
+			knownConst.byte(i) = thisMemory.at(location+i).tryGetKnownConst()->value;
 		}
 		return knownConst;
 	}
-	else if (std::holds_alternative<SemanticThisPtr>(it->second))
+	else if (type == SemanticValue::Type::ThisPtr)
 	{
-		//Just hope there's no shearing
-		return std::get<SemanticThisPtr>(it->second);
+		return SemanticThisPtr(thisMemory.at(location).tryGetThisPtr()->offset);
 	}
 	else
 	{
 		//Something went very, very wrong
 		assert(false);
-		return SemanticUnknown();
+		return SemanticUnknown(size);
 	}
 }
 
@@ -87,13 +107,13 @@ SemanticValue MachineState::getMemory(SemanticKnownConst location, size_t size) 
 
 SemanticValue MachineState::getMemory(SemanticValue _location, size_t size) const
 {
-	     if (std::holds_alternative<SemanticUnknown   >(_location)) return SemanticUnknown();
-	else if (std::holds_alternative<SemanticKnownConst>(_location)) return getMemory(std::get<SemanticKnownConst>(_location), size);
-	else if (std::holds_alternative<SemanticThisPtr   >(_location)) return getMemory(std::get<SemanticThisPtr   >(_location), size);
+	     if (_location.isUnknown()) return SemanticUnknown(size);
+	else if (SemanticKnownConst* loc = _location.tryGetKnownConst()) return getMemory(*loc, size);
+	else if (SemanticThisPtr   * loc = _location.tryGetThisPtr   ()) return getMemory(*loc, size);
 	else
 	{
 		assert(false);
-		return SemanticValue();
+		return SemanticUnknown(size);
 	}
 }
 
@@ -101,15 +121,14 @@ void MachineState::setMemory(void* _location, SemanticValue value, size_t size)
 {
 	uint8_t* location = (uint8_t*)_location;
 
-	if (std::holds_alternative<SemanticKnownConst>(value))
+	if (auto* val = value.tryGetKnownConst())
 	{
-		SemanticKnownConst val = std::get<SemanticKnownConst>(value);
-		for (size_t i = 0; i < val.size; ++i) memory.insert_or_assign(location+i, SemanticKnownConst(val.byte(i), 1));
+		for (size_t i = 0; i < val->size; ++i) memory.insert_or_assign(location+i, SemanticKnownConst(val->byte(i), 1));
 	}
-	else if (std::holds_alternative<SemanticThisPtr>(value))
+	else if (value.tryGetThisPtr())
 	{
 		//Just hope there's no shearing
-		for (size_t i = 0; i < sizeof(void*); ++i) memory.insert_or_assign(location+i, std::get<SemanticThisPtr>(value));
+		for (size_t i = 0; i < sizeof(void*); ++i) memory.insert_or_assign(location+i, value);
 	}
 	else
 	{
@@ -122,15 +141,14 @@ void MachineState::setMemory(SemanticThisPtr _location, SemanticValue value, siz
 {
 	size_t location = _location.offset;
 
-	if (std::holds_alternative<SemanticKnownConst>(value))
+	if (auto* val = value.tryGetKnownConst())
 	{
-		SemanticKnownConst val = std::get<SemanticKnownConst>(value);
-		for (size_t i = 0; i < val.size; ++i) thisMemory.insert_or_assign(location+i, SemanticKnownConst(val.byte(i), 1));
+		for (size_t i = 0; i < val->size; ++i) thisMemory.insert_or_assign(location+i, SemanticKnownConst(val->byte(i), 1));
 	}
-	else if (std::holds_alternative<SemanticThisPtr>(value))
+	else if (value.tryGetThisPtr())
 	{
 		//Just hope there's no shearing
-		for (size_t i = 0; i < sizeof(void*); ++i) thisMemory.insert_or_assign(location+i, std::get<SemanticThisPtr>(value));
+		for (size_t i = 0; i < sizeof(void*); ++i) thisMemory.insert_or_assign(location+i, value);
 	}
 	else
 	{
@@ -146,9 +164,9 @@ void MachineState::setMemory(SemanticKnownConst location, SemanticValue value, s
 
 void MachineState::setMemory(SemanticValue _location, SemanticValue value, size_t size)
 {
-	//if (std::holds_alternative<SemanticUnknown   >(_location)) return;
-	     if (std::holds_alternative<SemanticKnownConst>(_location)) setMemory(std::get<SemanticKnownConst>(_location), value, size);
-	else if (std::holds_alternative<SemanticThisPtr   >(_location)) setMemory(std::get<SemanticThisPtr   >(_location), value, size);
+	//if (_location.isUnknown()) return;
+	     if (SemanticKnownConst* loc = _location.tryGetKnownConst()) setMemory(*loc, value, size);
+	else if (SemanticThisPtr   * loc = _location.tryGetThisPtr   ()) setMemory(*loc, value, size);
 	else
 	{
 		assert(false);

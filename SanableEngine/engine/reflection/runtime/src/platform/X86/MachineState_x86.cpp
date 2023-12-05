@@ -29,7 +29,7 @@ MachineState::MachineState()
 
 void MachineState::reset()
 {
-	for (auto& reg : __registerStorage) reg = SemanticUnknown();
+	for (auto& reg : __registerStorage) reg = SemanticUnknown(0);
 }
 
 SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
@@ -46,16 +46,17 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 {
 	assert(index < insn->detail->x86.op_count);
+	assert(insn->detail->x86.operands[index].size);
 	
 	//Special case: LEA (relative addresses)
 	if (insn->id == x86_insn::X86_INS_LEA && index == 1)
 	{
-		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), sizeof(void*));
+		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size);
 	}
 	//Special case: jmp aka branch (relative addresses)
 	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
 	{
-		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), sizeof(void*));
+		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size);
 	}
 	
 	//General case
