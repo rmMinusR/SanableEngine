@@ -57,7 +57,6 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 		{
 			//Pop previous stack frame (return address and RBP) from stack
 			SemanticKnownConst& rbp = *canonicalState.registers[X86_REG_RBP]->tryGetKnownConst();
-			SemanticKnownConst& rsp = *canonicalState.registers[X86_REG_RSP]->tryGetKnownConst();
 			SemanticKnownConst& rip = *canonicalState.registers[X86_REG_RIP]->tryGetKnownConst();
 			SemanticValue oldRbp     = canonicalState.stackPop(rbp.size);
 			SemanticValue returnAddr = canonicalState.stackPop(rip.size);
@@ -111,6 +110,16 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 	{
 		canonicalState.setOperand(insn, 0, canonicalState.getOperand(insn, 0)+canonicalState.getOperand(insn, 1));
 	}
+	else if (insn->id == x86_insn::X86_INS_DEC)
+	{
+		auto op = canonicalState.getOperand(insn, 0);
+		canonicalState.setOperand(insn, 0, op-SemanticKnownConst(1, op.getSize()) );
+	}
+	else if (insn->id == x86_insn::X86_INS_INC)
+	{
+		auto op = canonicalState.getOperand(insn, 0);
+		canonicalState.setOperand(insn, 0, op+SemanticKnownConst(1, op.getSize()) );
+	}
 	else if (insn->id == x86_insn::X86_INS_NOP)
 	{
 		//Do nothing
@@ -131,7 +140,7 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 void SemanticVM::execFunc(void(*fn)(), void(*expectedReturnAddress)(), int indentLevel)
 {
 	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
-
+	
 	//Simulate function, one op at a time
 	FunctionBytecodeWalker walker(fn);
 	bool endOfFunction;

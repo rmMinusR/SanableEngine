@@ -19,7 +19,7 @@ public:
 	void step(const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack);
 
 	/// <summary>
-	/// Simulate an entire function (until the final RET is reached).
+	/// Simulate an entire function (until its final RET is reached).
 	/// If branches occur, only shared known constants/magics will be considered canonical.
 	/// </summary>
 	/// <param name="fn">Function to simulate</param>
@@ -30,4 +30,11 @@ public:
 	/// <param name="callConv">Calling convention</param>
 	/// <param name="argTypes">Expected argument types</param>
 	//void execFunc(void(*fn)(), CallConv callConv, const std::vector<TypeInfo>& argTypes, void(*expectedReturnAddress)());
+
+	/// <summary>
+	/// Evalute all given branches, and keep only the values shared across all.
+	/// </summary>
+	/// <param name="canonicalState">Starting state. Modified once complete to reflect shared values.</param>
+	/// <param name="branchCursors">Expected argument types</param>
+	static void execBranch(MachineState& canonicalState, const std::vector<void*>& branchCursors);
 };

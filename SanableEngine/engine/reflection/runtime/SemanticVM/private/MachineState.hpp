@@ -50,4 +50,6 @@ public:
 	//void unwindStack(const StackVisitor& visitor) const;
 
 	int debugPrintWorkingSet() const; //On register-based machines, prints critical registers. On stack-based machines, prints stack head.
+
+	static MachineState merge(const std::vector<const MachineState*>& divergentStates);
 };
