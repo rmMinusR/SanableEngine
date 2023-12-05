@@ -48,7 +48,7 @@ int printInstructionCursor(const cs_insn* insn, int callLevel)
 {
 	int bytesWritten = 0;
 	for (int i = 0; i < callLevel   ; ++i) bytesWritten += printf(" |  "); //Indent
-	//                                     bytesWritten += printf("%p: ", (void*)walker.insn->address); //Write address
+	                                       bytesWritten += printf("%p: ", (void*)insn->address); //Write address
 	//for (int i = 0; i < insn->size  ; ++i) bytesWritten += printf(" %02x", insn->bytes[i]); //Write raw bytes
 	//for (int i = 0; i < 8-insn->size; ++i) bytesWritten += printf("   "); //Pad
 	                                       bytesWritten += printf("%s %s", insn->mnemonic, insn->op_str); //Write disassembly
@@ -123,7 +123,7 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 
 			//Sanity check. Also no ROP nonsense
 			void* poppedReturnAddr = popCallStack();
-			assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
+			if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
 		}
 		else
 		{
@@ -180,6 +180,47 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 	}
 }
 
+void vmExecFunc(MachineState& state, void(*fn)(), void(*expectedReturnAddress)())
+{
+	//Simulate function, one op at a time
+	FunctionBytecodeWalker walker(fn);
+	bool endOfFunction;
+	do
+	{
+		endOfFunction = !walker.advance();
+		(*state.registers[X86_REG_RIP]) = SemanticKnownConst((uint_addr_t)walker.codeCursor, sizeof(void*)); //Ensure RIP is up to date
+
+		{
+			int charsPrinted = 0;
+			//charsPrinted += printInstructionCursor(walker.insn, state.countStackFrames()-1);
+			charsPrinted += printInstructionCursor(walker.insn, 0);
+			pad(charsPrinted, 70);
+		}
+
+		//Execute current call frame, one opcode at a time
+		void(*funcToCall)() = nullptr;
+		stepVM(state, walker.insn,
+			[&](void* fn) { funcToCall = (void(*)()) fn; },
+			[&]() { return expectedReturnAddress; }
+		);
+
+		{
+			int charsPrinted = 0;
+			charsPrinted += printf(" < ");
+			charsPrinted += printMachineState(state);
+			pad(charsPrinted, 50);
+			if (walker.insn->id == x86_insn::X86_INS_LEA) charsPrinted += printf(" ;   ") + printLEA(state, walker.insn);
+			charsPrinted += printf("\n");
+		}
+
+		assert(state.registers[X86_REG_RSP]->tryGetKnownConst() && "Lost track of RSP! This should never happen!");
+
+		//If we're supposed to call another function, do so
+		if (funcToCall) vmExecFunc(state, funcToCall, (void(*)())walker.codeCursor);
+		
+	} while (!endOfFunction);
+}
+
 DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM
@@ -187,55 +228,13 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 	(*state.registers[X86_REG_RBP]) = SemanticUnknown(sizeof(void*)); //Caller is indeterminate. TODO: 32-bit-on-64 support?
 	(*state.registers[X86_REG_RSP]) = SemanticKnownConst(-2*sizeof(void*), sizeof(void*)); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
 	(*state.registers[X86_REG_RCX]) = SemanticThisPtr(0); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
-	
+
+	//Run
 	printMachineState(state);
 	printf("\n");
+	vmExecFunc(state, ctor, nullptr);
 
-	//Simulate function, one op at a time
-	std::vector<FunctionBytecodeWalker> callstack;
-	callstack.emplace_back(ctor);
-	while (callstack.size() > 0)
-	{
-		//FunctionBytecodeWalker& walker = callstack[callstack.size() - 1];
-		#define walker callstack[callstack.size()-1]
-		bool endOfFunction = !walker.advance();
-		(*state.registers[X86_REG_RIP]) = SemanticKnownConst((uint_addr_t)walker.codeCursor, sizeof(void*)); //Ensure RIP is up to date
-
-		{
-			int charsPrinted = 0;
-			charsPrinted += printInstructionCursor(walker.insn, callstack.size() - 1);
-			//pad(charsPrinted, 70);
-			pad(charsPrinted, 40);
-		}
-
-		//Execute current call frame, one opcode at a time
-		stepVM(state, walker.insn,
-			[&](void* func)
-			{
-				callstack.emplace_back((uint8_t*)func);
-			},
-			[&]()
-			{
-				callstack.pop_back();
-				return callstack.size()>0 ? (void*)callstack[callstack.size()-1].codeCursor : nullptr;
-			}
-		);
-		
-		{
-			int charsPrinted = 0;
-			charsPrinted += printf(" < ");
-			charsPrinted += printMachineState(state);
-			pad(charsPrinted, 50);
-			if (callstack.size() > 0 && walker.insn->id == x86_insn::X86_INS_LEA) charsPrinted += printf(" ;   ") + printLEA(state, walker.insn);
-			charsPrinted += printf("\n");
-		}
-
-		if (!state.registers[X86_REG_RSP]->tryGetKnownConst())
-		{
-			printf("WARNING: Lost track of RSP! This should never happen!\n");
-		}
-	}
-
+	//Ensure good output
 	{
 		auto* rsp = state.registers[X86_REG_RSP]->tryGetKnownConst();
 		assert(rsp && rsp->value == 0);

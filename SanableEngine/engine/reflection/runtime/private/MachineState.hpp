@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <map>
+#include <functional>
 
 #include "capstone/capstone.h"
 
@@ -28,8 +29,10 @@ public:
 	MachineState();
 
 	void reset();
+
 	SemanticValue getOperand(const cs_insn* insn, size_t index) const;
 	void setOperand(const cs_insn* insn, size_t index, SemanticValue value);
+
 	SemanticValue getMemory(void*              location, size_t size) const;
 	SemanticValue getMemory(SemanticValue       location, size_t size) const;
 	SemanticValue getMemory(SemanticKnownConst location, size_t size) const;
@@ -38,6 +41,11 @@ public:
 	void setMemory(SemanticValue       location, SemanticValue value, size_t size);
 	void setMemory(SemanticKnownConst location, SemanticValue value, size_t size);
 	void setMemory(SemanticThisPtr    location, SemanticValue value, size_t size);
+
 	void stackPush(SemanticValue value);
 	SemanticValue stackPop(size_t nBytes);
+
+	//size_t countStackFrames() const;
+	//using StackVisitor = std::function<void(const SemanticValue& rbp, const SemanticValue& returnLocation)>;
+	//void unwindStack(const StackVisitor& visitor) const;
 };

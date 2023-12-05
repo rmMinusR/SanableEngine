@@ -120,3 +120,27 @@ SemanticValue MachineState::stackPop(size_t nBytes)
 	rsp.value += nBytes; //Reclaim space on stack
 	return out;
 }
+
+/*
+size_t MachineState::countStackFrames() const
+{
+	size_t n = 1;
+	unwindStack([&](const SemanticValue& stackHighEndAddr, const SemanticValue& returnLocation) { ++n; });
+	return n;
+}
+
+void MachineState::unwindStack(const StackVisitor& visitor) const
+{
+	SemanticValue rbp = getMemory(*registers[X86_REG_RBP], sizeof(void*));
+	while (!rbp.isUnknown())
+	{
+		SemanticKnownConst offset(sizeof(void*), sizeof(void*));
+		SemanticValue oldRbp     = getMemory(rbp       , sizeof(void*)); //Read from stack
+		SemanticValue returnAddr = getMemory(rbp+offset, sizeof(void*)); //Read from stack
+
+		visitor(rbp, returnAddr);
+		
+		rbp = oldRbp; //Pop rbp
+	}
+}
+// */
