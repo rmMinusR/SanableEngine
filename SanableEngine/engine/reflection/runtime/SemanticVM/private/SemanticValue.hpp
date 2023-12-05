@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+int debugPrintSignedHex(int64_t val);
+
 struct SemanticUnknown /// A continuous span of unknown bytes, or the result of combination of mismatched types (spanning the largest size)
 {
 	size_t size = 0;
@@ -61,6 +63,8 @@ public:
 	void operator=(const SemanticUnknown&    val);
 	void operator=(const SemanticKnownConst& val);
 	void operator=(const SemanticThisPtr&    val);
+
+	int debugPrintValue() const; //Returns number of chars printed
 };
 
 SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs);

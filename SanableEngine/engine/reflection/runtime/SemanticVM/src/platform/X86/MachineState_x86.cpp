@@ -144,3 +144,17 @@ void MachineState::unwindStack(const StackVisitor& visitor) const
 	}
 }
 // */
+
+int MachineState::debugPrintWorkingSet() const
+{
+	int bytesWritten = 0;
+	bytesWritten += printf("rcx=");
+	bytesWritten += registers[X86_REG_RCX]->debugPrintValue();
+	bytesWritten += printf(" | rax=");
+	bytesWritten += registers[X86_REG_RAX]->debugPrintValue();
+	bytesWritten += printf(" | rsp=");
+	bytesWritten += registers[X86_REG_RSP]->debugPrintValue();
+	//bytesWritten += printf(" | rbp=");
+	//bytesWritten += debugPrint(*state.registers[X86_REG_RBP]);
+	return bytesWritten;
+}

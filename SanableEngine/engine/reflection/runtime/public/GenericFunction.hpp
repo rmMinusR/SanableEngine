@@ -70,7 +70,7 @@ public:
 private:
 	TypeName returnType;
 	std::vector<TypeName> args;
-	TypeName owningType; //Only if nonstatic member function
+	TypeName owningType; //Only present if nonstatic member function. Implies __thiscall.
 	CallConv callConv;
 
 	#pragma region Capture functions and helpers

@@ -29,6 +29,7 @@ typedef void(*void_func_ptr)(); //Cannot directly return a function ptr, must us
 void_func_ptr platform_getRelFunc(const cs_insn& insn);
 void* platform_getRelAddr(const cs_insn& insn);
 
+int printInstructionCursor(const cs_insn* insn, int callLevel);
 
 bool platform_isIf(const cs_insn& insn);
 

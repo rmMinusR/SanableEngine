@@ -48,4 +48,6 @@ public:
 	//size_t countStackFrames() const;
 	//using StackVisitor = std::function<void(const SemanticValue& rbp, const SemanticValue& returnLocation)>;
 	//void unwindStack(const StackVisitor& visitor) const;
+
+	int debugPrintWorkingSet() const; //On register-based machines, prints critical registers. On stack-based machines, prints stack head.
 };

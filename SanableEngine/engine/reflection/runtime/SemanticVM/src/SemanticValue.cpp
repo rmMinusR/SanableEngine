@@ -4,6 +4,13 @@
 #include <functional>
 
 
+int debugPrintSignedHex(int64_t val)
+{
+	if (val >= 0) return printf("+0x%llx", val);
+	else          return printf("-0x%llx", 1 + (~uint64_t(0) - uint64_t(val)));
+}
+
+
 SemanticUnknown::SemanticUnknown(size_t size) :
 	size(size)
 {
@@ -93,6 +100,21 @@ const SemanticThisPtr* SemanticValue::tryGetThisPtr() const
 {
 	if (valueType == Type::ThisPtr) return &asThisPtr;
 	else return nullptr;
+}
+
+int SemanticValue::debugPrintValue() const
+{
+	int nWritten = 0;
+
+	     if (const SemanticKnownConst* _val = tryGetKnownConst()) nWritten = debugPrintSignedHex(_val->value);
+	else if (const SemanticThisPtr   * _val = tryGetThisPtr   ()) nWritten = printf("this") + debugPrintSignedHex(_val->offset);
+	else if (isUnknown()) nWritten = printf("(unknown)");
+	else assert(false);
+
+	int nToPad = 15-nWritten;
+	if (nToPad > 0) printf("%*c", nToPad, ' ');
+
+	return nWritten + std::max(0, nToPad);
 }
 
 

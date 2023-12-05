@@ -41,3 +41,14 @@ void capstone_cleanup_instance()
 		capstone_check_error(status);
 	}
 }
+
+int printInstructionCursor(const cs_insn* insn, int callLevel)
+{
+	int bytesWritten = 0;
+	for (int i = 0; i < callLevel   ; ++i) bytesWritten += printf(" |  "); //Indent
+	                                       bytesWritten += printf("%p: ", (void*)insn->address); //Write address
+	//for (int i = 0; i < insn->size  ; ++i) bytesWritten += printf(" %02x", insn->bytes[i]); //Write raw bytes
+	//for (int i = 0; i < 8-insn->size; ++i) bytesWritten += printf("   "); //Pad
+	                                       bytesWritten += printf("%s %s", insn->mnemonic, insn->op_str); //Write disassembly
+	return bytesWritten;
+}
