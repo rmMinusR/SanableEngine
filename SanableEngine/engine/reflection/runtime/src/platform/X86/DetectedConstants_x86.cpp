@@ -91,12 +91,9 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 		SemanticValue     & rbp = *state.registers[X86_REG_RBP];
 		SemanticKnownConst& rip = *state.registers[X86_REG_RIP]->tryGetKnownConst();
 		SemanticKnownConst  fp  = *state.getOperand(insn, 0).tryGetKnownConst();
-
-		//Push return address to stack
-		rsp.value -= rip.size; state.setMemory((void*)rsp.value, rip, rip.size);
-
-		//Push previous RBP to stack
-		rsp.value -= sizeof(void*); state.setMemory((void*)rsp.value, rbp, sizeof(void*));
+		
+		state.stackPush(rip); //Push return address to stack
+		state.stackPush(rbp); //Push previous RBP to stack
 
 		//Mark new RBP
 		rbp = rsp;
@@ -114,21 +111,15 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 			//Pop previous stack frame (return address and RBP) from stack
 			SemanticKnownConst& rbp = *state.registers[X86_REG_RBP]->tryGetKnownConst();
 			SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
-			SemanticValue oldRbp     = state.getMemory((void*)(rbp.value              ), sizeof(void*));
-			SemanticValue returnAddr = state.getMemory((void*)(rbp.value+sizeof(void*)), sizeof(void*));
-			rsp.value += 2*sizeof(void*);
+			SemanticKnownConst& rip = *state.registers[X86_REG_RIP]->tryGetKnownConst();
+			SemanticValue oldRbp     = state.stackPop(rbp.size);
+			SemanticValue returnAddr = state.stackPop(rip.size);
 
 			*state.registers[X86_REG_RIP] = returnAddr; //Jump to return address
 			*state.registers[X86_REG_RBP] = oldRbp; //Pop rbp
 
 			//If given an operand, pop that many bytes from the stack
-			if (insn->detail->x86.op_count == 1)
-			{
-				size_t opSize = state.getOperand(insn, 0).tryGetKnownConst()->value;
-				SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
-				state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
-				rsp.value += opSize; //Reclaim space on stack
-			}
+			if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
 
 			//Sanity check. Also no ROP nonsense
 			void* poppedReturnAddr = popCallStack();
@@ -137,20 +128,14 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 		else
 		{
 			//Invalidate state
-			*state.registers[X86_REG_RIP] = SemanticUnknown(sizeof(void*));
+			*state.registers[X86_REG_RIP] = SemanticUnknown(sizeof(void*)); //FIXME read proper size
 			*state.registers[X86_REG_RBP] = SemanticUnknown(sizeof(void*));
 
 			//Pop from stack
-			state.registers[X86_REG_RSP]->tryGetKnownConst()->value += 2 * sizeof(void*);
+			state.stackPop(2 * sizeof(void*)); //FIXME read proper size
 				
 			//If given an operand, pop that many bytes from the stack
-			if (insn->detail->x86.op_count == 1)
-			{
-				size_t opSize = state.getOperand(insn, 0).tryGetKnownConst()->value;
-				SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
-				state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
-				rsp.value += opSize; //Reclaim space on stack
-			}
+			if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
 
 			//Pop from our sanity checker
 			popCallStack();
@@ -158,17 +143,11 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 	}
 	else if (insn->id == x86_insn::X86_INS_PUSH)
 	{
-		size_t opSize = insn->detail->x86.operands[0].size;
-		SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
-		rsp.value -= opSize; //Make space on stack
-		state.setMemory((void*)rsp.value, state.getOperand(insn, 0), opSize); //Write to stack
+		state.stackPush(state.getOperand(insn, 0));
 	}
 	else if (insn->id == x86_insn::X86_INS_POP)
 	{
-		size_t opSize = insn->detail->x86.operands[0].size;
-		SemanticKnownConst& rsp = *state.registers[X86_REG_RSP]->tryGetKnownConst();
-		state.setOperand(insn, 0, state.getMemory((void*)rsp.value, opSize)); //Read from stack
-		rsp.value += opSize; //Reclaim space on stack
+		state.setOperand(insn, 0, state.stackPop(insn->detail->x86.operands[0].size));
 	}
 	else if (insn->id == x86_insn::X86_INS_XCHG)
 	{
@@ -192,8 +171,8 @@ void stepVM(MachineState& state, const cs_insn* insn, const std::function<void(v
 	else
 	{
 		//Unhandled operation: Just invalidate all relevant register state
-		cs_regs regsRead   ; uint8_t nRegsRead;
-		cs_regs regsWritten; uint8_t nRegsWritten;
+		cs_regs  regsRead,  regsWritten;
+		uint8_t nRegsRead, nRegsWritten;
 		cs_regs_access(capstone_get_instance(), insn,
 			regsRead   , &nRegsRead,
 			regsWritten, &nRegsWritten);

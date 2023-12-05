@@ -12,9 +12,10 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 	size_t size;
 	uint64_t value; //We don't need to support registers bigger than 64 bits right now
 
-	SemanticKnownConst(uint64_t v, size_t s);
+	SemanticKnownConst(uint64_t value, size_t size);
 	uint8_t& byte(size_t index);
 	uint64_t bound() const;
+	SemanticKnownConst signExtend(size_t targetSizeBytes) const;
 };
 struct SemanticThisPtr /// Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
 {
@@ -46,6 +47,7 @@ private:
 public:
 	Type getType() const;
 	size_t getSize() const;
+	void resize(size_t); //Usually a very bad idea. But necessary for some things.
 	bool isUnknown() const;
 	SemanticKnownConst* tryGetKnownConst();
 	SemanticThisPtr   * tryGetThisPtr   ();

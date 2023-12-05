@@ -34,6 +34,17 @@ uint64_t SemanticKnownConst::bound() const
 	}
 }
 
+SemanticKnownConst SemanticKnownConst::signExtend(size_t targetSizeBytes) const
+{
+	int64_t val;
+	     if (size == 1) val = (int8_t )value;
+	else if (size == 2) val = (int16_t)value;
+	else if (size == 4) val = (int32_t)value;
+	else if (size == 8) val = (int64_t)value;
+	else assert(false);
+	return SemanticKnownConst(val, targetSizeBytes);
+}
+
 SemanticThisPtr::SemanticThisPtr(size_t offset) :
 	offset(offset)
 {
@@ -48,6 +59,11 @@ SemanticValue::Type SemanticValue::getType() const
 size_t SemanticValue::getSize() const
 {
 	return size;
+}
+
+void SemanticValue::resize(size_t newSize)
+{
+	size = newSize;
 }
 
 bool SemanticValue::isUnknown() const

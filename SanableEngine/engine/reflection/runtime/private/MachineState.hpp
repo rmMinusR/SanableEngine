@@ -38,4 +38,6 @@ public:
 	void setMemory(SemanticValue       location, SemanticValue value, size_t size);
 	void setMemory(SemanticKnownConst location, SemanticValue value, size_t size);
 	void setMemory(SemanticThisPtr    location, SemanticValue value, size_t size);
+	void stackPush(SemanticValue value);
+	SemanticValue stackPop(size_t nBytes);
 };

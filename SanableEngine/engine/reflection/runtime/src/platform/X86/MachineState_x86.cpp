@@ -61,21 +61,27 @@ SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 	
 	//General case
 	cs_x86_op op = insn->detail->x86.operands[index];
+	SemanticValue out;
 	switch (op.type)
 	{
 	case x86_op_type::X86_OP_REG:
-		return *registers[op.reg];
+		out = *registers[op.reg];
+		break;
 
 	case x86_op_type::X86_OP_IMM:
-		return SemanticKnownConst(op.imm, op.size); //Completely legal: almost every machine out there stores negatives as two's compliment
+		out = SemanticKnownConst(op.imm, op.size); //Completely legal: almost every machine out there stores negatives as two's compliment
+		break;
 
 	case x86_op_type::X86_OP_MEM:
-		return getMemory(decodeMemAddr(op.mem), op.size);
+		out = getMemory(decodeMemAddr(op.mem), op.size);
+		break;
 
 	default:
 		assert(false);
-		return SemanticValue();
+		break;
 	}
+	out.resize(op.size);
+	return out;
 }
 
 void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue value)
@@ -98,4 +104,19 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue v
 	default:
 		assert(false);
 	}
+}
+
+void MachineState::stackPush(SemanticValue value)
+{
+	SemanticKnownConst& rsp = *registers[X86_REG_RSP]->tryGetKnownConst();
+	rsp.value -= value.getSize(); //Make space on stack
+	setMemory(rsp, value, value.getSize()); //Write to stack
+}
+
+SemanticValue MachineState::stackPop(size_t nBytes)
+{
+	SemanticKnownConst& rsp = *registers[X86_REG_RSP]->tryGetKnownConst();
+	SemanticValue out = getMemory(rsp, nBytes); //Read from stack
+	rsp.value += nBytes; //Reclaim space on stack
+	return out;
 }
