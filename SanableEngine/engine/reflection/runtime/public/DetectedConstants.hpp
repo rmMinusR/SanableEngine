@@ -4,8 +4,6 @@
 
 #include "dllapi.h"
 
-struct MachineState;
-
 
 struct DetectedConstants
 {

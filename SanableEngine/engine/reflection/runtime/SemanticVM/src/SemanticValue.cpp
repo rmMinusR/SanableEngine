@@ -10,8 +10,8 @@ SemanticUnknown::SemanticUnknown(size_t size) :
 }
 
 SemanticKnownConst::SemanticKnownConst(uint64_t v, size_t s) :
-	value(v),
-	size(s)
+	size(s),
+	value(v)
 {
 }
 
@@ -36,7 +36,7 @@ uint64_t SemanticKnownConst::bound() const
 
 SemanticKnownConst SemanticKnownConst::signExtend(size_t targetSizeBytes) const
 {
-	int64_t val;
+	int64_t val = 0;
 	     if (size == 1) val = (int8_t )value;
 	else if (size == 2) val = (int16_t)value;
 	else if (size == 4) val = (int32_t)value;

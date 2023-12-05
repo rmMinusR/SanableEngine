@@ -166,6 +166,6 @@ void MachineState::setMemory(SemanticValue _location, SemanticValue value, size_
 {
 	     if (SemanticKnownConst* loc = _location.tryGetKnownConst()) setMemory(*loc, value, size);
 	else if (SemanticThisPtr   * loc = _location.tryGetThisPtr   ()) setMemory(*loc, value, size);
-	else if (_location.isUnknown()) assert(false && "Cannot write to a memory address whose location is unknown! Doing so would break the entire memory's determinism contract.");
+	else if (_location.isUnknown()) assert(false && "Cannot write to an indeterminate memory address! This would make the entire memory indeterminate.");
 	else assert(false && "Unknown SemanticValue form");
 }
