@@ -34,35 +34,39 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
 	{
 		//Requires target address to be a known const. Will crash otherwise
-		SemanticKnownConst& rsp = *canonicalState.registers[X86_REG_RSP]->tryGetKnownConst();
-		SemanticValue     & rbp = *canonicalState.registers[X86_REG_RBP];
-		SemanticKnownConst& rip = *canonicalState.registers[X86_REG_RIP]->tryGetKnownConst();
-		SemanticKnownConst  fp  = *canonicalState.getOperand(insn, 0).tryGetKnownConst();
+		SemanticKnownConst rsp = *canonicalState.getRegister(X86_REG_RSP).tryGetKnownConst();
+		SemanticValue      rbp =  canonicalState.getRegister(X86_REG_RBP);
+		SemanticKnownConst rip = *canonicalState.getRegister(X86_REG_RIP).tryGetKnownConst();
+		SemanticKnownConst fp  = *canonicalState.getOperand(insn, 0).tryGetKnownConst();
 		
 		canonicalState.stackPush(rip); //Push return address to stack
 		canonicalState.stackPush(rbp); //Push previous RBP to stack
 
-		//Mark new RBP
+		//Mark new stack frame location
 		rbp = rsp;
 
 		//Jump to new function
-		rip.value = fp.value;
+		rip = fp;
+
+		//Write back to registers
+		canonicalState.setRegister(X86_REG_RBP, rbp);
+		canonicalState.setRegister(X86_REG_RIP, rip);
 
 		pushCallStack((uint8_t*)rip.value); //Sanity check. Also no ROP nonsense
 	}
 	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_RET))
 	{
 		//Cannot pop to an indeterminate address
-		if (canonicalState.registers[X86_REG_RBP]->tryGetKnownConst())
+		if (canonicalState.getRegister(X86_REG_RBP).tryGetKnownConst())
 		{
 			//Pop previous stack frame (return address and RBP) from stack
-			SemanticKnownConst& rbp = *canonicalState.registers[X86_REG_RBP]->tryGetKnownConst();
-			SemanticKnownConst& rip = *canonicalState.registers[X86_REG_RIP]->tryGetKnownConst();
+			SemanticKnownConst rbp = *canonicalState.getRegister(X86_REG_RBP).tryGetKnownConst();
+			SemanticKnownConst rip = *canonicalState.getRegister(X86_REG_RIP).tryGetKnownConst();
 			SemanticValue oldRbp     = canonicalState.stackPop(rbp.size);
 			SemanticValue returnAddr = canonicalState.stackPop(rip.size);
 
-			*canonicalState.registers[X86_REG_RIP] = returnAddr; //Jump to return address
-			*canonicalState.registers[X86_REG_RBP] = oldRbp; //Pop rbp
+			canonicalState.setRegister(X86_REG_RBP, oldRbp); //Restore previous stack frame
+			canonicalState.setRegister(X86_REG_RIP, returnAddr); //Jump to return address
 
 			//If given an operand, pop that many bytes from the stack
 			if (insn->detail->x86.op_count == 1) canonicalState.stackPop(canonicalState.getOperand(insn, 0).tryGetKnownConst()->value);
@@ -74,11 +78,13 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 		else
 		{
 			//Invalidate state
-			*canonicalState.registers[X86_REG_RIP] = SemanticUnknown(sizeof(void*)); //FIXME read proper size
-			*canonicalState.registers[X86_REG_RBP] = SemanticUnknown(sizeof(void*));
+			size_t ripSize = canonicalState.getRegister(X86_REG_RIP).getSize();
+			size_t rbpSize = canonicalState.getRegister(X86_REG_RBP).getSize();
+			canonicalState.setRegister(X86_REG_RIP, SemanticUnknown(ripSize) );
+			canonicalState.setRegister(X86_REG_RBP, SemanticUnknown(rbpSize) );
 
 			//Pop from stack
-			canonicalState.stackPop(2 * sizeof(void*)); //FIXME read proper size
+			canonicalState.stackPop(ripSize + rbpSize);
 				
 			//If given an operand, pop that many bytes from the stack
 			if (insn->detail->x86.op_count == 1) canonicalState.stackPop(canonicalState.getOperand(insn, 0).tryGetKnownConst()->value);
@@ -132,7 +138,7 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 		cs_regs_access(capstone_get_instance(), insn,
 			regsRead   , &nRegsRead,
 			regsWritten, &nRegsWritten);
-		for (int i = 0; i < nRegsWritten; ++i) *(canonicalState.registers[regsWritten[i]]) = SemanticUnknown(sizeof(void*));
+		for (int i = 0; i < nRegsWritten; ++i) canonicalState.setRegister((x86_reg)regsWritten[i], SemanticUnknown(sizeof(void*)) ); //TODO read correct size
 	}
 }
 
@@ -147,7 +153,8 @@ void SemanticVM::execFunc(void(*fn)(), void(*expectedReturnAddress)(), int inden
 	do
 	{
 		endOfFunction = !walker.advance();
-		(*canonicalState.registers[X86_REG_RIP]) = SemanticKnownConst((uint_addr_t)walker.codeCursor, sizeof(void*)); //Ensure RIP is up to date
+		size_t ripSize = canonicalState.getRegister(X86_REG_RIP).getSize();
+		canonicalState.setRegister(X86_REG_RIP, SemanticKnownConst((uint_addr_t)walker.codeCursor, ripSize) ); //Ensure RIP is up to date
 
 		//DEBUG
 		canonicalState.debugPrintWorkingSet();
@@ -162,7 +169,7 @@ void SemanticVM::execFunc(void(*fn)(), void(*expectedReturnAddress)(), int inden
 
 		printf("\n");
 
-		assert(canonicalState.registers[X86_REG_RSP]->tryGetKnownConst() && "Lost track of RSP! This should never happen!");
+		assert(canonicalState.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
 
 		//If we're supposed to call another function, do so
 		if (funcToCall) execFunc(funcToCall, (void(*)())walker.codeCursor, indentLevel+1);

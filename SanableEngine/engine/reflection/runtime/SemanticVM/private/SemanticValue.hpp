@@ -37,6 +37,7 @@ public:
 	};
 
 private:
+	Type valueType;
 	union
 	{
 		size_t size;
@@ -44,7 +45,6 @@ private:
 		SemanticKnownConst asKnownConst;
 		SemanticThisPtr    asThisPtr;
 	};
-	Type valueType;
 
 public:
 	Type getType() const;

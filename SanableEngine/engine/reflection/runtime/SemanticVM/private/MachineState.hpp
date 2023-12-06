@@ -19,8 +19,9 @@ private:
 	SemanticValue* __registerMappings[nRegisters]; //You can access this if you want, but probably use "registers" instead
 public:
 	//Safety: Redefine registers as immutable
-	SemanticValue* const* const registers = __registerMappings;
 	SemanticValue decodeMemAddr(const x86_op_mem&) const;
+	SemanticValue getRegister(x86_reg id) const;
+	void setRegister(x86_reg id, SemanticValue val);
 
 private:
 	std::map<uint8_t*, SemanticValue> memory; //Will never be SemanticUnknown

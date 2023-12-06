@@ -36,11 +36,21 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 {
 	std::optional<SemanticValue> addr; //TODO: Return GeneralValue, account for ThisPtr
 #define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*))) + (val))
-	if (mem.base  != X86_REG_INVALID) addValue( *registers[mem.base] );
-	if (mem.index != X86_REG_INVALID) addValue( *registers[mem.index] * SemanticKnownConst(mem.scale, sizeof(void*)) );
+	if (mem.base  != X86_REG_INVALID) addValue( getRegister(mem.base) );
+	if (mem.index != X86_REG_INVALID) addValue( getRegister(mem.index) * SemanticKnownConst(mem.scale, sizeof(void*)) );
 	assert(mem.segment == X86_REG_INVALID); //FIXME: I'm not dealing with that right now
 	addValue( SemanticKnownConst(mem.disp, sizeof(void*)) );
 	return addr.value();
+}
+
+SemanticValue MachineState::getRegister(x86_reg id) const
+{
+	return *(__registerMappings[id]);
+}
+
+void MachineState::setRegister(x86_reg id, SemanticValue val)
+{
+	*(__registerMappings[id]) = val;
 }
 
 SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
@@ -65,7 +75,7 @@ SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 	switch (op.type)
 	{
 	case x86_op_type::X86_OP_REG:
-		out = *registers[op.reg];
+		out = getRegister(op.reg);
 		break;
 
 	case x86_op_type::X86_OP_IMM:
@@ -94,7 +104,7 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue v
 	switch (op.type)
 	{
 	case x86_op_type::X86_OP_REG:
-		*registers[op.reg] = value;
+		setRegister(op.reg, value);
 		return;
 
 	case x86_op_type::X86_OP_MEM:
@@ -108,16 +118,18 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue v
 
 void MachineState::stackPush(SemanticValue value)
 {
-	SemanticKnownConst& rsp = *registers[X86_REG_RSP]->tryGetKnownConst();
+	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
 	rsp.value -= value.getSize(); //Make space on stack
 	setMemory(rsp, value, value.getSize()); //Write to stack
+	setRegister(X86_REG_RSP, rsp);
 }
 
 SemanticValue MachineState::stackPop(size_t nBytes)
 {
-	SemanticKnownConst& rsp = *registers[X86_REG_RSP]->tryGetKnownConst();
+	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
 	SemanticValue out = getMemory(rsp, nBytes); //Read from stack
 	rsp.value += nBytes; //Reclaim space on stack
+	setRegister(X86_REG_RSP, rsp);
 	return out;
 }
 
@@ -149,12 +161,12 @@ int MachineState::debugPrintWorkingSet() const
 {
 	int bytesWritten = 0;
 	bytesWritten += printf("rcx=");
-	bytesWritten += registers[X86_REG_RCX]->debugPrintValue();
+	bytesWritten += getRegister(X86_REG_RCX).debugPrintValue();
 	bytesWritten += printf(" | rax=");
-	bytesWritten += registers[X86_REG_RAX]->debugPrintValue();
+	bytesWritten += getRegister(X86_REG_RAX).debugPrintValue();
 	bytesWritten += printf(" | rsp=");
-	bytesWritten += registers[X86_REG_RSP]->debugPrintValue();
+	bytesWritten += getRegister(X86_REG_RSP).debugPrintValue();
 	//bytesWritten += printf(" | rbp=");
-	//bytesWritten += debugPrint(*state.registers[X86_REG_RBP]);
+	//bytesWritten += getRegister(X86_REG_RBP).debugPrintValue();
 	return bytesWritten;
 }

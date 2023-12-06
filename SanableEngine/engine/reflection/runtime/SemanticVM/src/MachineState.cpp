@@ -43,6 +43,10 @@ SemanticValue MachineState::getMemory(void* _location, size_t size) const
 	{
 		return SemanticThisPtr(memory.at(location).tryGetThisPtr()->offset);
 	}
+	else if (type == SemanticValue::Type::Unknown)
+	{
+		return SemanticUnknown(size);
+	}
 	else
 	{
 		//Something went very, very wrong
@@ -92,6 +96,10 @@ SemanticValue MachineState::getMemory(SemanticThisPtr _location, size_t size) co
 	{
 		return SemanticThisPtr(thisMemory.at(location).tryGetThisPtr()->offset);
 	}
+	else if (type == SemanticValue::Type::Unknown)
+	{
+		return SemanticUnknown(size);
+	}
 	else
 	{
 		//Something went very, very wrong
@@ -130,11 +138,12 @@ void MachineState::setMemory(void* _location, SemanticValue value, size_t size)
 		//Just hope there's no shearing
 		for (size_t i = 0; i < sizeof(void*); ++i) memory.insert_or_assign(location+i, value);
 	}
-	else
+	else if (value.isUnknown())
 	{
 		//Value was unknown
-		for (size_t i = 0; i < size; ++i) memory.erase(location+i);
+		for (size_t i = 0; i < size; ++i) memory.insert_or_assign(location+i, value);
 	}
+	else assert(false);
 }
 
 void MachineState::setMemory(SemanticThisPtr _location, SemanticValue value, size_t size)
@@ -150,11 +159,12 @@ void MachineState::setMemory(SemanticThisPtr _location, SemanticValue value, siz
 		//Just hope there's no shearing
 		for (size_t i = 0; i < sizeof(void*); ++i) thisMemory.insert_or_assign(location+i, value);
 	}
-	else
+	else if (value.isUnknown())
 	{
 		//Value was unknown
-		for (size_t i = 0; i < size; ++i) thisMemory.erase(location+i);
+		for (size_t i = 0; i < size; ++i) thisMemory.insert_or_assign(location+i, value);
 	}
+	else assert(false);
 }
 
 void MachineState::setMemory(SemanticKnownConst location, SemanticValue value, size_t size)
