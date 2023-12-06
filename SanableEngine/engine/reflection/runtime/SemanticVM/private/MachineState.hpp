@@ -1,12 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <map>
-#include <functional>
+#include <vector>
 
 #include "capstone/capstone.h"
 
 #include "SemanticValue.hpp"
+#include "VMMemory.hpp"
 
 
 struct MachineState
@@ -24,8 +24,8 @@ public:
 	void setRegister(x86_reg id, SemanticValue val);
 
 private:
-	std::map<uint8_t*, SemanticValue> memory; //Will never be SemanticUnknown
-	std::map<size_t, SemanticValue> thisMemory; //Memory of the "this" object
+	VMMemory constMemory; //General memory with known constant address
+	VMMemory thisMemory; //Memory of the "this" object
 public:
 	MachineState();
 
@@ -35,11 +35,11 @@ public:
 	void setOperand(const cs_insn* insn, size_t index, SemanticValue value);
 
 	SemanticValue getMemory(void*              location, size_t size) const;
-	SemanticValue getMemory(SemanticValue       location, size_t size) const;
+	SemanticValue getMemory(SemanticValue      location, size_t size) const;
 	SemanticValue getMemory(SemanticKnownConst location, size_t size) const;
 	SemanticValue getMemory(SemanticThisPtr    location, size_t size) const;
 	void setMemory(void*              location, SemanticValue value, size_t size); //"size" only used if value is unknown
-	void setMemory(SemanticValue       location, SemanticValue value, size_t size);
+	void setMemory(SemanticValue      location, SemanticValue value, size_t size);
 	void setMemory(SemanticKnownConst location, SemanticValue value, size_t size);
 	void setMemory(SemanticThisPtr    location, SemanticValue value, size_t size);
 

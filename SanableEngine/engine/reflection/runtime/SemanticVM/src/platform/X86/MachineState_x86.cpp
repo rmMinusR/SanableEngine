@@ -30,6 +30,8 @@ MachineState::MachineState()
 void MachineState::reset()
 {
 	for (auto& reg : __registerStorage) reg = SemanticUnknown(0);
+	constMemory.reset();
+	thisMemory.reset();
 }
 
 SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
@@ -118,6 +120,7 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue v
 
 void MachineState::stackPush(SemanticValue value)
 {
+	assert(value.getSize() > 0);
 	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
 	rsp.value -= value.getSize(); //Make space on stack
 	setMemory(rsp, value, value.getSize()); //Write to stack
@@ -130,6 +133,7 @@ SemanticValue MachineState::stackPop(size_t nBytes)
 	SemanticValue out = getMemory(rsp, nBytes); //Read from stack
 	rsp.value += nBytes; //Reclaim space on stack
 	setRegister(X86_REG_RSP, rsp);
+	assert(out.getSize() == nBytes);
 	return out;
 }
 
