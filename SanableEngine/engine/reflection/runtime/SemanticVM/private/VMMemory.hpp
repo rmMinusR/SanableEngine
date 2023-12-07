@@ -14,7 +14,7 @@ class VMMemory
 public:
 	void reset();
 
-	SemanticValue get(void* location, size_t size) const;
+	[[nodiscard]] SemanticValue get(void* location, size_t size) const;
 	void set(void* location, SemanticValue value, size_t size);
 
 	inline SemanticValue get(uint64_t location, size_t size) const { return get((void*)location, size); }

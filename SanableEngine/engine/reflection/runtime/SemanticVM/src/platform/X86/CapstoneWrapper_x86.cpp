@@ -14,9 +14,6 @@ void_func_ptr platform_getRelFunc(const cs_insn& insn)
 
 bool platform_isIf(const cs_insn& insn)
 {
-	return !carray_contains(insn.detail->groups, insn.detail->groups_count, cs_group_type::CS_GRP_CALL)
-		&& (
-			carray_contains(insn.detail->groups, insn.detail->groups_count, cs_group_type::CS_GRP_JUMP)
-			|| carray_contains(insn.detail->groups, insn.detail->groups_count, cs_group_type::CS_GRP_BRANCH_RELATIVE)
-		);
+	return !insn_in_group(insn, cs_group_type::CS_GRP_CALL)
+		&& (insn_in_group(insn, cs_group_type::CS_GRP_JUMP) || insn_in_group(insn, cs_group_type::CS_GRP_BRANCH_RELATIVE));
 }

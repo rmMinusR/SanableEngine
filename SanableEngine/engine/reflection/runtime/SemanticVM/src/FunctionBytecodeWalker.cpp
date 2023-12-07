@@ -41,7 +41,7 @@ bool FunctionBytecodeWalker::advance()
 		return true;
 	}
 	//If it's a RETURN, continue only if we are allowed to JUMP to later
-	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_RET))
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{
 		return furthestKnownJump > codeCursor;
 	}

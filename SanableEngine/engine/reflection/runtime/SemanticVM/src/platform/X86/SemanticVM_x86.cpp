@@ -31,7 +31,7 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 	{
 		canonicalState.setOperand(insn, 0, canonicalState.getOperand(insn, 1));
 	}
-	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
 		//Requires target address to be a known const. Will crash otherwise
 		SemanticKnownConst rsp = *canonicalState.getRegister(X86_REG_RSP).tryGetKnownConst();
@@ -54,7 +54,7 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 
 		pushCallStack((uint8_t*)rip.value); //Sanity check. Also no ROP nonsense
 	}
-	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_RET))
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{
 		//Cannot pop to an indeterminate address
 		if (canonicalState.getRegister(X86_REG_RBP).tryGetKnownConst())
@@ -142,8 +142,7 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 	}
 }
 
-
-void SemanticVM::execFunc(void(*fn)(), void(*expectedReturnAddress)(), int indentLevel)
+void SemanticVM::execFunc_internal(void(*fn)(), void(*expectedReturnAddress)(), int indentLevel)
 {
 	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
 	
@@ -172,7 +171,12 @@ void SemanticVM::execFunc(void(*fn)(), void(*expectedReturnAddress)(), int inden
 		assert(canonicalState.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
 
 		//If we're supposed to call another function, do so
-		if (funcToCall) execFunc(funcToCall, (void(*)())walker.codeCursor, indentLevel+1);
+		if (funcToCall) execFunc_internal(funcToCall, (void(*)())walker.codeCursor, indentLevel+1);
 		
 	} while (!endOfFunction);
+}
+
+void SemanticVM::execFunc(void(*fn)())
+{
+	execFunc_internal(fn, nullptr, 0);
 }

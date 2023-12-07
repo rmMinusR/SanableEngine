@@ -24,6 +24,11 @@ bool carray_contains_if(T1* arr, size_t arrSize, TMatchFunc matchFunc)
 	return false;
 }
 
+inline bool insn_in_group(const cs_insn& insn, uint8_t group)
+{
+	return carray_contains(insn.detail->groups, insn.detail->groups_count, group);
+}
+
 
 typedef void(*void_func_ptr)(); //Cannot directly return a function ptr, must use a typedef otherwise lexer gets confused
 void_func_ptr platform_getRelFunc(const cs_insn& insn);

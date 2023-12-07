@@ -36,7 +36,7 @@ void MachineState::reset()
 
 SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 {
-	std::optional<SemanticValue> addr; //TODO: Return GeneralValue, account for ThisPtr
+	std::optional<SemanticValue> addr;
 #define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*))) + (val))
 	if (mem.base  != X86_REG_INVALID) addValue( getRegister(mem.base) );
 	if (mem.index != X86_REG_INVALID) addValue( getRegister(mem.index) * SemanticKnownConst(mem.scale, sizeof(void*)) );
@@ -66,7 +66,7 @@ SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size);
 	}
 	//Special case: jmp aka branch (relative addresses)
-	else if (carray_contains(insn->detail->groups, insn->detail->groups_count, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
+	else if (insn_in_group(*insn, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
 	{
 		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size);
 	}

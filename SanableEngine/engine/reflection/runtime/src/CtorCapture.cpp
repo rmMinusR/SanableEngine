@@ -19,7 +19,7 @@ DetectedConstants capture_utils::_captureVtablesInternal(size_t objSize, std::in
 		FunctionBytecodeWalker thunkWalker(thunk);
 		while (thunkWalker.advance())
 		{
-			if (carray_contains(thunkWalker.insn->detail->groups, thunkWalker.insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
+			if (insn_in_group(*thunkWalker.insn, cs_group_type::CS_GRP_CALL))
 			{
 				void(*fp)() = platform_getRelFunc(*thunkWalker.insn);
 				auto it = std::find(possibleCtors.begin(), possibleCtors.end(), fp);
@@ -38,7 +38,7 @@ DetectedConstants capture_utils::_captureVtablesInternal(size_t objSize, std::in
 		FunctionBytecodeWalker thunkWalker(thunk);
 		while (thunkWalker.advance())
 		{
-			if (carray_contains(thunkWalker.insn->detail->groups, thunkWalker.insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
+			if (insn_in_group(*thunkWalker.insn, cs_group_type::CS_GRP_CALL))
 			{
 				void(*fp)() = platform_getRelFunc(*thunkWalker.insn);
 				auto it = std::find(notPresent.begin(), notPresent.end(), fp);
