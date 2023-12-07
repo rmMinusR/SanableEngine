@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <vector>
+#include <map>
 
 #include "capstone/capstone.h"
 
@@ -15,10 +16,9 @@ public:
 	constexpr static size_t nRegisters = X86_REG_ENDING;
 
 private:
-	SemanticValue __registerStorage[nRegisters]; //RAW DATA. DO NOT ACCESS DIRECTLY.
-	SemanticValue* __registerMappings[nRegisters]; //You can access this if you want, but probably use "registers" instead
+	std::map<x86_reg, SemanticValue> __registerStorage;
+	x86_reg __registerMappings[nRegisters];
 public:
-	//Safety: Redefine registers as immutable
 	SemanticValue decodeMemAddr(const x86_op_mem&) const;
 	SemanticValue getRegister(x86_reg id) const;
 	void setRegister(x86_reg id, SemanticValue val);

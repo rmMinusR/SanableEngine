@@ -9,11 +9,11 @@
 MachineState::MachineState()
 {
 	//Allow registers to share memory without heap allocation
-	for (size_t i = 0; i < nRegisters; ++i) __registerMappings[i] = __registerStorage + i;
+	for (size_t i = 0; i < nRegisters; ++i) __registerMappings[i] = (x86_reg)i;
 
 	//General-purpose registers share memory. Set those up.
 	//See https://en.wikibooks.org/wiki/X86_Assembly/X86_Architecture#General-Purpose_Registers_(GPR)_-_16-bit_naming_conventions
-#define DECL_REGISTER_GROUP_IDENTITY(suffix) __registerMappings[X86_REG_##suffix] = __registerMappings[X86_REG_R##suffix] = __registerMappings[X86_REG_E##suffix] = __registerStorage+(X86_REG_##suffix);
+#define DECL_REGISTER_GROUP_IDENTITY(suffix) __registerMappings[X86_REG_##suffix] = __registerMappings[X86_REG_R##suffix] = __registerMappings[X86_REG_E##suffix] = X86_REG_##suffix;
 	DECL_REGISTER_GROUP_IDENTITY(AX);
 	DECL_REGISTER_GROUP_IDENTITY(BX);
 	DECL_REGISTER_GROUP_IDENTITY(CX);
@@ -29,7 +29,7 @@ MachineState::MachineState()
 
 void MachineState::reset()
 {
-	for (auto& reg : __registerStorage) reg = SemanticUnknown(0);
+	__registerStorage.clear();
 	constMemory.reset();
 	thisMemory.reset();
 }
@@ -47,12 +47,15 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 
 SemanticValue MachineState::getRegister(x86_reg id) const
 {
-	return *(__registerMappings[id]);
+	x86_reg mappedId = __registerMappings[id];
+	auto it = __registerStorage.find(mappedId);
+	return it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
 }
 
 void MachineState::setRegister(x86_reg id, SemanticValue val)
 {
-	*(__registerMappings[id]) = val;
+	x86_reg mappedId = __registerMappings[id];
+	__registerStorage.insert_or_assign(mappedId, val);
 }
 
 SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
