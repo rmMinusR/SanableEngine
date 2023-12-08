@@ -29,7 +29,11 @@ public:
 		Parity = 2,
 		AuxCarry = 4,
 		Zero = 6,
-		Sign = 7
+		Sign = 7,
+		Trap = 8,
+		InterruptEnable = 9,
+		Direction = 10,
+		Overflow = 11
 	};
 
 private:
@@ -55,7 +59,7 @@ public:
 	void stackPush(SemanticValue value);
 	SemanticValue stackPop(size_t nBytes);
 
-	bool conditionMet(const cs_insn& insn) const; //Given a conditional instruction (ie. JNE), is the specified condition met? Defined per-platform.
+	std::optional<bool> isConditionMet(unsigned int insnId) const; //Check if the condition described by a branch instruction is met, or nullopt if it is indeterminate
 
 	//size_t countStackFrames() const;
 	//using StackVisitor = std::function<void(const SemanticValue& rbp, const SemanticValue& returnLocation)>;

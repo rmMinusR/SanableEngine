@@ -57,10 +57,10 @@ SemanticThisPtr::SemanticThisPtr(size_t offset) :
 {
 }
 
-std::optional<bool> SemanticFlags::get(int id) const
+std::optional<bool> SemanticFlags::check(int id, bool expectedValue) const
 {
 	uint64_t mask = 1<<id;
-	return (bitsUsage&mask) ? std::make_optional<bool>(bits&mask) : std::nullopt;
+	return (bitsKnown&mask) ? std::make_optional<bool>( (bits&mask) == expectedValue) : std::nullopt;
 }
 
 void SemanticFlags::set(int id, std::optional<bool> val)
@@ -70,9 +70,16 @@ void SemanticFlags::set(int id, std::optional<bool> val)
 	{
 		if (val.value()) bits |= mask;
 		else bits &= ~mask;
-		bitsUsage |= mask;
+		bitsKnown |= mask;
 	}
-	else bitsUsage &= ~mask;
+	else bitsKnown &= ~mask;
+}
+
+bool SemanticFlags::allKnown(const std::initializer_list<int>& ids) const
+{
+	uint64_t mask = 0;
+	for (int id : ids) mask |= 1<<id;
+	return (bitsKnown&mask) == mask;
 }
 
 
@@ -160,8 +167,8 @@ SemanticValue SemanticValue_doMathOp(SemanticValue arg1, SemanticValue arg2,
 	auto* flags2 = arg2.tryGetFlags();
 
 	//If entire flags field is known, it is effectively a known const
-	if (flags1 && flags1->bitsUsage == ~0ull) const1 = reinterpret_cast<SemanticKnownConst*>(flags1); //const's value corresponds to flags' bits field
-	if (flags2 && flags2->bitsUsage == ~0ull) const2 = reinterpret_cast<SemanticKnownConst*>(flags2);
+	if (flags1 && flags1->bitsKnown == ~0ull) const1 = reinterpret_cast<SemanticKnownConst*>(flags1); //const's value corresponds to flags' bits field
+	if (flags2 && flags2->bitsKnown == ~0ull) const2 = reinterpret_cast<SemanticKnownConst*>(flags2);
 
 	SemanticUnknown unknown(std::max(arg1.getSize(), arg2.getSize()));
 	if (arg1.isUnknown() || arg2.isUnknown()) return unknown;

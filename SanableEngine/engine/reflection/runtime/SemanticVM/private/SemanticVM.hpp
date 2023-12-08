@@ -25,7 +25,13 @@ public:
 	/// <param name="insn">Instruction to simulate</param>
 	/// <param name="pushCallStack">Callback for when a CALL happens</param>
 	/// <param name="popCallStack">Callback for when a RET happens, which should yield the expected return address, or null if indeterminate/unchecked</param>
-	void step(const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack);
+	/// <param name="jump">Callback for when a jump or determinate branch occurs.</param>
+	/// <param name="fork">Callback for when an indeterminate branch occurs. If branching is determinate, jump callback will be used instead.</param>
+	void step(const cs_insn* insn,
+			  const std::function<void(void*)>& pushCallStack,
+			  const std::function<void*()>& popCallStack,
+			  const std::function<void(void*)>& jump,
+			  const std::function<void(const std::vector<void*>&)>& fork);
 
 	/// <summary>
 	/// Deterministically simulate an entire function (until its final RET is reached).

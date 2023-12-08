@@ -30,6 +30,7 @@ MachineState::MachineState()
 void MachineState::reset()
 {
 	__registerStorage.clear();
+
 	constMemory.reset();
 	thisMemory.reset();
 }
@@ -144,6 +145,85 @@ SemanticValue MachineState::stackPop(size_t nBytes)
 	setRegister(X86_REG_RSP, rsp);
 	assert(out.getSize() == nBytes);
 	return out;
+}
+
+std::optional<bool> MachineState::isConditionMet(unsigned int insnId) const
+{
+	//See https://www.felixcloutier.com/x86/jcc
+	SemanticFlags flags = *getRegister(x86_reg::X86_REG_EFLAGS).tryGetFlags();
+	switch (insnId)
+	{
+		case x86_insn::X86_INS_JO : return flags.check((int)MachineState::FlagIDs::Overflow, true );
+		case x86_insn::X86_INS_JNO: return flags.check((int)MachineState::FlagIDs::Overflow, false);
+		case x86_insn::X86_INS_JB : return flags.check((int)MachineState::FlagIDs::Carry   , true );
+		case x86_insn::X86_INS_JAE: return flags.check((int)MachineState::FlagIDs::Carry   , false);
+		case x86_insn::X86_INS_JE : return flags.check((int)MachineState::FlagIDs::Zero    , true );
+		case x86_insn::X86_INS_JNE: return flags.check((int)MachineState::FlagIDs::Zero    , false);
+		case x86_insn::X86_INS_JS : return flags.check((int)MachineState::FlagIDs::Sign    , true );
+		case x86_insn::X86_INS_JNS: return flags.check((int)MachineState::FlagIDs::Sign    , false);
+		case x86_insn::X86_INS_JP : return flags.check((int)MachineState::FlagIDs::Parity  , true );
+		case x86_insn::X86_INS_JNP: return flags.check((int)MachineState::FlagIDs::Parity  , false);
+
+		case x86_insn::X86_INS_JBE:
+		{
+			auto cf = flags.check((int)MachineState::FlagIDs::Carry, true);
+			auto zf = flags.check((int)MachineState::FlagIDs::Zero, true);
+			if (cf.has_value() && zf.has_value()) return cf.value() || zf.value(); //Determinate case
+			else                                  return std::nullopt; //Indeterminate case
+		}
+
+		case x86_insn::X86_INS_JA:
+		{
+			auto cf = flags.check((int)MachineState::FlagIDs::Carry, true);
+			auto zf = flags.check((int)MachineState::FlagIDs::Zero, true);
+			if (cf.has_value() && zf.has_value()) return !cf.value() && !zf.value(); //Determinate case
+			else                                  return std::nullopt; //Indeterminate case
+			break;
+		}
+
+		case x86_insn::X86_INS_JL:
+		{
+			auto sf = flags.check((int)MachineState::FlagIDs::Sign, true);
+			auto of = flags.check((int)MachineState::FlagIDs::Overflow, true);
+			if (sf.has_value() && of.has_value()) return sf.value() != of.value(); //Determinate case
+			else                                  return std::nullopt; //Indeterminate case
+			break;
+		}
+
+		case x86_insn::X86_INS_JGE:
+		{
+			auto sf = flags.check((int)MachineState::FlagIDs::Sign, true);
+			auto of = flags.check((int)MachineState::FlagIDs::Overflow, true);
+			if (sf.has_value() && of.has_value()) return sf.value() == of.value(); //Determinate case
+			else                                  return std::nullopt; //Indeterminate case
+			break;
+		}
+
+		case x86_insn::X86_INS_JLE:
+		{
+			auto zf = flags.check((int)MachineState::FlagIDs::Zero, true);
+			auto sf = flags.check((int)MachineState::FlagIDs::Sign, true);
+			auto of = flags.check((int)MachineState::FlagIDs::Overflow, true);
+			if (zf.has_value() && zf.value()) return true;
+			else if (sf.has_value() && of.has_value()) return sf.value() != of.value(); //Determinate case
+			else                                       return std::nullopt; //Indeterminate case
+			break;
+		}
+
+		case x86_insn::X86_INS_JG:
+		{
+			auto zf = flags.check((int)MachineState::FlagIDs::Zero, true);
+			auto sf = flags.check((int)MachineState::FlagIDs::Sign, true);
+			auto of = flags.check((int)MachineState::FlagIDs::Overflow, true);
+			if (zf.has_value() && sf.has_value() && of.has_value()) return !zf.value() && (sf.value() == of.value()); //Determinate case
+			else                                                    return std::nullopt; //Indeterminate case
+			break;
+		}
+
+		default:
+			assert(false && "Unknown branch condition");
+			return std::nullopt;
+	}
 }
 
 /*

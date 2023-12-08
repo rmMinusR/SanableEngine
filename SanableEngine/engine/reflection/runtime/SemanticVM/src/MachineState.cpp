@@ -2,9 +2,9 @@
 
 #include <cassert>
 
-SemanticValue MachineState::getMemory(void*              location, size_t size) const { return constMemory.get(location             , size); }
-SemanticValue MachineState::getMemory(SemanticThisPtr    location, size_t size) const { return thisMemory .get(location.offset      , size); }
-SemanticValue MachineState::getMemory(SemanticKnownConst location, size_t size) const { return constMemory.get((void*)location.value, size); }
+SemanticValue MachineState::getMemory(void*              location, size_t size) const { return constMemory.get(location       , size); }
+SemanticValue MachineState::getMemory(SemanticThisPtr    location, size_t size) const { return thisMemory .get(location.offset, size); }
+SemanticValue MachineState::getMemory(SemanticKnownConst location, size_t size) const { return constMemory.get(location.value , size); }
 
 SemanticValue MachineState::getMemory(SemanticValue _location, size_t size) const
 {
@@ -18,9 +18,9 @@ SemanticValue MachineState::getMemory(SemanticValue _location, size_t size) cons
 	}
 }
 
-void MachineState::setMemory(void*              location, SemanticValue value, size_t size) { return constMemory.set(location             , value, size); }
-void MachineState::setMemory(SemanticThisPtr    location, SemanticValue value, size_t size) { return thisMemory .set(location.offset      , value, size); }
-void MachineState::setMemory(SemanticKnownConst location, SemanticValue value, size_t size) { return constMemory.set((void*)location.value, value, size); }
+void MachineState::setMemory(void*              location, SemanticValue value, size_t size) { return constMemory.set(location       , value, size); }
+void MachineState::setMemory(SemanticThisPtr    location, SemanticValue value, size_t size) { return thisMemory .set(location.offset, value, size); }
+void MachineState::setMemory(SemanticKnownConst location, SemanticValue value, size_t size) { return constMemory.set(location.value , value, size); }
 
 void MachineState::setMemory(SemanticValue _location, SemanticValue value, size_t size)
 {

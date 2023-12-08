@@ -19,7 +19,7 @@ int pad_inline(int charsPrinted, int desiredWidth)
 }
 
 
-void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&pushCallStack, const std::function<void*()>&popCallStack)
+void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
 {
 	if (insn->id == x86_insn::X86_INS_LEA)
 	{
@@ -130,6 +130,30 @@ void SemanticVM::step(const cs_insn* insn, const std::function<void(void*)>&push
 	{
 		//Do nothing
 	}
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_BRANCH_RELATIVE)) //TODO: Really hope nobody uses absolute branching. Is that a thing?
+	{
+		std::optional<bool> conditionMet = canonicalState.isConditionMet(insn->id);
+
+		auto* ifBranch = canonicalState.getOperand(insn, 0).tryGetKnownConst();
+		auto* noBranch = canonicalState.getRegister(x86_reg::X86_REG_RIP).tryGetKnownConst();
+		assert(ifBranch && "Indirect branching currently not supported");
+		assert(noBranch && "Indirect branching currently not supported");
+
+		//Indeterminate: fork
+		if (!conditionMet.has_value())
+		{
+			fork({
+				(void*)noBranch->value,
+				(void*)ifBranch->value
+			});
+		}
+
+		//Determinate: jump if condition met
+		else
+		{
+			if (conditionMet.value()) jump(ifBranch);
+		}
+	}
 	else
 	{
 		//Unhandled operation: Just invalidate all relevant register state
@@ -161,9 +185,12 @@ void SemanticVM::execFunc_internal(void(*fn)(), void(*expectedReturnAddress)(), 
 
 		//Execute current call frame, one opcode at a time
 		void(*funcToCall)() = nullptr;
+		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
 		step(walker.insn,
-			[&](void* fn) { funcToCall = (void(*)()) fn; },
-			[&]() { return expectedReturnAddress; }
+			[&](void* fn) { funcToCall = (void(*)()) fn; }, //On CALL
+			[&]() { return expectedReturnAddress; }, //On RET
+			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
+			[&](const std::vector<void*>& forks) { jmpTargets = forks; } //On fork
 		);
 
 		printf("\n");
@@ -172,6 +199,10 @@ void SemanticVM::execFunc_internal(void(*fn)(), void(*expectedReturnAddress)(), 
 
 		//If we're supposed to call another function, do so
 		if (funcToCall) execFunc_internal(funcToCall, (void(*)())walker.codeCursor, indentLevel+1);
+
+		//Handle forking/jumping
+		if (jmpTargets.size() == 1) walker.codeCursor = (uint8_t*)jmpTargets[0];
+		else if (jmpTargets.size() > 1) execBranch(canonicalState, jmpTargets);
 		
 	} while (!endOfFunction);
 }

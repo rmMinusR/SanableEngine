@@ -37,9 +37,10 @@ struct SemanticFlags /// Represents a bitfield of at most 64 bits, each of which
 {
 	size_t size = sizeof(uint64_t); //Do not modify
 	uint64_t bits = 0;
-	uint64_t bitsUsage = 0;
-	std::optional<bool> get(int id) const;
+	uint64_t bitsKnown = 0;
+	std::optional<bool> check(int id, bool expectedValue) const;
 	void set(int id, std::optional<bool> val);
+	bool allKnown(const std::initializer_list<int>& ids) const;
 };
 
 #define _X(id) static_assert(sizeof(Semantic##id) != 0); //Ensure each specified type exists
