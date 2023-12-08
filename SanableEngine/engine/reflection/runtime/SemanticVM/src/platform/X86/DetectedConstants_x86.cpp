@@ -11,17 +11,17 @@
 DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM
-	SemanticVM vm;
-	vm.canonicalState.setRegister(X86_REG_RCX, SemanticThisPtr(0) ); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
+	MachineState canonicalState;
+	canonicalState.setRegister(X86_REG_RCX, SemanticThisPtr(0) ); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 
 	//Run
-	vm.execFunc(ctor);
+	SemanticVM::execFunc(canonicalState, ctor);
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);
 	for (size_t i = 0; i < objSize; ++i)
 	{
-		SemanticValue _byte = vm.canonicalState.getMemory(SemanticThisPtr{ i }, 1);
+		SemanticValue _byte = canonicalState.getMemory(SemanticThisPtr{ i }, 1);
 		if (auto* byte = _byte.tryGetKnownConst())
 		{
 			out.usage[i] = true;
