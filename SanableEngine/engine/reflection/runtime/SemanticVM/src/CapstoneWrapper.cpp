@@ -42,6 +42,13 @@ void capstone_cleanup_instance()
 	}
 }
 
+
+bool insn_in_group(const cs_insn& insn, uint8_t group)
+{
+	return carray_contains(insn.detail->groups, insn.detail->groups_count, group);
+}
+
+
 int printInstructionCursor(const cs_insn* insn, int callLevel)
 {
 	int bytesWritten = 0;

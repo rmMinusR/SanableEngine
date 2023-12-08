@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <map>
+#include <optional>
 
 #include "capstone/capstone.h"
 
@@ -22,6 +23,14 @@ public:
 	SemanticValue decodeMemAddr(const x86_op_mem&) const;
 	SemanticValue getRegister(x86_reg id) const;
 	void setRegister(x86_reg id, SemanticValue val);
+	enum class FlagIDs
+	{
+		Carry = 0,
+		Parity = 2,
+		AuxCarry = 4,
+		Zero = 6,
+		Sign = 7
+	};
 
 private:
 	VMMemory constMemory; //General memory with known constant address
@@ -45,6 +54,8 @@ public:
 
 	void stackPush(SemanticValue value);
 	SemanticValue stackPop(size_t nBytes);
+
+	bool conditionMet(const cs_insn& insn) const; //Given a conditional instruction (ie. JNE), is the specified condition met? Defined per-platform.
 
 	//size_t countStackFrames() const;
 	//using StackVisitor = std::function<void(const SemanticValue& rbp, const SemanticValue& returnLocation)>;

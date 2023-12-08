@@ -1,8 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 int debugPrintSignedHex(int64_t val);
+
+#define _XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN() \
+	_X(KnownConst) \
+	_X(ThisPtr) \
+	_X(Flags)
+#define _XM_FOREACH_SEMANTICVALUE_TYPE() \
+	_X(Unknown) _XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN()
 
 struct SemanticUnknown /// A continuous span of unknown bytes, or the result of combination of mismatched types (spanning the largest size)
 {
@@ -25,15 +33,28 @@ struct SemanticThisPtr /// Represents the "this" keyword plus some offset. Typic
 	size_t offset = 0;
 	SemanticThisPtr(size_t offset);
 };
+struct SemanticFlags /// Represents a bitfield of at most 64 bits, each of which can be in a known or unknown state
+{
+	size_t size = sizeof(uint64_t); //Do not modify
+	uint64_t bits = 0;
+	uint64_t bitsUsage = 0;
+	std::optional<bool> get(int id) const;
+	void set(int id, std::optional<bool> val);
+};
+
+#define _X(id) static_assert(sizeof(Semantic##id) != 0); //Ensure each specified type exists
+_XM_FOREACH_SEMANTICVALUE_TYPE()
+#undef _X
 
 struct SemanticValue
 {
 public:
+
 	enum class Type
 	{
-		Unknown = 0, /// An value that hasn't been set, was combined with something else unknown, or was sheared
-		KnownConst, /// A known constant value
-		ThisPtr /// A magic value plus some offset
+#define _X(id) id,
+		_XM_FOREACH_SEMANTICVALUE_TYPE()
+#undef _X
 	};
 
 private:
@@ -41,9 +62,9 @@ private:
 	union
 	{
 		size_t size;
-		SemanticUnknown    asUnknown;
-		SemanticKnownConst asKnownConst;
-		SemanticThisPtr    asThisPtr;
+#define _X(id) Semantic##id as##id;
+		_XM_FOREACH_SEMANTICVALUE_TYPE()
+#undef _X
 	};
 
 public:
@@ -51,18 +72,24 @@ public:
 	size_t getSize() const;
 	void resize(size_t); //Usually a very bad idea. But necessary for some things.
 	bool isUnknown() const;
-	SemanticKnownConst* tryGetKnownConst();
-	SemanticThisPtr   * tryGetThisPtr   ();
-	const SemanticKnownConst* tryGetKnownConst() const;
-	const SemanticThisPtr   * tryGetThisPtr   () const;
+
+	//Getters
+#define _X(id) \
+	Semantic##id* tryGet##id(); \
+	const Semantic##id* tryGet##id() const;
+
+	_XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN()
+#undef _X
 
 	SemanticValue();
-	SemanticValue(const SemanticUnknown&);
-	SemanticValue(const SemanticKnownConst&);
-	SemanticValue(const SemanticThisPtr&);
-	void operator=(const SemanticUnknown&    val);
-	void operator=(const SemanticKnownConst& val);
-	void operator=(const SemanticThisPtr&    val);
+
+	//Converting constructors and operator=
+#define _X(id) \
+	SemanticValue(const Semantic##id&); \
+	SemanticValue& operator=(const Semantic##id& val);
+
+	_XM_FOREACH_SEMANTICVALUE_TYPE()
+#undef _X
 
 	int debugPrintValue() const; //Returns number of chars printed
 };

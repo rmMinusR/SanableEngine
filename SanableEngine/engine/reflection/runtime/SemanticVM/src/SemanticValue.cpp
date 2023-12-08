@@ -57,6 +57,24 @@ SemanticThisPtr::SemanticThisPtr(size_t offset) :
 {
 }
 
+std::optional<bool> SemanticFlags::get(int id) const
+{
+	uint64_t mask = 1<<id;
+	return (bitsUsage&mask) ? std::make_optional<bool>(bits&mask) : std::nullopt;
+}
+
+void SemanticFlags::set(int id, std::optional<bool> val)
+{
+	uint64_t mask = 1<<id;
+	if (val.has_value())
+	{
+		if (val.value()) bits |= mask;
+		else bits &= ~mask;
+		bitsUsage |= mask;
+	}
+	else bitsUsage &= ~mask;
+}
+
 
 SemanticValue::Type SemanticValue::getType() const
 {
@@ -78,29 +96,21 @@ bool SemanticValue::isUnknown() const
 	return valueType == Type::Unknown || getSize() == 0;
 }
 
-SemanticKnownConst* SemanticValue::tryGetKnownConst()
-{
-	if (valueType == Type::KnownConst) return &asKnownConst;
-	else return nullptr;
-}
+//Getters
+#define _X(id) \
+	Semantic##id* SemanticValue::tryGet##id() \
+	{ \
+		if (valueType == Type::id) return &as##id; \
+		else return nullptr; \
+	} \
+	const Semantic##id* SemanticValue::tryGet##id() const \
+	{ \
+		if (valueType == Type::id) return &as##id; \
+		else return nullptr; \
+	}
 
-SemanticThisPtr* SemanticValue::tryGetThisPtr()
-{
-	if (valueType == Type::ThisPtr) return &asThisPtr;
-	else return nullptr;
-}
-
-const SemanticKnownConst* SemanticValue::tryGetKnownConst() const
-{
-	if (valueType == Type::KnownConst) return &asKnownConst;
-	else return nullptr;
-}
-
-const SemanticThisPtr* SemanticValue::tryGetThisPtr() const
-{
-	if (valueType == Type::ThisPtr) return &asThisPtr;
-	else return nullptr;
-}
+_XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN()
+#undef _X
 
 int SemanticValue::debugPrintValue() const
 {
@@ -117,33 +127,20 @@ int SemanticValue::debugPrintValue() const
 	return nWritten + std::max(0, nToPad);
 }
 
+SemanticValue::SemanticValue() : SemanticValue(SemanticUnknown(0)) { }
 
-#pragma region Overhead (boring)
+//Converting constructors and operator=
+#define _X(id) \
+	SemanticValue::SemanticValue(const Semantic##id& val) { *this = val; } \
+	SemanticValue& SemanticValue::operator=(const Semantic##id& val) \
+	{ \
+		valueType = Type::id; \
+		as##id = val; \
+		return *this; \
+	}
 
-SemanticValue::SemanticValue()                              { *this = SemanticUnknown(0); }
-SemanticValue::SemanticValue(const SemanticUnknown   & val) { *this = val; }
-SemanticValue::SemanticValue(const SemanticKnownConst& val) { *this = val; }
-SemanticValue::SemanticValue(const SemanticThisPtr   & val) { *this = val; }
-
-void SemanticValue::operator=(const SemanticUnknown& val)
-{
-	valueType = Type::Unknown;
-	asUnknown = val;
-}
-
-void SemanticValue::operator=(const SemanticKnownConst& val)
-{
-	valueType = Type::KnownConst;
-	asKnownConst = val;
-}
-
-void SemanticValue::operator=(const SemanticThisPtr& val)
-{
-	valueType = Type::ThisPtr;
-	asThisPtr = val;
-}
-
-#pragma endregion
+_XM_FOREACH_SEMANTICVALUE_TYPE()
+#undef _X
 
 
 #pragma region Math
@@ -152,12 +149,19 @@ SemanticValue SemanticValue_doMathOp(SemanticValue arg1, SemanticValue arg2,
 	const std::function<SemanticValue(SemanticKnownConst, SemanticKnownConst)>& funcConstConst, //Any of these can be null and we'll just return default unknown
 	const std::function<SemanticValue(SemanticKnownConst, SemanticThisPtr   )>& funcConstThis,
 	const std::function<SemanticValue(SemanticThisPtr   , SemanticKnownConst)>& funcThisConst,
-	const std::function<SemanticValue(SemanticThisPtr   , SemanticThisPtr   )>& funcThisThis)
+	const std::function<SemanticValue(SemanticThisPtr   , SemanticThisPtr   )>& funcThisThis,
+	const std::function<SemanticValue(SemanticFlags     , SemanticFlags     )>& funcFlagsFlags)
 {
 	auto* const1 = arg1.tryGetKnownConst();
 	auto* const2 = arg2.tryGetKnownConst();
 	auto* pThis1 = arg1.tryGetThisPtr();
 	auto* pThis2 = arg2.tryGetThisPtr();
+	auto* flags1 = arg2.tryGetFlags();
+	auto* flags2 = arg2.tryGetFlags();
+
+	//If entire flags field is known, it is effectively a known const
+	if (flags1 && flags1->bitsUsage == ~0ull) const1 = reinterpret_cast<SemanticKnownConst*>(flags1); //const's value corresponds to flags' bits field
+	if (flags2 && flags2->bitsUsage == ~0ull) const2 = reinterpret_cast<SemanticKnownConst*>(flags2);
 
 	SemanticUnknown unknown(std::max(arg1.getSize(), arg2.getSize()));
 	if (arg1.isUnknown() || arg2.isUnknown()) return unknown;
@@ -166,9 +170,10 @@ SemanticValue SemanticValue_doMathOp(SemanticValue arg1, SemanticValue arg2,
 		assert(const1->size == const2->size);
 		return funcConstConst ? funcConstConst(*const1, *const2) : unknown;
 	}
-	else if (const1 && pThis2) return funcConstThis ? funcConstThis(*const1, *pThis2) : unknown;
-	else if (pThis1 && const2) return funcThisConst ? funcThisConst(*pThis1, *const2) : unknown;
-	else if (pThis1 && pThis2) return funcThisThis  ? funcThisThis (*pThis1, *pThis2) : unknown;
+	else if (const1 && pThis2) return funcConstThis  ? funcConstThis (*const1, *pThis2) : unknown;
+	else if (pThis1 && const2) return funcThisConst  ? funcThisConst (*pThis1, *const2) : unknown;
+	else if (pThis1 && pThis2) return funcThisThis   ? funcThisThis  (*pThis1, *pThis2) : unknown;
+	else if (flags1 && flags2) return funcFlagsFlags ? funcFlagsFlags(*flags1, *flags2) : unknown;
 	else { assert(false); return SemanticValue(); }
 }
 
@@ -178,7 +183,8 @@ SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs)
 		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() + arg2.bound(), arg1.size); },
 		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.bound() + arg2.offset}; },
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.bound() }; },
-		nullptr //this + this
+		nullptr, //this + this
+		nullptr //flags + flags
 	);
 }
 
@@ -188,7 +194,8 @@ SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() - arg2.bound(), arg1.size); },
 		nullptr, //const - this
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.bound() }; },
-		[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*)); }
+		[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*)); },
+		nullptr //flags + flags
 	);
 }
 
@@ -198,7 +205,8 @@ SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs)
 		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() * arg2.bound(), arg1.size); },
 		nullptr, //const * this
 		nullptr, //this * const
-		nullptr //this * this
+		nullptr, //this * this
+		nullptr //flags * flags
 	);
 }
 

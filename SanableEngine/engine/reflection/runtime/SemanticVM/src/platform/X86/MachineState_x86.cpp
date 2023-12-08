@@ -49,11 +49,17 @@ SemanticValue MachineState::getRegister(x86_reg id) const
 {
 	x86_reg mappedId = __registerMappings[id];
 	auto it = __registerStorage.find(mappedId);
-	return it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
+	
+	SemanticValue out = it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
+
+	if (id != X86_REG_EFLAGS) return out;
+	else return out.isUnknown() ? SemanticFlags() : out;
 }
 
 void MachineState::setRegister(x86_reg id, SemanticValue val)
 {
+	assert(id != X86_REG_EFLAGS); //Needs special handling; manipulate MachineState::flags instead
+
 	x86_reg mappedId = __registerMappings[id];
 	__registerStorage.insert_or_assign(mappedId, val);
 }

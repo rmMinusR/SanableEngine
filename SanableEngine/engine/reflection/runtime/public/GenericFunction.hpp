@@ -72,6 +72,7 @@ private:
 	std::vector<TypeName> args;
 	TypeName owningType; //Only present if nonstatic member function. Implies __thiscall.
 	CallConv callConv;
+	void(*fn)(); //If member function, will instead be a thunk to that function.
 
 	#pragma region Capture functions and helpers
 
@@ -122,7 +123,7 @@ public:
 	template<typename TOwner, typename TRet, typename... TArgs>
 	static GenericFunction captureThisCall(TRet(__thiscall TOwner::*fn)(TArgs...))
 	{
-		//TODO fix storage: Member ptrs are sometimes wider
+		static_assert(sizeof(fn) == sizeof(void*)); //Member ptrs are sometimes wider? Not sure how.
 		GenericFunction out = captureCommon<TRet, TArgs...>();
 		out.owningType = TypeName::create<TOwner>();
 		out.callConv = CallConv::ThisCall;

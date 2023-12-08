@@ -178,5 +178,18 @@ void SemanticVM::execFunc_internal(void(*fn)(), void(*expectedReturnAddress)(), 
 
 void SemanticVM::execFunc(void(*fn)())
 {
+	//Setup
+	canonicalState.setRegister(X86_REG_RIP, SemanticUnknown(sizeof(void*)) ); //TODO: 32-bit-on-64 support?
+	canonicalState.setRegister(X86_REG_RBP, SemanticUnknown(sizeof(void*)) ); //Caller is indeterminate. TODO: 32-bit-on-64 support?
+	canonicalState.setRegister(X86_REG_RSP, SemanticKnownConst(-2 * sizeof(void*), sizeof(void*)) ); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
+
+	//Invoke
 	execFunc_internal(fn, nullptr, 0);
+	canonicalState.debugPrintWorkingSet();
+	printf("\n");
+
+	//Ensure output parity
+	SemanticValue rsp = canonicalState.getRegister(X86_REG_RSP);
+	SemanticKnownConst* const_rsp = rsp.tryGetKnownConst();
+	assert(const_rsp && const_rsp->value == 0); //TODO handle return value
 }
