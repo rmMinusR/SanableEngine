@@ -103,6 +103,20 @@ bool SemanticValue::isUnknown() const
 	return valueType == Type::Unknown || getSize() == 0;
 }
 
+std::optional<bool> SemanticValue::isZero() const
+{
+	if (isUnknown()) return std::nullopt;
+
+	switch (valueType)
+	{
+	case Type::KnownConst: return asKnownConst.bound() == 0;
+	case Type::ThisPtr: return false;
+	case Type::Flags: return (asFlags.bitsKnown == ~0ull) ? std::make_optional<bool>(asFlags.bits) == 0 : std::make_optional<bool>();
+
+	default: assert(false && "Unhandled value type"); return std::nullopt;
+	}
+}
+
 //Getters
 #define _X(id) \
 	Semantic##id* SemanticValue::tryGet##id() \

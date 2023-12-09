@@ -16,7 +16,7 @@ class SemanticVM
 	/// <param name="expectedReturnAddress">Expected return address, or null if indeterminate/unchecked</param>
 	/// <param name="indentLevel">For debugging</param>
 	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel);
-
+	
 public:
 	/// <summary>
 	/// Simulate a single instruction
@@ -40,11 +40,4 @@ public:
 	/// <param name="state">Starting state. Modified once complete to reflect altered values.</param>
 	/// <param name="fn">Function to simulate. NOTE: Arguments and return values are currently not supported.</param>
 	static void execFunc(MachineState& state, void(*fn)());
-
-	/// <summary>
-	/// Evalute all given branches, and keep only the values shared across all.
-	/// </summary>
-	/// <param name="canonicalState">Starting state. Modified once complete to reflect shared values.</param>
-	/// <param name="branchCursors">Expected argument types</param>
-	static void execBranch(MachineState& canonicalState, const std::vector<void*>& branchCursors);
 };

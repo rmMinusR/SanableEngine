@@ -73,6 +73,7 @@ public:
 	size_t getSize() const;
 	void resize(size_t); //Usually a very bad idea. But necessary for some things.
 	bool isUnknown() const;
+	std::optional<bool> isZero() const;
 
 	//Getters
 #define _X(id) \

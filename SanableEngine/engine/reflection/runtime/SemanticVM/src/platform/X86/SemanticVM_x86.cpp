@@ -142,6 +142,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//Indeterminate: fork
 		if (!conditionMet.has_value())
 		{
+			assert(ifBranch->value > noBranch->value && "Indeterminate looping currently not supported");
 			fork({
 				(void*)noBranch->value,
 				(void*)ifBranch->value
@@ -168,51 +169,111 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel)
 {
-	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
-	
-	//Simulate function, one op at a time
-	FunctionBytecodeWalker walker(fn);
-	bool endOfFunction;
-	do
+	//Prepare capstone disassembler
+	cs_insn* insn = cs_malloc(capstone_get_instance());
+
+	//Prepare branch list
+	struct branch_t
 	{
-		endOfFunction = !walker.advance();
-		size_t ripSize = state.getRegister(X86_REG_RIP).getSize();
-		state.setRegister(X86_REG_RIP, SemanticKnownConst((uint_addr_t)walker.codeCursor, ripSize) ); //Ensure RIP is up to date
+		const uint8_t* cursor;
+		MachineState state;
+		bool keepExecuting;
+	};
+	std::vector<branch_t> branches = {
+		{ (uint8_t*)fn, MachineState(), true }
+	};
+
+	while (true)
+	{
+		//Canonize branches with the same cursor
+		for (int i = 0; i < branches.size(); ++i)
+		{
+			for (int j = i+1; j < branches.size(); ++j)
+			{
+				if (branches[i].cursor == branches[j].cursor && branches[i].keepExecuting && branches[j].keepExecuting)
+				{
+					branches[i].state = MachineState::merge({ &branches[i].state, &branches[j].state }); //Canonize state
+					branches.erase(branches.begin()+i); //Erase copy
+					j--; //Don't skip!
+				}
+			}
+		}
+
+		//Execute the cursor that's furthest behind
+		branch_t* toExec = &branches[0];
+		for (int i = 1; i < branches.size(); ++i) if (branches[i].keepExecuting && branches[i].cursor < toExec->cursor) toExec = &branches[i];
+		if (toExec == nullptr) break; //All branches have terminated
+
+		//Advance cursor and interpret next
+		uint64_t addr = (uint64_t)(uint_addr_t)(toExec->cursor);
+		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
+		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &toExec->cursor, &allowedToProcess, &addr, insn);
+		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
+		
+		//Update emulated instruction pointer
+		SemanticValue rip = toExec->state.getRegister(X86_REG_RIP);
+		rip.tryGetKnownConst()->value = addr;
+		toExec->state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, sizeof(void*)) ); //Ensure RIP is up to date
 
 		//DEBUG
-		state.debugPrintWorkingSet();
-		printInstructionCursor(walker.insn, indentLevel);
+		toExec->state.debugPrintWorkingSet();
+		printInstructionCursor(insn, indentLevel);
 
 		//Execute current call frame, one opcode at a time
-		void(*funcToCall)() = nullptr;
+		void* callTarget = nullptr;
 		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
-		step(state, walker.insn,
-			[&](void* fn) { funcToCall = (void(*)()) fn; }, //On CALL
+		step(toExec->state, insn,
+			[&](void* fn) { callTarget = fn; }, //On CALL
 			[&]() { return expectedReturnAddress; }, //On RET
 			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
 			[&](const std::vector<void*>& forks) { jmpTargets = forks; } //On fork
 		);
-
+		
+		//DEBUG
 		printf("\n");
 
-		assert(state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
-
 		//If we're supposed to call another function, do so
-		if (funcToCall) execFunc_internal(state, funcToCall, (void(*)())walker.codeCursor, indentLevel+1);
+		if (callTarget) execFunc_internal(toExec->state, (void(*)())callTarget, (void(*)())toExec->cursor, indentLevel+1);
 
-		//Handle forking/jumping
-		if (jmpTargets.size() == 1) walker.codeCursor = (uint8_t*)jmpTargets[0];
-		else if (jmpTargets.size() > 1) execBranch(state, jmpTargets);
-		
-	} while (!endOfFunction);
+		//Handle jumping/branching
+		if (jmpTargets.size() == 1) toExec->cursor = (uint8_t*)jmpTargets[0]; //Determinate case: jump
+		else if (jmpTargets.size() > 1) //Indeterminate case: branch
+		{
+			for (void* i : jmpTargets) assert(i >= toExec->cursor && "Indeterminate looping not supported");
+
+			toExec->cursor = (uint8_t*)jmpTargets[0];
+			for (int i = 1; i < jmpTargets.size(); ++i)
+			{
+				branches.push_back({ (uint8_t*)jmpTargets[i], toExec->state, true });
+			}
+		}
+
+		assert(toExec->state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
+	}
+
+	//Canonize all remaining states
+	std::vector<const MachineState*> divergentStates;
+	for (const branch_t& branch : branches) divergentStates.push_back(&branch.state);
+	state = MachineState::merge(divergentStates);
+
+	//Cleanup capstone disassembler
+	cs_free(insn, 1);
 }
 
 void SemanticVM::execFunc(MachineState& state, void(*fn)())
 {
-	//Setup
+	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
+
+	//Setup: set flags
 	state.setRegister(X86_REG_RIP, SemanticUnknown(sizeof(void*)) ); //TODO: 32-bit-on-64 support?
 	state.setRegister(X86_REG_RBP, SemanticUnknown(sizeof(void*)) ); //Caller is indeterminate. TODO: 32-bit-on-64 support?
 	state.setRegister(X86_REG_RSP, SemanticKnownConst(-2 * sizeof(void*), sizeof(void*)) ); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
+	{
+		SemanticFlags flags;
+		flags.bits = 0;
+		flags.bitsKnown = ~0ull;
+		state.setRegister(X86_REG_EFLAGS, flags);
+	}
 
 	//Invoke
 	execFunc_internal(state, fn, nullptr, 0);

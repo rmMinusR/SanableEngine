@@ -5,12 +5,15 @@
 
 #include "SemanticValue.hpp"
 
+struct MachineState;
+
 /// <summary>
 /// Represents an emulated memory space. Multiple of these can be combined (ie. ThisPtr is treated as its own memory space)
 /// </summary>
 class VMMemory
 {
-	std::map<uint8_t*, SemanticValue> memory; //Will never be SemanticUnknown
+	friend struct MachineState;
+	std::map<uint8_t*, SemanticValue> memory;
 public:
 	void reset();
 

@@ -164,6 +164,10 @@ std::optional<bool> MachineState::isConditionMet(unsigned int insnId) const
 		case x86_insn::X86_INS_JP : return flags.check((int)MachineState::FlagIDs::Parity  , true );
 		case x86_insn::X86_INS_JNP: return flags.check((int)MachineState::FlagIDs::Parity  , false);
 
+		case x86_insn::X86_INS_JCXZ:
+		case x86_insn::X86_INS_JECXZ:
+		case x86_insn::X86_INS_JRCXZ: return getRegister(x86_reg::X86_REG_RCX).isZero();
+
 		case x86_insn::X86_INS_JBE:
 		{
 			auto cf = flags.check((int)MachineState::FlagIDs::Carry, true);
@@ -262,4 +266,68 @@ int MachineState::debugPrintWorkingSet() const
 	//bytesWritten += printf(" | rbp=");
 	//bytesWritten += getRegister(X86_REG_RBP).debugPrintValue();
 	return bytesWritten;
+}
+
+SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
+{
+	SemanticUnknown unknown(std::max(a.getSize(), b.getSize()));
+	if (a.isUnknown() || b.isUnknown()) return unknown;
+
+	const auto* aConst = a.tryGetKnownConst();
+	const auto* bConst = b.tryGetKnownConst();
+	const auto* aThis  = a.tryGetThisPtr();
+	const auto* bThis  = b.tryGetThisPtr();
+	const auto* aFlags = a.tryGetFlags();
+	const auto* bFlags = b.tryGetFlags();
+
+	//If all flags are known, treat as const
+	if (aFlags && aFlags->bitsKnown == ~0ull) aConst = (const SemanticKnownConst*) aFlags; //Flags' bits field corresponds to const's value field
+	if (bFlags && bFlags->bitsKnown == ~0ull) bConst = (const SemanticKnownConst*) bFlags;
+
+	if (aConst && bConst && aConst->bound() == bConst->bound()) return a;
+	else if (aThis && bThis && aThis->offset == bThis->offset) return a;
+	else if (aFlags && bFlags)
+	{
+		SemanticFlags flags;
+		for (int i = 0; i < sizeof(flags.bits); ++i)
+		{
+			std::optional<bool> av = aFlags->check(i, true);
+			std::optional<bool> bv = bFlags->check(i, true);
+			if (av.has_value() && bv.has_value() && av.value() == bv.value()) flags.set(i, av.value());
+			else flags.set(i, std::nullopt);
+		}
+		return flags;
+	}
+	else return unknown;
+}
+
+template<typename T>
+void mergeMaps(T& canonical, const T& reference)
+{
+	for (const auto& refKv : reference)
+	{
+		auto canonKv = canonical.find(refKv.first);
+		if (canonKv != canonical.end())
+		{
+			SemanticValue val = mergeValues(canonKv->second, refKv.second);
+			if (!val.isUnknown()) canonical.at(refKv.first) = val;
+			else canonical.erase(canonKv);
+		}
+	}
+}
+
+MachineState MachineState::merge(const std::vector<const MachineState*>& divergentStates)
+{
+	assert(divergentStates.size() > 0);
+	if (divergentStates.size() == 1) return *divergentStates[0];
+
+	MachineState canonical = *divergentStates[0];
+	for (int stateID = 1; stateID < divergentStates.size(); ++stateID)
+	{
+		const MachineState* state = divergentStates[stateID];
+		mergeMaps(canonical.__registerStorage , state->__registerStorage );
+		mergeMaps(canonical.constMemory.memory, state->constMemory.memory);
+		mergeMaps(canonical.thisMemory .memory, state->thisMemory .memory);
+	}
+	return canonical;
 }
