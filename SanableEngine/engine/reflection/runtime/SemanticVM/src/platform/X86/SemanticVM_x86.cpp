@@ -180,7 +180,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		bool keepExecuting;
 	};
 	std::vector<branch_t> branches = {
-		{ (uint8_t*)fn, MachineState(), true }
+		{ (uint8_t*)fn, state, true }
 	};
 
 	while (true)
@@ -200,8 +200,14 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		}
 
 		//Execute the cursor that's furthest behind
-		branch_t* toExec = &branches[0];
-		for (int i = 1; i < branches.size(); ++i) if (branches[i].keepExecuting && branches[i].cursor < toExec->cursor) toExec = &branches[i];
+		branch_t* toExec = nullptr;
+		for (int i = 0; i < branches.size(); ++i)
+		{
+			if (branches[i].keepExecuting && (toExec == nullptr || branches[i].cursor < toExec->cursor))
+			{
+				toExec = &branches[i];
+			}
+		}
 		if (toExec == nullptr) break; //All branches have terminated
 
 		//Advance cursor and interpret next
@@ -212,8 +218,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		
 		//Update emulated instruction pointer
 		SemanticValue rip = toExec->state.getRegister(X86_REG_RIP);
-		rip.tryGetKnownConst()->value = addr;
-		toExec->state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, sizeof(void*)) ); //Ensure RIP is up to date
+		toExec->state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, rip.getSize()) ); //Ensure RIP is up to date
 
 		//DEBUG
 		toExec->state.debugPrintWorkingSet();
@@ -224,7 +229,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
 		step(toExec->state, insn,
 			[&](void* fn) { callTarget = fn; }, //On CALL
-			[&]() { return expectedReturnAddress; }, //On RET
+			[&]() { toExec->keepExecuting = false; return expectedReturnAddress; }, //On RET
 			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
 			[&](const std::vector<void*>& forks) { jmpTargets = forks; } //On fork
 		);

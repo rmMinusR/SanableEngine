@@ -50,19 +50,26 @@ SemanticValue MachineState::getRegister(x86_reg id) const
 {
 	x86_reg mappedId = __registerMappings[id];
 	auto it = __registerStorage.find(mappedId);
-	
-	SemanticValue out = it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
-
-	if (id != X86_REG_EFLAGS) return out;
-	else return out.isUnknown() ? SemanticFlags() : out;
+	return it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
 }
 
 void MachineState::setRegister(x86_reg id, SemanticValue val)
 {
-	assert(id != X86_REG_EFLAGS); //Needs special handling; manipulate MachineState::flags instead
-
 	x86_reg mappedId = __registerMappings[id];
-	__registerStorage.insert_or_assign(mappedId, val);
+	if (mappedId == X86_REG_EFLAGS) //Needs special handling: must maintain that this is SemanticFlags
+	{
+		SemanticFlags _val;
+			 if (val.isUnknown()) _val = SemanticFlags();
+		else if (val.tryGetThisPtr()) _val = SemanticFlags(); //Treat ThisPtr as unknown
+		else if (auto* f = val.tryGetFlags()) _val = *f;
+		else if (auto* c = val.tryGetKnownConst()) { _val.bits = c->value; _val.bitsKnown = ~(~0ull << (8*c->size) ); }
+		else assert(false && "Unhandled value type");
+		__registerStorage.insert_or_assign(mappedId, _val);
+	}
+	else
+	{
+		__registerStorage.insert_or_assign(mappedId, val);
+	}
 }
 
 SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
