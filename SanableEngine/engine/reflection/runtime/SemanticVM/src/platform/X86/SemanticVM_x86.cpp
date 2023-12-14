@@ -71,7 +71,12 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			//See https://en.wikipedia.org/wiki/Half-carry_flag section on x86
 			af = ( (c1->bound()&0x0F) + (c2->bound()&0x0F) )&0x10;
 		}
+		else if (op1.isUnknown() || op2.isUnknown())
+		{
+			cf = of = sf = zf = af = pf = std::nullopt;
+		}
 		else assert(false && "Cannot compare: Unhandled case");
+		
 		//Write back flags
 		SemanticFlags flags = *state.getRegister(X86_REG_EFLAGS).tryGetFlags();
 		flags.set((int)MachineState::FlagIDs::Carry   , cf);
@@ -81,6 +86,15 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		flags.set((int)MachineState::FlagIDs::AuxCarry, af);
 		flags.set((int)MachineState::FlagIDs::Parity  , pf);
 		state.setRegister(X86_REG_EFLAGS, flags);
+
+		//Debug
+		printf("   ; ");
+		printf("cf=%s ", cf.has_value() ? (cf.value() ? "Y" : "N") : "U");
+		printf("of=%s ", of.has_value() ? (of.value() ? "Y" : "N") : "U");
+		printf("sf=%s ", sf.has_value() ? (sf.value() ? "Y" : "N") : "U");
+		printf("zf=%s ", zf.has_value() ? (zf.value() ? "Y" : "N") : "U");
+		printf("af=%s ", af.has_value() ? (af.value() ? "Y" : "N") : "U");
+		printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
