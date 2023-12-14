@@ -41,13 +41,18 @@ uint64_t SemanticKnownConst::bound() const
 	}
 }
 
+uint64_t SemanticKnownConst::mask() const
+{
+	return ~(~0ull << size);
+}
+
 SemanticKnownConst SemanticKnownConst::signExtend(size_t targetSizeBytes) const
 {
 	int64_t val = 0;
-	     if (size == 1) val = (int8_t )value;
-	else if (size == 2) val = (int16_t)value;
-	else if (size == 4) val = (int32_t)value;
-	else if (size == 8) val = (int64_t)value;
+	     if (size == 1) val = (int8_t )(int64_t)value;
+	else if (size == 2) val = (int16_t)(int64_t)value;
+	else if (size == 4) val = (int32_t)(int64_t)value;
+	else if (size == 8) val = (int64_t)(int64_t)value;
 	else assert(false);
 	return SemanticKnownConst(val, targetSizeBytes);
 }

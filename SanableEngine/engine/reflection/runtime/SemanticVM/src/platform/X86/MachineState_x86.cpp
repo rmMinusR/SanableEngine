@@ -308,9 +308,20 @@ SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
 	else return unknown;
 }
 
-template<typename T>
-void mergeMaps(T& canonical, const T& reference)
+template<typename K, typename V>
+void mergeMaps(std::map<K, V>& canonical, const std::map<K, V>& reference)
 {
+	//Remove elements in canonical not present in reference
+	{
+		auto it = std::find_if(canonical.begin(), canonical.end(),
+			[&](const auto& i) {
+				return reference.find(i.first) == reference.end();
+			}
+		);
+		if (it != canonical.end()) canonical.erase(it);
+	}
+
+	//Merge by value
 	for (const auto& refKv : reference)
 	{
 		auto canonKv = canonical.find(refKv.first);
