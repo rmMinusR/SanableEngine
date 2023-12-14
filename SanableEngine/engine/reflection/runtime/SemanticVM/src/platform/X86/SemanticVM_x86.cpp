@@ -98,65 +98,19 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
-		//Requires target address to be a known const. Will crash otherwise
-		SemanticKnownConst rsp = *state.getRegister(X86_REG_RSP).tryGetKnownConst();
-		SemanticValue      rbp =  state.getRegister(X86_REG_RBP);
-		SemanticKnownConst rip = *state.getRegister(X86_REG_RIP).tryGetKnownConst();
 		SemanticKnownConst fp  = *state.getOperand(insn, 0).tryGetKnownConst();
-		
-		state.stackPush(rip); //Push return address to stack
-		state.stackPush(rbp); //Push previous RBP to stack
-
-		//Mark new stack frame location
-		rbp = rsp;
-
-		//Jump to new function
-		rip = fp;
-
-		//Write back to registers
-		state.setRegister(X86_REG_RBP, rbp);
-		state.setRegister(X86_REG_RIP, rip);
-
-		pushCallStack((uint8_t*)rip.value); //Sanity check. Also no ROP nonsense
+		state.pushStackFrame(fp);
+		pushCallStack((uint8_t*)fp.value); //Sanity check. Also no ROP nonsense
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{
-		//Cannot pop to an indeterminate address
-		if (state.getRegister(X86_REG_RBP).tryGetKnownConst())
-		{
-			//Pop previous stack frame (return address and RBP) from stack
-			SemanticKnownConst rbp = *state.getRegister(X86_REG_RBP).tryGetKnownConst();
-			SemanticKnownConst rip = *state.getRegister(X86_REG_RIP).tryGetKnownConst();
-			SemanticValue oldRbp     = state.stackPop(rbp.size);
-			SemanticValue returnAddr = state.stackPop(rip.size);
+		SemanticValue returnAddr = state.popStackFrame();
 
-			state.setRegister(X86_REG_RBP, oldRbp); //Restore previous stack frame
-			state.setRegister(X86_REG_RIP, returnAddr); //Jump to return address
+		//If given an operand, pop that many bytes from the stack
+		if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
 
-			//If given an operand, pop that many bytes from the stack
-			if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
-
-			//Sanity check. Also no ROP nonsense
-			void* poppedReturnAddr = popCallStack();
-			if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
-		}
-		else
-		{
-			//Invalidate state
-			size_t ripSize = state.getRegister(X86_REG_RIP).getSize();
-			size_t rbpSize = state.getRegister(X86_REG_RBP).getSize();
-			state.setRegister(X86_REG_RIP, SemanticUnknown(ripSize) );
-			state.setRegister(X86_REG_RBP, SemanticUnknown(rbpSize) );
-
-			//Pop from stack
-			state.stackPop(ripSize + rbpSize);
-				
-			//If given an operand, pop that many bytes from the stack
-			if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
-
-			//Pop from our sanity checker
-			popCallStack();
-		}
+		void* poppedReturnAddr = popCallStack();
+		if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
 	}
 	else if (insn->id == x86_insn::X86_INS_PUSH)
 	{
@@ -231,7 +185,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 	}
 }
 
-void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel)
+void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
 {
 	//Prepare capstone disassembler
 	cs_insn* insn = cs_malloc(capstone_get_instance());
@@ -292,10 +246,10 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		printInstructionCursor(insn, indentLevel);
 
 		//Execute current call frame, one opcode at a time
-		void* callTarget = nullptr;
+		void(*callTarget)() = nullptr;
 		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
 		step(toExec->state, insn,
-			[&](void* fn) { callTarget = fn; }, //On CALL
+			[&](void* fn) { callTarget = (void(*)()) fn; }, //On CALL
 			[&]() { //On RET
 				toExec->keepExecuting = false;
 				printf("\nBranch #%i terminated at @%x", toExecIndex, toExec->cursor);
@@ -310,7 +264,31 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		assert(toExec->state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
 
 		//If we're supposed to call another function, do so
-		if (callTarget) execFunc_internal(toExec->state, (void(*)())callTarget, (void(*)())toExec->cursor, indentLevel+1);
+		if (callTarget)
+		{
+			if (std::find(allocators.begin(), allocators.end(), callTarget) != allocators.end())
+			{
+				//No need to call function, just mark that we're creating a new heap object
+				
+				//TODO proper register detection
+				//std::vector<x86_reg> covariants = ???;
+				//assert(covariants.size() == 1);
+				//toExec->state.setRegister(covariants[0], SemanticThisPtr(0)); //TODO dynamic heap-object counting
+				toExec->state.setRegister(x86_reg::X86_REG_EAX, SemanticThisPtr(0)); //TODO dynamic heap-object counting
+				toExec->state.popStackFrame(); //Undo pushing stack frame
+				printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
+			}
+			else if (std::find(sandboxed.begin(), sandboxed.end(), callTarget) != sandboxed.end())
+			{
+				//TODO implement
+				toExec->state.popStackFrame(); //TEMP: Undo pushing stack frame
+				printf("Function is sandboxed, and will not be simulated.\n");
+			}
+			else
+			{
+				execFunc_internal(toExec->state, callTarget, (void(*)())toExec->cursor, indentLevel+1, allocators, sandboxed);
+			}
+		}
 
 		//Handle jumping/branching
 		if (jmpTargets.size() == 1) toExec->cursor = (uint8_t*)jmpTargets[0]; //Determinate case: jump
@@ -332,13 +310,13 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 	//Canonize all remaining states
 	std::vector<const MachineState*> divergentStates;
 	for (const branch_t& branch : branches) divergentStates.push_back(&branch.state);
-	state = MachineState::merge(divergentStates);
-
+	state = MachineState::merge(divergentStates); //TODO handle sandboxing
+	
 	//Cleanup capstone disassembler
 	cs_free(insn, 1);
 }
 
-void SemanticVM::execFunc(MachineState& state, void(*fn)())
+void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
 {
 	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
 
@@ -354,7 +332,8 @@ void SemanticVM::execFunc(MachineState& state, void(*fn)())
 	}
 
 	//Invoke
-	execFunc_internal(state, fn, nullptr, 0);
+	execFunc_internal(state, fn, nullptr, 0, allocators, sandboxed);
+	printf("[Canonical] ");
 	state.debugPrintWorkingSet();
 	printf("\n");
 

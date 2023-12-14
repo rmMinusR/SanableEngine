@@ -81,8 +81,8 @@ void testCtorCaptureV2()
 			printf("\n");
 
 			//New version
-			bool wasPreZeroed = false;
-			DetectedConstants vtables = capture_utils::type<T>::template ctor<>::captureVtables(&wasPreZeroed);
+			bool wasPreZeroed = true; //TODO detect pre-zeroing
+			DetectedConstants vtables = capture_utils::type<T>::template ctor<>::captureVtables();
 
 			//Unmark explicit fields
 			ty->walkFields(

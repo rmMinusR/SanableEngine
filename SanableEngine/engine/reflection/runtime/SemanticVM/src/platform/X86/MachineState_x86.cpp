@@ -154,6 +154,58 @@ SemanticValue MachineState::stackPop(size_t nBytes)
 	return out;
 }
 
+void MachineState::pushStackFrame(SemanticKnownConst fp)
+{
+	//Requires target address to be a known const. Will crash otherwise
+	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
+	SemanticValue      rbp =  getRegister(X86_REG_RBP);
+	SemanticKnownConst rip = *getRegister(X86_REG_RIP).tryGetKnownConst();
+		
+	stackPush(rip); //Push return address to stack
+	stackPush(rbp); //Push previous RBP to stack
+
+	//Mark new stack frame location
+	rbp = rsp;
+
+	//Jump to new function
+	rip = fp;
+
+	//Write back to registers
+	setRegister(X86_REG_RBP, rbp);
+	setRegister(X86_REG_RIP, rip);
+}
+
+SemanticValue MachineState::popStackFrame()
+{
+	//Cannot pop to an indeterminate address
+	if (getRegister(X86_REG_RBP).tryGetKnownConst())
+	{
+		//Pop previous stack frame (return address and RBP) from stack
+		SemanticKnownConst rbp = *getRegister(X86_REG_RBP).tryGetKnownConst();
+		SemanticKnownConst rip = *getRegister(X86_REG_RIP).tryGetKnownConst();
+		SemanticValue oldRbp     = stackPop(rbp.size);
+		SemanticValue returnAddr = stackPop(rip.size);
+
+		setRegister(X86_REG_RBP, oldRbp); //Restore previous stack frame
+		setRegister(X86_REG_RIP, returnAddr); //Jump to return address
+
+		return returnAddr;
+	}
+	else
+	{
+		//Invalidate state
+		size_t ripSize = getRegister(X86_REG_RIP).getSize();
+		size_t rbpSize = getRegister(X86_REG_RBP).getSize();
+		setRegister(X86_REG_RIP, SemanticUnknown(ripSize) );
+		setRegister(X86_REG_RBP, SemanticUnknown(rbpSize) );
+
+		//Pop from stack
+		stackPop(ripSize + rbpSize);
+		
+		return SemanticUnknown(ripSize);
+	}
+}
+
 std::optional<bool> MachineState::isConditionMet(unsigned int insnId) const
 {
 	//See https://www.felixcloutier.com/x86/jcc

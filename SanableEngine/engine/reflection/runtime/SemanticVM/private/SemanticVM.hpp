@@ -15,7 +15,9 @@ class SemanticVM
 	/// <param name="fn">Function to simulate</param>
 	/// <param name="expectedReturnAddress">Expected return address, or null if indeterminate/unchecked</param>
 	/// <param name="indentLevel">For debugging</param>
-	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel);
+	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
+	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param>
+	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
 	
 public:
 	/// <summary>
@@ -39,5 +41,7 @@ public:
 	/// </summary>
 	/// <param name="state">Starting state. Modified once complete to reflect altered values.</param>
 	/// <param name="fn">Function to simulate. NOTE: Arguments and return values are currently not supported.</param>
-	static void execFunc(MachineState& state, void(*fn)());
+	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
+	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param>
+	static void execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
 };

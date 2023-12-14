@@ -58,6 +58,8 @@ public:
 
 	void stackPush(SemanticValue value);
 	SemanticValue stackPop(size_t nBytes);
+	void pushStackFrame(SemanticKnownConst fp);
+	SemanticValue popStackFrame();
 
 	std::optional<bool> isConditionMet(unsigned int insnId) const; //Check if the condition described by a branch instruction is met, or nullopt if it is indeterminate
 
