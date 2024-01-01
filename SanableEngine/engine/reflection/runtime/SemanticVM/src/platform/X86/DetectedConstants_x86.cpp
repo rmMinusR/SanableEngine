@@ -11,7 +11,7 @@
 DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 {
 	//Setup VM
-	MachineState canonicalState;
+	MachineState canonicalState(true);
 	canonicalState.setRegister(X86_REG_RCX, SemanticThisPtr(0) ); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 
 	//Run

@@ -6,7 +6,8 @@
 #include "CapstoneWrapper.hpp"
 
 
-MachineState::MachineState()
+MachineState::MachineState(bool canReadHostMemory) :
+	canReadHostMemory(canReadHostMemory)
 {
 	//Allow registers to share memory without heap allocation
 	for (size_t i = 0; i < nRegisters; ++i) __registerMappings[i] = (x86_reg)i;
@@ -23,7 +24,7 @@ MachineState::MachineState()
 	DECL_REGISTER_GROUP_IDENTITY(SI);
 	DECL_REGISTER_GROUP_IDENTITY(DI);
 	
-	//Set up all registers in unknown state
+	//Set up all registers in default state
 	reset();
 };
 

@@ -19,6 +19,7 @@ public:
 private:
 	std::map<x86_reg, SemanticValue> __registerStorage;
 	x86_reg __registerMappings[nRegisters];
+	bool canReadHostMemory;
 public:
 	SemanticValue decodeMemAddr(const x86_op_mem&) const;
 	SemanticValue getRegister(x86_reg id) const;
@@ -40,7 +41,7 @@ private:
 	VMMemory constMemory; //General memory with known constant address
 	VMMemory thisMemory; //Memory of the "this" object
 public:
-	MachineState();
+	MachineState(bool canReadHostMemory);
 
 	void reset();
 

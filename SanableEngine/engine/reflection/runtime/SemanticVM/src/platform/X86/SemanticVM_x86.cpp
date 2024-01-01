@@ -241,9 +241,10 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		toExec->state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, rip.getSize()) ); //Ensure RIP is up to date
 
 		//DEBUG
-		printf("[Branch %2i] ", toExecIndex);
 		toExec->state.debugPrintWorkingSet();
-		printInstructionCursor(insn, indentLevel);
+		for (int i = 0; i < indentLevel; ++i) printf(" |  "); //Indent
+		printf("[Branch %2i] ", toExecIndex);
+		printInstructionCursor(insn);
 
 		//Execute current call frame, one opcode at a time
 		void(*callTarget)() = nullptr;
