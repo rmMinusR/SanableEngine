@@ -78,7 +78,7 @@ SemanticFlags::SemanticFlags(uint64_t bits, uint64_t known) :
 std::optional<bool> SemanticFlags::check(int id, bool expectedValue) const
 {
 	uint64_t mask = 1<<id;
-	return (bitsKnown&mask) ? std::make_optional<bool>( (bits&mask) == expectedValue) : std::nullopt;
+	return (bitsKnown&mask) ? std::make_optional<bool>( bool(bits&mask) == expectedValue) : std::nullopt;
 }
 
 void SemanticFlags::set(int id, std::optional<bool> val)

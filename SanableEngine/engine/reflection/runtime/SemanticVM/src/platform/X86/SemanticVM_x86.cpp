@@ -233,8 +233,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 		auto* ifBranch = state.getOperand(insn, 0).tryGetKnownConst();
 		auto* noBranch = state.getRegister(x86_reg::X86_REG_RIP).tryGetKnownConst();
-		assert(ifBranch && "Indirect branching currently not supported");
-		assert(noBranch && "Indirect branching currently not supported");
+		assert(ifBranch && "Attempted to branch to an indeterminate location!");
+		assert(noBranch && "Attempted to branch to an indeterminate location!");
 
 		//Indeterminate case: fork
 		if (!conditionMet.has_value())
@@ -248,7 +248,9 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//Determinate case: jump if condition met
 		else
 		{
-			if (conditionMet.value()) jump(ifBranch);
+			if (conditionMet.value()) jump((void*)ifBranch->value);
+
+			printf("   ; Determinate: %s", conditionMet.value() ? "Branching" : "Not branching");
 		}
 	}
 	else
