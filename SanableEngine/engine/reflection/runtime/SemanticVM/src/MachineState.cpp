@@ -1,4 +1,5 @@
 #include "MachineState.hpp"
+#include "SemanticVM.hpp"
 
 #include <cassert>
 
@@ -7,7 +8,7 @@ SemanticValue MachineState::getMemory(void* location, size_t size, bool tryHostM
 	SemanticValue out = constMemory.get(location, size);
 	if (canReadHostMemory && tryHostMemory && out.isUnknown())
 	{
-		printf("Read host memory: %p[%i]\n", location, (int)size);
+		if (SemanticVM::debug) printf("Read host memory: %p[%i]\n", location, (int)size);
 		SemanticKnownConst c(0, size, false);
 		memcpy(&c.value, location, size);
 		return c;

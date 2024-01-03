@@ -53,7 +53,7 @@ void testCtorCaptureV2()
 {
 	SUBCASE("Parity vs self")
 	{
-		printf("============== BEGIN %s v2/v2 parity check ==============\n\n", typeid(T).name());
+		//printf("============== BEGIN %s v2/v2 parity check ==============\n\n", typeid(T).name());
 
 		DetectedConstants vtables1 = capture_utils::type<T>::template ctor<>::captureVtables();
 		DetectedConstants vtables2 = capture_utils::type<T>::template ctor<>::captureVtables();
@@ -67,14 +67,14 @@ void testCtorCaptureV2()
 		}
 		CHECK(good);
 
-		printf("============== END %s v2/v2 parity check ==============\n\n", typeid(T).name());
+		//printf("============== END %s v2/v2 parity check ==============\n\n", typeid(T).name());
 	}
 
 	SUBCASE("Parity vs v1")
 	{
 		for (uint8_t fill : { 0x00, 0x88, 0xFF })
 		{
-			printf("============== BEGIN %s v1/v2 parity check ==============\n\n", typeid(T).name());
+			//printf("============== BEGIN %s v1/v2 parity check ==============\n\n", typeid(T).name());
 			const TypeInfo* ty = TypeName::create<T>().resolve();
 
 			//Get baseline from old version
@@ -94,6 +94,7 @@ void testCtorCaptureV2()
 				}
 			);
 			
+			/*
 			printf("v1: ");
 			for (size_t i = 0; i < sizeof(T); ++i) printf("%02x ", (uint32_t)dummy[i]);
 			printf("\n");
@@ -101,6 +102,7 @@ void testCtorCaptureV2()
 			printf("v2: ");
 			for (size_t i = 0; i < sizeof(T); ++i) if (vtables.usage[i]) printf("%02x ", (uint32_t)vtables.bytes[i]); else printf(".. ");
 			printf("\n");
+			// */
 			
 			//Verify consistent
 			bool good = true;
@@ -111,7 +113,7 @@ void testCtorCaptureV2()
 			}
 			CHECK(good);
 
-			printf("============== END %s v1/v2 parity check ==============\n\n", typeid(T).name());
+			//printf("============== END %s v1/v2 parity check ==============\n\n", typeid(T).name());
 
 			if (wasPreZeroed) return; //Cannot test against varying fill if pre-zeroing is happening
 		}

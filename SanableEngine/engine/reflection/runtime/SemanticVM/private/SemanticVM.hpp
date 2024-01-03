@@ -20,6 +20,8 @@ class SemanticVM
 	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
 	
 public:
+	static bool debug; //Default false. Set true to enable debugging.
+
 	/// <summary>
 	/// Simulate a single instruction
 	/// </summary>
@@ -29,11 +31,11 @@ public:
 	/// <param name="jump">Callback for when a jump or determinate branch occurs.</param>
 	/// <param name="fork">Callback for when an indeterminate branch occurs. If branching is determinate, jump callback will be used instead.</param>
 	static void step(MachineState& state,
-					 const cs_insn* insn,
-					 const std::function<void(void*)>& pushCallStack,
-					 const std::function<void*()>& popCallStack,
-					 const std::function<void(void*)>& jump,
-					 const std::function<void(const std::vector<void*>&)>& fork);
+			const cs_insn* insn,
+			const std::function<void(void*)>& pushCallStack,
+			const std::function<void*()>& popCallStack,
+			const std::function<void(void*)>& jump,
+			const std::function<void(const std::vector<void*>&)>& fork);
 
 	/// <summary>
 	/// Deterministically simulate an entire function (until its final RET is reached).

@@ -15,7 +15,8 @@ DetectedConstants DetectedConstants::captureCtor(size_t objSize, void(*ctor)())
 	canonicalState.setRegister(X86_REG_RCX, SemanticThisPtr(0) ); //__thiscall: caller puts address of class object in rCX (see <https://en.wikibooks.org/wiki/X86_Disassembly/Calling_Conventions#THISCALL>)
 
 	//Run
-	SemanticVM::execFunc(canonicalState, ctor, {}, {});
+	SemanticVM vm;
+	vm.execFunc(canonicalState, ctor, {}, {});
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);

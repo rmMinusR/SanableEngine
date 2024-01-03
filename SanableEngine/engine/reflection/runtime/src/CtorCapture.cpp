@@ -10,7 +10,8 @@ DetectedConstants capture_utils::_captureVtablesInternal(size_t objSize, void(*t
 {
 	//Simulate
 	MachineState canonicalState(true);
-	SemanticVM::execFunc(canonicalState, thunk, allocators, nofill);
+	SemanticVM vm;
+	vm.execFunc(canonicalState, thunk, allocators, nofill);
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);
