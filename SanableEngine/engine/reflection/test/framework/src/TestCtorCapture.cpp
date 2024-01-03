@@ -53,32 +53,34 @@ void testCtorCaptureV2()
 {
 	SUBCASE("Parity vs self")
 	{
+		printf("============== BEGIN %s v2/v2 parity check ==============\n\n", typeid(T).name());
+
 		DetectedConstants vtables1 = capture_utils::type<T>::template ctor<>::captureVtables();
 		DetectedConstants vtables2 = capture_utils::type<T>::template ctor<>::captureVtables();
 
 		//Verify consistent
+		bool good = true;
 		for (size_t i = 0; i < sizeof(T); ++i)
 		{
-			REQUIRE(vtables1.usage[i] == vtables2.usage[i]);
-			REQUIRE(vtables1.bytes[i] == vtables2.bytes[i]);
+			good &= (vtables1.usage[i] == vtables2.usage[i]);
+			good &= (vtables1.bytes[i] == vtables2.bytes[i]);
 		}
+		CHECK(good);
 
-		printf("============== v2/v2 parity: OK ==============\n");
+		printf("============== END %s v2/v2 parity check ==============\n\n", typeid(T).name());
 	}
 
 	SUBCASE("Parity vs v1")
 	{
 		for (uint8_t fill : { 0x00, 0x88, 0xFF })
 		{
+			printf("============== BEGIN %s v1/v2 parity check ==============\n\n", typeid(T).name());
 			const TypeInfo* ty = TypeName::create<T>().resolve();
 
-			//Baseline
+			//Get baseline from old version
 			uint8_t dummy[sizeof(T)];
 			memset(dummy, fill, sizeof(T));
 			ty->vptrJam(dummy);
-
-			for (size_t i = 0; i < sizeof(T); ++i) printf("%02x ", (uint32_t)dummy[i]);
-			printf("\n");
 
 			//New version
 			bool wasPreZeroed = true; //TODO detect pre-zeroing
@@ -92,17 +94,24 @@ void testCtorCaptureV2()
 				}
 			);
 			
+			printf("v1: ");
+			for (size_t i = 0; i < sizeof(T); ++i) printf("%02x ", (uint32_t)dummy[i]);
+			printf("\n");
+
+			printf("v2: ");
 			for (size_t i = 0; i < sizeof(T); ++i) if (vtables.usage[i]) printf("%02x ", (uint32_t)vtables.bytes[i]); else printf(".. ");
 			printf("\n");
 			
 			//Verify consistent
+			bool good = true;
 			for (size_t i = 0; i < sizeof(T); ++i)
 			{
-				if (vtables.usage[i]) REQUIRE(dummy[i] == vtables.bytes[i]);
-				else REQUIRE(dummy[i] == fill);
+				if (vtables.usage[i]) good &= (dummy[i] == vtables.bytes[i]);
+				else good &= (dummy[i] == fill);
 			}
+			CHECK(good);
 
-			printf("============== v1/v2 parity: OK ==============\n");
+			printf("============== END %s v1/v2 parity check ==============\n\n", typeid(T).name());
 
 			if (wasPreZeroed) return; //Cannot test against varying fill if pre-zeroing is happening
 		}

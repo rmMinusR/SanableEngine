@@ -16,9 +16,10 @@ SemanticUnknown::SemanticUnknown(size_t size) :
 {
 }
 
-SemanticKnownConst::SemanticKnownConst(uint64_t v, size_t s) :
+SemanticKnownConst::SemanticKnownConst(uint64_t v, size_t s, bool isPositionIndependentAddr) :
 	size(s),
-	value(v)
+	value(v),
+	isPositionIndependentAddr(isPositionIndependentAddr)
 {
 }
 
@@ -48,17 +49,29 @@ uint64_t SemanticKnownConst::mask() const
 
 SemanticKnownConst SemanticKnownConst::signExtend(size_t targetSizeBytes) const
 {
+	assert(!isPositionIndependentAddr);
+
 	int64_t val = 0;
 	     if (size == 1) val = (int8_t )(int64_t)value;
 	else if (size == 2) val = (int16_t)(int64_t)value;
 	else if (size == 4) val = (int32_t)(int64_t)value;
 	else if (size == 8) val = (int64_t)(int64_t)value;
 	else assert(false);
-	return SemanticKnownConst(val, targetSizeBytes);
+	return SemanticKnownConst(val, targetSizeBytes, false);
 }
 
 SemanticThisPtr::SemanticThisPtr(size_t offset) :
 	offset(offset)
+{
+}
+
+SemanticFlags::SemanticFlags()
+{
+}
+
+SemanticFlags::SemanticFlags(uint64_t bits, uint64_t known) :
+	bits(bits),
+	bitsKnown(known)
 {
 }
 
@@ -138,7 +151,7 @@ std::optional<bool> SemanticValue::isZero() const
 _XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN()
 #undef _X
 
-int SemanticValue::debugPrintValue() const
+int SemanticValue::debugPrintValue(bool pad) const
 {
 	int nWritten = 0;
 
@@ -148,9 +161,9 @@ int SemanticValue::debugPrintValue() const
 	else assert(false);
 
 	int nToPad = 15-nWritten;
-	if (nToPad > 0) printf("%*c", nToPad, ' ');
+	if (pad && nToPad > 0) nWritten += printf("%*c", nToPad, ' ');
 
-	return nWritten + std::max(0, nToPad);
+	return nWritten;
 }
 
 SemanticValue::SemanticValue() : SemanticValue(SemanticUnknown(0)) { }
@@ -167,6 +180,18 @@ SemanticValue::SemanticValue() : SemanticValue(SemanticUnknown(0)) { }
 
 _XM_FOREACH_SEMANTICVALUE_TYPE()
 #undef _X
+
+
+bool SemanticValue::operator==(const SemanticValue& rhs) const
+{
+	return this->valueType == rhs.valueType
+		&& memcmp(&this->asUnknown, &rhs.asUnknown, variantSize) == 0; //FIXME fast impl, should really call each value type's operator==
+}
+
+bool SemanticValue::operator!=(const SemanticValue& rhs) const
+{
+	return !(*this == rhs);
+}
 
 
 #pragma region Math
@@ -206,7 +231,7 @@ SemanticValue SemanticValue_doMathOp(SemanticValue arg1, SemanticValue arg2,
 SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs)
 {
 	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() + arg2.bound(), arg1.size); },
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() + arg2.bound(), arg1.size, (arg1.isPositionIndependentAddr + arg2.isPositionIndependentAddr) == 1); },
 		[](SemanticKnownConst arg1, SemanticThisPtr    arg2) { return SemanticThisPtr{ arg1.bound() + arg2.offset}; },
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset + arg2.bound() }; },
 		nullptr, //this + this
@@ -216,11 +241,12 @@ SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs)
 
 SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 {
+	if (lhs == rhs) return SemanticKnownConst(0, lhs.getSize(), false);
 	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() - arg2.bound(), arg1.size); },
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() - arg2.bound(), arg1.size, (arg1.isPositionIndependentAddr - arg2.isPositionIndependentAddr) == 1); },
 		nullptr, //const - this
 		[](SemanticThisPtr    arg1, SemanticKnownConst arg2) { return SemanticThisPtr{ arg1.offset - arg2.bound() }; },
-		[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*)); },
+		[](SemanticThisPtr    arg1, SemanticThisPtr    arg2) { return SemanticKnownConst(arg1.offset - arg2.offset, sizeof(void*), false); },
 		nullptr //flags + flags
 	);
 }
@@ -228,11 +254,47 @@ SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs)
 {
 	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() * arg2.bound(), arg1.size); },
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() * arg2.bound(), arg1.size, arg1.isPositionIndependentAddr && !arg2.isPositionIndependentAddr && arg2.bound()==1); },
 		nullptr, //const * this
 		nullptr, //this * const
 		nullptr, //this * this
 		nullptr //flags * flags
+	);
+}
+
+SemanticValue operator&(const SemanticValue& lhs, const SemanticValue& rhs)
+{
+	if (lhs == rhs) return lhs;
+	return SemanticValue_doMathOp(lhs, rhs,
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() & arg2.bound(), arg1.size, false); },
+		nullptr, //const & this
+		nullptr, //this & const
+		nullptr, //this & this: identity case will catch most, otherwise it actually holds no semantic meaning
+		[](SemanticFlags arg1, SemanticFlags arg2) { return SemanticFlags(arg1.bits & arg2.bits, arg1.bitsKnown & arg2.bitsKnown); }
+	);
+}
+
+SemanticValue operator|(const SemanticValue& lhs, const SemanticValue& rhs)
+{
+	if (lhs == rhs) return lhs;
+	return SemanticValue_doMathOp(lhs, rhs,
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() | arg2.bound(), arg1.size, false); },
+		nullptr, //const & this
+		nullptr, //this & const
+		nullptr, //this & this: identity case will catch most, otherwise it actually holds no semantic meaning
+		[](SemanticFlags arg1, SemanticFlags arg2) { return SemanticFlags(arg1.bits | arg2.bits, arg1.bitsKnown & arg2.bitsKnown); }
+	);
+}
+
+SemanticValue operator^(const SemanticValue& lhs, const SemanticValue& rhs)
+{
+	if (lhs == rhs && !lhs.isUnknown()) return SemanticKnownConst(0, lhs.getSize(), false);
+	return SemanticValue_doMathOp(lhs, rhs,
+		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() ^ arg2.bound(), arg1.size, false); },
+		nullptr, //const & this
+		nullptr, //this & const
+		nullptr, //this & this: identity case will catch most, otherwise it actually holds no semantic meaning
+		[](SemanticFlags arg1, SemanticFlags arg2) { return SemanticFlags(arg1.bits ^ arg2.bits, arg1.bitsKnown & arg2.bitsKnown); }
 	);
 }
 

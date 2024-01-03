@@ -48,7 +48,7 @@ public:
 	SemanticValue getOperand(const cs_insn* insn, size_t index) const;
 	void setOperand(const cs_insn* insn, size_t index, SemanticValue value);
 
-	SemanticValue getMemory(void*              location, size_t size) const;
+	SemanticValue getMemory(void*              location, size_t size, bool tryHostMemory) const;
 	SemanticValue getMemory(SemanticValue      location, size_t size) const;
 	SemanticValue getMemory(SemanticKnownConst location, size_t size) const;
 	SemanticValue getMemory(SemanticThisPtr    location, size_t size) const;

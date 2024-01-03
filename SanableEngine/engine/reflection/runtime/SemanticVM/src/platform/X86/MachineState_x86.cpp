@@ -39,11 +39,11 @@ void MachineState::reset()
 SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 {
 	std::optional<SemanticValue> addr;
-#define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*))) + (val))
+#define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*), false)) + (val))
 	if (mem.base  != X86_REG_INVALID) addValue( getRegister(mem.base) );
-	if (mem.index != X86_REG_INVALID) addValue( getRegister(mem.index) * SemanticKnownConst(mem.scale, sizeof(void*)) );
+	if (mem.index != X86_REG_INVALID) addValue( getRegister(mem.index) * SemanticKnownConst(mem.scale, sizeof(void*), false) );
 	assert(mem.segment == X86_REG_INVALID); //FIXME: I'm not dealing with that right now
-	addValue( SemanticKnownConst(mem.disp, sizeof(void*)) );
+	addValue( SemanticKnownConst(mem.disp, sizeof(void*), false) );
 	return addr.value();
 }
 
@@ -81,12 +81,12 @@ SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 	//Special case: LEA (relative addresses)
 	if (insn->id == x86_insn::X86_INS_LEA && index == 1)
 	{
-		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size);
+		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size, true);
 	}
 	//Special case: jmp aka branch (relative addresses)
 	else if (insn_in_group(*insn, x86_insn_group::X86_GRP_BRANCH_RELATIVE))
 	{
-		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size);
+		return SemanticKnownConst((uint_addr_t)platform_getRelAddr(*insn), insn->detail->x86.operands[index].size, true);
 	}
 	
 	//General case
@@ -99,7 +99,7 @@ SemanticValue MachineState::getOperand(const cs_insn* insn, size_t index) const
 		break;
 
 	case x86_op_type::X86_OP_IMM:
-		out = SemanticKnownConst(op.imm, op.size); //Completely legal: almost every machine out there stores negatives as two's compliment
+		out = SemanticKnownConst(op.imm, op.size, false); //Completely legal: almost every machine out there stores negatives as two's compliment
 		break;
 
 	case x86_op_type::X86_OP_MEM:
@@ -317,10 +317,10 @@ void MachineState::unwindStack(const StackVisitor& visitor) const
 int MachineState::debugPrintWorkingSet() const
 {
 	int bytesWritten = 0;
-	bytesWritten += printf("rcx=");
-	bytesWritten += getRegister(X86_REG_RCX).debugPrintValue();
-	bytesWritten += printf(" | rax=");
-	bytesWritten += getRegister(X86_REG_RAX).debugPrintValue();
+	//bytesWritten += printf("rcx=");
+	//bytesWritten += getRegister(X86_REG_RCX).debugPrintValue();
+	//bytesWritten += printf(" | rax=");
+	//bytesWritten += getRegister(X86_REG_RAX).debugPrintValue();
 	bytesWritten += printf(" | rsp=");
 	bytesWritten += getRegister(X86_REG_RSP).debugPrintValue();
 	//bytesWritten += printf(" | rbp=");

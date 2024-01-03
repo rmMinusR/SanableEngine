@@ -2,13 +2,13 @@
 
 #include <cassert>
 
-SemanticValue MachineState::getMemory(void* location, size_t size) const
+SemanticValue MachineState::getMemory(void* location, size_t size, bool tryHostMemory) const
 {
 	SemanticValue out = constMemory.get(location, size);
-	if (false && canReadHostMemory && out.isUnknown())
+	if (canReadHostMemory && tryHostMemory && out.isUnknown())
 	{
 		printf("Read host memory: %p[%i]\n", location, (int)size);
-		SemanticKnownConst c(0, size);
+		SemanticKnownConst c(0, size, false);
 		memcpy(&c.value, location, size);
 		return c;
 	}
@@ -17,7 +17,7 @@ SemanticValue MachineState::getMemory(void* location, size_t size) const
 
 //SemanticValue MachineState::getMemory(void*              location, size_t size) const { return constMemory.get(location       , size); }
 SemanticValue MachineState::getMemory(SemanticThisPtr    location, size_t size) const { return thisMemory .get(location.offset, size); }
-SemanticValue MachineState::getMemory(SemanticKnownConst location, size_t size) const { return getMemory((void*)location.value, size); }
+SemanticValue MachineState::getMemory(SemanticKnownConst location, size_t size) const { return getMemory((void*)location.value, size, location.isPositionIndependentAddr); }
 
 SemanticValue MachineState::getMemory(SemanticValue _location, size_t size) const
 {

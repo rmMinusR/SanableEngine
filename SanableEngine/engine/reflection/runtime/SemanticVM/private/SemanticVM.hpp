@@ -16,7 +16,7 @@ class SemanticVM
 	/// <param name="expectedReturnAddress">Expected return address, or null if indeterminate/unchecked</param>
 	/// <param name="indentLevel">For debugging</param>
 	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
-	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param>
+	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param> //TODO: Proper covariant detection, only updating stack pointers and invalidating registers written
 	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
 	
 public:

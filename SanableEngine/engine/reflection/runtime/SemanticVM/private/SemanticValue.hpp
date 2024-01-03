@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <algorithm>
 
 int debugPrintSignedHex(int64_t val);
 
@@ -21,8 +22,9 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 {
 	size_t size;
 	uint64_t value; //We don't need to support registers bigger than 64 bits right now
+	bool isPositionIndependentAddr;
 
-	SemanticKnownConst(uint64_t value, size_t size);
+	SemanticKnownConst(uint64_t value, size_t size, bool isPositionIndependentAddr);
 	uint8_t& byte(size_t index);
 	uint64_t bound() const;
 	uint64_t mask() const; //Also equivalent to unsigned max or signed -1
@@ -39,6 +41,8 @@ struct SemanticFlags /// Represents a bitfield of at most 64 bits, each of which
 	size_t size = sizeof(uint64_t); //Do not modify
 	uint64_t bits = 0;
 	uint64_t bitsKnown = 0;
+	SemanticFlags();
+	SemanticFlags(uint64_t bits, uint64_t known);
 	std::optional<bool> check(int id, bool expectedValue) const;
 	void set(int id, std::optional<bool> val);
 	bool allKnown(const std::initializer_list<int>& ids) const;
@@ -69,6 +73,10 @@ private:
 #undef _X
 	};
 
+#define _X(id) sizeof(Semantic##id),
+	constexpr static size_t variantSize = std::max({ _XM_FOREACH_SEMANTICVALUE_TYPE() (size_t)0 });
+#undef _X
+
 public:
 	Type getType() const;
 	size_t getSize() const;
@@ -94,12 +102,21 @@ public:
 	_XM_FOREACH_SEMANTICVALUE_TYPE()
 #undef _X
 
-	int debugPrintValue() const; //Returns number of chars printed
+	bool operator==(const SemanticValue& rhs) const;
+	bool operator!=(const SemanticValue& rhs) const;
+
+	int debugPrintValue(bool pad = true) const; //Returns number of chars printed
 };
 
 SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs);
+SemanticValue operator&(const SemanticValue& lhs, const SemanticValue& rhs);
+SemanticValue operator|(const SemanticValue& lhs, const SemanticValue& rhs);
+SemanticValue operator^(const SemanticValue& lhs, const SemanticValue& rhs);
 inline SemanticValue& operator+=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs + rhs; return lhs; }
 inline SemanticValue& operator-=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs - rhs; return lhs; }
 inline SemanticValue& operator*=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs * rhs; return lhs; }
+inline SemanticValue& operator&=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs & rhs; return lhs; }
+inline SemanticValue& operator|=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs | rhs; return lhs; }
+inline SemanticValue& operator^=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs ^ rhs; return lhs; }

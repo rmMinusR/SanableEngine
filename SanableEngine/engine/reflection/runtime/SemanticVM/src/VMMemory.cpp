@@ -13,7 +13,7 @@ void VMMemory::set(void* _location, SemanticValue value, size_t size)
 
 	if (auto* val = value.tryGetKnownConst())
 	{
-		for (size_t i = 0; i < val->size; ++i) memory.insert_or_assign(location+i, SemanticKnownConst(val->byte(i), 1));
+		for (size_t i = 0; i < val->size; ++i) memory.insert_or_assign(location+i, SemanticKnownConst(val->byte(i), 1, val->isPositionIndependentAddr));
 	}
 	else if (value.tryGetThisPtr())
 	{
@@ -58,10 +58,12 @@ SemanticValue VMMemory::get(void* _location, size_t size) const
 	if (type == SemanticValue::Type::KnownConst)
 	{
 		//Try to load value at address, if it is fully present as a constant
-		SemanticKnownConst knownConst(0, size);
+		SemanticKnownConst knownConst(0, size, true);
 		for (size_t i = 0; i < size; ++i)
 		{
-			knownConst.byte(i) = memory.at(location+i).tryGetKnownConst()->value;
+			const SemanticKnownConst* k = memory.at(location + i).tryGetKnownConst();
+			knownConst.byte(i) = k->value;
+			knownConst.isPositionIndependentAddr &= k->isPositionIndependentAddr;
 		}
 		return knownConst;
 	}

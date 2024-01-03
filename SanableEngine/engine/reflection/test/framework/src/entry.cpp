@@ -3,5 +3,6 @@
 
 int main(int argc, char** argv)
 {
-	return doctest::Context(argc, argv).run();
+	doctest::Context ctx(argc, argv);
+	return ctx.run();
 }
