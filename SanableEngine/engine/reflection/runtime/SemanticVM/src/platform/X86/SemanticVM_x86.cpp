@@ -1,5 +1,7 @@
 #include "SemanticVM.hpp"
 
+#include <cassert>
+
 #include "CapstoneWrapper.hpp"
 #include "FunctionBytecodeWalker.hpp"
 

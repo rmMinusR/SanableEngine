@@ -3,7 +3,6 @@
 #include <functional>
 
 #include "MachineState.hpp"
-#include "GenericFunction.hpp"
 
 class SemanticVM
 {
