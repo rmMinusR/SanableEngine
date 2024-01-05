@@ -5,8 +5,8 @@
 #include <optional>
 
 #include "dllapi.h"
-#include "rttiutils.h"
 
+#include "ThunkUtils.hpp"
 #include "TypeName.hpp"
 #include "ParentInfo.hpp"
 #include "FieldInfo.hpp"
@@ -124,7 +124,7 @@ public:
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
 		out.align = alignof(TObj);
-		out.dtor = dtor_utils<TObj>::dtor;
+		out.dtor = thunk_utils<TObj>::dtor;
 		out.create_internalFinalize();
 		return out;
 	}

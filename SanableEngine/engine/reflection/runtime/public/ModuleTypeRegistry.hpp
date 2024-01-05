@@ -7,7 +7,7 @@
 class GlobalTypeRegistry;
 
 /// <summary>
-/// Reflection(ish) for all types within a module (read: plugin).
+/// Reflection(ish) for all types within a module (read: DLL/plugin).
 /// </summary>
 class ModuleTypeRegistry
 {

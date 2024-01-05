@@ -1,7 +1,7 @@
 #include "doctest.h"
 
 #include "GlobalTypeRegistry.hpp"
-#include "CtorCapture.hpp"
+#include "ThunkUtils.hpp"
 #include "application/PluginCore.hpp"
 
 #include "Inheritance.hpp"
@@ -55,8 +55,8 @@ void testCtorCaptureV2()
 	{
 		//printf("============== BEGIN %s v2/v2 parity check ==============\n\n", typeid(T).name());
 
-		DetectedConstants vtables1 = capture_utils::type<T>::template ctor<>::captureVtables();
-		DetectedConstants vtables2 = capture_utils::type<T>::template ctor<>::captureVtables();
+		DetectedConstants vtables1 = thunk_utils<T>::template ctor<>::captureVtables();
+		DetectedConstants vtables2 = thunk_utils<T>::template ctor<>::captureVtables();
 
 		//Verify consistent
 		bool good = true;
@@ -84,7 +84,7 @@ void testCtorCaptureV2()
 
 			//New version
 			bool wasPreZeroed = true; //TODO detect pre-zeroing
-			DetectedConstants vtables = capture_utils::type<T>::template ctor<>::captureVtables();
+			DetectedConstants vtables = thunk_utils<T>::template ctor<>::captureVtables();
 
 			//Unmark explicit fields
 			ty->walkFields(

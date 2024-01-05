@@ -1,4 +1,4 @@
-#include "CtorCapture.hpp"
+#include "ThunkUtils.hpp"
 
 #include <cassert>
 
@@ -6,7 +6,7 @@
 #include "FunctionBytecodeWalker.hpp"
 #include "SemanticVM.hpp"
 
-DetectedConstants capture_utils::_captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill)
+DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill)
 {
 	//Simulate
 	MachineState canonicalState(true);
