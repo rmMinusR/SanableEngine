@@ -6,12 +6,25 @@
 #include "FunctionBytecodeWalker.hpp"
 #include "SemanticVM.hpp"
 
+ptrdiff_t _captureCastOffset(const DetectedConstants& image, void(*castThunk)())
+{
+	MachineState canonicalState(true);
+	for (int i = 0; i < image.bytes.size(); ++i)
+	{
+		if (image.usage[i]) canonicalState.setMemory(SemanticThisPtr(i), SemanticKnownConst(image.bytes[i], 1, false), 1);
+	}
+
+	//Simulate
+	SemanticVM::execFunc(canonicalState, castThunk, {}, {});
+
+	return ptrdiff_t();
+}
+
 DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill)
 {
 	//Simulate
 	MachineState canonicalState(true);
-	SemanticVM vm;
-	vm.execFunc(canonicalState, thunk, allocators, nofill);
+	SemanticVM::execFunc(canonicalState, thunk, allocators, nofill);
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);

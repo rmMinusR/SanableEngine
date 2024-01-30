@@ -11,16 +11,9 @@ void TypeBuilder::addParent_internal(const TypeName& parent, size_t size, const 
 	pendingParents.emplace_back(parent, type.size, size, upcastFn, visibility, virtualness);
 }
 
-void TypeBuilder::addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset)
+void TypeBuilder::addField_internal(const TypeName& declaredType, const std::string& name, size_t size, std::function<ptrdiff_t(const void*)> accessor, MemberVisibility visibility)
 {
-	FieldInfo f;
-	f.owner = type.name;
-	f.type = declaredType;
-	f.name = name;
-	f.size = size;
-	f.offset = offset;
-	f.visibility = MemberVisibility::Public; //TEMP TODO make RTTI generation step
-	type.fields.push_back(f);
+	pendingFields.emplace_back(declaredType, name, size, accessor, visibility);
 }
 
 void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
@@ -62,6 +55,10 @@ void TypeBuilder::registerType(ModuleTypeRegistry* registry)
 	//Resolve pending parents
 	for (ParentInfoBuilder& p : pendingParents) type.parents.push_back(p.buildFromSurrogate());
 	pendingParents.clear();
+
+	//Resolve pending fields
+	for (const FieldInfoBuilder& p : pendingFields) type.fields.push_back(p.build(type.name, type.implicitValues));
+	pendingFields.clear();
 
 	assert(registry->lookupType(type.name) == nullptr);
 	registry->types.push_back(type);

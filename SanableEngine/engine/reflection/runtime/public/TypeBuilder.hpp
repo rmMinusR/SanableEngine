@@ -2,8 +2,10 @@
 
 #include "TypeInfo.hpp"
 #include "ParentInfoBuilder.hpp"
+#include "FieldInfoBuilder.hpp"
 
 #include <cassert>
+#include <functional>
 
 class ModuleTypeRegistry;
 
@@ -13,11 +15,12 @@ private:
 	TypeInfo type;
 
 	std::vector<ParentInfoBuilder> pendingParents;
+	std::vector<FieldInfoBuilder> pendingFields;
 	
 	ENGINE_RTTI_API TypeBuilder();
 
 	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness); //Order independent. UpcastFn must be valid when captureCDO or registerType are called.
-	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, size_t offset); //Order independent
+	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, std::function<ptrdiff_t(const void*)> accessor, MemberVisibility visibility); //Order independent. Accessor must be valid after captureCDO is called.
 	ENGINE_RTTI_API void captureCDO_internal(const std::vector<void*>& instances);
 
 public:
@@ -54,9 +57,9 @@ public:
 
 	//Order independent
 	template<typename TField>
-	inline void addField(const std::string& name, size_t offset)
+	inline void addField(const std::string& name, std::function<ptrdiff_t(const void*)> accessor)
 	{
-		addField_internal(TypeName::create<TField>(), name, sizeof(TField), offset);
+		addField_internal(TypeName::create<TField>(), name, sizeof(TField), accessor, MemberVisibility::Public); // TODO extract visibility in RTTI generation step
 	}
 
 	//Only call once all fields and parents are registered

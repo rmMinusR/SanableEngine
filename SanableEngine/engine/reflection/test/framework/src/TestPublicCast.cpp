@@ -46,7 +46,7 @@ TEST_CASE("public_cast")
 		tester.*DO_PUBLIC_CAST(PublicCastTester_priv) = 2;
 	}
 
-	SUBCASE("Offsetof member variable (manual)")
+	SUBCASE("Offsetof member variable (manual, explicit)")
 	{
 		PublicCastTester* tester = reinterpret_cast<PublicCastTester*>(0xDEADBEEF);
 		ptrdiff_t diff = (char*)std::addressof(tester->*DO_PUBLIC_CAST(PublicCastTester_priv)) - (char*)tester;
@@ -55,7 +55,7 @@ TEST_CASE("public_cast")
 
 	SUBCASE("Offsetof member variable (macroed)")
 	{
-		ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF(PublicCastTester_priv, PublicCastTester);
+		ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF_LAMBDA(PublicCastTester_priv, PublicCastTester)(nullptr);
 		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
 	}
 

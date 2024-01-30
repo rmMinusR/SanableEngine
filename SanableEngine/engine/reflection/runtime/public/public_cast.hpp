@@ -48,7 +48,13 @@ namespace public_cast
 	//The following is equivalent: myObject->*DO_PUBLIC_CAST(keyToMyVar)
 	//Which is fully equivalent, and is both lvalue and rvalue
 	#define DO_PUBLIC_CAST(key) ::public_cast::_caster<::public_cast::_type_lut<__PUBLIC_CAST_KEY__##key>::ptr_t, __PUBLIC_CAST_KEY__##key>::m
-	#define DO_PUBLIC_CAST_OFFSETOF(key, TClass) ((char*)std::addressof(((TClass*)nullptr)->*DO_PUBLIC_CAST(key)) - (char*)nullptr)
+	#define DO_PUBLIC_CAST_OFFSETOF_LAMBDA(key, TClass) \
+		[](const void* obj) {\
+			auto fieldLoc = std::addressof( ((const TClass*)obj)->*DO_PUBLIC_CAST(key) );\
+			return ( (const char*)fieldLoc - (const char*)obj );\
+		}
+	//Obsolete: Doesn't work on virtually-inherited types
+	//#define DO_PUBLIC_CAST_OFFSETOF(key, TClass) ((char*)std::addressof(((TClass*)nullptr)->*DO_PUBLIC_CAST(key)) - (char*)nullptr)
 	
 	//Source file only
 	//NOTE: memberTypePtr must be passed as __VA_ARGS__ since the C preprocessor will mess up templates otherwise

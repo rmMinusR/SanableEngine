@@ -3,6 +3,7 @@
 #include "ParentInfo.hpp"
 
 #include <functional>
+#include <vector>
 
 //Internal mechanism used by TypeBuilder
 //Resolving parent info late allows us to use valid objects from CDO capture step

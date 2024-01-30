@@ -349,7 +349,7 @@ class FieldInfo(Member):
     def renderMain(this):
         # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
         # f'builder.addField<decltype({this.owner.absName}::{this.relName})>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
-        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF({this.pubCastKey}, {this.owner.absName}));'
+        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF_LAMBDA({this.pubCastKey}, {this.owner.absName}));'
 
     def getReferencedTypes(this) -> list[str]:
         c = cvpUnwrapTypeName(this.__declaredTypeName)

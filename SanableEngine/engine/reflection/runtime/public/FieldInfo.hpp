@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MemberInfo.hpp"
-#include "TypeInfo.hpp"
+#include "TypeName.hpp"
 
 struct FieldInfo : public MemberInfo
 {

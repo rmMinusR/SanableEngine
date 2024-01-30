@@ -6,6 +6,7 @@
 typedef void (*dtor_t)(void*); //CANNOT be a std::function or lambda because destroying the dtor_t instance would attempt to delete memory from a possibly-unloaded plugin
 
 
+ENGINE_RTTI_API ptrdiff_t _captureCastOffset(const DetectedConstants& image, void*(*castThunk)(void*)); //TODO implement
 ENGINE_RTTI_API DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill);
 //Helper for SemanticVM ThisPtr detection
 template<int> void* dummyAllocator() { return nullptr; }
