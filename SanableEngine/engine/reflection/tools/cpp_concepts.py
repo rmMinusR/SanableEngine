@@ -486,9 +486,9 @@ class TypeInfo(Symbol):
         
         # Finalize
         if not this.isAbstract:
-           out += f"\nbuilder.captureCDO<{this.absName}>();"
+           out += f"\nbuilder.captureClassImage<{this.absName}>();"
         else:
-            out += f"\n//{this.absName} is abstract. Skipping CDO capture."
+            out += f"\n//{this.absName} is abstract. Skipping class image capture."
         out += "\nbuilder.registerType(registry);"
         return f"//{this.absName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 

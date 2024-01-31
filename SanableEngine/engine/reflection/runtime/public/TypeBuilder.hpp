@@ -21,7 +21,7 @@ private:
 
 	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness); //Order independent. UpcastFn must be valid when captureCDO or registerType are called.
 	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, std::function<ptrdiff_t(const void*)> accessor, MemberVisibility visibility); //Order independent. Accessor must be valid after captureCDO is called.
-	ENGINE_RTTI_API void captureCDO_internal(const std::vector<void*>& instances);
+	ENGINE_RTTI_API void captureClassImage_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor);
 
 public:
 	template<typename TObj>
@@ -64,29 +64,14 @@ public:
 
 	//Only call once all fields and parents are registered
 	template<typename TObj, typename... TCtorArgs>
-	void captureCDO(TCtorArgs... ctorArgs)
+	void captureClassImage(TCtorArgs... ctorArgs)
 	{
 		assert(TypeName::create<TObj>() == type.name);
 
-		//Prepare memory
-		char mem1[sizeof(TObj)];
-		char mem2[sizeof(TObj)];
-		char mem3[sizeof(TObj)];
-		memset(mem1, 0x00, sizeof(mem1));
-		memset(mem2, 0x88, sizeof(mem2));
-		memset(mem3, 0xFF, sizeof(mem3));
-
-		//Create CDOs
-		TObj* cdo1 = new (mem1) TObj(ctorArgs...);
-		TObj* cdo2 = new (mem2) TObj(ctorArgs...);
-		TObj* cdo3 = new (mem3) TObj(ctorArgs...);
-
 		//Magic!
-		captureCDO_internal({ cdo1, cdo2, cdo3 });
-
-		//Clean up
-		cdo1->~TObj();
-		cdo2->~TObj();
-		cdo3->~TObj();
+		captureClassImage_internal(
+			[&](void* obj) { new (obj) TObj(ctorArgs...); },
+			[](void* obj) { static_cast<TObj*>(obj)->~TObj(); }
+		);
 	}
 };

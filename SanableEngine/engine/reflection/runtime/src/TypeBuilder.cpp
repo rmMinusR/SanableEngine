@@ -16,22 +16,35 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 	pendingFields.emplace_back(declaredType, name, size, accessor, visibility);
 }
 
-void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
+void TypeBuilder::captureClassImage_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor)
 {
 	assert(type.byteUsage != nullptr);
 	assert(type.implicitValues == nullptr);
-	assert(instances.size() >= 2);
 	
+	//Prepare memory
+	char* cdo1 = (char*)malloc(3 * type.size);
+	char* cdo2 = cdo1 + type.size;
+	char* cdo3 = cdo2 + type.size;
+	memset(cdo1, 0x00, type.size);
+	memset(cdo2, 0x88, type.size);
+	memset(cdo3, 0xFF, type.size);
+
+	//Create CDOs
+	ctor(cdo1);
+	ctor(cdo2);
+	ctor(cdo3);
+
+	////// BEGIN MAIN MAGIC //////
+
 	//A bitset would be more space-efficient, but that's fixed size and probably slower for our purposes
 	memset(type.byteUsage, (uint8_t)TypeInfo::ByteUsage::ImplicitConst, type.size);
 	
 	//Detect constants
 	type.implicitValues = (char*) malloc(type.size);
-	memcpy(type.implicitValues, instances[0], type.size); //First one has no point of comparison
+	memcpy(type.implicitValues, cdo1, type.size); //First one has no point of comparison
 
-	for (int i = 1; i < instances.size(); ++i) //Scan each additional provided instance...
+	auto cmpAgainst = [&](char* cmp)
 	{
-		char* cmp = (char*)instances[i];
 		for (size_t byteIndex = 0; byteIndex < type.size; ++byteIndex) //... byte by byte...
 		{
 			//If we don't match, it's padding
@@ -40,14 +53,23 @@ void TypeBuilder::captureCDO_internal(const std::vector<void*>& instances)
 				type.byteUsage[byteIndex] = TypeInfo::ByteUsage::Padding;
 			}
 		}
-	}
+	};
+	cmpAgainst(cdo2);
+	cmpAgainst(cdo3);
 
 	//Resolve pending parents
-	for (ParentInfoBuilder& p : pendingParents) type.parents.push_back(p.buildFromCDOs(instances));
+	for (ParentInfoBuilder& p : pendingParents) type.parents.push_back(p.buildFromClassImage(type.implicitValues));
 	pendingParents.clear();
 
 	//Normally we'd scan each field and mark them as used, but we defer until we're registered with GlobalTypeRegistry
 	//Otherwise we wouldn't be able to walk parents in the same translation unit for explicit fields
+
+	////// END MAIN MAGIC //////
+	
+	dtor(cdo1);
+	dtor(cdo2);
+	dtor(cdo3);
+	free(cdo1);
 }
 
 void TypeBuilder::registerType(ModuleTypeRegistry* registry)
@@ -59,6 +81,8 @@ void TypeBuilder::registerType(ModuleTypeRegistry* registry)
 	//Resolve pending fields
 	for (const FieldInfoBuilder& p : pendingFields) type.fields.push_back(p.build(type.name, type.implicitValues));
 	pendingFields.clear();
+
+	//DO NOT update byte usage: this is deferred to TypeInfo::doLateBinding
 
 	assert(registry->lookupType(type.name) == nullptr);
 	registry->types.push_back(type);
