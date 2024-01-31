@@ -486,7 +486,7 @@ class TypeInfo(Symbol):
         
         # Finalize
         if not this.isAbstract:
-           out += f"\nbuilder.captureClassImage<{this.absName}>();"
+           out += f"\nbuilder.captureClassImage_v2<{this.absName}>();"
         else:
             out += f"\n//{this.absName} is abstract. Skipping class image capture."
         out += "\nbuilder.registerType(registry);"

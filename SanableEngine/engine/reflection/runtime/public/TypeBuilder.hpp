@@ -21,7 +21,8 @@ private:
 
 	ENGINE_RTTI_API void addParent_internal(const TypeName& parent, size_t size, const std::function<void*(void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness); //Order independent. UpcastFn must be valid when captureCDO or registerType are called.
 	ENGINE_RTTI_API void addField_internal(const TypeName& declaredType, const std::string& name, size_t size, std::function<ptrdiff_t(const void*)> accessor, MemberVisibility visibility); //Order independent. Accessor must be valid after captureCDO is called.
-	ENGINE_RTTI_API void captureClassImage_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor);
+	ENGINE_RTTI_API void captureClassImage_v1_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor);
+	ENGINE_RTTI_API void captureClassImage_v2_internal(const DetectedConstants& image);
 
 public:
 	template<typename TObj>
@@ -64,14 +65,20 @@ public:
 
 	//Only call once all fields and parents are registered
 	template<typename TObj, typename... TCtorArgs>
-	void captureClassImage(TCtorArgs... ctorArgs)
+	void captureClassImage_v1(TCtorArgs... ctorArgs)
 	{
 		assert(TypeName::create<TObj>() == type.name);
-
-		//Magic!
-		captureClassImage_internal(
+		captureClassImage_v1_internal(
 			[&](void* obj) { new (obj) TObj(ctorArgs...); },
 			[](void* obj) { static_cast<TObj*>(obj)->~TObj(); }
 		);
+	}
+	
+	//Only call once all fields and parents are registered
+	template<typename TObj, typename... TCtorArgs>
+	void captureClassImage_v2()
+	{
+		assert(TypeName::create<TObj>() == type.name);
+		captureClassImage_v2_internal(thunk_utils<TObj>::template ctor<TCtorArgs...>::captureVtables());
 	}
 };

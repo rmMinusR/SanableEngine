@@ -16,7 +16,7 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 	pendingFields.emplace_back(declaredType, name, size, accessor, visibility);
 }
 
-void TypeBuilder::captureClassImage_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor)
+void TypeBuilder::captureClassImage_v1_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor)
 {
 	assert(type.byteUsage != nullptr);
 	assert(type.implicitValues == nullptr);
@@ -57,10 +57,6 @@ void TypeBuilder::captureClassImage_internal(std::function<void(void*)> ctor, st
 	cmpAgainst(cdo2);
 	cmpAgainst(cdo3);
 
-	//Resolve pending parents
-	for (ParentInfoBuilder& p : pendingParents) type.parents.push_back(p.buildFromClassImage(type.implicitValues));
-	pendingParents.clear();
-
 	//Normally we'd scan each field and mark them as used, but we defer until we're registered with GlobalTypeRegistry
 	//Otherwise we wouldn't be able to walk parents in the same translation unit for explicit fields
 
@@ -72,10 +68,29 @@ void TypeBuilder::captureClassImage_internal(std::function<void(void*)> ctor, st
 	free(cdo1);
 }
 
+void TypeBuilder::captureClassImage_v2_internal(const DetectedConstants& image)
+{
+	assert(type.byteUsage != nullptr);
+	assert(type.implicitValues == nullptr);
+	type.implicitValues = (char*)malloc(type.size);
+
+	//Assume padding as default
+	memset(type.byteUsage, (uint8_t)TypeInfo::ByteUsage::Padding, type.size);
+
+	for (int i = 0; i < type.size; ++i)
+	{
+		if (image.usage[i])
+		{
+			type.byteUsage[i] = TypeInfo::ByteUsage::ImplicitConst;
+			type.implicitValues[i] = image.bytes[i];
+		}
+	}
+}
+
 void TypeBuilder::registerType(ModuleTypeRegistry* registry)
 {
 	//Resolve pending parents
-	for (ParentInfoBuilder& p : pendingParents) type.parents.push_back(p.buildFromSurrogate());
+	for (ParentInfoBuilder& p : pendingParents) type.parents.push_back(p.buildFromClassImage(type.implicitValues));
 	pendingParents.clear();
 
 	//Resolve pending fields

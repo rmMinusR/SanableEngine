@@ -17,6 +17,7 @@ ptrdiff_t _captureCastOffset(const DetectedConstants& image, void(*castThunk)())
 	//Simulate
 	SemanticVM::execFunc(canonicalState, castThunk, {}, {});
 
+	assert(false); //TODO implement
 	return ptrdiff_t();
 }
 
