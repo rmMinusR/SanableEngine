@@ -1,4 +1,5 @@
-﻿from enum import Enum
+﻿from ast import Param
+from enum import Enum
 import itertools
 import os
 from typing import Generator
@@ -218,12 +219,40 @@ class Virtualizable(Member):
 class ParameterInfo(Symbol):
     def __init__(this, module: "Module", cursor: Cursor):
         Symbol.__init__(this, module, cursor)
-        this.__typeName = cursor.displayname
-        #this.__name = TODO scan file
+        this.__displayName: str = cursor.displayname
+        
+        # TODO very inefficient, optimize
+
+        # Find index of self
+        allParams: list[Cursor] = [i for i in cursor.semantic_parent.get_children() if i.kind == CursorKind.PARM_DECL]
+        selfParam = [i for i in allParams if i.displayname == this.__displayName][0]
+        selfIndex = allParams.index(selfParam) # Note: We aren't guaranteed that the same cursor is returned
+            
+        # Scan for args in parent name
+        parentName: str = cursor.semantic_parent.displayname
+        parentArgsBegin = len(parentName)-2
+        parenLevel = 1
+        while parenLevel > 0:
+            assert parentArgsBegin > 0
+            parentArgsBegin -= 1
+            if parentName[parentArgsBegin] == "(": parenLevel -= 1
+            if parentName[parentArgsBegin] == ")": parenLevel += 1
+        
+        parentArgs = [i.strip() for i in parentName[parentArgsBegin+1:-1].split(",")]
+        assert selfIndex < len(parentArgs)
+        this.__typeName = parentArgs[selfIndex]
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.PARM_DECL
+
+    @property
+    def typeName(this):
+        return this.__typeName
+
+    @property
+    def displayName(this):
+        return this.__displayName
 
 
 class GlobalFuncInfo(Symbol):
@@ -296,7 +325,7 @@ class ConstructorInfo(Member):
         Member.__init__(this, module, cursor, owner)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
         
-        this.__parameters = []
+        this.__parameters: list[ParameterInfo] = []
         for i in cursor.get_children():
             if ParameterInfo.matches(i):
                 this.__parameters.append(ParameterInfo(module, i))
@@ -486,7 +515,21 @@ class TypeInfo(Symbol):
         
         # Finalize
         if not this.isAbstract:
-           out += f"\nbuilder.captureClassImage_v2<{this.absName}>();"
+            ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo)]
+            hasDefaultCtor = len(ctors)==0
+            # TODO: ignore private ctors
+            ctors.sort(key=lambda i: len(i.parameters))
+
+            ctorParamArgs = None
+            if len(ctors) > 0:
+                ctorParamArgs = [this.absName] + [i.typeName for i in ctors[0].parameters]
+            elif hasDefaultCtor:
+                ctorParamArgs = [this.absName]
+
+            if ctorParamArgs != None:
+                out += f"\nbuilder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
+            else:
+                out += f"\n#error {this.absName} has no accessible constructor, and cannot have its image snapshotted"
         else:
             out += f"\n//{this.absName} is abstract. Skipping class image capture."
         out += "\nbuilder.registerType(registry);"
