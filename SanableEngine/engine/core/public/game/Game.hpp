@@ -1,7 +1,5 @@
 #pragma once
 
-#include "EngineCoreReflectionHooks.hpp"
-
 #include <vector>
 #include "../dllapi.h"
 #include "CallBatcher.inl"
@@ -16,8 +14,6 @@ class InputSystem;
 
 class Game
 {
-    SANABLE_REFLECTION_HOOKS
-
     Application* application;
     InputSystem* inputSystem;
 

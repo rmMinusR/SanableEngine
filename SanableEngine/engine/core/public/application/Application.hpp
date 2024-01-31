@@ -7,7 +7,6 @@
 
 #include "../dllapi.h"
 
-#include <EngineCoreReflectionHooks.hpp>
 #include "application/PluginManager.hpp"
 #include "application/WindowBuilder.hpp"
 
@@ -16,8 +15,6 @@ class Game;
 
 class Application
 {
-    SANABLE_REFLECTION_HOOKS
-
 private:
     Game* game;
 

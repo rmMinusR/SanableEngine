@@ -2,11 +2,6 @@
 
 #include <cassert>
 
-ShaderProgram::ShaderProgram() :
-	handle(0)
-{
-}
-
 ShaderProgram::ShaderProgram(const std::filesystem::path& basePath) :
 	basePath(basePath),
 	handle(0)

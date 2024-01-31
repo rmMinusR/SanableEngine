@@ -2,10 +2,6 @@
 
 #include "ShaderProgram.hpp"
 
-Material::Material()
-{
-}
-
 Material::Material(ShaderProgram* shader) :
 	shader(shader)
 {

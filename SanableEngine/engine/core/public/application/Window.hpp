@@ -4,7 +4,6 @@
 #include <memory>
 #include <SDL_video.h>
 #include <SDL_events.h>
-#include <EngineCoreReflectionHooks.hpp>
 #include "../dllapi.h"
 #include "Renderer.hpp"
 #include "WindowRenderPipeline.hpp"
@@ -15,9 +14,6 @@ struct GLSettings;
 
 class Window
 {
-	SANABLE_REFLECTION_HOOKS
-	Window();
-
 private:
 	SDL_Window* handle;
 	SDL_GLContext context;

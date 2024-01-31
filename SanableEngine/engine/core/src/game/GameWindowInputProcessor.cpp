@@ -4,10 +4,6 @@
 #include "game/Game.hpp"
 #include "game/InputSystem.hpp"
 
-GameWindowInputProcessor::GameWindowInputProcessor()
-{
-}
-
 GameWindowInputProcessor::GameWindowInputProcessor(Game* game) :
 	game(game)
 {

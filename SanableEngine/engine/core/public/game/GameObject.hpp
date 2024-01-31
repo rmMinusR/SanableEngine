@@ -4,7 +4,6 @@
 
 #include <vector>
 #include <cassert>
-#include <EngineCoreReflectionHooks.hpp>
 
 #include "MemoryManager.hpp"
 #include "application/Application.hpp"
@@ -17,8 +16,6 @@ struct HotswapTypeData;
 
 class GameObject
 {
-    SANABLE_REFLECTION_HOOKS
-
 protected:
     Transform transform;
 

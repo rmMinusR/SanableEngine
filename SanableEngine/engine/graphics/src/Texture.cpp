@@ -7,10 +7,6 @@
 
 #include "stb_image.h"
 
-Texture::Texture()
-{
-}
-
 Texture::Texture(const std::filesystem::path& path, SDL_GLContext ctx) :
 	id(0),
 	width(0),

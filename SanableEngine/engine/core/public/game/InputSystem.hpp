@@ -1,7 +1,5 @@
 #pragma once
 
-#include "EngineCoreReflectionHooks.hpp"
-
 #include <SDL_scancode.h>
 #include "../dllapi.h"
 #include "Vector3.inl"
@@ -11,8 +9,6 @@ class Game;
 
 class InputSystem
 {
-	SANABLE_REFLECTION_HOOKS
-
 	friend class GameWindowInputProcessor;
 	void onGainFocus();
 	void onLoseFocus();

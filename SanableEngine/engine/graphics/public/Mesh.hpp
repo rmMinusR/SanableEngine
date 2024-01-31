@@ -4,14 +4,11 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 #include <GL/glew.h>
-#include <EngineCoreReflectionHooks.hpp>
 
 #include "dllapi.h"
 
 class Mesh
 {
-	SANABLE_REFLECTION_HOOKS
-
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;

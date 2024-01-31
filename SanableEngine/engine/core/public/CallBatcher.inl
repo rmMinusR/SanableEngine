@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "dllapi.h"
-#include "rttiutils.h"
 
 template<typename TObj>
 class CallBatcher
@@ -11,8 +10,8 @@ class CallBatcher
 private:
 	std::vector<TObj*> objects;
 
-	typedef vtable_ptr sortID_t;
-	static inline sortID_t getSortID(TObj* obj) { return get_vtable_ptr(obj); }
+	typedef void** sortID_t; //vptr, if present. TODO: switch to new RTTI system
+	static inline sortID_t getSortID(TObj* obj) { return *reinterpret_cast<sortID_t*>(obj); }
 
 public:
 	CallBatcher()

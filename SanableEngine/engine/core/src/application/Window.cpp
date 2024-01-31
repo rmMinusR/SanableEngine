@@ -7,14 +7,6 @@
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 
-Window::Window() :
-    handle(nullptr),
-    context(nullptr),
-    engine(nullptr)
-{
-    //Reflection hooks compat
-}
-
 Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor) :
     engine(engine),
     renderPipeline(std::move(renderPipeline)),

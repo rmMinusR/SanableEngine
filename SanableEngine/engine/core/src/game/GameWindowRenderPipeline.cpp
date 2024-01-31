@@ -8,10 +8,6 @@
 #include "Material.hpp"
 #include "ShaderProgram.hpp"
 
-GameWindowRenderPipeline::GameWindowRenderPipeline()
-{
-}
-
 GameWindowRenderPipeline::GameWindowRenderPipeline(Game* game) :
 	game(game)
 {

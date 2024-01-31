@@ -3,7 +3,6 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <EngineCoreReflectionHooks.hpp>
 #include "../dllapi.h"
 #include "Vector3.inl"
 #include "WindowRenderPipeline.hpp"
@@ -15,8 +14,6 @@ class Window;
 
 class WindowBuilder
 {
-	SANABLE_REFLECTION_HOOKS
-
 	GLSettings glSettings; //Provided by engine. DO NOT MESS WITH outside of platform main.
 
 	//Required

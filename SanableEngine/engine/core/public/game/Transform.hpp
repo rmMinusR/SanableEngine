@@ -5,15 +5,12 @@
 #include "../dllapi.h"
 
 #include <glm/gtc/quaternion.hpp>
-#include <EngineCoreReflectionHooks.hpp>
 #include "Vector3.inl"
 
 class ModuleTypeRegistry;
 
 class Transform
 {
-	SANABLE_REFLECTION_HOOKS
-
 private:
 	Transform* parent;
 	std::vector<Transform*> children;

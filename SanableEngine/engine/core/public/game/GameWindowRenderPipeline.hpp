@@ -1,16 +1,11 @@
 #pragma once
 
-#include <EngineCoreReflectionHooks.hpp>
-
 #include "application/WindowRenderPipeline.hpp"
 
 class Game;
 
 class GameWindowRenderPipeline : public WindowRenderPipeline
 {
-	SANABLE_REFLECTION_HOOKS
-	GameWindowRenderPipeline();
-
 	Game* game;
 
 public:

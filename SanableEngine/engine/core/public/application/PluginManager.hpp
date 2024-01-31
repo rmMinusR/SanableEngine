@@ -3,7 +3,6 @@
 #include "../dllapi.h"
 
 #include <vector>
-#include <EngineCoreReflectionHooks.hpp>
 
 #include "Plugin.hpp"
 
@@ -12,8 +11,6 @@ class Application;
 
 class PluginManager
 {
-	SANABLE_REFLECTION_HOOKS
-
 private:
 	Application* const engine;
 	std::vector<Plugin*> plugins;

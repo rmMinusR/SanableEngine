@@ -1,14 +1,10 @@
 #pragma once
 
-#include <EngineCoreReflectionHooks.hpp>
 #include "ShaderStage.hpp"
 #include "ShaderUniform.hpp"
 
 class ShaderProgram
 {
-	SANABLE_REFLECTION_HOOKS
-	ShaderProgram();
-
 	std::filesystem::path basePath;
 
 	GLuint handle;

@@ -3,7 +3,6 @@
 #include <variant>
 
 #include <GL/glew.h>
-#include <EngineCoreReflectionHooks.hpp>
 
 #include "Rect.hpp"
 #include "Renderer.hpp"
@@ -13,8 +12,6 @@
 
 class Camera : public Component
 {
-	SANABLE_REFLECTION_HOOKS
-
 public:
 	enum Mode
 	{
