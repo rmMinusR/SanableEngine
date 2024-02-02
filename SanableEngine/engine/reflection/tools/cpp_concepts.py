@@ -20,7 +20,16 @@ def _getAbsName(target: Cursor) -> str:
         return ""
     else:
         # Loop case
-        return _getAbsName(target.semantic_parent) + "::" + target.displayname
+
+        # Strip leading C-style record type specifier
+        ownName = target.displayname
+        def stripexact(val: str, leading: str): return val[len(leading):] if val.startswith(leading) else val
+        ownName = stripexact(ownName, "enum ")
+        ownName = stripexact(ownName, "class ") # Since this is after "enum" it will also catch "enum class"
+        ownName = stripexact(ownName, "struct ")
+
+        # Concat and loop
+        return _getAbsName(target.semantic_parent) + "::" + ownName
 
 def _isTemplate(kind: CursorKind):
     return kind in [
@@ -155,6 +164,7 @@ class Member(Symbol):
         super().__init__(module, cursor)
         this.owner = owner
         assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
+        this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
     
     @property
     def pubCastKey(this):
@@ -214,6 +224,16 @@ class Virtualizable(Member):
         if p != None:
             return p.isVirtual
         return False
+
+
+class Callable:
+    def __init__(this, module: "Module", cursor: Cursor):
+        this.parameters: list[ParameterInfo] = []
+        for i in cursor.get_children():
+            if ParameterInfo.matches(i):
+                this.parameters.append(ParameterInfo(module, i))
+
+        this.isDeleted = cursor.is_deleted_method()
 
 
 class ParameterInfo(Symbol):
@@ -294,15 +314,11 @@ class GlobalVarInfo(Symbol):
         return f"//GlobalVarInfo: {this.absName}" # TODO capture address
 
 
-class BoundFuncInfo(Virtualizable):
+class BoundFuncInfo(Virtualizable, Callable):
     def __init__(this, module: "Module", cursor: Cursor, owner):
         Virtualizable.__init__(this, module, cursor, owner)
+        Callable.__init__(this, module, cursor)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
-        
-        this.__parameters = []
-        for i in cursor.get_children():
-            if ParameterInfo.matches(i):
-                this.__parameters.append(ParameterInfo(module, i))
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -311,18 +327,15 @@ class BoundFuncInfo(Virtualizable):
             CursorKind.FUNCTION_DECL,
             CursorKind.FUNCTION_TEMPLATE
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
-
-    @property
-    def parameters(this):
-        return this.__parameters
-
+    
     def renderMain(this):
         return f"//BoundFuncInfo: {this.absName}" # TODO capture address
 
 
-class ConstructorInfo(Member):
+class ConstructorInfo(Member, Callable):
     def __init__(this, module: "Module", cursor: Cursor, owner):
         Member.__init__(this, module, cursor, owner)
+        Callable.__init__(this, module, cursor)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
         
         this.__parameters: list[ParameterInfo] = []
@@ -333,10 +346,6 @@ class ConstructorInfo(Member):
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.CONSTRUCTOR
-
-    @property
-    def parameters(this):
-        return this.__parameters
     
     def renderMain(this):
         return None
@@ -395,8 +404,6 @@ class ParentInfo(Member):
         Member.__init__(this, module, cursor, owner)
         this.dynOwner = owner
         assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a parent"
-        
-        this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
 
         this.isVirtual = any([i.spelling == "virtual" for i in cursor.get_tokens()])
         if this.isVirtual:
@@ -414,6 +421,16 @@ class ParentInfo(Member):
     
     def renderMain(this):
         return f"builder.addParent<{this.dynOwner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
+
+
+class FriendInfo(Member):
+    def __init__(this, module: "Module", cursor: Cursor, owner):
+        Member.__init__(this, module, cursor, owner)
+        this.targetName = _getAbsName([i for i in cursor.get_children()][0]) # Select friend name
+
+    @staticmethod
+    def matches(cursor: Cursor):
+        return cursor.kind == CursorKind.FRIEND_DECL
 
 
 class TypeInfo(Symbol):
@@ -515,9 +532,10 @@ class TypeInfo(Symbol):
         
         # Finalize
         if not this.isAbstract:
-            ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo)]
+            ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted]
             hasDefaultCtor = len(ctors)==0
-            # TODO: ignore private ctors
+            isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "thunk_utils" in i.targetName) for i in this.__contents ])
+            if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
             ctors.sort(key=lambda i: len(i.parameters))
 
             ctorParamArgs = None
@@ -677,7 +695,6 @@ ignoredSymbols = [
     CursorKind.STATIC_ASSERT,
     CursorKind.ALIGNED_ATTR,
     CursorKind.NAMESPACE_REF, # No point in implementing namespace aliasing
-    CursorKind.FRIEND_DECL, # Note: Might want to implement friend checking before doing codegen, but not now
 
     # ??? I have no idea what these are
     CursorKind.CXX_BOOL_LITERAL_EXPR,
@@ -713,5 +730,5 @@ ignoredSymbols = [
     CursorKind.FUNCTION_TEMPLATE,
     CursorKind.PACK_EXPANSION_EXPR
 ]
-allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo]
+allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo, FriendInfo]
 allowedGlobalSymbols = [TypeInfo] # GlobalVarInfo, GlobalFuncInfo

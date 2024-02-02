@@ -9,6 +9,7 @@
 #include "WindowRenderPipeline.hpp"
 
 class WindowBuilder;
+class ModuleTypeRegistry;
 class WindowInputProcessor;
 struct GLSettings;
 
@@ -28,6 +29,7 @@ private:
 
 	Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor);
 	friend class WindowBuilder;
+	friend class thunk_utils<Window>;
 public:
 	ENGINEGRAPHICS_API ~Window();
 
