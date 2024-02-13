@@ -4,9 +4,9 @@
 #include <algorithm>
 
 Transform::Transform() :
-	isDirtySelf(false),
 	parent(nullptr),
 	local(),
+	isDirtySelf(false),
 	global()
 {
 }

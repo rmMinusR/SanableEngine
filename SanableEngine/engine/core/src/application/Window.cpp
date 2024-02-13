@@ -8,9 +8,9 @@
 #include "GLSettings.hpp"
 
 Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor) :
-    engine(engine),
     renderPipeline(std::move(renderPipeline)),
-    inputProcessor(std::move(inputProcessor))
+    inputProcessor(std::move(inputProcessor)),
+    engine(engine)
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 

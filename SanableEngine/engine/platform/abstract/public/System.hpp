@@ -18,12 +18,12 @@ namespace gpr460
 		static constexpr float defaultTargetFps = 60;
 
 	public: //FIXME make protected again
-		friend class Application;
+		friend class ::Application;
 		virtual void Init(Application*);
 		virtual void DoMainLoop() = 0;
 		virtual void Shutdown() = 0;
 		
-		friend class PluginManager;
+		friend class ::PluginManager;
 		virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const = 0;
 
 	public:

@@ -36,6 +36,8 @@ class IUpdatable
 protected:
 	virtual void Update() = 0;
 	friend class Game;
+public:
+	ENGINECORE_API virtual ~IUpdatable();
 };
 
 class Material;
@@ -47,4 +49,6 @@ class I3DRenderable
 protected:
 	virtual void renderImmediate(Renderer*) const = 0;
 	friend class GameWindowRenderPipeline;
+public:
+	ENGINECORE_API virtual ~I3DRenderable();
 };

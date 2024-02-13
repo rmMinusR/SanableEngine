@@ -9,8 +9,8 @@ class ShaderProgram
 
 	GLuint handle;
 
-	static constexpr char* vertName = "vert.glsl";
-	static constexpr char* fragName = "frag.glsl";
+	ENGINEGRAPHICS_API static const char* vertName;
+	ENGINEGRAPHICS_API static const char* fragName;
 
 	std::vector<ShaderUniform> uniforms;
 

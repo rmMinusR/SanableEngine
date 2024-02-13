@@ -79,6 +79,6 @@ public:
 	void captureClassImage_v2()
 	{
 		assert(TypeName::create<TObj>() == type.name);
-		captureClassImage_v2_internal(thunk_utils<TObj>::analyzeConstructor<TCtorArgs...>());
+		captureClassImage_v2_internal(thunk_utils<TObj>::template analyzeConstructor<TCtorArgs...>());
 	}
 };

@@ -13,7 +13,7 @@ class MeshRenderer : public Component, public I3DRenderable
 	Material* material;
 public:
 	ENGINEGRAPHICS_API MeshRenderer(Mesh* mesh, Material* material);
-	ENGINEGRAPHICS_API ~MeshRenderer() = default;
+	ENGINEGRAPHICS_API virtual ~MeshRenderer();
 
 	ENGINEGRAPHICS_API Material* getMaterial() const override;
 protected:

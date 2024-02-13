@@ -117,4 +117,6 @@ Camera& Camera::operator=(Camera&& mov)
 
 	size = mov.size;
 	mode = mov.mode;
+
+	return *this;
 }

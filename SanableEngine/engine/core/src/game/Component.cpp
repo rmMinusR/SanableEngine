@@ -24,3 +24,11 @@ Component::~Component()
 void Component::onStart()
 {
 }
+
+IUpdatable::~IUpdatable()
+{
+}
+
+I3DRenderable::~I3DRenderable()
+{
+}

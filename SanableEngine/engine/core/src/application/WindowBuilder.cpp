@@ -9,10 +9,10 @@ void WindowBuilder::setInputProcessor(std::unique_ptr<WindowInputProcessor>&& in
 }
 
 WindowBuilder::WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline) :
+	glSettings(glSettings),
 	engine(engine),
 	name(name),
 	size(width, height, 0),
-	glSettings(glSettings),
 	renderPipeline(std::move(renderPipeline))
 {
 }

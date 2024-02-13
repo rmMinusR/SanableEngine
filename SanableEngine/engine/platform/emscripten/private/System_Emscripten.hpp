@@ -7,7 +7,7 @@ namespace gpr460
 	class System_Emscripten : public System
 	{
 	protected:
-		friend class Application;
+		friend class ::Application;
 		void Init(Application*) override;
 		void DoMainLoop() override;
 		void Shutdown() override;

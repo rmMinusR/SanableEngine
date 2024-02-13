@@ -28,3 +28,7 @@ void MeshRenderer::renderImmediate(Renderer* renderer) const
 	ShaderProgram::clear();
 	*/
 }
+
+MeshRenderer::~MeshRenderer()
+{
+}

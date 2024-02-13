@@ -48,4 +48,6 @@ Texture& Texture::operator=(Texture&& mov)
 	this->width = mov.width;
 	this->height = mov.height;
 	this->nChannels = mov.nChannels;
+
+	return *this;
 }

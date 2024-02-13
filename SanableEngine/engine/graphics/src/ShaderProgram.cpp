@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+const char* ShaderProgram::vertName = "vert.glsl";
+const char* ShaderProgram::fragName = "frag.glsl";
+
 ShaderProgram::ShaderProgram(const std::filesystem::path& basePath) :
 	basePath(basePath),
 	handle(0)
@@ -32,7 +35,9 @@ bool ShaderProgram::load()
 	//Load dependencies
 	ShaderStage vertShader(basePath/vertName, ShaderStage::Type::Vertex);
 	ShaderStage fragShader(basePath/fragName, ShaderStage::Type::Fragment);
-	if (!vertShader.load() | !fragShader.load()) return false;
+	bool stageLoadSuccess = vertShader.load();
+	stageLoadSuccess &= fragShader.load();
+	if (!stageLoadSuccess) return false;
 
 	//Load and link self
 	handle = glCreateProgram();

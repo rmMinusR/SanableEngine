@@ -9,8 +9,8 @@ class StackAllocator
 {
 private:
     size_t maxSize;
-    char* memory;
     size_t used;
+    char* memory;
 
 public:
     ENGINEMEM_API StackAllocator();
