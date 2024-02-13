@@ -4,6 +4,7 @@
 #include <memory>
 #include <SDL_video.h>
 #include <SDL_events.h>
+#include <ThunkUtils.hpp>
 #include "../dllapi.h"
 #include "Renderer.hpp"
 #include "WindowRenderPipeline.hpp"
@@ -29,7 +30,7 @@ private:
 
 	Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor);
 	friend class WindowBuilder;
-	friend class thunk_utils<Window>;
+	friend struct thunk_utils<Window>;
 public:
 	ENGINEGRAPHICS_API ~Window();
 

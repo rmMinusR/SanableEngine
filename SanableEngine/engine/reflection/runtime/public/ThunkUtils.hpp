@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include "dllapi.h"
 #include "DetectedConstants.hpp"
 
@@ -8,32 +10,31 @@ typedef void (*dtor_t)(void*); //CANNOT be a std::function or lambda because des
 
 ENGINE_RTTI_API ptrdiff_t _captureCastOffset(const DetectedConstants& image, void*(*castThunk)(void*)); //TODO implement
 ENGINE_RTTI_API DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill);
-//Helper for SemanticVM ThisPtr detection
-template<int> void* dummyAllocator() { return nullptr; }
 
 
 template<typename T>
 struct thunk_utils
 {
 	thunk_utils() = delete;
+	
+private:
+	//Helper for SemanticVM ThisPtr detection. Dllimport'ed functions such as malloc may have
+	//separate callsite addresses per translation unit (even if deferring to a shared libc)
+	template<int> static void* dummyAllocator() { return nullptr; }
 
 	template<typename... Args>
-	struct ctor
+	static void thunk_newInPlace(Args... args) { new(dummyAllocator<0>()) T(std::forward<Args>(args)...); }
+public:
+	template<typename... Args>
+	static inline DetectedConstants analyzeConstructor()
 	{
-	private:
-		static void thunk_newInPlace(Args... args) { new(dummyAllocator<0>()) T(args...); }
-
-	public:
-		static inline DetectedConstants captureVtables()
-		{
-			return _captureVtablesInternal(
-				sizeof(T),
-				(void(*)()) &thunk_newInPlace,
-				{ (void(*)()) &dummyAllocator<0> },
-				{ (void(*)()) &memset } //Some compilers will pre-zero, especially in debug mode. Don't catch that. NOTE: &memset will be unique per-module.
-			);
-		}
-	};
+		return _captureVtablesInternal(
+			sizeof(T),
+			(void(*)()) &thunk_newInPlace<Args...>,
+			{ (void(*)()) &dummyAllocator<0> },
+			{ (void(*)()) &memset } //Some compilers will pre-zero, especially in debug mode. Don't catch that. &memset will be unique per-module, so we need to pass this per calling TU.
+		);
+	}
 		
 	#pragma region Destructor
 

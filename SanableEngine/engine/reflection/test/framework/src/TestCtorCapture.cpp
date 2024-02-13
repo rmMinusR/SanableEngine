@@ -55,8 +55,8 @@ void testCtorCaptureV2()
 	{
 		//printf("============== BEGIN %s v2/v2 parity check ==============\n\n", typeid(T).name());
 
-		DetectedConstants vtables1 = thunk_utils<T>::template ctor<>::captureVtables();
-		DetectedConstants vtables2 = thunk_utils<T>::template ctor<>::captureVtables();
+		DetectedConstants vtables1 = thunk_utils<T>::template analyzeConstructor<>();
+		DetectedConstants vtables2 = thunk_utils<T>::template analyzeConstructor<>();
 
 		//Verify consistent
 		bool good = true;
@@ -84,7 +84,7 @@ void testCtorCaptureV2()
 
 			//New version
 			bool wasPreZeroed = true; //TODO detect pre-zeroing
-			DetectedConstants vtables = thunk_utils<T>::template ctor<>::captureVtables();
+			DetectedConstants vtables = thunk_utils<T>::template analyzeConstructor<>();
 
 			//Unmark explicit fields
 			ty->walkFields(
