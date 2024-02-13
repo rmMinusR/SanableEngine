@@ -48,6 +48,8 @@ bool isOperandIdentity(const cs_insn* insn, int id1, int id2)
 
 void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
 {
+	#pragma region Data flow
+
 	if (insn->id == x86_insn::X86_INS_LEA)
 	{
 		auto addr = state.getOperand(insn, 1);
@@ -57,9 +59,12 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 	else if (insn->id == x86_insn::X86_INS_MOV)
 	{
 		auto val = state.getOperand(insn, 1);
-
+		state.setOperand(insn, 0, val);
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
-
+	}
+	else if (insn->id == x86_insn::X86_INS_MOVABS)
+	{
+		auto val = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, val);
 	}
 	else if (insn->id == x86_insn::X86_INS_MOVSX || insn->id == x86_insn::X86_INS_MOVSXD)
@@ -75,6 +80,34 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 		state.setOperand(insn, 0, val);
 	}
+	else if (insn->id == x86_insn::X86_INS_PUSH)
+	{
+		state.stackPush(state.getOperand(insn, 0));
+	}
+	else if (insn->id == x86_insn::X86_INS_POP)
+	{
+		auto val = state.stackPop(insn->detail->x86.operands[0].size);
+		state.setOperand(insn, 0, val);
+		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+	}
+	else if (insn->id == x86_insn::X86_INS_XCHG)
+	{
+		auto val1 = state.getOperand(insn, 0);
+		auto val2 = state.getOperand(insn, 1);
+		state.setOperand(insn, 0, val2);
+		state.setOperand(insn, 1, val1);
+
+		if (debug)
+		{
+			printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val1.debugPrintValue(false);
+			printf(" | ")   + debugPrintOperand(state, insn, 1) + printf(":= ") + val1.debugPrintValue(false);
+		}
+	}
+
+	#pragma endregion
+
+	#pragma region Math
+
 	else if (insn->id == x86_insn::X86_INS_CMP)
 	{
 		std::optional<bool> cf, of, sf, zf, af, pf;
@@ -131,45 +164,6 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("zf=%s ", zf.has_value() ? (zf.value() ? "Y" : "N") : "U");
 			printf("af=%s ", af.has_value() ? (af.value() ? "Y" : "N") : "U");
 			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
-		}
-	}
-	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
-	{
-		SemanticKnownConst fp  = *state.getOperand(insn, 0).tryGetKnownConst();
-		state.pushStackFrame(fp);
-		pushCallStack((uint8_t*)fp.value); //Sanity check. Also no ROP nonsense
-	}
-	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
-	{
-		SemanticValue returnAddr = state.popStackFrame();
-
-		//If given an operand, pop that many bytes from the stack
-		if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
-
-		void* poppedReturnAddr = popCallStack();
-		if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
-	}
-	else if (insn->id == x86_insn::X86_INS_PUSH)
-	{
-		state.stackPush(state.getOperand(insn, 0));
-	}
-	else if (insn->id == x86_insn::X86_INS_POP)
-	{
-		auto val = state.stackPop(insn->detail->x86.operands[0].size);
-		state.setOperand(insn, 0, val);
-		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
-	}
-	else if (insn->id == x86_insn::X86_INS_XCHG)
-	{
-		auto val1 = state.getOperand(insn, 0);
-		auto val2 = state.getOperand(insn, 1);
-		state.setOperand(insn, 0, val2);
-		state.setOperand(insn, 1, val1);
-
-		if (debug)
-		{
-			printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val1.debugPrintValue(false);
-			printf(" | ")   + debugPrintOperand(state, insn, 1) + printf(":= ") + val1.debugPrintValue(false);
 		}
 	}
 	else if (insn->id == x86_insn::X86_INS_SUB)
@@ -232,6 +226,74 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		auto op = state.getOperand(insn, 0);
 		state.setOperand(insn, 0, op+SemanticKnownConst(1, op.getSize(), false) );
 	}
+	else if (insn->id == x86_insn::X86_INS_SHL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue result = SemanticUnknown(op1.getSize());
+		SemanticKnownConst* shift = op2.tryGetKnownConst();
+		if (shift)
+		{
+			if (SemanticKnownConst* cv = op1.tryGetKnownConst())
+			{
+				cv->value = cv->value << shift->value;
+				result = *cv;
+			}
+			else if (SemanticFlags* fv = op1.tryGetFlags())
+			{
+				fv->bits      = fv->bits      << shift->value;
+				fv->bitsKnown = fv->bitsKnown << shift->value;
+				for (int i = 0; i < shift->value; ++i) fv->set(i, false); //These bits are known
+				result = *fv;
+			}
+		}
+		state.setOperand(insn, 0, result);
+		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+	}
+	else if (insn->id == x86_insn::X86_INS_SHR)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue result = SemanticUnknown(op1.getSize());
+		SemanticKnownConst* shift = op2.tryGetKnownConst();
+		if (shift)
+		{
+			if (SemanticKnownConst* cv = op1.tryGetKnownConst())
+			{
+				cv->value = cv->value >> shift->value;
+				result = *cv;
+			}
+			else if (SemanticFlags* fv = op1.tryGetFlags())
+			{
+				fv->bits      = fv->bits      >> shift->value;
+				fv->bitsKnown = fv->bitsKnown >> shift->value;
+				result = *fv;
+			}
+		}
+		state.setOperand(insn, 0, result);
+		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+	}
+
+	#pragma endregion
+
+	#pragma region Flow control
+
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
+	{
+		SemanticKnownConst fp  = *state.getOperand(insn, 0).tryGetKnownConst();
+		state.pushStackFrame(fp);
+		pushCallStack((uint8_t*)fp.value); //Sanity check. Also no ROP nonsense
+	}
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
+	{
+		SemanticValue returnAddr = state.popStackFrame();
+
+		//If given an operand, pop that many bytes from the stack
+		if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
+
+		void* poppedReturnAddr = popCallStack();
+		if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
+	}
 	else if (insn->id == x86_insn::X86_INS_NOP)
 	{
 		//Do nothing
@@ -259,11 +321,25 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		{
 			if (conditionMet.value()) jump((void*)ifBranch->value);
 
-			if (debug) printf("   ; Determinate: %s", conditionMet.value() ? "Branching" : "Not branching");
+			if (debug) printf("   ; Determinate: %s", conditionMet.value() ? "Jumping" : "Not jumping");
 		}
 	}
+	else if (insn_in_group(*insn, cs_group_type::CS_GRP_JUMP))
+	{
+		SemanticValue addr = state.getOperand(insn, 0);
+		assert(!addr.isUnknown() && "Cannot jump to an unknown location");
+		jump((void*) addr.tryGetKnownConst()->value);
+	}
+	else if (insn->id == x86_insn::X86_INS_INT3 || insn->id == x86_insn::X86_INS_INT || insn->id == x86_insn::X86_INS_INTO || insn->id == x86_insn::X86_INS_INT1)
+	{
+		assert(false && "Caught an interrupt! Can't continue emulated execution.");
+	}
+
+	#pragma endregion
+
 	else
 	{
+		printf("WARNING: Unknown operation\n");
 		//Unhandled operation: Just invalidate all relevant register state
 		cs_regs  regsRead,  regsWritten;
 		uint8_t nRegsRead, nRegsWritten;
