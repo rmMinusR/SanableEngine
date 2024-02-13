@@ -31,7 +31,7 @@ public:
 		return _captureVtablesInternal(
 			sizeof(T),
 			(void(*)()) &thunk_newInPlace<Args...>,
-			{ (void(*)()) &dummyAllocator<0> },
+			{ (void(*)()) &dummyAllocator<0>, (void(*)()) &malloc },
 			{ (void(*)()) &memset } //Some compilers will pre-zero, especially in debug mode. Don't catch that. &memset will be unique per-module, so we need to pass this per calling TU.
 		);
 	}

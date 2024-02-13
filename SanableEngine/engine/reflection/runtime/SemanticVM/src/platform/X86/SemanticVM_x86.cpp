@@ -317,22 +317,21 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 			}
 		}
 		if (toExecIndex == -1) break; //All branches have terminated
-		branch_t* toExec = &branches[toExecIndex];
 
 		//Advance cursor and interpret next
-		uint64_t addr = (uint64_t)(uint_addr_t)(toExec->cursor);
+		uint64_t addr = (uint64_t)(uint_addr_t)(branches[toExecIndex].cursor);
 		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
-		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &toExec->cursor, &allowedToProcess, &addr, insn);
+		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &branches[toExecIndex].cursor, &allowedToProcess, &addr, insn);
 		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
 		
 		//Update emulated instruction pointer
-		SemanticValue rip = toExec->state.getRegister(X86_REG_RIP);
-		toExec->state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, rip.getSize(), true) ); //Ensure RIP is up to date
+		SemanticValue rip = branches[toExecIndex].state.getRegister(X86_REG_RIP);
+		branches[toExecIndex].state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, rip.getSize(), true) ); //Ensure RIP is up to date
 
 		//DEBUG
 		if (debug)
 		{
-			toExec->state.debugPrintWorkingSet();
+			branches[toExecIndex].state.debugPrintWorkingSet();
 			for (int i = 0; i < indentLevel; ++i) printf(" |  "); //Indent
 			printf("[Branch %2i] ", toExecIndex);
 			printInstructionCursor(insn);
@@ -341,11 +340,11 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		//Execute current call frame, one opcode at a time
 		void(*callTarget)() = nullptr;
 		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
-		step(toExec->state, insn,
+		step(branches[toExecIndex].state, insn,
 			[&](void* fn) { callTarget = (void(*)()) fn; }, //On CALL
 			[&]() { //On RET
-				toExec->keepExecuting = false;
-				if (debug) printf("   ; execution terminated", toExecIndex, toExec->cursor);
+				branches[toExecIndex].keepExecuting = false;
+				if (debug) printf("   ; execution terminated", toExecIndex, branches[toExecIndex].cursor);
 				return expectedReturnAddress;
 			},
 			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
@@ -353,13 +352,13 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		);
 		
 		//Handle jumping/branching
-		if (jmpTargets.size() == 1) toExec->cursor = (uint8_t*)jmpTargets[0]; //Determinate case: jump
+		if (jmpTargets.size() == 1) branches[toExecIndex].cursor = (uint8_t*)jmpTargets[0]; //Determinate case: jump
 		else if (jmpTargets.size() > 1) //Indeterminate case: branch
 		{
-			for (void* i : jmpTargets) assert(i >= toExec->cursor && "Indeterminate looping not supported");
+			for (void* i : jmpTargets) assert(i >= branches[toExecIndex].cursor && "Indeterminate looping not supported");
 
-			if (debug) printf("   ; Spawned branches ", toExecIndex, toExec->cursor);
-			toExec->cursor = (uint8_t*)jmpTargets[0];
+			if (debug) printf("   ; Spawned branches ", toExecIndex, branches[toExecIndex].cursor);
+			branches[toExecIndex].cursor = (uint8_t*)jmpTargets[0];
 			for (int i = 1; i < jmpTargets.size(); ++i)
 			{
 				if (debug) printf("#%i@%x ", i, jmpTargets[i]);
@@ -369,7 +368,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 
 		//DEBUG
 		if (debug) printf("\n");
-		assert(toExec->state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
+		assert(branches[toExecIndex].state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
 
 		//If we're supposed to call another function, do so
 		if (callTarget)
@@ -382,19 +381,19 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 				//std::vector<x86_reg> covariants = ???;
 				//assert(covariants.size() == 1);
 				//toExec->state.setRegister(covariants[0], SemanticThisPtr(0)); //TODO dynamic heap-object counting
-				toExec->state.setRegister(x86_reg::X86_REG_EAX, SemanticThisPtr(0)); //TODO dynamic heap-object counting
-				toExec->state.popStackFrame(); //Undo pushing stack frame
+				branches[toExecIndex].state.setRegister(x86_reg::X86_REG_EAX, SemanticThisPtr(0)); //TODO dynamic heap-object counting
+				branches[toExecIndex].state.popStackFrame(); //Undo pushing stack frame
 				if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
 			}
 			else if (std::find(sandboxed.begin(), sandboxed.end(), callTarget) != sandboxed.end())
 			{
 				//TODO implement
-				toExec->state.popStackFrame(); //TEMP: Undo pushing stack frame
+				branches[toExecIndex].state.popStackFrame(); //TEMP: Undo pushing stack frame
 				if (debug) printf("Function is sandboxed, and will not be simulated.\n");
 			}
 			else
 			{
-				execFunc_internal(toExec->state, callTarget, (void(*)())toExec->cursor, indentLevel+1, allocators, sandboxed);
+				execFunc_internal(branches[toExecIndex].state, callTarget, (void(*)())branches[toExecIndex].cursor, indentLevel+1, allocators, sandboxed);
 			}
 		}
 	}
