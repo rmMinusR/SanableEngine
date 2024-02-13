@@ -1,7 +1,5 @@
 #pragma once
 
-#include "StandardReflectionHooks.hpp"
-
 #include "game/Component.hpp"
 
 class PlayerController :
@@ -9,8 +7,6 @@ class PlayerController :
 	public IUpdatable
 {
 private:
-	SANABLE_REFLECTION_HOOKS
-
 	float moveSpeed;
 
 public:

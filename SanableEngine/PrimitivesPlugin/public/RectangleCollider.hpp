@@ -2,15 +2,12 @@
 
 #include "dllapi.h"
 
-#include "StandardReflectionHooks.hpp"
 #include <vector>
 
 #include "game/Component.hpp"
 
 class RectangleCollider : public Component
 {
-	SANABLE_REFLECTION_HOOKS
-
 private:
 	float w, h;
 

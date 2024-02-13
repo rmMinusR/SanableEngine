@@ -1,7 +1,5 @@
 #pragma once
 
-#include "StandardReflectionHooks.hpp"
-
 #include "dllapi.h"
 
 #include <SDL_pixels.h>
@@ -12,8 +10,6 @@ class RectangleRenderer :
 	public Component,
 	public I3DRenderable
 {
-	SANABLE_REFLECTION_HOOKS
-
 	PRIMITIVES_API RectangleRenderer() = default;
 private:
 	float w, h;
