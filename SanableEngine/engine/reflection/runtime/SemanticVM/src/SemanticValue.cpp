@@ -52,12 +52,30 @@ SemanticKnownConst SemanticKnownConst::signExtend(size_t targetSizeBytes) const
 	assert(!isPositionIndependentAddr);
 
 	int64_t val = 0;
-	     if (size == 1) val = (int8_t )(int64_t)value;
-	else if (size == 2) val = (int16_t)(int64_t)value;
-	else if (size == 4) val = (int32_t)(int64_t)value;
-	else if (size == 8) val = (int64_t)(int64_t)value;
+	     if (size == 1) val = int8_t ((int64_t)value);
+	else if (size == 2) val = int16_t((int64_t)value);
+	else if (size == 4) val = int32_t((int64_t)value);
+	else if (size == 8) val = int64_t((int64_t)value);
 	else assert(false);
 	return SemanticKnownConst(val, targetSizeBytes, false);
+}
+
+bool SemanticKnownConst::isSigned() const
+{
+	     if (size == 1) return int8_t ((int64_t)value) < 0;
+	else if (size == 2) return int16_t((int64_t)value) < 0;
+	else if (size == 4) return int32_t((int64_t)value) < 0;
+	else if (size == 8) return int64_t((int64_t)value) < 0;
+	else { assert(false); return false; }
+}
+
+void SemanticKnownConst::setSign(bool sign)
+{
+	     if (size == 1) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
+	else if (size == 2) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
+	else if (size == 4) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
+	else if (size == 8) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
+	else assert(false);
 }
 
 SemanticThisPtr::SemanticThisPtr(size_t offset) :

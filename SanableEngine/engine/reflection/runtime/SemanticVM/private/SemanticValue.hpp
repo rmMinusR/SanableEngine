@@ -29,6 +29,8 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 	uint64_t bound() const;
 	uint64_t mask() const; //Also equivalent to unsigned max or signed -1
 	SemanticKnownConst signExtend(size_t targetSizeBytes) const;
+	bool isSigned() const;
+	void setSign(bool sign);
 };
 struct SemanticThisPtr /// Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
 {

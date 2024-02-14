@@ -273,6 +273,46 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
 	}
+	else if (insn->id == x86_insn::X86_INS_SAL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue result = SemanticUnknown(op1.getSize());
+		SemanticKnownConst* shift = op2.tryGetKnownConst();
+		if (shift)
+		{
+			if (SemanticKnownConst* cv = op1.tryGetKnownConst())
+			{
+				bool sign = cv->isSigned();
+				cv->setSign(false);
+				cv->value = cv->value << shift->value;
+				cv->setSign(sign);
+				result = *cv;
+			}
+		}
+		state.setOperand(insn, 0, result);
+		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+	}
+	else if (insn->id == x86_insn::X86_INS_SAR)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue result = SemanticUnknown(op1.getSize());
+		SemanticKnownConst* shift = op2.tryGetKnownConst();
+		if (shift)
+		{
+			if (SemanticKnownConst* cv = op1.tryGetKnownConst())
+			{
+				bool sign = cv->isSigned();
+				cv->setSign(false);
+				cv->value = cv->value >> shift->value;
+				cv->setSign(sign);
+				result = *cv;
+			}
+		}
+		state.setOperand(insn, 0, result);
+		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+	}
 
 	#pragma endregion
 
