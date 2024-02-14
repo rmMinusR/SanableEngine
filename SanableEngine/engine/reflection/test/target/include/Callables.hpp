@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ReflectionSpec.hpp>
+
 namespace Callables
 {
 
@@ -15,7 +17,7 @@ namespace Callables
 	void __stdcall myFunc3_stdcall(int a);
 	void __stdcall myFunc4_stdcall(int a, char b);
 
-	struct CallableStruct
+	struct STIX_DISABLE_IMAGE_CAPTURE CallableStruct
 	{
 		long __thiscall myFunc1_thiscall();
 		void __thiscall myFunc2_thiscall();

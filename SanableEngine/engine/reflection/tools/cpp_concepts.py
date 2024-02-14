@@ -119,6 +119,9 @@ def cvpUnwrapTypeName(name: str) -> str:
     # Nothing to strip
     return name
 
+class Annotations:
+    DISABLE_IMAGE_CAPTURE = "stix::no_image_capture"
+
 
 
 class Symbol:
@@ -131,6 +134,13 @@ class Symbol:
         this.absName = _getAbsName(cursor)
         this.isDefinition = cursor.is_definition()
         this.sourceFile = SourceFile(cursor.location.file.name)
+
+        # Detect clang::annotate
+        this.annotations: list[str] = []
+        for i in cursor.get_children():
+            if i.kind == CursorKind.ANNOTATE_ATTR:
+                text: str = i.displayname
+                if text.startswith("stix::"): this.annotations.append(text)
     
     def __repr__(this):
         return this.absName
@@ -531,7 +541,11 @@ class TypeInfo(Symbol):
         out += "\n".join([i for i in renderedContents if i != None])
         
         # Finalize
-        if not this.isAbstract:
+        if this.isAbstract:
+            out += f"\n//{this.absName} is abstract. Skipping class image capture."
+        elif Annotations.DISABLE_IMAGE_CAPTURE not in this.annotations:
+            out += f"\n//{this.absName} has opted out of class image capture."
+        else:
             ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted]
             hasDefaultCtor = len(ctors)==0
             isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "thunk_utils" in i.targetName) for i in this.__contents ])
@@ -548,8 +562,6 @@ class TypeInfo(Symbol):
                 out += f"\nbuilder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
             else:
                 out += f"\n#error {this.absName} has no accessible constructor, and cannot have its image snapshotted"
-        else:
-            out += f"\n//{this.absName} is abstract. Skipping class image capture."
         out += "\nbuilder.registerType(registry);"
         return f"//{this.absName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 

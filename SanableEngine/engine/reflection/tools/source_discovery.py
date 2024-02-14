@@ -76,7 +76,7 @@ class SourceFile:
 		assert this.type != None
 
 		if this.tu == None:
-			cli_args = ["-std=c++17", "--language="+this.type]
+			cli_args = ["-std=c++17", "--language="+this.type, "-D__STIX_REFELCTION_GENERATING"]
 			cli_args.extend(['-I'+i for i in this.additionalIncludes]) # FIXME not space safe!
 			cli_args.extend(additionalCompilerOptions)
 			try:

@@ -5,6 +5,7 @@
 #include <SDL_video.h>
 #include <SDL_events.h>
 #include <ThunkUtils.hpp>
+#include <ReflectionSpec.hpp>
 #include "../dllapi.h"
 #include "Renderer.hpp"
 #include "WindowRenderPipeline.hpp"
@@ -14,7 +15,7 @@ class ModuleTypeRegistry;
 class WindowInputProcessor;
 struct GLSettings;
 
-class Window
+class STIX_DISABLE_IMAGE_CAPTURE Window
 {
 private:
 	SDL_Window* handle;
