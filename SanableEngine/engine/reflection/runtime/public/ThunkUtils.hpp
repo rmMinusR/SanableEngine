@@ -35,6 +35,7 @@ public:
 				(void(*)()) &dummyAllocator<0>,
 				(void(*)()) &malloc,
 				(void(*)()) (void*(*)(size_t)) &::operator new
+				//TODO: Capture from inherited TUs?
 			},
 			{ (void(*)()) &memset } //Some compilers will pre-zero, especially in debug mode. Don't catch that. &memset will be unique per-module, so we need to pass this per calling TU.
 		);

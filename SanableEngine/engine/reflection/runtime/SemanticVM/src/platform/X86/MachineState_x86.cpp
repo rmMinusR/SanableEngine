@@ -213,6 +213,8 @@ std::optional<bool> MachineState::isConditionMet(unsigned int insnId) const
 	SemanticFlags flags = *getRegister(x86_reg::X86_REG_EFLAGS).tryGetFlags();
 	switch (insnId)
 	{
+		case x86_insn::X86_INS_JMP: return true;
+
 		case x86_insn::X86_INS_JO : return flags.check((int)MachineState::FlagIDs::Overflow, true );
 		case x86_insn::X86_INS_JNO: return flags.check((int)MachineState::FlagIDs::Overflow, false);
 		case x86_insn::X86_INS_JB : return flags.check((int)MachineState::FlagIDs::Carry   , true );

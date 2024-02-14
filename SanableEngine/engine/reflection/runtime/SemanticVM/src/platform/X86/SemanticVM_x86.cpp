@@ -166,6 +166,47 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
 		}
 	}
+	else if (insn->id == x86_insn::X86_INS_TEST)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticKnownConst* c1 = op1.tryGetKnownConst();
+		SemanticKnownConst* c2 = op2.tryGetKnownConst();
+		
+		std::optional<bool> sf, zf, pf;
+		if (c1 && c2)
+		{
+			sf = c1->isSigned() && c2->isSigned();
+			zf = (c1->bound()&c2->bound())==0;
+			pf = 0b1 & ~(c1->bound()^c2->bound());
+		}
+		else if (op1.isUnknown() || op2.isUnknown())
+		{
+			sf = zf = pf = std::nullopt;
+		}
+		else assert(false && "Cannot compare: Unhandled case");
+		
+		//Write back flags
+		SemanticFlags flags = *state.getRegister(X86_REG_EFLAGS).tryGetFlags();
+		flags.set((int)MachineState::FlagIDs::Sign    , sf);
+		flags.set((int)MachineState::FlagIDs::Zero    , zf);
+		flags.set((int)MachineState::FlagIDs::Parity  , pf);
+		flags.set((int)MachineState::FlagIDs::Carry   , false);
+		flags.set((int)MachineState::FlagIDs::Overflow, false);
+		flags.set((int)MachineState::FlagIDs::AuxCarry, std::nullopt);
+		state.setRegister(X86_REG_EFLAGS, flags);
+		
+		//Debug
+		if (debug)
+		{
+			printf("   ; ") + op1.debugPrintValue(false) + printf(" ?= ") + op2.debugPrintValue(false) + printf(": ");
+			
+			printf("sf=%s ", sf.has_value() ? (sf.value() ? "Y" : "N") : "U");
+			printf("zf=%s ", zf.has_value() ? (zf.value() ? "Y" : "N") : "U");
+			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
+		}
+	}
+
 	else if (insn->id == x86_insn::X86_INS_SUB)
 	{
 		SemanticValue op1 = state.getOperand(insn, 0);
@@ -307,6 +348,44 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 				cv->setSign(false);
 				cv->value = cv->value >> shift->value;
 				cv->setSign(sign);
+				result = *cv;
+			}
+		}
+		state.setOperand(insn, 0, result);
+		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+	}
+	else if (insn->id == x86_insn::X86_INS_ROL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue result = SemanticUnknown(op1.getSize());
+		SemanticKnownConst* shift = op2.tryGetKnownConst();
+		if (shift)
+		{
+			if (SemanticKnownConst* cv = op1.tryGetKnownConst())
+			{
+				int bits = op1.getSize()*8;
+				cv->value = (cv->value << (shift->value%bits))
+					      | (cv->value >> (bits - shift->value%bits));
+				result = *cv;
+			}
+		}
+		state.setOperand(insn, 0, result);
+		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+	}
+	else if (insn->id == x86_insn::X86_INS_ROR)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue result = SemanticUnknown(op1.getSize());
+		SemanticKnownConst* shift = op2.tryGetKnownConst();
+		if (shift)
+		{
+			if (SemanticKnownConst* cv = op1.tryGetKnownConst())
+			{
+				int bits = op1.getSize()*8;
+				cv->value = (cv->value >> (shift->value%bits))
+					      | (cv->value << (bits - shift->value%bits));
 				result = *cv;
 			}
 		}
