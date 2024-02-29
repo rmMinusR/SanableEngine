@@ -94,9 +94,9 @@ if args.cache != None:
     cached = cpp_concepts.Module.load(args.cache)
     if targetModule.configMatches(cached):
         targetModule = cached
-        config.logger.log(100, "Loaded cache")
+        config.logger.info("Loaded cache")
     else:
-        config.logger.log(100, "Cannot reuse cache")
+        config.logger.info("Cannot reuse cache")
 
 config.logger.log(100, "Parsing...")
 targetModule.parseTU(sourceFiles)
