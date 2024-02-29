@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include <ReflectionSpec.hpp>
 #include "MemoryManager.hpp"
 #include "StackAllocator.hpp"
 

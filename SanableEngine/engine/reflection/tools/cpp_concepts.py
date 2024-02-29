@@ -2,6 +2,7 @@
 from enum import Enum
 import itertools
 import os
+from types import NoneType
 from typing import Generator
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
@@ -120,8 +121,44 @@ def cvpUnwrapTypeName(name: str) -> str:
     return name
 
 class Annotations:
-    DISABLE_IMAGE_CAPTURE = "stix::no_image_capture"
+    DO_IMAGE_CAPTURE = "stix::do_image_capture"
+    IMAGE_CAPTURE_BACKEND = "stix::image_capture_backend"
+    PREFERRED_CTOR = "stix::image_capture_prefer_ctor"
 
+    @staticmethod
+    def evalAsBool(val: str):
+        if val.lower() in ["y", "yes", "true" , "enable" , "enabled" ]: return True
+        if val.lower() in ["n", "no" , "false", "disable", "disabled"]: return False
+        assert False
+
+    @staticmethod
+    def getOwn(cursor: Cursor) -> dict[str, str|None]:
+        """Detect annotations passed by clang::annotate, on given cursor only"""
+        annotations: dict[str, object] = dict()
+        for i in cursor.get_children():
+            if i.kind == CursorKind.ANNOTATE_ATTR:
+                text: str = i.displayname
+                if text.startswith("stix::"):
+                    splitIndex = text.find("=")
+                    key = text[:splitIndex].strip()
+                    val = text[splitIndex+1:].strip() if splitIndex != -1 else None
+                    annotations[key] = val
+        return annotations
+
+    @staticmethod
+    def getAll(cursor: Cursor) -> dict[str, str|None]:
+        """Detect annotations passed by clang::annotate, on given cursor and all parents"""
+
+        annotations: dict[str, object] = Annotations.getOwn(cursor)
+
+        # Attempt to recurse
+        parent = cursor.semantic_parent
+        if type(parent) != NoneType:
+            inherited = Annotations.getAll(parent) # TODO we could get better performance by caching this
+            for k in inherited.keys():
+                if k not in annotations.keys(): annotations[k] = inherited[k]
+
+        return annotations
 
 
 class Symbol:
@@ -135,12 +172,8 @@ class Symbol:
         this.isDefinition = cursor.is_definition()
         this.sourceFile = SourceFile(cursor.location.file.name)
 
-        # Detect clang::annotate
-        this.annotations: list[str] = []
-        for i in cursor.get_children():
-            if i.kind == CursorKind.ANNOTATE_ATTR:
-                text: str = i.displayname
-                if text.startswith("stix::"): this.annotations.append(text)
+        # Detect annotations passed by clang::annotate
+        this.annotations = Annotations.getAll(cursor)
     
     def __repr__(this):
         return this.absName
@@ -153,6 +186,15 @@ class Symbol:
 
     def getReferencedTypes(this) -> list[str]:
         return []
+
+    def hasAnnotation(this, name) -> bool:
+        return name in this.annotations.keys()
+
+    def getAnnotationOrDefault(this, name: str, default: str) -> str:
+        if name in this.annotations.keys() and this.annotations[name] != None:
+            return this.annotations[name]
+        else:
+            return default
 
 
 class Member(Symbol):
@@ -532,6 +574,41 @@ class TypeInfo(Symbol):
             out.extend(i.renderPreDecls())
         return out
 
+    def __renderImageCapture_cdo(this):
+        # Gather valid constructors
+        ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, defaultImageCaptureMode) )]
+        hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
+        isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "TypeBuilder" in i.targetName) for i in this.__contents ])
+        if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
+        ctors.sort(key=lambda i: len(i.parameters))
+        
+        # Emit code
+        if len(ctors) > 0 and len(ctors[0].parameters) == 0:
+            return f"builder.captureClassImage_v1<{this.absName}>();"
+        else:
+            return f"#error {this.absName} has no accessible CDO-compatible constructor, and cannot have its image snapshotted"
+
+    def __renderImageCapture_disassembly(this):
+        # Gather valid constructors
+        ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted]
+        hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
+        isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "thunk_utils" in i.targetName) for i in this.__contents ])
+        if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
+        ctors.sort(key=lambda i: len(i.parameters))
+
+        # Gather args for explicit template
+        ctorParamArgs = None
+        if len(ctors) > 0:
+            ctorParamArgs = [this.absName] + [i.typeName for i in ctors[0].parameters]
+        elif hasDefaultCtor:
+            ctorParamArgs = [this.absName]
+
+        # Emit code
+        if ctorParamArgs != None:
+            return f"builder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
+        else:
+            return f"#error {this.absName} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
+
     def renderMain(this):
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
@@ -540,28 +617,25 @@ class TypeInfo(Symbol):
         renderedContents = [i.renderMain() for i in (this.__contents + this.implicitlyInheritedVirtualParents)]
         out += "\n".join([i for i in renderedContents if i != None])
         
-        # Finalize
+        # Render image capture, if configured
         if this.isAbstract:
             out += f"\n//{this.absName} is abstract. Skipping class image capture."
-        elif Annotations.DISABLE_IMAGE_CAPTURE not in this.annotations:
-            out += f"\n//{this.absName} has opted out of class image capture."
-        else:
-            ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted]
-            hasDefaultCtor = len(ctors)==0
-            isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "thunk_utils" in i.targetName) for i in this.__contents ])
-            if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
-            ctors.sort(key=lambda i: len(i.parameters))
-
-            ctorParamArgs = None
-            if len(ctors) > 0:
-                ctorParamArgs = [this.absName] + [i.typeName for i in ctors[0].parameters]
-            elif hasDefaultCtor:
-                ctorParamArgs = [this.absName]
-
-            if ctorParamArgs != None:
-                out += f"\nbuilder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
+        elif not Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, defaultImageCaptureMode) ):
+            if Annotations.evalAsBool( defaultImageCaptureMode ):
+                out += f"\n//{this.absName} has opted out of class image capture." # Default-on: has opted out
             else:
-                out += f"\n#error {this.absName} has no accessible constructor, and cannot have its image snapshotted"
+                out += f"\n//{this.absName} hasn't opted in to class image capture." # Default-off: hasn't opted in
+        else:
+            backend = this.getAnnotationOrDefault(Annotations.IMAGE_CAPTURE_BACKEND, defaultImageCaptureBackend)
+            if backend == "default": backend = defaultImageCaptureBackend
+            if backend == "disassembly":
+                out += "\n" + this.__renderImageCapture_disassembly()
+            elif backend == "cdo":
+                out += "\n" + this.__renderImageCapture_cdo()
+            else:
+                out += f"\n#error Unknown image capture backend: {backend}"
+
+        # Finalize
         out += "\nbuilder.registerType(registry);"
         return f"//{this.absName}\n" + "{\n"+indent(out, ' '*4)+"\n}"
 
@@ -744,3 +818,7 @@ ignoredSymbols = [
 ]
 allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo, FriendInfo]
 allowedGlobalSymbols = [TypeInfo] # GlobalVarInfo, GlobalFuncInfo
+
+
+defaultImageCaptureMode = "enabled"
+defaultImageCaptureBackend = "disassembly"

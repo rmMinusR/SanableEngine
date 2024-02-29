@@ -15,7 +15,7 @@ class ModuleTypeRegistry;
 class WindowInputProcessor;
 struct GLSettings;
 
-class STIX_DISABLE_IMAGE_CAPTURE Window
+class Window
 {
 private:
 	SDL_Window* handle;
