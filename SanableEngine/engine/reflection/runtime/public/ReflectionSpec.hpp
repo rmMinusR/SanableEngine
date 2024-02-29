@@ -16,12 +16,10 @@
 //Enable/disable attributes are nestable. For example:
 //
 //class STIX_DISABLE_IMAGE_CAPTURE MyFunkyClass {
-//  MyFunkyClass(); //Not reflected
+//  MyFunkyClass(); //Ctor not reflected
+//  class STIX_ENABLE_IMAGE_CAPTURE MyFunkySubclass {}; //Ctor will be reflected
 //};
 //
-//class STIX_DISABLE_IMAGE_CAPTURE MyFunkyClass2 {
-//  STIX_ENABLE_IMAGE_CAPTURE MyFunkyClass2(int foo); //Reflected
-//};
 
 #define STIX_DISABLE_IMAGE_CAPTURE __STIX_REFLECTION_ANNOTATE("stix::do_image_capture=no")
 #define STIX_ENABLE_IMAGE_CAPTURE __STIX_REFLECTION_ANNOTATE("stix::do_image_capture=yes")
