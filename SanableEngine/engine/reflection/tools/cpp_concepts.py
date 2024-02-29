@@ -550,7 +550,7 @@ class TypeInfo(Symbol):
             if p != None: out.extend(i.backingType.allParents)
             else: config.logger.critical(f"Cannot traverse parent: {this.absName} -> {i.absName}. This may result in incorrect cast information.")
         return out
-
+    
     @property
     def implicitlyInheritedVirtualParents(this) -> list[ParentInfo]:
         out = [copy.copy(i) for i in this.allParents if i.isVirtual and i not in this.immediateParents]
@@ -558,7 +558,7 @@ class TypeInfo(Symbol):
         # Create dummy redirect
         for i in out:
             i.virtualness = ParentInfo.Virtualness.VirtualInherited
-            i.dynOwner = this
+            i.owner = this
 
         # Deduplicate by absName
         for i in out[::-1]:
