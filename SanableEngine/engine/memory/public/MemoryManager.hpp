@@ -2,15 +2,12 @@
 
 #include <unordered_map>
 #include <vector>
-#include "TypedMemoryPool.inl"
+#include "TypedMemoryPool.hpp"
 
 class GameObject;
 class Application;
 struct TypeInfo;
 class PluginManager;
-
-template<>
-struct PoolSettings<GameObject, 64> {};
 
 class MemoryManager
 {
@@ -47,23 +44,19 @@ private:
 template<typename TObj>
 inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
 {
-	TypedMemoryPool<TObj>* out = nullptr;
+	GenericTypedMemoryPool* out = nullptr;
 
 	//Search for pool matching typename
 	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->contentsType.name == TypeName::create<TObj>(); });
-	if (it != pools.cend())
-	{
-		out = (TypedMemoryPool<TObj>*)*it; //TODO sanity dynamic_cast?
-	}
-	//for (RawMemoryPool* p : pools) if (out = dynamic_cast<TypedMemoryPool<TObj>*>(p)) return out;
+	if (it != pools.cend()) out = *it;
 
 	//If set to create on fallback, do so
 	if (!out && fallbackCreate)
 	{
-		pools.push_back( out = new TypedMemoryPool<TObj>(PoolSettings<TObj>::maxObjectCount) );
+		pools.push_back( out = GenericTypedMemoryPool::create<TObj>() );
 	}
 
-	return out;
+	return out ? reinterpret_cast<TypedMemoryPool<TObj>*>(&out->view) : nullptr;
 }
 
 template<typename TObj, typename... TCtorArgs>
@@ -76,7 +69,7 @@ template<typename TObj>
 void MemoryManager::destroy(TObj* obj)
 {
 	//Try direct lookup first
-	RawMemoryPool* pool = (RawMemoryPool*) getSpecificPool<TObj>(false);
+	GenericTypedMemoryPool* pool = getSpecificPool<TObj>(false)->impl;
 
 	//If that fails, search every pool to find owner
 	if (!pool)

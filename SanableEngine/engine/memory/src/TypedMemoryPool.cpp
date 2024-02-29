@@ -1,10 +1,11 @@
-#include "GenericTypedMemoryPool.hpp"
+#include "TypedMemoryPool.hpp"
 
 #include "ObjectPatch.hpp"
 
 GenericTypedMemoryPool::GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, const TypeInfo& contentsType) :
 	RawMemoryPool(maxNumObjects, objectSize),
-	contentsType(contentsType)
+	contentsType(contentsType),
+	view(this)
 {
 	debugName = contentsType.name.as_str();
 }

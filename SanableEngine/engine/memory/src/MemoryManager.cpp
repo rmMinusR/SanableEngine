@@ -9,7 +9,10 @@ void MemoryManager::init()
 
 void MemoryManager::cleanup()
 {
-	for (GenericTypedMemoryPool* i : pools) delete i;
+	for (GenericTypedMemoryPool* i : pools)
+	{
+		delete i;
+	}
 	pools.clear();
 }
 

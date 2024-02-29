@@ -61,7 +61,7 @@ int RectangleCollider::GetCollisions(RectangleCollider** outArr) const
 {
 	int nHits = 0;
 	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getApplication()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
-	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it)
+	for (auto it = pool->cbegin(); it != pool->cend(); ++it)
 	{
 		RectangleCollider* c = (RectangleCollider*)*it;
 

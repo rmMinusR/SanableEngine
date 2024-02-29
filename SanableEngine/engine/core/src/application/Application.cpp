@@ -116,8 +116,7 @@ void Application::shutdown()
 
     game->cleanup();
 
-    for (Window* w : windows) WindowBuilder::destroy(w);
-    windows.clear();
+    while (!windows.empty()) WindowBuilder::destroy(windows[windows.size()-1]);
     mainWindow = nullptr;
     
     //Clean up memory, GameObject pool first so components are released

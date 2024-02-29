@@ -39,7 +39,7 @@ public:
 
 	//Allocates raw memory.
 	//Set hook if type requires special initialization
-	ENGINEMEM_API void* allocate();
+	[[nodiscard]] ENGINEMEM_API void* allocate();
 	hook_t initHook;
 
 	//Deallocates raw memory.
