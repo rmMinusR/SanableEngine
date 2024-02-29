@@ -22,5 +22,6 @@ target_include_directories("engine-core" INTERFACE "${CMAKE_CURRENT_LIST_DIR}/in
 # Declare install targets
 install_dll("engine-core" ".")
 
-set_target_properties(engine-core PROPERTIES RTTI_TEMPLATE_FILE "${CMAKE_CURRENT_LIST_DIR}/template/rtti.template.cpp")
+stix_use_template(engine-core "${CMAKE_CURRENT_LIST_DIR}/template/rtti.template.cpp")
+stix_default_image_capture_status(engine-core disabled)
 generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})

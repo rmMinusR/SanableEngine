@@ -14,6 +14,8 @@ parser.add_argument("-o", "--output", default=None, help="Specify an output fold
 parser.add_argument("--cache", default=None, help="If specified, cache results for future runs. Helps improve speed.")
 parser.add_argument("-v", "--verbose", action="store_true")
 parser.add_argument("--template-file", dest="template_file", default=None)
+parser.add_argument("--default-image-capture-backend", dest="default_image_capture_backend", choices=["cdo", "disassembly"], default="disassembly")
+parser.add_argument("--default-image-capture-status", dest="default_image_capture_status", choices=["enabled", "disabled"], default="enabled")
 parser.add_argument("--", dest="compilerArgs", nargs='*', help="Additional arguments passed through to the compiler. May include already-listed defines and includes.")
 
 # Filter out arguments passed through to the compiler
@@ -39,7 +41,7 @@ import config
 if args.verbose:
     config.logger.setLevel(0)
 
-#Process CMake-style lists
+# Process CMake-style lists
 args.targets = [i for i in args.targets.split(";") if len(i) != 0]
 assert len(args.targets) > 0, "Must provide at least one target!"
 
@@ -53,19 +55,23 @@ if args.defines != None:
 else:
     args.defines = []
 
-#Default template file, if none specified
+# Default template file, if none specified
 if args.template_file == None:
     scriptDir = os.path.dirname(os.path.abspath(__file__))
     args.template_file = os.path.join(scriptDir, "rtti.template.cpp")
 
-#Default output folder, if none specified
+# Default output folder, if none specified
 if args.output == None:
     args.output = os.path.join(args.targets[0], "src")
 
-#Default file name within folder, if a folder was specified
+# Default file name within folder, if a folder was specified
 if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
     args.output = os.path.join(args.output, "rtti.generated.cpp")
 
+# Default image capture config
+import cpp_concepts
+cpp_concepts.defaultImageCaptureStatus = args.default_image_capture_status
+cpp_concepts.defaultImageBackend = args.default_image_capture_backend
 
 
 ########################## Main business logic ##########################
@@ -79,10 +85,20 @@ sourceFiles = [f for f in projectFiles if f.type != None and not f.hasError]
 for sourceFile in sourceFiles:
     sourceFile.additionalIncludes += args.includes
 
+# Attempt to load from cache, if present
+targetModule = cpp_concepts.Module(
+    defaultImageCaptureStatus=args.default_image_capture_status,
+    defaultImageCaptureBackend=args.default_image_capture_backend
+)
+if args.cache != None:
+    cached = cpp_concepts.Module.load(args.cache)
+    if targetModule.configMatches(cached):
+        targetModule = cached
+        config.logger.log(100, "Loaded cache")
+    else:
+        config.logger.log(100, "Cannot reuse cache")
+
 config.logger.log(100, "Parsing...")
-import cpp_concepts
-if args.cache != None: targetModule = cpp_concepts.Module.load(args.cache)
-else: targetModule = cpp_concepts.Module()
 targetModule.parseTU(sourceFiles)
 
 config.logger.info("Finalizing...")

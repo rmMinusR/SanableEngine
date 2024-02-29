@@ -127,8 +127,8 @@ class Annotations:
 
     @staticmethod
     def evalAsBool(val: str):
-        if val.lower() in ["y", "yes", "true" , "enable" , "enabled" ]: return True
-        if val.lower() in ["n", "no" , "false", "disable", "disabled"]: return False
+        if val.lower() in ["y", "yes", "true" , "enable" , "enabled" , "on" ]: return True
+        if val.lower() in ["n", "no" , "false", "disable", "disabled", "off"]: return False
         assert False
 
     @staticmethod
@@ -576,7 +576,7 @@ class TypeInfo(Symbol):
 
     def __renderImageCapture_cdo(this):
         # Gather valid constructors
-        ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, defaultImageCaptureMode) )]
+        ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, this.module.defaultImageCaptureStatus) )]
         hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
         isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "TypeBuilder" in i.targetName) for i in this.__contents ])
         if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
@@ -620,14 +620,14 @@ class TypeInfo(Symbol):
         # Render image capture, if configured
         if this.isAbstract:
             out += f"\n//{this.absName} is abstract. Skipping class image capture."
-        elif not Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, defaultImageCaptureMode) ):
-            if Annotations.evalAsBool( defaultImageCaptureMode ):
+        elif not Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, this.module.defaultImageCaptureStatus) ):
+            if Annotations.evalAsBool( this.module.defaultImageCaptureStatus ):
                 out += f"\n//{this.absName} has opted out of class image capture." # Default-on: has opted out
             else:
                 out += f"\n//{this.absName} hasn't opted in to class image capture." # Default-off: hasn't opted in
         else:
-            backend = this.getAnnotationOrDefault(Annotations.IMAGE_CAPTURE_BACKEND, defaultImageCaptureBackend)
-            if backend == "default": backend = defaultImageCaptureBackend
+            backend = this.getAnnotationOrDefault(Annotations.IMAGE_CAPTURE_BACKEND, this.module.defaultImageCaptureBackend)
+            if backend == "default": backend = this.module.defaultImageCaptureBackend
             if backend == "disassembly":
                 out += "\n" + this.__renderImageCapture_disassembly()
             elif backend == "cdo":
@@ -649,10 +649,18 @@ class TypeInfo(Symbol):
 
 
 class Module:
-    def __init__(this):
+    def __init__(this, defaultImageCaptureStatus="enabled", defaultImageCaptureBackend="disassembly"):
         this.__symbols: dict[str, Symbol] = dict()
         this.__sourceFiles: set[SourceFile] = set()
+        this.version = 2
+        this.defaultImageCaptureStatus  = defaultImageCaptureStatus
+        this.defaultImageCaptureBackend = defaultImageCaptureBackend
     
+    def configMatches(this, other):
+        if this.version != other.version: return False
+        return this.defaultImageCaptureStatus  == other.defaultImageCaptureStatus \
+           and this.defaultImageCaptureBackend == other.defaultImageCaptureBackend
+
     def parseTU(this, sources: list[SourceFile]):
         isUpToDate = lambda file: next(filter(lambda i: i == file, this.__sourceFiles), None).contentsHash == file.contentsHash
         
@@ -818,7 +826,3 @@ ignoredSymbols = [
 ]
 allowedMemberSymbols = [FieldInfo, ParentInfo, ConstructorInfo, DestructorInfo, BoundFuncInfo, FriendInfo]
 allowedGlobalSymbols = [TypeInfo] # GlobalVarInfo, GlobalFuncInfo
-
-
-defaultImageCaptureMode = "enabled"
-defaultImageCaptureBackend = "disassembly"
