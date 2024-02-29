@@ -94,7 +94,6 @@ if args.cache != None:
     cached = cpp_concepts.Module.load(args.cache)
     if targetModule.configMatches(cached):
         targetModule = cached
-        config.logger.info("Loaded cache")
     else:
         config.logger.info("Cannot reuse cache")
 
