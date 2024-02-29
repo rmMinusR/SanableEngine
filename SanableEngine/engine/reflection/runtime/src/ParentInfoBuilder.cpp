@@ -15,7 +15,7 @@ ParentInfoBuilder::ParentInfoBuilder(const TypeName& parentType, size_t ownSize,
 
 ParentInfo ParentInfoBuilder::buildFromClassImage(char* image)
 {
-	assert(image);
+	assert((data.virtualness == ParentInfo::Virtualness::NonVirtual || image != nullptr) && "Casting requires class image, but none was provided!");
 
 	//Detect offset
 	void* parentAddr = upcastFn(image);

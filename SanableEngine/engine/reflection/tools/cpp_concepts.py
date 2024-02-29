@@ -452,9 +452,8 @@ class ParentInfo(Member):
         VirtualExplicit  = "ParentInfo::Virtualness::VirtualExplicit"
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
-    def __init__(this, module: "Module", cursor: Cursor, owner):
+    def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         Member.__init__(this, module, cursor, owner)
-        this.dynOwner = owner
         assert ParentInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a parent"
 
         this.isVirtual = any([i.spelling == "virtual" for i in cursor.get_tokens()])
@@ -472,7 +471,7 @@ class ParentInfo(Member):
         return this.module.lookup(this.absName)
     
     def renderMain(this):
-        return f"builder.addParent<{this.dynOwner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
+        return f"builder.addParent<{this.owner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
 
 
 class FriendInfo(Member):
