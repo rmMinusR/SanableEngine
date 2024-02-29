@@ -24,4 +24,4 @@ install_dll("engine-core" ".")
 
 stix_use_template(engine-core "${CMAKE_CURRENT_LIST_DIR}/template/rtti.template.cpp")
 stix_default_image_capture_status(engine-core disabled)
-generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})
+stix_generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})

@@ -5,7 +5,7 @@ project("engine-reflection-tools")
 
 set(REFLECTION_COMMAND python "${CMAKE_CURRENT_LIST_DIR}/rttigen.py")
 
-# Optional property setters. Must be set before calling generate_reflection.
+# Optional property setters. Must be set before calling stix_generate_reflection.
 
 function(stix_use_template targetName template)
 	set_target_properties(${targetName} PROPERTIES STIX_TEMPLATE_FILE ${template})
@@ -22,7 +22,7 @@ endfunction()
 
 # Main integration
 
-function(generate_reflection targetName rootDir)
+function(stix_generate_reflection targetName rootDir)
 	# Resolve optional properties
 	get_target_property(TEMPLATE_FILE ${targetName} STIX_TEMPLATE_FILE)
 	if (TEMPLATE_FILE STREQUAL "TEMPLATE_FILE-NOTFOUND")

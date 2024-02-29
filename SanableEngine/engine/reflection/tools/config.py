@@ -1,6 +1,6 @@
 import logging
 
-formatter = logging.Formatter(fmt="%(levelname)-9s %(message)s")
+formatter = logging.Formatter(fmt="%(levelname)-10s %(message)s")
 
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
