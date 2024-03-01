@@ -15,6 +15,8 @@ private:
 	std::vector<GenericTypedMemoryPool*> pools;
 	//std::unordered_map<std::string, RawMemoryPool*> pools;
 
+	template<typename TObj>
+	inline GenericTypedMemoryPool* getSpecificPool_internal(bool fallbackCreate);
 public:
 	template<typename TObj>
 	inline TypedMemoryPool<TObj>* getSpecificPool(bool fallbackCreate);
@@ -42,21 +44,30 @@ private:
 
 
 template<typename TObj>
-inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
+inline GenericTypedMemoryPool* MemoryManager::getSpecificPool_internal(bool fallbackCreate)
 {
-	GenericTypedMemoryPool* out = nullptr;
-
 	//Search for pool matching typename
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->contentsType.name == TypeName::create<TObj>(); });
-	if (it != pools.cend()) out = *it;
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName()  == TypeName::create<TObj>(); });
+	if (it != pools.cend()) return *it;
 
 	//If set to create on fallback, do so
-	if (!out && fallbackCreate)
+	if (fallbackCreate)
 	{
-		pools.push_back( out = GenericTypedMemoryPool::create<TObj>() );
+		GenericTypedMemoryPool* out = nullptr;
+		out = GenericTypedMemoryPool::create<TObj>();
+		pools.push_back(out);
+		return out;
 	}
 
-	return out ? reinterpret_cast<TypedMemoryPool<TObj>*>(&out->view) : nullptr;
+	//Nothing found!
+	return nullptr;
+}
+
+template<typename TObj>
+inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
+{
+	GenericTypedMemoryPool* out = getSpecificPool_internal<TObj>(fallbackCreate);
+	return out ? out->getView<TObj>() : nullptr;
 }
 
 template<typename TObj, typename... TCtorArgs>
@@ -69,7 +80,7 @@ template<typename TObj>
 void MemoryManager::destroy(TObj* obj)
 {
 	//Try direct lookup first
-	GenericTypedMemoryPool* pool = getSpecificPool<TObj>(false)->impl;
+	GenericTypedMemoryPool* pool = getSpecificPool_internal<TObj>(false);
 
 	//If that fails, search every pool to find owner
 	if (!pool)
@@ -86,7 +97,7 @@ void MemoryManager::destroy(TObj* obj)
 template<typename TObj>
 void MemoryManager::destroyPool()
 {
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->contentsType.name == TypeName::create<TObj>(); });
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == TypeName::create<TObj>(); });
 	if (it != pools.cend())
 	{
 		delete *it;

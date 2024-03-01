@@ -36,11 +36,6 @@ public:
 	inline RawMemoryPool::const_iterator cbegin() const { return impl->cbegin(); }
 	inline RawMemoryPool::const_iterator cend  () const { return impl->cend  (); }
 	
-#ifdef TEST_MEMORY
-	//INTERNAL TESTING USE ONLY
-	inline GenericTypedMemoryPool* asGeneric() { return this; }
-#endif
-
 protected:
 	TypedMemoryPool(TypedMemoryPool&&) = delete;
 	TypedMemoryPool(const TypedMemoryPool&) = delete;
@@ -69,6 +64,13 @@ public:
 			maxNumObjects,
 			TypeInfo::createDummy<TObj>() //No need to resolve dummy TypeInfo here. Engine will call refreshObjects after all TypeInfos are registered.
 		);
+	}
+
+	template<typename TObj>
+	inline TypedMemoryPool<TObj>* getView()
+	{
+		assert(TypeName::create<TObj>() == contentsType.name);
+		return reinterpret_cast<TypedMemoryPool<TObj>*>(&view);
 	}
 
 	//INTERNAL USE ONLY
