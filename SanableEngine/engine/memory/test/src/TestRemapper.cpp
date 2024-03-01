@@ -3,7 +3,7 @@
 #include "ModuleTypeRegistry.hpp"
 #include "TypeBuilder.hpp"
 
-#include "TypedMemoryPool.inl"
+#include "TypedMemoryPool.hpp"
 #include "MemoryMapper.hpp"
 #include "MoveTester.hpp"
 
@@ -120,8 +120,9 @@ TEST_SUITE("MemoryMapper")
 
 		//Setup: Memory pool
 		constexpr size_t nObjs = 4;
-		TypedMemoryPool<MoveTester> pool(nObjs);
-		pool.asGeneric()->refreshObjects(*startingType, nullptr);
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<MoveTester>(nObjs);
+		TypedMemoryPool<MoveTester> pool(poolBackend);
+		poolBackend->refreshObjects(*startingType, nullptr);
 
 		//Setup: Objects in memory pool
 		MoveTester* objs[nObjs];
@@ -133,7 +134,7 @@ TEST_SUITE("MemoryMapper")
 
 		//Act: Do resize
 		MemoryMapper remapper;
-		pool.asGeneric()->refreshObjects(*switchType, &remapper);
+		poolBackend->refreshObjects(*switchType, &remapper);
 		MoveTester* remappedObjs[nObjs];
 		for (int i = 0; i < nObjs; ++i)
 		{
@@ -150,6 +151,7 @@ TEST_SUITE("MemoryMapper")
 
 		//Cleanup
 		for (int i = 0; i < nObjs; ++i) pool.release(remappedObjs[i]);
+		delete poolBackend;
 	}
 
 

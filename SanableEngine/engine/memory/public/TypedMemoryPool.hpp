@@ -1,6 +1,5 @@
 #pragma once
 
-#include "MemoryPoolCommon.hpp"
 #include "RawMemoryPool.hpp"
 #include "TypeInfo.hpp"
 
@@ -24,10 +23,7 @@ public:
 	{
 		//Allocate memory
 		TObj* pObj = (TObj*) impl->allocate();
-#ifndef TEST_MEMORY
-		assert(pObj);
-#endif
-
+		
 		//Construct object
 		if (pObj) new (pObj) TObj(ctorArgs...);
 
@@ -63,6 +59,8 @@ public:
 	ENGINEMEM_API ~GenericTypedMemoryPool();
 
 	ENGINEMEM_API bool isLoaded() const;
+	ENGINEMEM_API const TypeInfo* getContentsType() const;
+	ENGINEMEM_API TypeName getContentsTypeName() const;
 
 	template<typename TObj>
 	[[nodiscard]] static GenericTypedMemoryPool* create(size_t maxNumObjects = 64)

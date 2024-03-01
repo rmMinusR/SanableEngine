@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 
-#include "TypedMemoryPool.inl"
+#include "TypedMemoryPool.hpp"
 #include "LeakTracer.hpp"
 
 TEST_CASE("TypedMemoryPool")
@@ -11,7 +11,8 @@ TEST_CASE("TypedMemoryPool")
 	SUBCASE("Emplace LeakTracers")
 	{
 		constexpr int nObjs = 4;
-		TypedMemoryPool<LeakTracer> pool(nObjs);
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<LeakTracer>(nObjs);
+		TypedMemoryPool<LeakTracer> pool(poolBackend);
 		
 		LeakTracer* objs[nObjs];
 		for (int i = 0; i < nObjs; ++i)
@@ -26,12 +27,15 @@ TEST_CASE("TypedMemoryPool")
 		for (int i = 0; i < nObjs; ++i) pool.release(objs[i]);
 
 		CHECK(LeakTracer::numLiving == 0);
+
+		delete poolBackend;
 	}
 
 	SUBCASE("Double-delete LeakTracers")
 	{
 		//Setup
-		TypedMemoryPool<LeakTracer> pool(1);
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<LeakTracer>(1);
+		TypedMemoryPool<LeakTracer> pool(poolBackend);
 		LeakTracer* obj = pool.emplace();
 		REQUIRE(LeakTracer::numLiving == 1);
 
@@ -46,18 +50,21 @@ TEST_CASE("TypedMemoryPool")
 		
 		//Verify 2: make sure dtor wasn't called again
 		CHECK(LeakTracer::numLiving == 0);
+
+		delete poolBackend;
 	}
 
 	SUBCASE("Leak LeakTracers")
 	{
 		//Setup
 		constexpr int nObjs = 4;
-		TypedMemoryPool<LeakTracer>* pool = new TypedMemoryPool<LeakTracer>(nObjs);
-		for (int i = 0; i < nObjs; ++i) pool->emplace();
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<LeakTracer>(nObjs);
+		TypedMemoryPool<LeakTracer> pool(poolBackend);
+		for (int i = 0; i < nObjs; ++i) pool.emplace();
 		REQUIRE(LeakTracer::numLiving == nObjs);
 
 		//Act
-		delete pool;
+		delete poolBackend;
 
 		//Verify
 		CHECK(LeakTracer::numLiving == 0);

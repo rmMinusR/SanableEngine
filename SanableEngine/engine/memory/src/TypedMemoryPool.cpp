@@ -21,6 +21,16 @@ bool GenericTypedMemoryPool::isLoaded() const
 	return contentsType.isLoaded();
 }
 
+const TypeInfo* GenericTypedMemoryPool::getContentsType() const
+{
+	return isLoaded() ? &contentsType : nullptr;
+}
+
+TypeName GenericTypedMemoryPool::getContentsTypeName() const
+{
+	return contentsType.name;
+}
+
 void GenericTypedMemoryPool::refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper)
 {
 	assert(newTypeData.name == contentsType.name); //Ensure same type

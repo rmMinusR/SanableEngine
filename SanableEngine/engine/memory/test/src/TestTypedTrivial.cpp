@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 
-#include "TypedMemoryPool.inl"
+#include "TypedMemoryPool.hpp"
 
 TEST_CASE("TypedMemoryPool")
 {
@@ -8,7 +8,8 @@ TEST_CASE("TypedMemoryPool")
 	{
 		//Setup
 		constexpr int nInts = 4;
-		TypedMemoryPool<int> pool(nInts);
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<int>(nInts);
+		TypedMemoryPool<int> pool(poolBackend);
 		
 		//Act
 		int* vals[nInts];
@@ -27,12 +28,14 @@ TEST_CASE("TypedMemoryPool")
 
 		//Cleanup
 		for (int i = 0; i < nInts; ++i) pool.release(vals[i]);
+		delete poolBackend;
 	}
 
 	SUBCASE("Overallocate int")
 	{
 		//Set up pool and fill it
-		TypedMemoryPool<int> pool(1);
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<int>(1);
+		TypedMemoryPool<int> pool(poolBackend);
 		int* goodAlloc = pool.emplace();
 		REQUIRE(goodAlloc != nullptr);
 
@@ -42,12 +45,14 @@ TEST_CASE("TypedMemoryPool")
 
 		//Clean up
 		pool.release(goodAlloc);
+		delete poolBackend;
 	}
 
 	SUBCASE("Leak ints")
 	{
 		constexpr int nInts = 4;
-		TypedMemoryPool<int> pool(nInts);
+		GenericTypedMemoryPool* poolBackend = GenericTypedMemoryPool::create<int>(nInts);
+		TypedMemoryPool<int> pool(poolBackend);
 		for (int i = 0; i < nInts; ++i) pool.emplace(i);
 	}
 }
