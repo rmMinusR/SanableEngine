@@ -24,10 +24,12 @@ public:
 	{
 		//Allocate memory
 		TObj* pObj = (TObj*) impl->allocate();
+#ifndef TEST_MEMORY
 		assert(pObj);
+#endif
 
 		//Construct object
-		new (pObj) TObj(ctorArgs...);
+		if (pObj) new (pObj) TObj(ctorArgs...);
 
 		return pObj;
 	}
@@ -37,6 +39,11 @@ public:
 
 	inline RawMemoryPool::const_iterator cbegin() const { return impl->cbegin(); }
 	inline RawMemoryPool::const_iterator cend  () const { return impl->cend  (); }
+	
+#ifdef TEST_MEMORY
+	//INTERNAL TESTING USE ONLY
+	inline GenericTypedMemoryPool* asGeneric() { return this; }
+#endif
 
 protected:
 	TypedMemoryPool(TypedMemoryPool&&) = delete;
@@ -51,7 +58,7 @@ protected:
 	TypeInfo contentsType;
 	TypedMemoryPool<void> view; //Needs to be cast to be used safely
 
-	ENGINEMEM_API GenericTypedMemoryPool(size_t maxNumObjects, size_t objectSize, const TypeInfo& contentsType);
+	ENGINEMEM_API GenericTypedMemoryPool(size_t maxNumObjects, const TypeInfo& contentsType);
 public:
 	ENGINEMEM_API ~GenericTypedMemoryPool();
 
@@ -62,12 +69,10 @@ public:
 	{
 		return new GenericTypedMemoryPool(
 			maxNumObjects,
-			getClosestPowerOf2LargerThan(std::max(sizeof(TObj), alignof(TObj))),
 			TypeInfo::createDummy<TObj>() //No need to resolve dummy TypeInfo here. Engine will call refreshObjects after all TypeInfos are registered.
 		);
 	}
 
-protected:
-	friend class MemoryManager;
+	//INTERNAL USE ONLY
 	ENGINEMEM_API void refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper);
 };

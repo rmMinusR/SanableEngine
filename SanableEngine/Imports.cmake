@@ -84,8 +84,14 @@ else()
     message(ERROR "-> Could not configure GLEW: Unknown platform")
 endif()
 
-# Delegate doctest configuration
-include("${CMAKE_CURRENT_LIST_DIR}/libs/doctest/CMakeLists.txt")
+# Delegate doctest configuration: https://stackoverflow.com/a/72984086
+ include(FetchContent)
+ FetchContent_Declare(
+     doctest
+     GIT_REPOSITORY "https://github.com/doctest/doctest"
+ )
+ FetchContent_MakeAvailable(doctest)
+include("${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake")
 
 # Configure Capstone disassembly engine
 set(SANABLE_DISASSEMBLER "Capstone")
