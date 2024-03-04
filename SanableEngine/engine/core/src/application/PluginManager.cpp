@@ -33,7 +33,9 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 
 Plugin* PluginManager::discover(const std::filesystem::path& dllPath)
 {
+	//Prevent double loads
 	assert(std::find_if(plugins.begin(), plugins.end(), [&](Plugin* i) { return i->getPath() == dllPath; }) == plugins.end());
+	
 	Plugin* p = new Plugin(dllPath);
 	std::cout << "Loading plugin: " << dllPath.filename() << '\n';
 	p->load(engine);
@@ -55,6 +57,18 @@ void PluginManager::loadAll()
 void PluginManager::unloadAll()
 {
 	for (Plugin* p : plugins) p->unload();
+}
+
+void PluginManager::hook(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	plugin->init();
+}
+
+void PluginManager::unhook(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	plugin->cleanup(false);
 }
 
 void PluginManager::hookAll()
@@ -92,4 +106,19 @@ void PluginManager::reloadAll()
     hookAll();
     
     std::cout << "Hot Reload Complete\n";
+}
+
+void PluginManager::enumeratePlugins(const std::function<void(Plugin*)>& visitor)
+{
+	for (Plugin* p : plugins) visitor(p);
+}
+
+Plugin const* PluginManager::getPlugin(const std::wstring& name)
+{
+	for (Plugin* p : plugins)
+	{
+		if (p->path == name) return p;
+		if (p->reportedData && p->reportedData->name == name) return p;
+	}
+	return nullptr;
 }

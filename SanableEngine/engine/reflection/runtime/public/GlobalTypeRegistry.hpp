@@ -12,7 +12,7 @@
 class GlobalTypeRegistry
 {
 public:
-	typedef std::string module_key_t;
+	typedef std::wstring module_key_t;
 
 private:
 	static std::unordered_map<module_key_t, ModuleTypeRegistry> modules;
@@ -29,11 +29,13 @@ public:
 	/// <summary>
 	/// Register a new module. If one already exists with the same name, it will be unloaded first.
 	/// </summary>
+	ENGINE_RTTI_API static void loadModule(std::string key, const ModuleTypeRegistry& newTypes);
 	ENGINE_RTTI_API static void loadModule(module_key_t key, const ModuleTypeRegistry& newTypes);
 
 	/// <summary>
 	/// Mark a module as unloaded
 	/// </summary>
+	ENGINE_RTTI_API static void unloadModule(std::string key);
 	ENGINE_RTTI_API static void unloadModule(module_key_t key);
 
 	/// <summary>

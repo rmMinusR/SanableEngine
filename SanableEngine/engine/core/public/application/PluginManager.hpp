@@ -16,10 +16,7 @@ private:
 	std::vector<Plugin*> plugins;
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder);
-	Plugin* discover(const std::filesystem::path& dllPath);
 
-	void load(Plugin* plugin);
-	void unload(Plugin* plugin);
 	void loadAll();
 	void unloadAll();
 
@@ -34,5 +31,14 @@ private:
 	friend class Application;
 
 public:
-	//Plugin const* getPlugin(const std::wstring& name);
+	ENGINECORE_API void enumeratePlugins(const std::function<void(Plugin*)>& visitor);
+	ENGINECORE_API Plugin const* getPlugin(const std::wstring& name);
+	
+	ENGINECORE_API Plugin* discover(const std::filesystem::path& dllPath);
+
+	ENGINECORE_API void load(Plugin* plugin);
+	ENGINECORE_API void unload(Plugin* plugin);
+
+	ENGINECORE_API void hook(Plugin* plugin);
+	ENGINECORE_API void unhook(Plugin* plugin);
 };

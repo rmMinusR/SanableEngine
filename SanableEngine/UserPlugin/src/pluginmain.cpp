@@ -25,7 +25,7 @@ PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* repo
 {
     std::cout << "UserPlugin: plugin_report() called" << std::endl;
 
-    report->name = "UserPlugin";
+    report->name = L"UserPlugin";
 
     ::application = (Application*)application; //FIXME bad practice
 

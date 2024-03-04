@@ -9,7 +9,7 @@
 
 #include <cassert>
 
-__thiscall Plugin::Plugin(const std::filesystem::path& path) :
+Plugin::Plugin(const std::filesystem::path& path) :
 	status(Status::NotLoaded),
 	reportedData(nullptr),
 	path(path)

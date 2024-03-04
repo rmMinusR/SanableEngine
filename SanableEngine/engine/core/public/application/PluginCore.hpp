@@ -26,7 +26,7 @@ typedef void (PLUGIN_C_API_SPEC *fp_plugin_reportTypes)(ModuleTypeRegistry* repo
 
 struct PluginReportedData
 {
-	std::string name;
+	std::wstring name;
 
 	//unsigned int versionID;
 	//std::string versionString;

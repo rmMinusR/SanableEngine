@@ -12,7 +12,7 @@ PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* repo
 {
     printf("PrimitivesPlugin: plugin_report() called\n");
 
-    report->name = "PrimitivesPlugin";
+    report->name = L"PrimitivesPlugin";
     
     ::application = (Application*)application; //FIXME bad practice
 
