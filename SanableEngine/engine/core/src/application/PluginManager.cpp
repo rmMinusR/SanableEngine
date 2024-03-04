@@ -18,68 +18,54 @@ PluginManager::PluginManager(Application* engine) :
 
 PluginManager::~PluginManager()
 {
-	assert(plugins.size() == 0);
+	for (Plugin* p : plugins) delete p;
+	plugins.clear();
 }
 
 void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 {
-	//Discover, create a wrapper and load the DLL of each
-	std::vector<Plugin*> batch;
 	for (const std::filesystem::path& dllPath : engine->getSystem()->ListPlugins(pluginsFolder))
 	{
-		Plugin* p = new Plugin(dllPath);
-		std::cout << "Importing plugin code: " << dllPath.filename() << '\n';
-		p->loadDLL();
-		batch.push_back(p); //Defer plugin_preInit call
-		plugins.push_back(p);
+		discover(dllPath);
 	}
-
-	for (Plugin* p : batch)
-	{
-		std::cout << "Registering plugin: " << p->path.filename() << '\n';
-		p->preInit(engine);
-		std::cout << "Reported name: " << p->reportedData->name << '\n';
-	}
-
-	for (Plugin* p : batch)
-	{
-		p->tryRegisterTypes();
-	}
-
-	for (Plugin* p : batch)
-	{
-		std::cout << "Applying plugin hooks for " << p->reportedData->name << '\n';
-		p->init(true);
-	}
-
 	std::cout << "Done discovering plugins\n";
 }
 
-void PluginManager::load(const std::wstring& dllPath)
+Plugin* PluginManager::discover(const std::filesystem::path& dllPath)
 {
+	assert(std::find_if(plugins.begin(), plugins.end(), [&](Plugin* i) { return i->getPath() == dllPath; }) == plugins.end());
 	Plugin* p = new Plugin(dllPath);
-	p->loadDLL();
-	p->preInit(engine);
-	p->tryRegisterTypes();
+	std::cout << "Loading plugin: " << dllPath.filename() << '\n';
+	p->load(engine);
 	plugins.push_back(p);
+	return p;
 }
 
-void PluginManager::hookAll(bool firstRun)
+void PluginManager::load(Plugin* plugin)
 {
-	for (Plugin* p : plugins) p->init(firstRun);
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	plugin->load(engine);
+}
+
+void PluginManager::loadAll()
+{
+	for (Plugin* p : plugins) p->load(engine);
+}
+
+void PluginManager::unloadAll()
+{
+	for (Plugin* p : plugins) p->unload();
+}
+
+void PluginManager::hookAll()
+{
+	for (Plugin* p : plugins) p->init();
 }
 
 void PluginManager::unhookAll(bool shutdown)
 {
 	//TODO dependency tree
 	for (Plugin* p : plugins) p->cleanup(shutdown);
-}
-
-void PluginManager::unloadAll()
-{
-	for (Plugin* p : plugins) p->unloadDLL();
-	for (Plugin* p : plugins) delete p;
-	plugins.clear();
 }
 
 void PluginManager::reloadAll()
@@ -91,21 +77,19 @@ void PluginManager::reloadAll()
     engine->getGame()->applyConcurrencyBuffers();
 
     std::cout << "Unloading plugin code...\n";
-	for (Plugin* p : plugins) p->unloadDLL();
+	unloadAll();
 
     std::cout << "Loading plugin code...\n";
-	for (Plugin* p : plugins) p->loadDLL();
-	for (Plugin* p : plugins) p->preInit(engine);
+	loadAll();
 
     std::cout << "Refreshing object layouts and vtables...\n";
-	for (Plugin* p : plugins) p->tryRegisterTypes();
 	engine->getMemoryManager()->ensureFresh();
 
-    std::cout << "Applying plugin hooks...\n";
-    hookAll(false);
-    
     std::cout << "Refreshing pointers... (call batchers)\n";
 	engine->getGame()->refreshCallBatchers();
 
+    std::cout << "Applying plugin hooks...\n";
+    hookAll();
+    
     std::cout << "Hot Reload Complete\n";
 }

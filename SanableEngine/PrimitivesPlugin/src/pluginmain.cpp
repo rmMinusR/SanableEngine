@@ -8,13 +8,13 @@
 
 Application* application;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, Application* application)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
 {
-    printf("PrimitivesPlugin: plugin_preInit() called\n");
+    printf("PrimitivesPlugin: plugin_report() called\n");
 
     report->name = "PrimitivesPlugin";
     
-    ::application = application;
+    ::application = (Application*)application; //FIXME bad practice
 
     return true;
 }

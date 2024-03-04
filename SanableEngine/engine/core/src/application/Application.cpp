@@ -102,6 +102,8 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     mainWindow = mainWindowBuilder.build();
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
+    pluginManager.loadAll();
+    pluginManager.hookAll();
 
     if (userInitCallback) (*userInitCallback)(this);
 }

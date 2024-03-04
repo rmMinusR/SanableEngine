@@ -19,7 +19,7 @@ __thiscall Plugin::Plugin(const std::filesystem::path& path) :
 
 Plugin::~Plugin()
 {
-	assert(!_dllGood() && status == Status::NotLoaded);
+	assert(!isCodeLoaded() && status == Status::NotLoaded && !isHooked());
 }
 
 Plugin::Plugin(Plugin&& mov) noexcept
@@ -35,7 +35,7 @@ Plugin::Plugin(Plugin&& mov) noexcept
 
 void* Plugin::getSymbol(const char* name) const
 {
-	assert(_dllGood());
+	assert(isCodeLoaded());
 #ifdef _WIN32
 	return reinterpret_cast<void*>(GetProcAddress(dll, name));
 #endif
@@ -44,23 +44,36 @@ void* Plugin::getSymbol(const char* name) const
 #endif
 }
 
-bool Plugin::_dllGood() const
+std::filesystem::path Plugin::getPath() const
+{
+	return path;
+}
+
+bool Plugin::isCodeLoaded() const
 {
 	return dll != InvalidLibHandle;
 }
 
-bool Plugin::loadDLL()
+bool Plugin::isHooked() const
+{
+	return status >= Status::Hooked;
+}
+
+bool Plugin::load(Application const* engine)
 {
 	if (status != Status::NotLoaded) return status > Status::NotLoaded;
-	assert(!_dllGood());
+	assert(!isCodeLoaded());
 
+	//Load code
 #ifdef _WIN32
 	dll = LoadLibraryW(path.c_str());
 #endif
 #ifdef __EMSCRIPTEN__
 	dll = dlopen(path.c_str(), RTLD_LAZY);
 #endif
-	if (!_dllGood())
+
+	//If load failed, abort
+	if (!isCodeLoaded())
 	{
 #ifdef _WIN32
 		DWORD err = GetLastError();
@@ -73,76 +86,64 @@ bool Plugin::loadDLL()
 	}
 
 	status = Status::DllLoaded;
-	return true;
-}
 
-bool Plugin::preInit(Application* engine)
-{
-	if (status != Status::DllLoaded) return status > Status::DllLoaded;
-	assert(_dllGood());
-	
-	fp_plugin_preInit func = (fp_plugin_preInit)getSymbol("plugin_preInit");
-	if (!func)
+	//Gather entry points
+	entryPoints.report      = (fp_plugin_report     ) getSymbol("plugin_report"     );
+	entryPoints.init        = (fp_plugin_init       ) getSymbol("plugin_init"       );
+	entryPoints.cleanup     = (fp_plugin_cleanup    ) getSymbol("plugin_cleanup"    );
+	entryPoints.reportTypes = (fp_plugin_reportTypes) getSymbol("plugin_reportTypes");
+
+	//Validate
+	if (!entryPoints.report || !entryPoints.reportTypes)
 	{
-		wprintf(L"ERROR: Plugin %s has no preInit function\n", path.filename().c_str());
+		wprintf(L"ERROR: Plugin %s is missing report points\n", path.filename().c_str());
 		return false;
 	}
-
+	if ((entryPoints.init==nullptr) != (entryPoints.cleanup==nullptr))
+	{
+		wprintf(L"ERROR: Plugin %s has mismatched hook points\n", path.filename().c_str());
+		return false;
+	}
+	
+	//Report plugin data
 	assert(!reportedData);
 	reportedData = new PluginReportedData();
-	bool success = func(this, reportedData, engine);
+	bool success = entryPoints.report(this, reportedData, engine);
 	if (!success) return false;
 
+	//Report RTTI
+	ModuleTypeRegistry r;
+	entryPoints.reportTypes(&r);
+	GlobalTypeRegistry::loadModule(reportedData->name, r);
+	wprintf(L"Loaded RTTI for %u types from plugin %s\n", r.getTypes().size(), path.filename().c_str());
+	
 	status = Status::Registered;
+	wasEverLoaded = true;
 	return true;
 }
 
-void Plugin::tryRegisterTypes()
-{
-	assert(_dllGood() && status >= Status::Registered);
-	
-	fp_plugin_reportTypes report = (fp_plugin_reportTypes)getSymbol("plugin_reportTypes");
-	if (report)
-	{
-		ModuleTypeRegistry types;
-		report(&types);
-		GlobalTypeRegistry::loadModule(reportedData->name, types);
-
-		wprintf(L"Loaded RTTI for %u types from plugin %s\n", types.getTypes().size(), path.filename().c_str());
-	}
-}
-
-bool Plugin::init(bool firstRun)
+bool Plugin::init()
 {
 	if (status != Status::Registered) return status > Status::Registered;
-	assert(_dllGood());
+	assert(isCodeLoaded());
 
-	fp_plugin_init func = (fp_plugin_init)getSymbol("plugin_init");
-	if (!func)
+	if (entryPoints.init)
 	{
-		printf("ERROR: Plugin %s has no init function", (char*)path.filename().c_str());
-		return false;
+		bool success = entryPoints.init(!wasEverHooked);
+		if (!success) return false;
 	}
 
-	bool success = func(firstRun);
-	if (!success) return false;
-
 	status = Status::Hooked;
-
+	wasEverHooked = true;
 	return true;
 }
 
 bool Plugin::cleanup(bool shutdown)
 {
 	if (status != Status::Hooked) return status < Status::Hooked;
-	assert(_dllGood());
+	assert(isCodeLoaded());
 
-	fp_plugin_cleanup func = (fp_plugin_cleanup)getSymbol("plugin_cleanup");
-	if (!func) {
-		printf("ERROR: Plugin %s has no cleanup function", (char*)path.filename().c_str());
-		return false;
-	}
-	func(shutdown);
+	if (entryPoints.cleanup) entryPoints.cleanup(shutdown);
 
 	assert(reportedData);
 	delete reportedData;
@@ -153,10 +154,12 @@ bool Plugin::cleanup(bool shutdown)
 	return true;
 }
 
-void Plugin::unloadDLL()
+void Plugin::unload()
 {
 	assert(status == Status::DllLoaded || status == Status::Registered);
-	assert(_dllGood());
+	assert(isCodeLoaded());
+
+	GlobalTypeRegistry::unloadModule(reportedData->name);
 
 #ifdef _WIN32
 	BOOL success = FreeLibrary(dll);

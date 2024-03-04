@@ -16,10 +16,15 @@ private:
 	std::vector<Plugin*> plugins;
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder);
-	void load(const std::wstring& dllPath);
-	void hookAll(bool firstRun);
-	void unhookAll(bool shutdown);
+	Plugin* discover(const std::filesystem::path& dllPath);
+
+	void load(Plugin* plugin);
+	void unload(Plugin* plugin);
+	void loadAll();
 	void unloadAll();
+
+	void hookAll();
+	void unhookAll(bool shutdown);
 
 	void reloadAll();
 

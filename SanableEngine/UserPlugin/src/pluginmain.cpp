@@ -21,13 +21,13 @@
 
 Application* application;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, Application* application)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
 {
-    std::cout << "UserPlugin: plugin_preInit() called" << std::endl;
-    ::application = application;
+    std::cout << "UserPlugin: plugin_report() called" << std::endl;
 
     report->name = "UserPlugin";
 
+    ::application = (Application*)application; //FIXME bad practice
 
     return true;
 }
