@@ -88,7 +88,7 @@ void MemoryManager::destroy(TObj* obj)
 		for (GenericTypedMemoryPool* i : pools) if (i->contains(obj)) { pool = i; break; }
 	}
 
-	assert(pool);
+	assert(pool); //FIXME this will also fail if the owning pool's backing type isn't loaded
 	assert(pool->contains(obj));
 
 	pool->release(obj);

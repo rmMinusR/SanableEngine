@@ -8,7 +8,7 @@ GenericTypedMemoryPool::GenericTypedMemoryPool(size_t maxNumObjects, const TypeI
 	view(this)
 {
 	debugName = contentsType.name.as_str();
-	releaseHook = contentsType.dtor;
+	releaseHook = contentsType.dtor; //FIXME this will SIGSEGV on destroy if backing type isn't loaded. Switch to conditional call.
 }
 
 GenericTypedMemoryPool::~GenericTypedMemoryPool()
