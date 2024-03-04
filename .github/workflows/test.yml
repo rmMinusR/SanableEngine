@@ -42,6 +42,10 @@ jobs:
     - name: Install Libclang
       run: python -m pip install libclang
     
+    - name: Generate GLEW sources
+      working-directory: SanableEngine/libs/glew/auto
+      run: make
+    
     - run: mkdir SanableEngine\builds\Win64-MSVC
     
     - name: Generate build files
@@ -84,6 +88,10 @@ jobs:
     
     - name: Install Libclang
       run: python -m pip install libclang
+    
+    - name: Generate GLEW sources
+      working-directory: SanableEngine/libs/glew/auto
+      run: make
     
     - run: mkdir SanableEngine\builds\Win64-MinGW
     
