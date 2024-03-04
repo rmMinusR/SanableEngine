@@ -1,10 +1,11 @@
 #include "PluginManagerView.hpp"
 
-#include "PluginManager.hpp"
-#include "Plugin.hpp"
+#include "application/PluginManager.hpp"
+#include "application/Plugin.hpp"
 #include "Renderer.hpp"
-#include "GameObject.hpp"
-#include "EngineCore.hpp"
+#include "game/GameObject.hpp"
+#include "game/Game.hpp"
+#include "application/Application.hpp"
 
 PluginManagerView::PluginManagerView()
 {
@@ -16,7 +17,7 @@ PluginManagerView::~PluginManagerView()
 
 void PluginManagerView::onStart()
 {
-	mgr = gameObject->getEngine()->getPluginManager();
+	mgr = gameObject->getContext()->getApplication()->getPluginManager();
 }
 
 void PluginManagerView::Update()
@@ -24,10 +25,15 @@ void PluginManagerView::Update()
 	
 }
 
-void PluginManagerView::Render(Renderer* target)
+Material* PluginManagerView::getMaterial() const
 {
-	for (Plugin* p : mgr->getPlugins())
+	return nullptr;
+}
+
+void PluginManagerView::renderImmediate(Renderer* target) const
+{
+	mgr->enumeratePlugins([&](Plugin* p)
 	{
-		
-	}
+		//TODO implement
+	});
 }

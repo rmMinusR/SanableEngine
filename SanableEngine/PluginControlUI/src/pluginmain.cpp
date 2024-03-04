@@ -1,19 +1,19 @@
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 
-#include "EngineCore.hpp"
-#include "GameObject.hpp"
+#include "game/Game.hpp"
+#include "game/GameObject.hpp"
 #include "PluginManagerView.hpp"
 
-EngineCore* engine;
+Game* game;
 GameObject* ui;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
+PLUGIN_C_API(bool) plugin_preInit(Plugin const* context, PluginReportedData* report, Application const* engine)
 {
     printf("PluginControlUI: plugin_preInit() called\n");
 
-    report->name = "PluginControlUI";
+    report->name = L"PluginControlUI";
     
-    ::engine = engine;
+    ::game = engine->getGame();
     
     return true;
 }
@@ -24,7 +24,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
 
     if (firstRun)
     {
-        ui = engine->addGameObject();
+        ui = game->addGameObject();
         ui->CreateComponent<PluginManagerView>();
     }
 
@@ -37,7 +37,7 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        engine->destroy(ui);
+        game->destroy(ui);
         ui = nullptr;
     }
 }

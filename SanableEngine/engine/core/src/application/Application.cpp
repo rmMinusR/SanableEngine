@@ -167,6 +167,11 @@ StackAllocator* Application::getFrameAllocator()
     return &frameAllocator;
 }
 
+PluginManager* Application::getPluginManager()
+{
+    return &pluginManager;
+}
+
 WindowBuilder Application::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
 {
     return WindowBuilder(this, name, width, height, glSettings, std::move(renderPipeline));
