@@ -76,7 +76,7 @@ class SourceFile:
 		assert this.type != None
 
 		if this.tu == None:
-			cli_args = ["-std=c++17", "--language="+this.type]
+			cli_args = ["-std=c++17", "--language="+this.type, "-D__STIX_REFELCTION_GENERATING"]
 			cli_args.extend(['-I'+i for i in this.additionalIncludes]) # FIXME not space safe!
 			cli_args.extend(additionalCompilerOptions)
 			try:
@@ -87,17 +87,23 @@ class SourceFile:
 
 		return this.tu.cursor
 	
-def discoverAll(targetPath: str) -> list[SourceFile, None, None]:
-	if os.path.isdir(targetPath):
-		# Recurse
-		out = []
-		for subpath in os.listdir(targetPath):
-			out.extend(discoverAll(os.path.join(targetPath, subpath)))
-			# Propagate isGenerated if in a .generated directory
-			if targetPath.endswith(".generated"):
-				for i in out:
-					i.isGenerated = True
-		return out
-	else:
-		# Path refers to file
-		return [SourceFile(targetPath)]
+def discoverAll(targetPaths: list[str]) -> list[SourceFile, None, None]:
+	def discover(targetPath: str):
+		if os.path.isdir(targetPath):
+			# Recurse
+			out = []
+			for subpath in os.listdir(targetPath):
+				out.extend(discover(os.path.join(targetPath, subpath)))
+				# Propagate isGenerated if in a .generated directory
+				if targetPath.endswith(".generated"):
+					for i in out:
+						i.isGenerated = True
+			return out
+		else:
+			# Path refers to file
+			return [SourceFile(targetPath)]
+
+	out = list()
+	for i in targetPaths:
+		out.extend(discover(i))
+	return out

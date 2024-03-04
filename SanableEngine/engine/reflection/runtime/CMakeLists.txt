@@ -10,5 +10,7 @@ target_include_directories("engine-rtti" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/priv
 # Declare exports
 target_include_directories("engine-rtti" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
+include("${CMAKE_CURRENT_LIST_DIR}/SemanticVM/CMakeLists.txt")
+
 # Declare install targets
 install_dll("engine-rtti" ".")

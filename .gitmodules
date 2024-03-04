@@ -1,3 +1,12 @@
 [submodule "emsdk"]
 	path = emsdk
 	url = https://github.com/emscripten-core/emsdk.git
+[submodule "SanableEngine/libs/OpenFBX"]
+	path = SanableEngine/libs/OpenFBX
+	url = https://github.com/nem0/OpenFBX.git
+[submodule "SanableEngine/libs/capstone"]
+	path = SanableEngine/libs/capstone
+	url = https://github.com/capstone-engine/capstone.git
+[submodule "SanableEngine/libs/glew"]
+	path = SanableEngine/libs/glew
+	url = https://github.com/nigels-com/glew.git

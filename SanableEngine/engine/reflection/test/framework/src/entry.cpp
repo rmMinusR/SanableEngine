@@ -1,7 +1,8 @@
 #define DOCTEST_CONFIG_IMPLEMENT
-#include "doctest.h"
+#include <doctest/doctest.h>
 
 int main(int argc, char** argv)
 {
-	return doctest::Context(argc, argv).run();
+	doctest::Context ctx(argc, argv);
+	return ctx.run();
 }

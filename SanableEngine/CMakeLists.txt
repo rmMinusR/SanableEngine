@@ -1,6 +1,7 @@
 cmake_minimum_required (VERSION 3.13)
 
 project ("devenv") #Ignore
+enable_testing()
 
 include("Utils.cmake") # Include function library
 include("Imports.cmake") # Include libs folder

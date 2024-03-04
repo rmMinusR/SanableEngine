@@ -10,7 +10,7 @@ target_include_directories("engine-assets" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/pr
 
 # Declare imports
 target_include_directories("engine-assets" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-assets" PUBLIC ${SDL2_LIBRARIES} engine-memory SDL2_image::SDL2_image SDL2_ttf::SDL2_ttf)
+target_link_libraries("engine-assets" PUBLIC ${SDL2_LIBRARIES} engine-memory)
 
 # Declare exports
 target_include_directories("engine-assets" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")

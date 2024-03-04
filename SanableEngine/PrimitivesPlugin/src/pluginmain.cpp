@@ -1,20 +1,20 @@
 #include <iostream>
 
-#include "PluginCore.hpp"
-#include "Plugin.hpp"
+#include "application/PluginCore.hpp"
+#include "application/Plugin.hpp"
 
 #include "RectangleCollider.hpp"
 #include "RectangleRenderer.hpp"
 
-EngineCore* engine;
+Application* application;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, EngineCore* engine)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
 {
-    printf("PrimitivesPlugin: plugin_preInit() called\n");
+    printf("PrimitivesPlugin: plugin_report() called\n");
 
-    report->name = "PrimitivesPlugin";
+    report->name = L"PrimitivesPlugin";
     
-    ::engine = engine;
+    ::application = (Application*)application; //FIXME bad practice
 
     return true;
 }
@@ -31,7 +31,7 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        engine->getMemoryManager()->destroyPool<RectangleCollider>();
-        engine->getMemoryManager()->destroyPool<RectangleRenderer>();
+        application->getMemoryManager()->destroyPool<RectangleCollider>();
+        application->getMemoryManager()->destroyPool<RectangleRenderer>();
     }
 }

@@ -1,9 +1,11 @@
 import logging
 
-formatter = logging.Formatter(fmt="%(levelname)-8s >> %(message)")
+formatter = logging.Formatter(fmt="%(levelname)-10s %(message)s")
 
 consoleHandler = logging.StreamHandler()
 consoleHandler.setFormatter(formatter)
 
-logger = logging.Logger("Logger")
-#logger.addHandler(consoleHandler)
+global logger
+logger = logging.Logger("STIX")
+logger.setLevel("INFO")
+logger.addHandler(consoleHandler)

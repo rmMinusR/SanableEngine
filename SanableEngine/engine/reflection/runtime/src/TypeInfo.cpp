@@ -39,6 +39,7 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 {
 	this->name    = cpy.name;
 	this->size    = cpy.size;
+	this->align   = cpy.align;
 	this->dtor    = cpy.dtor;
 	this->parents = cpy.parents;
 	this->fields  = cpy.fields;
@@ -61,6 +62,7 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 {
 	this->name    = std::move(mov.name);
 	this->size    = std::move(mov.size);
+	this->align   = std::move(mov.align);
 	this->dtor    = std::move(mov.dtor);
 	this->parents = std::move(mov.parents);
 	this->fields  = std::move(mov.fields);
@@ -128,17 +130,24 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 			if ((int)parent.visibility & (int)visibilityFlags)
 			{
 				const TypeInfo* parentType = parent.typeName.resolve();
-				assert(parentType); //Can't walk what isn't loaded
-				parentType->walkFields(
-					visitor,
-					visibilityFlags,
-					true
-				);
+				if (parentType)
+				{
+					//Can't walk what isn't loaded
+					parentType->walkFields(
+						visitor,
+						visibilityFlags,
+						true
+					);
+				}
+				else
+				{
+					printf("ERROR: %s (parent of %s) was not loaded. Cannot walk all fields.\n", parent.typeName.c_str(), name.c_str());
+				}
 			}
 		}
 	}
 
-	//Walk parents
+	//Walk own fields
 	for (const FieldInfo& field : fields)
 	{
 		if ((int)field.visibility & (int)visibilityFlags)
@@ -193,13 +202,29 @@ void* TypeInfo::upcast(void* obj, const TypeName& name) const
 	return nullptr;
 }
 
+bool TypeInfo::matchesExact(void* obj) const
+{
+	assert(byteUsage);
+	assert(implicitValues);
+
+	for (size_t i = 0; i < size; ++i)
+	{
+		if (byteUsage[i] == ByteUsage::ImplicitConst && reinterpret_cast<char*>(obj)[i] != implicitValues[i]) return false; //If implicit const detected, value must match
+	}
+
+	return true;
+}
+
 void TypeInfo::doLateBinding()
 {
 	//Deferred from captureCDO: Mark all fields as used
 	assert(byteUsage);
 	walkFields(
-		[=](const FieldInfo& fi) {
-			memset(byteUsage+fi.offset, (uint8_t)ByteUsage::ExplicitField, fi.size);
+		[&](const FieldInfo& fi) {
+			ptrdiff_t root = fi.offset + (ptrdiff_t)this->upcast(nullptr, fi.owner);
+			//Note: cannot detect usage clobbering here. If the field is default-constructed, explicit fields will incorrectly be marked as ImplicitConst in the previous step.
+			//TODO: Detect default construction in RTTI generation step?
+			memset(byteUsage+root, (uint8_t)ByteUsage::ExplicitField, fi.size);
 		},
 		MemberVisibility::All,
 		true

@@ -96,6 +96,17 @@ function(declare_plugin name sources_var)
     SET(sanableAllPlugins ${sanableAllPlugins} ${name} PARENT_SCOPE)
 
     if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-        generate_reflection(${name} ${CMAKE_CURRENT_LIST_DIR})
+        stix_generate_reflection(${name} ${CMAKE_CURRENT_LIST_DIR})
     endif()
+endfunction()
+
+function(export_resource libTarget fileRelPath)
+    add_custom_command(
+        TARGET ${libTarget} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_LIST_DIR}/${fileRelPath}
+                ${CMAKE_CURRENT_BINARY_DIR}/${fileRelPath}
+        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${fileRelPath}
+    )
+    install(FILES "${CMAKE_CURRENT_LIST_DIR}/${fileRelPath}" DESTINATION "${fileRelPath}")
 endfunction()

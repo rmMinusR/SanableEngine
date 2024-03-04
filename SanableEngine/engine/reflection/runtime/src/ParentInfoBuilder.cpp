@@ -13,20 +13,14 @@ ParentInfoBuilder::ParentInfoBuilder(const TypeName& parentType, size_t ownSize,
 	data.virtualness = virtualness;
 }
 
-ParentInfo ParentInfoBuilder::buildFromCDOs(const std::vector<void*>& cdos)
+ParentInfo ParentInfoBuilder::buildFromClassImage(char* image)
 {
-	assert(!cdos.empty());
+	assert((data.virtualness == ParentInfo::Virtualness::NonVirtual || image != nullptr) && "Casting requires class image, but none was provided!");
 
-	//Detect offset using first CDO
-	void* parentAddr = upcastFn(cdos[0]);
-	assert( cdos[0] <= parentAddr && parentAddr < ((char*)cdos[0])+ownSize); //FIXME some implementations could theoretically allocate virtual bases on the heap. Figure it out... later.
-	data.offset = size_t(((char*)parentAddr) - ((char*)cdos[0]));
-
-	//Verify correctness against the rest
-	for (int i = 1; i < cdos.size(); ++i)
-	{
-		assert( upcastFn(cdos[i]) == ((char*)cdos[i])+data.offset );
-	}
+	//Detect offset
+	void* parentAddr = upcastFn(image);
+	assert( image <= parentAddr && parentAddr < image+ownSize); //FIXME some implementations could theoretically allocate virtual bases on the heap. Figure it out... later.
+	data.offset = size_t( ((char*)parentAddr) - image );
 
 	return data;
 }

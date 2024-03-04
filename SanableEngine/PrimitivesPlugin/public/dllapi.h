@@ -1,6 +1,6 @@
 //Deliberately no include guards
 
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 
 #if PrimitivesPlugin_EXPORTS
 #define PRIMITIVES_API API_EXPORT API_KEEPALIVE

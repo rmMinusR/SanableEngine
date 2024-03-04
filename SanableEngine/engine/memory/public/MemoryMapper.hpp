@@ -38,12 +38,12 @@ public:
 	/// Like rawMove, but calls move ctor first. Undefined behaviour when hot reloading.
 	/// </summary>
 	template<typename T>
-	ENGINEMEM_API void move(T* dst, T* src)
+	void move(T* dst, T* src)
 	{
 		*dst = std::move(*src); //Do actual move op
-		if (USE_INVALID_DATA_FILL) memset(src, INVALID_DATA_FILL_VALUE, bytesToMove); //Fill old memory
+		if (USE_INVALID_DATA_FILL) memset(src, INVALID_DATA_FILL_VALUE, sizeof(T)); //Fill old memory
 
-		logMove(dst, src, bytesToMove);
+		logMove(dst, src, sizeof(T));
 	}
 
 	/// <summary>

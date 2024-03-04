@@ -5,8 +5,8 @@
 #include <optional>
 
 #include "dllapi.h"
-#include "rttiutils.h"
 
+#include "ThunkUtils.hpp"
 #include "TypeName.hpp"
 #include "ParentInfo.hpp"
 #include "FieldInfo.hpp"
@@ -103,6 +103,12 @@ public:
 	ENGINE_RTTI_API void* upcast(void* obj, const TypeName& name) const;
 
 	/// <summary>
+	/// Test if the given object matches this type exactly. Does not test if object's type is derived from this.
+	/// Requires: captured ctor, virtual object
+	/// </summary>
+	ENGINE_RTTI_API bool matchesExact(void* obj) const;
+
+	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
 	/// </summary>
 	ENGINE_RTTI_INTERNAL( void doLateBinding(); )
@@ -124,7 +130,7 @@ public:
 		out.name = TypeName::create<TObj>();
 		out.size = sizeof(TObj);
 		out.align = alignof(TObj);
-		out.dtor = dtor_utils<TObj>::dtor;
+		out.dtor = thunk_utils<TObj>::dtor;
 		out.create_internalFinalize();
 		return out;
 	}

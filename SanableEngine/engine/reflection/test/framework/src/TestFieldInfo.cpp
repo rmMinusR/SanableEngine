@@ -1,8 +1,8 @@
-#include "doctest.h"
+#include <doctest/doctest.h>
 
 #include "GlobalTypeRegistry.hpp"
 #include "MemberInfo.hpp"
-#include "PluginCore.hpp"
+#include "application/PluginCore.hpp"
 
 #include "SimpleStruct.hpp"
 

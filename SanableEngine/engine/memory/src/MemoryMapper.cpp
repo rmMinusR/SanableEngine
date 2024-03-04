@@ -14,6 +14,8 @@ void MemoryMapper::rawMove(void* dst, void* src, size_t bytesToMove)
 
 void MemoryMapper::logMove(void* dst, void* src, size_t bytesToMove)
 {
+	if (!this) return;
+
 	RemapOp op;
 	op.src = src;
 	op.dst = dst;

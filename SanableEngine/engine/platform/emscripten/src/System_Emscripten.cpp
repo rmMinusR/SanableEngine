@@ -8,7 +8,7 @@
 #include <cassert>
 #include <sstream>
 
-#include "EngineCore.hpp"
+#include "Application.hpp"
 
 gpr460::System_Emscripten::System_Emscripten()
 {
@@ -28,7 +28,7 @@ void gpr460::System_Emscripten::DebugPause()
 #endif
 }
 
-void gpr460::System_Emscripten::Init(EngineCore* engine)
+void gpr460::System_Emscripten::Init(Application* engine)
 {
 	System::Init(engine);
 
@@ -38,7 +38,7 @@ void gpr460::System_Emscripten::Init(EngineCore* engine)
 
 void gpr460::System_Emscripten::DoMainLoop()
 {
-	emscripten_set_main_loop_arg(EngineCore::frameStep, engine, 0, true);
+	emscripten_set_main_loop_arg(Application::frameStep, engine, 0, true);
 }
 
 void gpr460::System_Emscripten::Shutdown()

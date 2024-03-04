@@ -19,3 +19,9 @@ struct Derived2 : public Base
 	virtual std::string identify() const override;
 	static std::string identify_s();
 };
+
+struct GrandchildOfBase : public Derived2
+{
+	virtual std::string identify() const override;
+	static std::string identify_s();
+};

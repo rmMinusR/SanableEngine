@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "MemoryPoolCommon.hpp"
+#include "alloc_detail.h"
 
 using namespace std;
 
@@ -28,6 +28,14 @@ bool RawMemoryPool::isAliveById(id_t id) const
 	return *block & bitmask;
 }
 
+void RawMemoryPool::setAlive(id_t id, bool isAlive)
+{
+	uint8_t* chunk = getLivingListBlock() + (id / 8);
+	uint8_t bitmask = 1 << (id % 8);
+	if (isAlive) *chunk |= bitmask;
+	else		 *chunk &= ~bitmask;
+}
+
 void RawMemoryPool::debugWarnUnreleased() const
 {
 	printf("WARNING: A release hook was set, but objects (%s) weren't properly released\n", debugName.c_str());
@@ -41,31 +49,28 @@ void RawMemoryPool::debugWarnUnreleased(void* obj) const
 RawMemoryPool::RawMemoryPool() :
 	initHook(nullptr),
 	releaseHook(nullptr),
-	mMemoryBlock(nullptr),
+	mLivingListBlock(nullptr),
+	mDataBlock(nullptr),
 	mMaxNumObjects(0),
 	mNumAllocatedObjects(0),
 	mObjectSize(0)
 {
 }
 
-RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize) : RawMemoryPool()
+RawMemoryPool::RawMemoryPool(size_t maxNumObjects, size_t objectSize, size_t objectAlign) : RawMemoryPool()
 {
-	//Disabled: Let's just trust the caller. TypedMemoryPool has safety anyway.
-	//make objectSize a power of 2 - used for padding
-	//assert(isPowerOfTwo(objectSize));
-	//objectSize = getClosestPowerOf2LargerThan(objectSize);
-	//if (objectSize < 4) objectSize = 4;
-
-	//allocate the memory
-	mMemoryBlock = malloc(getLivingListSpaceRequired() + objectSize * maxNumObjects);
-
-	//set member variables
+	//Set trivial fields
 	mMaxNumObjects = maxNumObjects;
 	mNumAllocatedObjects = 0;
 	mObjectSize = objectSize;
+	mObjectAlign = objectAlign;
 
-	//Mark all as unused
-	memset(getLivingListBlock(), 0x00, getLivingListSpaceRequired());
+	//Allocate memory blocks
+	mDataBlock = ALIGNED_ALLOC(mObjectSize * mMaxNumObjects, mObjectAlign);
+
+	size_t livingListSpaceRequired = ceil(mMaxNumObjects / 8.0f);
+	mLivingListBlock = (uint8_t*) malloc(livingListSpaceRequired);
+	memset(getLivingListBlock(), 0x00, livingListSpaceRequired); //Mark all as unused
 }
 
 RawMemoryPool::~RawMemoryPool()
@@ -73,14 +78,21 @@ RawMemoryPool::~RawMemoryPool()
 	//Call release hook on living objects
 	reset();
 
-	::free(mMemoryBlock);
-	mMemoryBlock = nullptr;
+	free(mLivingListBlock);
+	mLivingListBlock = nullptr;
+
+	ALIGNED_FREE(mDataBlock);
+	mDataBlock = nullptr;
 }
 
-RawMemoryPool::RawMemoryPool(RawMemoryPool&& rhs) :
-	RawMemoryPool(rhs.mMaxNumObjects, rhs.mObjectSize)
+RawMemoryPool::RawMemoryPool(RawMemoryPool&& mov) :
+	RawMemoryPool(mov.mMaxNumObjects, mov.mObjectSize, mov.mObjectAlign)
 {
-	std::swap(this->mMemoryBlock, rhs.mMemoryBlock);
+	this->mLivingListBlock = mov.mLivingListBlock;
+	this->mDataBlock       = mov.mDataBlock      ;
+
+	mov.mLivingListBlock = nullptr;
+	mov.mDataBlock       = nullptr;
 }
 
 void RawMemoryPool::reset()
@@ -102,25 +114,19 @@ void RawMemoryPool::reset()
 	}
 	
 	//Mark all as unused
-	memset(getLivingListBlock(), 0x00, getLivingListSpaceRequired());
+	memset(getLivingListBlock(), 0x00, ceil(mMaxNumObjects / 8.0f));
 
 	//reset count of allocated objects
 	mNumAllocatedObjects = 0;
 }
 
-void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
+void RawMemoryPool::resizeObjects(size_t newSize, size_t newAlign, MemoryMapper* mapper)
 {
-	newSize = getClosestPowerOf2LargerThan(newSize);
-	if (newSize != mObjectSize)
+	if (newSize != mObjectSize || newAlign != mObjectAlign)
 	{
 		//Allocate new backing block
-		void* newMemoryBlock = malloc(getLivingListSpaceRequired() + newSize*mMaxNumObjects);
-		void* newObjectBlock = ((char*)newMemoryBlock) + getLivingListSpaceRequired();
-
-		//Transfer living list
-		void* newLivingBlock = newMemoryBlock;
-		memcpy_s(newLivingBlock, getLivingListSpaceRequired(), getLivingListBlock(), getLivingListSpaceRequired());
-
+		void* newDataBlock = ALIGNED_ALLOC(newSize*mMaxNumObjects, newAlign);
+		
 		//Don't bother shuffling members. Assume the caller knows what they're doing.
 
 		if (newSize > mObjectSize)
@@ -129,7 +135,7 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 			for (size_t i = mMaxNumObjects-1; i != (size_t)-1; i--)
 			{
 				void* src = ((uint8_t*) getObjectDataBlock()) + (i * mObjectSize);
-				void* dst = ((uint8_t*)     newObjectBlock  ) + (i * newSize);
+				void* dst = ((uint8_t*)     newDataBlock    ) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
 		}
@@ -139,24 +145,34 @@ void RawMemoryPool::resizeObjects(size_t newSize, MemoryMapper* mapper)
 			for (size_t i = 0; i < mMaxNumObjects; i++)
 			{
 				void* src = ((uint8_t*) getObjectDataBlock()) + (i * mObjectSize);
-				void* dst = ((uint8_t*)     newObjectBlock  ) + (i * newSize);
+				void* dst = ((uint8_t*)     newDataBlock    ) + (i * newSize);
 				mapper->rawMove(dst, src, std::min(mObjectSize, newSize));
 			}
 		}
 		
-		::free(mMemoryBlock);
-		mMemoryBlock = newMemoryBlock;
+		ALIGNED_FREE(mDataBlock);
+		mDataBlock = newDataBlock;
 		mObjectSize = newSize;
+		mObjectAlign = newAlign;
+	}
+}
+
+void RawMemoryPool::setMaxNumObjects(size_t newCount, MemoryMapper* mapper)
+{
+	if (newCount != mMaxNumObjects)
+	{
+		//Allocate new backing block
+		void* newDataBlock = ALIGNED_ALLOC(mObjectSize*newCount, mObjectAlign);
+		
+		mapper->rawMove(newDataBlock, mDataBlock, mObjectSize*std::min(mMaxNumObjects, newCount));
+		
+		ALIGNED_FREE(mDataBlock);
+		mDataBlock = newDataBlock;
 	}
 }
 
 void* RawMemoryPool::allocate()
 {
-	if (mNumAllocatedObjects >= mMaxNumObjects)
-	{
-		return NULL;
-	}
-
 	if (mNumAllocatedObjects < mMaxNumObjects)
 	{
 		mNumAllocatedObjects++;
@@ -169,13 +185,12 @@ void* RawMemoryPool::allocate()
 			if (!isAlive(ptr)) break;
 		}
 
-		setFree(id, false);
+		setAlive(id, true);
 		if (initHook) initHook(ptr);
 		return ptr;
 	}
 	else
 	{
-		assert(false);
 		return nullptr;
 	}
 }
@@ -183,33 +198,28 @@ void* RawMemoryPool::allocate()
 void RawMemoryPool::release(void* ptr)
 {
 	//make sure that the address passed in is actually one managed by this pool
-	if (contains(ptr))
+	if (!contains(ptr))
 	{
-		if (releaseHook) releaseHook(ptr);
-
-		//add address back to free list
-		setFree(ptrToId(ptr), true);
-
-		mNumAllocatedObjects--;
+		cerr << "ERROR: object freed from a pool (" << debugName << ") that doesn't manage it\n";
+		return;
 	}
-	else
+	
+	//Make sure the specified object is alive
+	if (!isAlive(ptr))
 	{
-		cerr << "ERROR: object freed from a pool that doesn't manage it\n";
-		assert(false);
+		cerr << "ERROR: object freed (" << debugName << "), but was already dead\n";
+		return;
 	}
+
+	//Main business logic
+	if (releaseHook) releaseHook(ptr);
+	setAlive(ptrToId(ptr), false);
+	mNumAllocatedObjects--;
 }
 
 bool RawMemoryPool::contains(void* ptr) const
 {
 	return idToPtr(0) <= ptr && ptr < idToPtr(mMaxNumObjects);
-}
-
-void RawMemoryPool::setFree(id_t id, bool isFree)
-{
-	uint8_t* chunk = getLivingListBlock() + (id / 8);
-	uint8_t bitmask = 1 << (id%8);
-	if (isFree) *chunk &= ~bitmask;
-	else        *chunk |=  bitmask;
 }
 
 RawMemoryPool::const_iterator::const_iterator(RawMemoryPool const* pool, id_t index) :

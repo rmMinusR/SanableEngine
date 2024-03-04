@@ -3,6 +3,7 @@
 #include "ParentInfo.hpp"
 
 #include <functional>
+#include <vector>
 
 //Internal mechanism used by TypeBuilder
 //Resolving parent info late allows us to use valid objects from CDO capture step
@@ -18,5 +19,5 @@ public:
 	ParentInfoBuilder(const TypeName& parentType, size_t ownSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness);
 
 	ParentInfo buildFromSurrogate(); //Only works on normal inheritance
-	ParentInfo buildFromCDOs(const std::vector<void*>& cdos); //Works on normal and virtual inheritance
+	ParentInfo buildFromClassImage(char* image); //Works on normal and virtual inheritance
 };

@@ -3,7 +3,6 @@
 #include <algorithm>
 
 #include "dllapi.h"
-#include "rttiutils.h"
 
 template<typename TObj>
 class CallBatcher
@@ -11,8 +10,8 @@ class CallBatcher
 private:
 	std::vector<TObj*> objects;
 
-	typedef vtable_ptr sortID_t;
-	static inline sortID_t getSortID(TObj* obj) { return get_vtable_ptr(obj); }
+	typedef void** sortID_t; //vptr, if present. TODO: switch to new RTTI system
+	static inline sortID_t getSortID(TObj* obj) { return *reinterpret_cast<sortID_t*>(obj); }
 
 public:
 	CallBatcher()
@@ -21,22 +20,23 @@ public:
 	}
 
 	template<typename... TArgs>
-	void memberCall(void (TObj::*func)(TArgs...), TArgs... funcArgs)
+	void memberCall(void (TObj::*func)(TArgs...), TArgs... funcArgs) const
 	{
 		for (TObj* o : objects) (o->*func)(funcArgs...);
 	}
 
 	template<typename TFunc, typename... TArgs>
-	void staticCall(void *(*func)(TArgs...), TArgs... funcArgs)
+	void staticCall(TFunc func, TArgs... funcArgs) const
 	{
-		for (TObj* o : objects) (*func)(o, funcArgs...);
+		for (TObj* o : objects) func(o, funcArgs...);
 	}
 
 	void add(TObj* obj)
 	{
-		size_t insertIndex = 0;
-		while (insertIndex < objects.size() && getSortID(obj) > getSortID(objects[insertIndex])) insertIndex++;
-		objects.insert(objects.begin()+insertIndex, obj);
+		auto it = objects.begin();
+		while (it != objects.end() && getSortID(obj) > getSortID(*it)) ++it; //Group and order by vptr
+		while (it != objects.end() && obj > *it && getSortID(obj) == getSortID(*it)) ++it; //Then order within group by data location
+		objects.insert(it, obj);
 	}
 
 	void remove(TObj* obj)
