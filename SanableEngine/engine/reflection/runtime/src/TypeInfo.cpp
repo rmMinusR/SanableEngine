@@ -202,6 +202,19 @@ void* TypeInfo::upcast(void* obj, const TypeName& name) const
 	return nullptr;
 }
 
+bool TypeInfo::matchesExact(void* obj) const
+{
+	assert(byteUsage);
+	assert(implicitValues);
+
+	for (size_t i = 0; i < size; ++i)
+	{
+		if (byteUsage[i] == ByteUsage::ImplicitConst && reinterpret_cast<char*>(obj)[i] != implicitValues[i]) return false; //If implicit const detected, value must match
+	}
+
+	return true;
+}
+
 void TypeInfo::doLateBinding()
 {
 	//Deferred from captureCDO: Mark all fields as used
