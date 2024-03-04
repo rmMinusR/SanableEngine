@@ -31,6 +31,16 @@ void GlobalTypeRegistry::loadModule(module_key_t key, const ModuleTypeRegistry& 
 	it->second.doLateBinding();
 }
 
+TypeInfo const* GlobalTypeRegistry::snipeType(void* obj, size_t size, TypeInfo const* hint)
+{
+	for (const auto& kv : modules)
+	{
+		TypeInfo const* out = kv.second.snipeType(obj, size, hint);
+		if (out) return out;
+	}
+	return nullptr;
+}
+
 void GlobalTypeRegistry::unloadModule(module_key_t key)
 {
 	auto it = modules.find(key);

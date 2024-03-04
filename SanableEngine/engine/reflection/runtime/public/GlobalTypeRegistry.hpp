@@ -37,6 +37,15 @@ public:
 	ENGINE_RTTI_API static void unloadModule(module_key_t key);
 
 	/// <summary>
+	/// Attempt to find the exact type of a void pointer
+	/// </summary>
+	/// <param name="obj">Object of unknown type</param>
+	/// <param name="size">Size of object. Can be semi-inaccurate as long as we can safely read memory in the specified range.</param>
+	/// <param name="hint">Parent type, can be null if unknown</param>
+	/// <returns>Pointer to matching type, or null if none was found</returns>
+	ENGINE_RTTI_API static TypeInfo const* snipeType(void* obj, size_t size, TypeInfo const* hint = nullptr);
+
+	/// <summary>
 	/// Get the names of any types that have been altered via updateModule since last call.
 	/// </summary>
 	[[nodiscard]] ENGINE_RTTI_API static std::unordered_set<TypeName> getDirtyTypes();
