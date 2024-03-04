@@ -3,11 +3,13 @@
 #include "application/PluginManager.hpp"
 #include "application/Plugin.hpp"
 #include "Renderer.hpp"
+#include "Material.hpp"
 #include "game/GameObject.hpp"
 #include "game/Game.hpp"
 #include "application/Application.hpp"
 
-PluginManagerView::PluginManagerView()
+PluginManagerView::PluginManagerView(Material* material) :
+	material(material)
 {
 }
 
@@ -27,7 +29,7 @@ void PluginManagerView::Update()
 
 Material* PluginManagerView::getMaterial() const
 {
-	return nullptr;
+	return material;
 }
 
 void PluginManagerView::renderImmediate(Renderer* target) const

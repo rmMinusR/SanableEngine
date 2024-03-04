@@ -12,3 +12,6 @@ target_link_libraries("PluginControlUI" "engine-core")
 
 # Declare exports
 target_include_directories("PluginControlUI" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
+
+export_resource(PluginControlUI resources/shaders/ui/frag.glsl)
+export_resource(PluginControlUI resources/shaders/ui/vert.glsl)

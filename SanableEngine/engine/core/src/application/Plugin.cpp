@@ -1,7 +1,9 @@
 #include "application/Plugin.hpp"
 
+#include "application/Application.hpp"
 #include "application/PluginCore.hpp"
 #include "GlobalTypeRegistry.hpp"
+#include "MemoryManager.hpp"
 
 #if __EMSCRIPTEN__
 #include <dlfcn.h>
@@ -19,6 +21,7 @@ Plugin::Plugin(const std::filesystem::path& path) :
 
 Plugin::~Plugin()
 {
+	if (reportedData) delete reportedData;
 	assert(!isCodeLoaded() && status == Status::NotLoaded && !isHooked());
 }
 
@@ -59,7 +62,7 @@ bool Plugin::isHooked() const
 	return status >= Status::Hooked;
 }
 
-bool Plugin::load(Application const* engine)
+bool Plugin::load(Application const* context)
 {
 	if (status != Status::NotLoaded) return status > Status::NotLoaded;
 	assert(!isCodeLoaded());
@@ -108,7 +111,7 @@ bool Plugin::load(Application const* engine)
 	//Report plugin data
 	assert(!reportedData);
 	reportedData = new PluginReportedData();
-	bool success = entryPoints.report(this, reportedData, engine);
+	bool success = entryPoints.report(this, reportedData, context);
 	if (!success) return false;
 
 	//Report RTTI
@@ -145,20 +148,18 @@ bool Plugin::cleanup(bool shutdown)
 
 	if (entryPoints.cleanup) entryPoints.cleanup(shutdown);
 
-	assert(reportedData);
-	delete reportedData;
-	reportedData = nullptr;
-
 	status = Status::Registered;
 
 	return true;
 }
 
-void Plugin::unload()
+void Plugin::unload(Application* context)
 {
 	assert(status == Status::DllLoaded || status == Status::Registered);
 	assert(isCodeLoaded());
 
+	ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
+	for (const TypeInfo& i : types->getTypes()) context->getMemoryManager()->destroyPool(i.name);
 	GlobalTypeRegistry::unloadModule(reportedData->name);
 
 #ifdef _WIN32

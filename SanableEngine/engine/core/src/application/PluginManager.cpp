@@ -56,7 +56,7 @@ void PluginManager::loadAll()
 
 void PluginManager::unloadAll()
 {
-	for (Plugin* p : plugins) p->unload();
+	for (Plugin* p : plugins) p->unload(engine);
 }
 
 void PluginManager::hook(Plugin* plugin)

@@ -2,6 +2,16 @@
 
 #include "GlobalTypeRegistry.hpp"
 
+void MemoryManager::destroyPool(const TypeName& type)
+{
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == type; });
+	if (it != pools.cend())
+	{
+		delete *it;
+		pools.erase(it);
+	}
+}
+
 void MemoryManager::init()
 {
 	//Nothing to do here

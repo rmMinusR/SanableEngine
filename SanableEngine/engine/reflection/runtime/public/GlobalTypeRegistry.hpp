@@ -24,6 +24,8 @@ public:
 	/// </summary>
 	ENGINE_RTTI_API static TypeInfo const* lookupType(const TypeName& name);
 
+	ENGINE_RTTI_API static ModuleTypeRegistry const* getModule(const module_key_t& key);
+
 	//////////// INTERNAL FUNCTIONS ////////////
 
 	/// <summary>

@@ -17,6 +17,11 @@ TypeInfo const* GlobalTypeRegistry::lookupType(const TypeName& name)
 	return nullptr;
 }
 
+ModuleTypeRegistry const* GlobalTypeRegistry::getModule(const module_key_t& key)
+{
+	return &modules.at(key);
+}
+
 void GlobalTypeRegistry::loadModule(std::string key, const ModuleTypeRegistry& newTypes)
 {
 	std::wstring wide(key.length(), ' ');

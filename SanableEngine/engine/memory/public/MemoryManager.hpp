@@ -27,8 +27,9 @@ public:
 	template<typename TObj>
 	void destroy(TObj* obj);
 
+	ENGINEMEM_API void destroyPool(const TypeName& type);
 	template<typename TObj>
-	void destroyPool();
+	inline void destroyPool() { destroyPool(TypeName::create<TObj>()); }
 
 private:
 	ENGINEMEM_API void init();
@@ -92,15 +93,4 @@ void MemoryManager::destroy(TObj* obj)
 	assert(pool->contains(obj));
 
 	pool->release(obj);
-}
-
-template<typename TObj>
-void MemoryManager::destroyPool()
-{
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == TypeName::create<TObj>(); });
-	if (it != pools.cend())
-	{
-		delete *it;
-		pools.erase(it);
-	}
 }

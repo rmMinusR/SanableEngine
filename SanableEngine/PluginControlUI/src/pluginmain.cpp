@@ -3,11 +3,16 @@
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
 #include "PluginManagerView.hpp"
+#include "ShaderProgram.hpp"
+#include "Material.hpp"
 
 Game* game;
 GameObject* ui;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin const* context, PluginReportedData* report, Application const* engine)
+ShaderProgram* uiShader;
+Material* uiMaterial;
+
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* engine)
 {
     printf("PluginControlUI: plugin_preInit() called\n");
 
@@ -24,8 +29,12 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
 
     if (firstRun)
     {
+        uiShader = new ShaderProgram("resources/shaders/ui");
+        uiShader->load();
+        uiMaterial = new Material(uiShader);
+
         ui = game->addGameObject();
-        ui->CreateComponent<PluginManagerView>();
+        ui->CreateComponent<PluginManagerView>(uiMaterial);
     }
 
     return true;
@@ -39,5 +48,12 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
     {
         game->destroy(ui);
         ui = nullptr;
+
+        delete uiMaterial;
+        uiMaterial = nullptr;
+        delete uiShader;
+        uiShader = nullptr;
+
+        game->getApplication()->getMemoryManager()->destroyPool<PluginManagerView>();
     }
 }

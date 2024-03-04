@@ -71,8 +71,8 @@ private:
 		fp_plugin_reportTypes reportTypes = nullptr;
 	} entryPoints;
 
-	bool load(Application const* engine);
+	bool load(Application const* context);
 	bool init();
 	bool cleanup(bool shutdown);
-	void unload();
+	void unload(Application* context);
 };

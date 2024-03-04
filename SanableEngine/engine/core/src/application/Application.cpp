@@ -113,7 +113,9 @@ void Application::shutdown()
     assert(isAlive);
     isAlive = false;
 
+    game->applyConcurrencyBuffers();
     pluginManager.unhookAll(true);
+    game->applyConcurrencyBuffers();
     pluginManager.unloadAll();
 
     game->cleanup();
