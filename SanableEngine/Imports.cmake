@@ -71,8 +71,13 @@ target_include_directories(OpenFBX PUBLIC "${OpenFBX_BASE_DIR}/src/")
 if(WIN32)
     message(" > Configuring GLEW for Win32")
     set(GLEW_DIR "${CMAKE_CURRENT_LIST_DIR}/libs/glew")
-    # This version of GLEW has a broken configfile. Add target manually.
-    add_library(glew STATIC "${GLEW_DIR}/src/glew.c")
+
+    if(NOT EXISTS "${GLEW_DIR}/src/glew.c")
+        message(FATAL_ERROR "Please generate GLEW sources before building: Go to glew/auto and run make.")
+    endif()
+
+    # This version of GLEW has a broken configfile. Add targets manually.
+    add_library(glew STATIC "${GLEW_DIR}/src/glew.c") # NOTE: If this errors, 
     target_compile_definitions(glew PUBLIC GLEW_STATIC)
     target_compile_definitions(glew PRIVATE GLEW_BUILD)
     target_include_directories(glew PUBLIC "${GLEW_DIR}/include/")

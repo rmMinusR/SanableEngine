@@ -7,3 +7,6 @@
 [submodule "SanableEngine/libs/capstone"]
 	path = SanableEngine/libs/capstone
 	url = https://github.com/capstone-engine/capstone.git
+[submodule "SanableEngine/libs/glew"]
+	path = SanableEngine/libs/glew
+	url = https://github.com/nigels-com/glew.git
