@@ -123,8 +123,5 @@ PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
         delete mesh;
         delete shader;
         delete material;
-
-        application->getMemoryManager()->destroyPool<PlayerController>();
-        application->getMemoryManager()->destroyPool<ColliderColorChanger>();
     }
 }

@@ -31,7 +31,5 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        application->getMemoryManager()->destroyPool<RectangleCollider>();
-        application->getMemoryManager()->destroyPool<RectangleRenderer>();
     }
 }

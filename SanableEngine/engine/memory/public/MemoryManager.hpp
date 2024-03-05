@@ -15,9 +15,8 @@ private:
 	std::vector<GenericTypedMemoryPool*> pools;
 	//std::unordered_map<std::string, RawMemoryPool*> pools;
 
-	template<typename TObj>
-	inline GenericTypedMemoryPool* getSpecificPool_internal(bool fallbackCreate);
 public:
+	ENGINEMEM_API GenericTypedMemoryPool* getSpecificPool(const TypeName& type);
 	template<typename TObj>
 	inline TypedMemoryPool<TObj>* getSpecificPool(bool fallbackCreate);
 
@@ -42,32 +41,19 @@ private:
 	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
 };
 
-
-
-template<typename TObj>
-inline GenericTypedMemoryPool* MemoryManager::getSpecificPool_internal(bool fallbackCreate)
-{
-	//Search for pool matching typename
-	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName()  == TypeName::create<TObj>(); });
-	if (it != pools.cend()) return *it;
-
-	//If set to create on fallback, do so
-	if (fallbackCreate)
-	{
-		GenericTypedMemoryPool* out = nullptr;
-		out = GenericTypedMemoryPool::create<TObj>();
-		pools.push_back(out);
-		return out;
-	}
-
-	//Nothing found!
-	return nullptr;
-}
-
 template<typename TObj>
 inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
 {
-	GenericTypedMemoryPool* out = getSpecificPool_internal<TObj>(fallbackCreate);
+	GenericTypedMemoryPool* out = getSpecificPool(TypeName::create<TObj>());
+
+	//If set to create on fallback, do so
+	if (!out && fallbackCreate)
+	{
+		out = GenericTypedMemoryPool::create<TObj>();
+		pools.push_back(out);
+		return out->getView<TObj>();
+	}
+
 	return out ? out->getView<TObj>() : nullptr;
 }
 
@@ -81,7 +67,7 @@ template<typename TObj>
 void MemoryManager::destroy(TObj* obj)
 {
 	//Try direct lookup first
-	GenericTypedMemoryPool* pool = getSpecificPool_internal<TObj>(false);
+	GenericTypedMemoryPool* pool = getSpecificPool(TypeName::create<TObj>());
 
 	//If that fails, search every pool to find owner
 	if (!pool)
@@ -89,8 +75,9 @@ void MemoryManager::destroy(TObj* obj)
 		for (GenericTypedMemoryPool* i : pools) if (i->contains(obj)) { pool = i; break; }
 	}
 
-	assert(pool); //FIXME this will also fail if the owning pool's backing type isn't loaded
-	assert(pool->contains(obj));
-
-	pool->release(obj);
+	if (pool && pool->contains(obj))
+	{
+		pool->release(obj);
+	}
+	else wprintf(L"WARNING: Cannot destroy %s at %p: pool does not exist", TypeName::create<TObj>().c_str(), obj);
 }

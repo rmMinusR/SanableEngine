@@ -53,7 +53,5 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
         uiMaterial = nullptr;
         delete uiShader;
         uiShader = nullptr;
-
-        game->getApplication()->getMemoryManager()->destroyPool<PluginManagerView>();
     }
 }

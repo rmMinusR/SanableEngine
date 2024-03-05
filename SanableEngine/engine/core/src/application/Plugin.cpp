@@ -120,6 +120,17 @@ bool Plugin::load(Application const* context)
 	GlobalTypeRegistry::loadModule(reportedData->name, r);
 	wprintf(L"Loaded RTTI for %u types from plugin %s\n", r.getTypes().size(), path.filename().c_str());
 	
+	//If reloading, set release hooks
+	if (wasEverLoaded)
+	{
+		ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
+		for (const TypeInfo& i : types->getTypes())
+		{
+			GenericTypedMemoryPool* pool = ((Application*)context)->getMemoryManager()->getSpecificPool(i.name);
+			pool->releaseHook = i.dtor;
+		}
+	}
+
 	status = Status::Registered;
 	wasEverLoaded = true;
 	return true;
@@ -153,13 +164,22 @@ bool Plugin::cleanup(bool shutdown)
 	return true;
 }
 
+void tryFreeWarnUnloaded(void* ptr)
+{
+	wprintf(L"WARNING: Attempted to free object with unloaded type at address: %p\n", ptr);
+}
+
 void Plugin::unload(Application* context)
 {
 	assert(status == Status::DllLoaded || status == Status::Registered);
 	assert(isCodeLoaded());
 
 	ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
-	for (const TypeInfo& i : types->getTypes()) context->getMemoryManager()->destroyPool(i.name);
+	for (const TypeInfo& i : types->getTypes())
+	{
+		GenericTypedMemoryPool* pool = context->getMemoryManager()->getSpecificPool(i.name);
+		pool->releaseHook = tryFreeWarnUnloaded;
+	}
 	GlobalTypeRegistry::unloadModule(reportedData->name);
 
 #ifdef _WIN32

@@ -2,6 +2,16 @@
 
 #include "GlobalTypeRegistry.hpp"
 
+GenericTypedMemoryPool* MemoryManager::getSpecificPool(const TypeName& typeName)
+{
+	//Search for pool matching typename
+	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == typeName; });
+	if (it != pools.cend()) return *it;
+
+	//Nothing found!
+	return nullptr;
+}
+
 void MemoryManager::destroyPool(const TypeName& type)
 {
 	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == type; });

@@ -9,6 +9,7 @@
 #include "GlobalTypeRegistry.hpp"
 #include "application/Window.hpp"
 #include "game/Game.hpp"
+#include "MeshRenderer.hpp"
 #include "Camera.hpp"
 
 void Application::processEvents()
@@ -93,6 +94,7 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     memoryManager.init();
     memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module (avoiding nasty access violation errors)
     memoryManager.getSpecificPool<Camera>(true); //Same with Camera
+    memoryManager.getSpecificPool<MeshRenderer>(true); //And MeshRenderer
     memoryManager.ensureFresh();
 
     this->game = game;
@@ -114,16 +116,16 @@ void Application::shutdown()
     isAlive = false;
 
     game->applyConcurrencyBuffers();
-    pluginManager.unhookAll(true);
+    pluginManager.unhookAll(true); //FIXME: Pools destroyed automatically here, but Component and GameObject need to interface with Game
+    game->applyConcurrencyBuffers();
+    game->cleanup();
     game->applyConcurrencyBuffers();
     pluginManager.unloadAll();
-
-    game->cleanup();
 
     while (!windows.empty()) WindowBuilder::destroy(windows[windows.size()-1]);
     mainWindow = nullptr;
     
-    //Clean up memory, GameObject pool first so components are released
+    //Clean up memory, GameObject pool first so remaining components are released
     memoryManager.destroyPool<GameObject>();
     memoryManager.cleanup();
 
