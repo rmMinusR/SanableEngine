@@ -1,7 +1,7 @@
 #pragma once
 
+#include <glm/mat4x4.hpp>
 #include "dllapi.h"
-
 #include "Rect.hpp"
 
 /// <summary>
@@ -66,4 +66,6 @@ public:
 
 	ENGINEGUI_API void setRelativeRenderDepth(depth_t depth);
 	ENGINEGUI_API depth_t getRelativeRenderDepth() const;
+
+	ENGINEGUI_API operator glm::mat4() const; //GL interop
 };

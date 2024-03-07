@@ -15,7 +15,7 @@ public:
 	ENGINEGRAPHICS_API MeshRenderer(Mesh* mesh, Material* material);
 	ENGINEGRAPHICS_API virtual ~MeshRenderer();
 
-	ENGINEGRAPHICS_API Material* getMaterial() const override;
+	ENGINEGRAPHICS_API const Material* getMaterial() const override;
 protected:
 	ENGINEGRAPHICS_API void renderImmediate(Renderer* renderer) const override;
 };

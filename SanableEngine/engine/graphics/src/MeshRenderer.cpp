@@ -10,7 +10,7 @@ MeshRenderer::MeshRenderer(Mesh* mesh, Material* material) :
 {
 }
 
-Material* MeshRenderer::getMaterial() const
+const Material* MeshRenderer::getMaterial() const
 {
 	return material;
 }

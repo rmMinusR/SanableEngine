@@ -23,7 +23,7 @@ void RectangleRenderer::SetColor(SDL_Color newColor)
 	color = newColor;
 }
 
-Material* RectangleRenderer::getMaterial() const
+const Material* RectangleRenderer::getMaterial() const
 {
 	return nullptr;
 }

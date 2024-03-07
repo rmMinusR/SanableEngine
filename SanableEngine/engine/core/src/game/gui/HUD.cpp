@@ -3,6 +3,7 @@
 #include <unordered_map>
 
 #include "ShaderProgram.hpp"
+#include "Material.hpp"
 
 HUD::HUD()
 {
@@ -22,13 +23,12 @@ void HUD::render(Renderer* renderer)
 			std::vector<Widget*>
 		>
 	> renderables;
-	widgets.staticCall([&](Widget* r)
+	widgets.staticCall([&](Widget* w)
 	{
 		renderables[w->getShader()][w->getMaterial()].push_back(w);
 	});
 
 	//Process buffer
-	Renderer* renderInterface = window->getRenderer();
 	for (const auto& shaderGroup : renderables)
 	{
 		//Activate shader
@@ -38,16 +38,16 @@ void HUD::render(Renderer* renderer)
 		for (const auto& materialGroup : shaderGroup.second)
 		{
 			//Activate material
-			if (materialGroup.first) materialGroup.first->writeSharedUniforms(renderInterface);
+			if (materialGroup.first) materialGroup.first->writeSharedUniforms(renderer);
 			assert(materialGroup.first == nullptr || materialGroup.first->getShader() == shaderGroup.first);
 
-			for (const Widget* w : materialGroup.second)
+			for (Widget* w : materialGroup.second)
 			{
-				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderInterface, w);
+				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderer, w);
 
 				assert(w->getMaterial() == materialGroup.first);
-				assert(w->getMaterial() == nullptr || rw>getMaterial()->getShader() == shaderGroup.first);
-				w->renderImmediate(renderInterface);
+				assert(w->getMaterial() == nullptr || w->getMaterial()->getShader() == shaderGroup.first);
+				w->renderImmediate(renderer);
 			}
 		}
 	}

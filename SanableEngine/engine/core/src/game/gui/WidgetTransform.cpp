@@ -1,10 +1,13 @@
 #include "game/gui/WidgetTransform.hpp"
 
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
+
 WidgetTransform::WidgetTransform()
 {
 }
 
-void WidgetTransform::setPivot(float nrmX, float nrmY)
+void WidgetTransform::setPivot(float x, float y)
 {
 	pivotX = x;
 	pivotY = y;
@@ -48,8 +51,8 @@ Rect<float> WidgetTransform::getLocalRect() const
 	r.y = offsetY + height*pivotY;
 	if (parent)
 	{
-		r.x += parent->offsetX * parent->anchorX;
-		r.y += parent->offsetY * parent->anchorY;
+		r.x += parent->width  * parent->anchorX;
+		r.y += parent->height * parent->anchorY;
 	}
 	r.width = width;
 	r.height = height;
@@ -60,12 +63,12 @@ void WidgetTransform::setLocalRect(const Rect<float>& rect)
 {
 	width = rect.width;
 	height = rect.height;
-	rootX = rect.x - width*pivotX;
-	rootY = rect.y - height*pivotY;
+	offsetX = rect.x - width*pivotX;
+	offsetY = rect.y - height*pivotY;
 	if (parent)
 	{
-		r.x -= parent->offsetX * parent->anchorX;
-		r.y -= parent->offsetY * parent->anchorY;
+		offsetX -= parent->width  * parent->anchorX;
+		offsetY -= parent->height * parent->anchorY;
 	}
 }
 
@@ -107,7 +110,7 @@ void WidgetTransform::setRenderDepth(depth_t depth)
 	if (parent) relativeRenderDepth -= parent->getRelativeRenderDepth();
 }
 
-depth_t WidgetTransform::getRenderDepth() const
+WidgetTransform::depth_t WidgetTransform::getRenderDepth() const
 {
 	if (parent) return relativeRenderDepth + parent->getRenderDepth();
 	return relativeRenderDepth;
@@ -118,7 +121,18 @@ void WidgetTransform::setRelativeRenderDepth(depth_t depth)
 	relativeRenderDepth = depth;
 }
 
-depth_t WidgetTransform::getRelativeRenderDepth() const
+WidgetTransform::depth_t WidgetTransform::getRelativeRenderDepth() const
 {
 	return relativeRenderDepth;
+}
+
+WidgetTransform::operator glm::mat4() const
+{
+	Rect<float> rect;
+	return glm::translate<float, glm::packed_highp>(
+			glm::identity<glm::mat4>(),
+			glm::vec3(rect.x, rect.y, getRenderDepth())
+		)
+		//TODO rotation component goes here
+		* glm::scale(glm::identity<glm::mat4>(), glm::vec3(getScale()));
 }

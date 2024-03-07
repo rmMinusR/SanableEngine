@@ -40,11 +40,9 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			std::vector<const I3DRenderable*>
 		>
 	> renderables;
-	game->get3DRenderables()->staticCall([&](I3DRenderable* r)
+	game->get3DRenderables()->staticCall([&](const I3DRenderable* r)
 	{
-		Material* material = r->getMaterial();
-		const ShaderProgram* shader = material ? material->getShader() : nullptr;
-		renderables[shader][material].push_back(r);
+		renderables[r->getShader()][r->getMaterial()].push_back(r);
 	});
 
 	//Process buffer

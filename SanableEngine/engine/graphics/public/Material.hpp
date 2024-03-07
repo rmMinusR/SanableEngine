@@ -7,6 +7,7 @@ class ShaderProgram;
 class Renderer;
 class MeshRenderer;
 class I3DRenderable;
+class Widget;
 
 class Material
 {
@@ -22,6 +23,7 @@ public:
 	ENGINEGRAPHICS_API const ShaderProgram* getShader() const;
 	//ENGINEGRAPHICS_API const std::vector<ShaderUniform>& getParameters() const;
 
-	void writeSharedUniforms(Renderer* context) const;
-	void writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const;
+	ENGINEGRAPHICS_API void writeSharedUniforms(Renderer* context) const;
+	ENGINEGRAPHICS_API void writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const;
+	ENGINEGRAPHICS_API void writeInstanceUniforms(Renderer* context, const Widget* target) const;
 };
