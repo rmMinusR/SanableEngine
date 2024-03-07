@@ -1,6 +1,7 @@
 #pragma once
 
 #include "application/WindowRenderPipeline.hpp"
+#include "game/gui/HUD.hpp"
 
 class Game;
 
@@ -11,6 +12,8 @@ class GameWindowRenderPipeline : public WindowRenderPipeline
 public:
 	ENGINECORE_API GameWindowRenderPipeline(Game* game);
 	ENGINECORE_API virtual ~GameWindowRenderPipeline();
+
+	HUD hud;
 
 protected:
 	ENGINECORE_API virtual void setup(Window* window) override;

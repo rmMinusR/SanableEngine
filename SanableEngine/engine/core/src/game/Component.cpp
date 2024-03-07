@@ -4,6 +4,7 @@
 
 #include "application/Application.hpp"
 #include "game/GameObject.hpp"
+#include "Material.hpp"
 
 void Component::BindToGameObject(GameObject* obj)
 {
@@ -27,6 +28,12 @@ void Component::onStart()
 
 IUpdatable::~IUpdatable()
 {
+}
+
+const ShaderProgram* I3DRenderable::getShader() const
+{
+	const Material* material = getMaterial();
+	return material ? material->getShader() : nullptr;
 }
 
 I3DRenderable::~I3DRenderable()

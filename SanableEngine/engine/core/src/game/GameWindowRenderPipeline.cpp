@@ -71,4 +71,6 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			}
 		}
 	}
+
+	hud.render(renderInterface);
 }

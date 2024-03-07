@@ -41,11 +41,13 @@ public:
 };
 
 class Material;
+class ShaderProgram;
 class GameWindowRenderPipeline;
 class Renderer;
 class I3DRenderable
 {
-	virtual Material* getMaterial() const = 0;
+	ENGINECORE_API const ShaderProgram* getShader() const;
+	virtual const Material* getMaterial() const = 0;
 protected:
 	virtual void renderImmediate(Renderer*) const = 0;
 	friend class GameWindowRenderPipeline;
