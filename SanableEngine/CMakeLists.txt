@@ -4,7 +4,7 @@ project ("devenv") #Ignore
 enable_testing()
 
 include("Utils.cmake") # Include function library
-include("Imports.cmake") # Include libs folder
+include("libs/Imports.cmake") # Include libs folder
 
 add_compile_definitions(NOMINMAX) # Come on, MSVC. Don't conflict with standard libraries.
 
