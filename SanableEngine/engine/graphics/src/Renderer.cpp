@@ -60,12 +60,12 @@ void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wst
 void Renderer::drawTexture(const Texture& tex, int x, int y)
 {
 	ShaderProgram::clear();
-	drawTexture(tex, Vector3f(x, y, 0), tex.width, tex.height);
+	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
 }
 
-void Renderer::drawTexture(const Texture& tex, Vector3f pos, float w, float h)
+void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h)
 {
-	glBindTexture(GL_TEXTURE_2D, tex.id);
+	if (tex) glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
 	glTexCoord2i(0, 0); glVertex3f(pos.x  , pos.y  , pos.z);

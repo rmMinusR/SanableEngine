@@ -25,6 +25,6 @@ void ImageWidget::renderImmediate(Renderer* renderer)
 	auto depth = transform.getRenderDepth();
 	
 	renderer->errorCheck();
-	renderer->drawTexture(*texture, Vector3f(r.x, r.y, depth), r.width, r.height);
+	renderer->drawTexture(texture, Vector3f(r.x, r.y, depth), r.width, r.height);
 	renderer->errorCheck();
 }
