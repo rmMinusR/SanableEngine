@@ -72,6 +72,19 @@ void Renderer::drawTexture(const Texture& tex, int x, int y)
 	glDisable(GL_TEXTURE_2D);
 }
 
+void Renderer::drawTexture(const Texture& tex, Vector3f pos, float w, float h)
+{
+	glBindTexture(GL_TEXTURE_2D, tex.id);
+	glEnable(GL_TEXTURE_2D);
+	glBegin(GL_QUADS);
+	glTexCoord2i(0, 0); glVertex3f(pos.x  , pos.y  , pos.z);
+	glTexCoord2i(1, 0); glVertex3f(pos.x+w, pos.y  , pos.z);
+	glTexCoord2i(1, 1); glVertex3f(pos.x+w, pos.y+h, pos.z);
+	glTexCoord2i(0, 1); glVertex3f(pos.x  , pos.y+h, pos.z);
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+}
+
 void Renderer::errorCheck()
 {
 	GLenum err = glGetError();

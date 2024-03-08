@@ -13,6 +13,8 @@ public:
 	ENGINECORE_API virtual ~WindowGUIRenderPipeline();
 
 	HUD hud;
+	float zNear = 0;
+	float zFar = 1000;
 
 	ENGINECORE_API virtual void render(Rect<float> viewport) override;
 };
