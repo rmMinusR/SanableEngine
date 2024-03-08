@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ReflectionSpec.hpp>
 #include <glm/mat4x4.hpp>
 #include "dllapi.h"
 #include "Rect.hpp"
@@ -10,7 +11,7 @@
 /// <remarks>
 /// 
 /// </remarks>
-struct WidgetTransform
+struct STIX_ENABLE_IMAGE_CAPTURE WidgetTransform
 {
 public:
 	typedef int depth_t;

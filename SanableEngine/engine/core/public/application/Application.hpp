@@ -52,6 +52,7 @@ public:
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
     ENGINECORE_API PluginManager* getPluginManager();
+    ENGINECORE_API Window* getMainWindow();
 
     ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
 };

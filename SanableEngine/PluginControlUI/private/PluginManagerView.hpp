@@ -1,23 +1,21 @@
 #pragma once
 
-#include "game/Component.hpp"
+#include "game/gui/Widget.hpp"
 
 class PluginManager;
 class ShaderProgram;
 class Material;
 
-class PluginManagerView : public Component, public I3DRenderable, public IUpdatable
+class PluginManagerView : public Widget
 {
 	int selectionIndex;
 	PluginManager* mgr = nullptr;
 	Material* material;
 
 public:
-	PluginManagerView(Material* material);
+	PluginManagerView(PluginManager* mgr, Material* material);
 	~PluginManagerView();
 
-	virtual void onStart() override;
-	virtual void Update() override;
-	virtual Material* getMaterial() const override;
-	virtual void renderImmediate(Renderer* target) const override;
+	virtual const Material* getMaterial() const override;
+	virtual void renderImmediate(Renderer* target) override;
 };

@@ -13,6 +13,11 @@ HUD::~HUD()
 {
 }
 
+MemoryManager* HUD::getMemory()
+{
+	return &memory;
+}
+
 void HUD::render(Renderer* renderer)
 {
 	//Collect objects to buffer

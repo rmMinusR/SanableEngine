@@ -126,6 +126,8 @@ void Mesh::uploadToGPU()
 
 void Mesh::renderImmediate() const
 {
+	GLenum err = glGetError();
+	
 	glColor4f(1, 1, 1, 1);
 
 	//Draw mesh

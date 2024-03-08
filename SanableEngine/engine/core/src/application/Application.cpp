@@ -176,6 +176,11 @@ PluginManager* Application::getPluginManager()
     return &pluginManager;
 }
 
+Window* Application::getMainWindow()
+{
+    return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
+}
+
 WindowBuilder Application::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
 {
     return WindowBuilder(this, name, width, height, glSettings, std::move(renderPipeline));

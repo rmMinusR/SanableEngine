@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ReflectionSpec.hpp>
 #include "WidgetTransform.hpp"
 
 class Renderer;
@@ -7,10 +8,11 @@ class HUD;
 class Material;
 class ShaderProgram;
 
-class Widget
+class STIX_ENABLE_IMAGE_CAPTURE Widget
 {
 protected:
-	HUD* context;
+	HUD* hud;
+	friend class HUD;
 
 public:
 	WidgetTransform transform;

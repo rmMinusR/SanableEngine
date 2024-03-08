@@ -44,5 +44,8 @@ public:
 	ENGINEGRAPHICS_API int getHeight() const;
 	ENGINEGRAPHICS_API bool isFocused() const;
 
+	inline WindowRenderPipeline* getRenderPipeline() { return &*renderPipeline; }
+	inline WindowInputProcessor* getInputProcessor() { return &*inputProcessor; }
+
 	ENGINEGRAPHICS_API static void setActiveDrawTarget(const Window* w);
 };

@@ -8,8 +8,9 @@
 #include "game/Game.hpp"
 #include "application/Application.hpp"
 
-PluginManagerView::PluginManagerView(Material* material) :
-	material(material)
+PluginManagerView::PluginManagerView(PluginManager* mgr, Material* material) :
+	material(material),
+	mgr(mgr)
 {
 }
 
@@ -17,22 +18,12 @@ PluginManagerView::~PluginManagerView()
 {
 }
 
-void PluginManagerView::onStart()
-{
-	mgr = gameObject->getContext()->getApplication()->getPluginManager();
-}
-
-void PluginManagerView::Update()
-{
-	
-}
-
-Material* PluginManagerView::getMaterial() const
+const Material* PluginManagerView::getMaterial() const
 {
 	return material;
 }
 
-void PluginManagerView::renderImmediate(Renderer* target) const
+void PluginManagerView::renderImmediate(Renderer* target)
 {
 	mgr->enumeratePlugins([&](Plugin* p)
 	{
