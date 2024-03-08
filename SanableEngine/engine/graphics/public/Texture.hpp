@@ -27,4 +27,7 @@ public:
 	ENGINEGRAPHICS_API Texture& operator=(Texture&& mov);
 	Texture(const Texture& cpy) = delete;
 	Texture& operator=(const Texture& cpy) = delete;
+
+	inline int getNativeWidth () const { return width; }
+	inline int getNativeHeight() const { return height; }
 };

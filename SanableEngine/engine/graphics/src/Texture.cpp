@@ -23,8 +23,24 @@ Texture::Texture(const std::filesystem::path& path, SDL_GLContext ctx) :
 	glGenTextures(1, &id);
 	assert(id);
 
+	glBindTexture(GL_TEXTURE_2D, id);
+
+	//Set filtering mode
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
 	//Send data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+	//TODO better channels description detection
+	int glChannelsDesc;
+	switch (nChannels)
+	{
+		case 1: glChannelsDesc = GL_R8; break;
+		case 2: glChannelsDesc = GL_RG; break;
+		case 3: glChannelsDesc = GL_RGB; break;
+		case 4: glChannelsDesc = GL_RGBA; break;
+		default: assert(false); break;
+	}
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	//Cleanup
 	stbi_image_free(data);

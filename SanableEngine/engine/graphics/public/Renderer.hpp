@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <filesystem>
 #include <SDL_video.h>
 #include <glm/glm.hpp>
 #include "dllapi.h"
@@ -33,8 +34,10 @@ public:
 	
 	ENGINEGRAPHICS_API void drawRect(Vector3f center, float w, float h, const SDL_Color& color);
 	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos, bool highQuality = false);
-	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y);
+	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y); //Obsolete
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, Vector3f pos, float w, float h);
+
+	ENGINEGRAPHICS_API Texture* loadTexture(const std::filesystem::path& path);
 
 	ENGINEGRAPHICS_API static void errorCheck(); //TODO de-static
 };

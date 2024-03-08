@@ -60,16 +60,7 @@ void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wst
 void Renderer::drawTexture(const Texture& tex, int x, int y)
 {
 	ShaderProgram::clear();
-
-	glBindTexture(GL_TEXTURE_2D, tex.id);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex2i(x          , y           );
-	glTexCoord2i(1, 0); glVertex2i(x+tex.width, y           );
-	glTexCoord2i(1, 1); glVertex2i(x+tex.width, y+tex.height);
-	glTexCoord2i(0, 1); glVertex2i(x          , y+tex.height);
-	glEnd();
-	glDisable(GL_TEXTURE_2D);
+	drawTexture(tex, Vector3f(x, y, 0), tex.width, tex.height);
 }
 
 void Renderer::drawTexture(const Texture& tex, Vector3f pos, float w, float h)
@@ -83,6 +74,11 @@ void Renderer::drawTexture(const Texture& tex, Vector3f pos, float w, float h)
 	glTexCoord2i(0, 1); glVertex3f(pos.x  , pos.y+h, pos.z);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
+}
+
+Texture* Renderer::loadTexture(const std::filesystem::path& path)
+{
+	return new Texture(path, context);
 }
 
 void Renderer::errorCheck()
