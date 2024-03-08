@@ -3,6 +3,8 @@
 #include <SDL_render.h>
 #include <SDL_pixels.h>
 #include <GL/glew.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 #include "application/Window.hpp"
 #include "Texture.hpp"
@@ -11,6 +13,7 @@
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
+#include "Font.hpp"
 
 Renderer::Renderer() :
 	owner(nullptr),
@@ -37,24 +40,27 @@ void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& colo
 	glEnd();
 }
 
-void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos, bool highQuality)
+void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos)
 {
-	////Render on CPU
-	//SDL_Surface* surf;
-	//if (highQuality) surf = TTF_RenderUNICODE_Blended(font.handle, (uint16_t*)text.c_str(), color);
-	//else             surf = TTF_RenderUNICODE_Solid  (font.handle, (uint16_t*)text.c_str(), color);
-	//
-	////Render
-	//glPushMatrix();
-	//glTranslatef(x, y, 0);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surf->w, surf->h, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, surf->pixels); //Draw using CPU.
-	//
-	//glPopMatrix();
-	//
-	////Cleanup. Note: Does OpenGL need us to keep this around?
-	//SDL_FreeSurface(surf);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	for (int i = 0; i < text.length(); ++i)
+	{
+		const Font::CachedGlyph* glyph = font.getGlyph(text[i], this);
+		
+		drawTexture(
+			glyph->texture,
+			pos+Vector3f(glyph->bearingX, glyph->bearingY, 0),
+			glyph->texture->getNativeWidth(),
+			glyph->texture->getNativeHeight()
+		);
+
+		//Advance position
+		pos.x += glyph->advance;
+	}
+
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawTexture(const Texture& tex, int x, int y)
@@ -78,7 +84,23 @@ void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h)
 
 Texture* Renderer::loadTexture(const std::filesystem::path& path)
 {
-	return new Texture(path, context);
+	return Texture::fromFile(path, this);
+}
+
+Texture* Renderer::newTexture(int width, int height, int nChannels, void* data)
+{
+	return new Texture(this, width, height, nChannels, data);
+}
+
+Texture* Renderer::renderFontGlyph(const Font& font)
+{
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
+	return newTexture(
+		font.font->glyph->bitmap.width,
+		font.font->glyph->bitmap.rows,
+		1,
+		font.font->glyph->bitmap.buffer
+	);
 }
 
 void Renderer::errorCheck()

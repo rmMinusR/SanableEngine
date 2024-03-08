@@ -20,7 +20,8 @@ class Texture
 	int nChannels;
 
 public:
-	ENGINEGRAPHICS_API Texture(const std::filesystem::path&, SDL_GLContext ctx); //FIXME should use own renderer instead?
+	ENGINEGRAPHICS_API static Texture* fromFile(const std::filesystem::path&, Renderer* ctx);
+	ENGINEGRAPHICS_API Texture(Renderer* ctx, int width, int height, int nChannels, void* data);
 	ENGINEGRAPHICS_API ~Texture();
 
 	ENGINEGRAPHICS_API Texture(Texture&& mov);

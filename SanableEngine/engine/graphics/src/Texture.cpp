@@ -7,27 +7,44 @@
 
 #include "stb_image.h"
 
-Texture::Texture(const std::filesystem::path& path, SDL_GLContext ctx) :
-	id(0),
-	width(0),
-	height(0),
-	nChannels(0)
+#include "Renderer.hpp"
+#include "application/Window.hpp"
+
+Texture* Texture::fromFile(const std::filesystem::path& path, Renderer* ctx)
 {
 	//Load onto CPU
+	int width, height, nChannels;
 	void* data = stbi_load(path.u8string().c_str(), &width, &height, &nChannels, 0);
 	assert(data);
 	//cpu = IMG_Load(path.u8string().c_str());
 	//assert(cpu);
+	
+	Texture* out = new Texture(ctx, width, height, nChannels, data);
 
-	//Prep for GPU
+	//Cleanup
+	stbi_image_free(data);
+
+	return out;
+}
+
+Texture::Texture(Renderer* ctx, int width, int height, int nChannels, void* data) :
+	id(0),
+	width(width),
+	height(height),
+	nChannels(nChannels)
+{
+	Window::setActiveDrawTarget(ctx->getOwner());
+
 	glGenTextures(1, &id);
 	assert(id);
 
 	glBindTexture(GL_TEXTURE_2D, id);
 
-	//Set filtering mode
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	//Set filtering/wrapping modes
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	//Send data to GPU
 	//TODO better channels description detection
@@ -41,9 +58,6 @@ Texture::Texture(const std::filesystem::path& path, SDL_GLContext ctx) :
 		default: assert(false); break;
 	}
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-	//Cleanup
-	stbi_image_free(data);
 }
 
 Texture::~Texture()
