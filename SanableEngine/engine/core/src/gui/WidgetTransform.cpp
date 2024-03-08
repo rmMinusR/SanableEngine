@@ -47,8 +47,8 @@ void WidgetTransform::setRect(Rect<float> rect)
 Rect<float> WidgetTransform::getLocalRect() const
 {
 	Rect<float> r;
-	r.x = offsetX + width*pivotX;
-	r.y = offsetY + height*pivotY;
+	r.x = offsetX - width*pivotX;
+	r.y = offsetY - height*pivotY;
 	if (parent)
 	{
 		r.x += parent->width  * parent->anchorX;
@@ -63,8 +63,8 @@ void WidgetTransform::setLocalRect(const Rect<float>& rect)
 {
 	width = rect.width;
 	height = rect.height;
-	offsetX = rect.x - width*pivotX;
-	offsetY = rect.y - height*pivotY;
+	offsetX = rect.x + width*pivotX;
+	offsetY = rect.y + height*pivotY;
 	if (parent)
 	{
 		offsetX -= parent->width  * parent->anchorX;
@@ -101,6 +101,16 @@ WidgetTransform* WidgetTransform::getParent() const
 
 void WidgetTransform::setParent(WidgetTransform* parent)
 {
+	//Sanity check: can't cause loops
+	{
+		WidgetTransform* i = this->parent;
+		while (i)
+		{
+			assert(i != this);
+			i = i->parent;
+		}
+	}
+
 	this->parent = parent;
 }
 
