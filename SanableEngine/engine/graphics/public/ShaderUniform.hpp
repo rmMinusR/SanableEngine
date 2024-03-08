@@ -28,19 +28,22 @@ public:
 		Unbound = 0,
 
 		//Shared
+		__BEGIN_SHARED = Unbound,
 		#define _X(val) val,
 		ValueBinding_VALUES_SHARED
 		#undef _X
-
-		__DIVINSTANCED,
+		__END_SHARED,
 
 		//Instanced
+		__BEGIN_INSTANCED = __END_SHARED,
 		#define _X(val) val,
 		ValueBinding_VALUES_INSTANCED
 		#undef _X
-
-		__NUM_VALUES
+		__END_INSTANCED
 	};
+	static constexpr size_t ValueBinding_numInstanced = size_t(ValueBinding::__END_SHARED) - size_t(ValueBinding::__BEGIN_SHARED) - 1;
+	static constexpr size_t ValueBinding_numShared = size_t(ValueBinding::__END_INSTANCED) - size_t(ValueBinding::__BEGIN_INSTANCED) - 1;
+	static constexpr size_t ValueBinding_numValues = ValueBinding_numInstanced + ValueBinding_numShared;
 	static const char* ValueBinding_getName(ValueBinding binding);
 	static ValueBinding ValueBinding_fromName(const std::string& name);
 

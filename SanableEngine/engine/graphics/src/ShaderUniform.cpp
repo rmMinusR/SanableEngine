@@ -87,8 +87,13 @@ ShaderUniform::ValueBinding ShaderUniform::getBinding() const
 ShaderUniform::BindingStage ShaderUniform::getBindingStage() const
 {
 	if (binding == ValueBinding::Unbound) return BindingStage::Unbound;
-	else if ((int)binding > (int)ValueBinding::__DIVINSTANCED) return BindingStage::BindInstanced;
-	else return BindingStage::BindShared;
+	else if ((int)ValueBinding::__BEGIN_SHARED    < (int)binding && (int)binding < (int)ValueBinding::__END_SHARED   ) return BindingStage::BindShared;
+	else if ((int)ValueBinding::__BEGIN_INSTANCED < (int)binding && (int)binding < (int)ValueBinding::__END_INSTANCED) return BindingStage::BindInstanced;
+	else
+	{
+		assert(false);
+		return (BindingStage) -1;
+	}
 }
 
 void ShaderUniform::tryBindShared(Renderer* context) const
