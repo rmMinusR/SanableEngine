@@ -11,6 +11,7 @@
 Game* game;
 PluginManagerView* ui;
 Window* ctlWindow;
+HUD* ctlGuiRoot;
 
 ShaderProgram* uiShader;
 Material* uiMaterial;
@@ -33,8 +34,8 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     if (firstRun)
     {
         {
-            std::unique_ptr<WindowGUIRenderPipeline> renderer = std::make_unique<WindowGUIRenderPipeline>();
-            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, std::move(renderer));
+            std::unique_ptr<WindowGUIRenderPipeline> _renderer = std::make_unique<WindowGUIRenderPipeline>();
+            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, std::move(_renderer));
             ctlWindow = builder.build();
         }
 
@@ -43,10 +44,8 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         uiShader->load();
         uiMaterial = new Material(uiShader);
 
-        {
-            WindowGUIRenderPipeline* renderer = (WindowGUIRenderPipeline*) ctlWindow->getRenderPipeline();
-            ui = renderer->hud.addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), uiMaterial);
-        }
+        ctlGuiRoot = &static_cast<WindowGUIRenderPipeline*>(ctlWindow->getRenderPipeline())->hud;
+        ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), uiMaterial);
 
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin
@@ -62,12 +61,15 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        delete ctlWindow;
-        ctlWindow = nullptr;
+        ctlGuiRoot->removeWidget(ui);
+        ui = nullptr;
 
         delete uiMaterial;
         uiMaterial = nullptr;
         delete uiShader;
         uiShader = nullptr;
+
+        WindowBuilder::destroy(ctlWindow);
+        ctlWindow = nullptr;
     }
 }

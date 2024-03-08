@@ -178,7 +178,7 @@ void Plugin::unload(Application* context)
 	for (const TypeInfo& i : types->getTypes())
 	{
 		GenericTypedMemoryPool* pool = context->getMemoryManager()->getSpecificPool(i.name);
-		pool->releaseHook = tryFreeWarnUnloaded;
+		if (pool) pool->releaseHook = tryFreeWarnUnloaded;
 	}
 	GlobalTypeRegistry::unloadModule(reportedData->name);
 

@@ -71,3 +71,13 @@ void Renderer::drawTexture(const Texture& tex, int x, int y)
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 }
+
+void Renderer::errorCheck()
+{
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR)
+	{
+		printf("GL error (code %u): %s\n", err, glewGetErrorString(err));
+		assert(false);
+	}
+}
