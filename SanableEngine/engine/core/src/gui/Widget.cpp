@@ -1,4 +1,4 @@
-#include "game/gui/Widget.hpp"
+#include "gui/Widget.hpp"
 
 #include "Material.hpp"
 

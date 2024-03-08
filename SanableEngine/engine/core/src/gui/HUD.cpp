@@ -1,4 +1,4 @@
-#include "game/gui/HUD.hpp"
+#include "gui/HUD.hpp"
 
 #include <unordered_map>
 

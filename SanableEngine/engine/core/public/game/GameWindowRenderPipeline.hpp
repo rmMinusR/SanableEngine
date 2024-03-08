@@ -1,7 +1,7 @@
 #pragma once
 
 #include "application/WindowRenderPipeline.hpp"
-#include "game/gui/HUD.hpp"
+#include "gui/HUD.hpp"
 
 class Game;
 

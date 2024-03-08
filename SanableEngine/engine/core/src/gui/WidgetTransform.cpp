@@ -1,4 +1,4 @@
-#include "game/gui/WidgetTransform.hpp"
+#include "gui/WidgetTransform.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>

@@ -2,7 +2,7 @@
 
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
-#include "game/gui/WindowGUIRenderPipeline.hpp"
+#include "gui/WindowGUIRenderPipeline.hpp"
 #include "application/Window.hpp"
 #include "PluginManagerView.hpp"
 #include "ShaderProgram.hpp"

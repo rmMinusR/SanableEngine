@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/gui/Widget.hpp"
+#include "gui/Widget.hpp"
 
 class PluginManager;
 class ShaderProgram;

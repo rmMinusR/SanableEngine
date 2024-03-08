@@ -1,4 +1,4 @@
-#include "game/gui/WindowGUIRenderPipeline.hpp"
+#include "gui/WindowGUIRenderPipeline.hpp"
 
 #include "application/Window.hpp"
 

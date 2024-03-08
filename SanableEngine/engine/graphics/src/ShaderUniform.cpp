@@ -5,7 +5,7 @@
 #include "Camera.hpp"
 #include "MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
-#include "game/gui/Widget.hpp"
+#include "gui/Widget.hpp"
 
 const char* ShaderUniform::ValueBinding_getName(ValueBinding binding)
 {
