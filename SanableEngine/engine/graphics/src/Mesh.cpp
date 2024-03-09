@@ -159,6 +159,11 @@ void Mesh::uploadToGPU()
 	glBindVertexArray(0);
 }
 
+bool Mesh::isGPUReady() const
+{
+	return VAO && VBO && EBO;
+}
+
 void Mesh::renderImmediate() const
 {
 	GLenum err = glGetError();

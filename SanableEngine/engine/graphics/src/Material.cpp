@@ -45,3 +45,8 @@ void Material::writeInstanceUniforms(Renderer* context, const Widget* target) co
 {
 	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, target);
 }
+
+void Material::writeInstanceUniforms_generic(Renderer* context) const
+{
+	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced_generic(context);
+}

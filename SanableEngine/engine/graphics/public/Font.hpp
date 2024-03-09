@@ -57,15 +57,17 @@ class Font
 private:
 	std::shared_ptr<FreetypeHandle> libHandle;
 	FT_Face font;
+	int size;
 	friend class Renderer;
 
 	mutable std::map<wchar_t, RenderedGlyph> cache; //TODO make per-Renderer
 	//TODO memory pool of glyphs? Reallocation could be a good opportunity to test mover
 
 	ENGINEGRAPHICS_API bool activateGlyph(wchar_t data, int flags) const; //Returns true if successful
-	ENGINEGRAPHICS_API RenderedGlyph const* getGlyph(wchar_t data, Renderer* renderer) const;
+	ENGINEGRAPHICS_API RenderedGlyph const* getGlyph(wchar_t data, Renderer* renderer) const; //Returns null if none found--use getFallbackGlyph if so.
+	ENGINEGRAPHICS_API RenderedGlyph const* getFallbackGlyph(Renderer* renderer) const;
 public:
-	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, float size);
-	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, float size, int index); //Some .ttf files have multiple fonts inside
+	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, int size);
+	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, int size, int index); //Some .ttf files have multiple fonts inside
 	ENGINEGRAPHICS_API ~Font();
 };

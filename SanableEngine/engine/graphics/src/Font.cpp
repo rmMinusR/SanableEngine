@@ -95,12 +95,8 @@ RenderedGlyph const* Font::getGlyph(wchar_t data, Renderer* renderer) const
 
 	//Otherwise, render
 
-	constexpr wchar_t fallback1 = 0xFFFD; //Question diamond
-	constexpr wchar_t fallback2 = 0x25A1; //White square
-	constexpr wchar_t fallback3 = L'?';
-
-	//Load desired character glyph. If that fails, load fallback
-	if (!activateGlyph(data, FT_LOAD_RENDER)) activateGlyph(fallback3, FT_LOAD_RENDER);
+	//Load desired character glyph
+	if (!activateGlyph(data, FT_LOAD_RENDER)) return nullptr;
 
 	RenderedGlyph glyph;
 	glyph.texture = renderer->renderFontGlyph(*this);
@@ -112,12 +108,22 @@ RenderedGlyph const* Font::getGlyph(wchar_t data, Renderer* renderer) const
 	return &cache[data];
 }
 
-Font::Font(const std::filesystem::path& path, float size) :
+RenderedGlyph const* Font::getFallbackGlyph(Renderer* renderer) const
+{
+	RenderedGlyph const* out = nullptr;
+	out = getGlyph(0xFFFD, renderer); if (out) return out; //Question diamond
+	out = getGlyph(0x25A1, renderer); if (out) return out; //White square
+	out = getGlyph(L'?'  , renderer); if (out) return out; //Basic ASCII question mark
+	assert(false && "No fallback glyph available!");
+	return nullptr;
+}
+
+Font::Font(const std::filesystem::path& path, int size) :
 	Font(path, size, 0)
 {
 }
 
-Font::Font(const std::filesystem::path& path, float size, int index)
+Font::Font(const std::filesystem::path& path, int size, int index)
 {
 	libHandle = FreetypeHandle::getInstance();
 
@@ -133,6 +139,7 @@ Font::Font(const std::filesystem::path& path, float size, int index)
 	{
 		FT_Set_Pixel_Sizes(font, 0, size);
 		FT_Select_Charmap(font, FT_ENCODING_UNICODE);
+		this->size = size;
 	}
 }
 

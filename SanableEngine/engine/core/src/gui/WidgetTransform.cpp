@@ -138,7 +138,7 @@ WidgetTransform::depth_t WidgetTransform::getRelativeRenderDepth() const
 
 WidgetTransform::operator glm::mat4() const
 {
-	Rect<float> rect;
+	Rect<float> rect = getRect();
 	return glm::translate<float, glm::packed_highp>(
 			glm::identity<glm::mat4>(),
 			glm::vec3(rect.x, rect.y, getRenderDepth())

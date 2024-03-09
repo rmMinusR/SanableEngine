@@ -75,35 +75,28 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 
 	glMatrixMode(GL_MODELVIEW);
 
+	if (!dynQuad.isGPUReady()) dynQuad.uploadToGPU();
+
 	Vector3f relpos;
 
 	for (int i = 0; i < text.length(); ++i)
 	{
 		//TODO special case for CR, LF, EOL (aka CRLF)
 
-		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
-		
 		glPushMatrix();
-		//glScalef(glyph->texture->getNativeWidth(), glyph->texture->getNativeHeight(), 1);
+		glTranslatef(0, font.size, 0); //Follow convention of using top-left corner to anchor
+		glTranslatef(relpos.x, relpos.y, 0); //Apply current render root location
+
+		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
+		if (!glyph) glyph = font.getFallbackGlyph(this);
 		
-		//BAD HACK, FIXME by splitting CPU mesh and GPU mesh into separate classes
-		dynQuad.vertices[1].position = glm::vec3(glyph->texture->getNativeWidth(),                                 0, 0);
-		dynQuad.vertices[2].position = glm::vec3(                               0, glyph->texture->getNativeHeight(), 0);
-		dynQuad.vertices[3].position = glm::vec3(glyph->texture->getNativeWidth(), glyph->texture->getNativeHeight(), 0);
-		dynQuad.uploadToGPU();
-		
-		if (glyph->texture) glBindTexture(GL_TEXTURE_2D, glyph->texture->id);
-		glTranslatef(relpos.x, relpos.y, 0);
-		mat.writeSharedUniforms(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
+		glBindTexture(GL_TEXTURE_2D, glyph->texture->id);
+		glTranslatef(glyph->bearingX, -glyph->bearingY, 0); //Apply glyph's requested offset for texture
+		glScalef(glyph->texture->getNativeWidth(), glyph->texture->getNativeHeight(), 1); //Apply glyph's requested size
+		mat.writeInstanceUniforms_generic(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
+
 		dynQuad.renderImmediate();
 		
-		//drawTexture(
-		//	glyph->texture,
-		//	pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
-		//	glyph->texture->getNativeWidth(),
-		//	glyph->texture->getNativeHeight()
-		//);
-
 		glPopMatrix();
 		
 		//Advance position

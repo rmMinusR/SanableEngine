@@ -37,6 +37,7 @@ public:
 	ENGINEGRAPHICS_API void markDynamic();
 
 	ENGINEGRAPHICS_API void uploadToGPU();
+	ENGINEGRAPHICS_API bool isGPUReady() const;
 	ENGINEGRAPHICS_API void renderImmediate() const;
 
 	//Loading functions
