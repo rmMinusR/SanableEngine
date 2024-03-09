@@ -4,6 +4,7 @@
 #include "Rect.hpp"
 
 class Window;
+class WindowBuilder;
 class Application;
 
 class WindowRenderPipeline
@@ -17,4 +18,5 @@ protected:
 	ENGINECORE_API virtual void setup(Window* window);
 	virtual void render(Rect<float> viewport) = 0;
 	friend class Window;
+	friend class WindowBuilder;
 };

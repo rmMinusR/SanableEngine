@@ -26,6 +26,7 @@ Window* WindowBuilder::build()
 	Window* window = new Window(name, size.x, size.y, glSettings, engine, std::move(renderPipeline), std::move(inputProcessor));
 	if (position.has_value()) window->move(position.value().x, position.value().y);
 	engine->windows.push_back(window);
+	window->renderPipeline->setup(window);
 	return window;
 }
 

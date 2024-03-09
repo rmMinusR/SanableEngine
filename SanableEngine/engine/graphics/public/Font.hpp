@@ -30,6 +30,27 @@ public:
 
 class Renderer;
 class Texture;
+class Font;
+
+class RenderedGlyph
+{
+	Texture* texture;
+	int bearingX;
+	int bearingY;
+	int advance;
+	friend class Renderer;
+	friend class Font;
+public:
+	ENGINEGRAPHICS_API RenderedGlyph();
+	ENGINEGRAPHICS_API ~RenderedGlyph();
+
+	ENGINEGRAPHICS_API operator bool() const;
+
+	RenderedGlyph(const RenderedGlyph& cpy) = delete;
+	RenderedGlyph operator=(const RenderedGlyph& cpy) = delete;
+	ENGINEGRAPHICS_API RenderedGlyph(RenderedGlyph&& mov);
+	ENGINEGRAPHICS_API RenderedGlyph& operator=(RenderedGlyph&& mov);
+};
 
 class Font
 {
@@ -38,30 +59,11 @@ private:
 	FT_Face font;
 	friend class Renderer;
 
-	class CachedGlyph
-	{
-		Texture* texture;
-		int bearingX;
-		int bearingY;
-		int advance;
-		friend class Renderer;
-		friend class Font;
-	public:
-		ENGINEGRAPHICS_API CachedGlyph();
-		ENGINEGRAPHICS_API ~CachedGlyph();
-
-		ENGINEGRAPHICS_API operator bool() const;
-
-		CachedGlyph(const CachedGlyph& cpy) = delete;
-		CachedGlyph operator=(const CachedGlyph& cpy) = delete;
-		ENGINEGRAPHICS_API CachedGlyph(CachedGlyph&& mov);
-		ENGINEGRAPHICS_API CachedGlyph operator=(CachedGlyph&& mov);
-	};
-	mutable std::map<wchar_t, CachedGlyph> cache; //TODO make per-Renderer
+	mutable std::map<wchar_t, RenderedGlyph> cache; //TODO make per-Renderer
 	//TODO memory pool of glyphs? Reallocation could be a good opportunity to test mover
 
 	ENGINEGRAPHICS_API bool activateGlyph(wchar_t data, int flags) const; //Returns true if successful
-	ENGINEGRAPHICS_API CachedGlyph const* getGlyph(wchar_t data, Renderer* renderer) const;
+	ENGINEGRAPHICS_API RenderedGlyph const* getGlyph(wchar_t data, Renderer* renderer) const;
 public:
 	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, float size);
 	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, float size, int index); //Some .ttf files have multiple fonts inside

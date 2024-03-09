@@ -42,25 +42,25 @@ void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& colo
 
 void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos)
 {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (int i = 0; i < text.length(); ++i)
 	{
-		const Font::CachedGlyph* glyph = font.getGlyph(text[i], this);
+		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
 		
 		drawTexture(
 			glyph->texture,
-			pos+Vector3f(glyph->bearingX, glyph->bearingY, 0),
+			pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
 			glyph->texture->getNativeWidth(),
 			glyph->texture->getNativeHeight()
 		);
-
+		
 		//Advance position
-		pos.x += glyph->advance;
+		pos.x += glyph->advance / 64.0f;
 	}
 
-	glDisable(GL_BLEND);
+	//glDisable(GL_BLEND);
 }
 
 void Renderer::drawTexture(const Texture& tex, int x, int y)
@@ -95,12 +95,13 @@ Texture* Renderer::newTexture(int width, int height, int nChannels, void* data)
 Texture* Renderer::renderFontGlyph(const Font& font)
 {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
-	return newTexture(
+	Texture* out = newTexture(
 		font.font->glyph->bitmap.width,
 		font.font->glyph->bitmap.rows,
 		1,
 		font.font->glyph->bitmap.buffer
 	);
+	return out;
 }
 
 void Renderer::errorCheck()

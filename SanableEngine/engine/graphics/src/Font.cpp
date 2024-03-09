@@ -56,7 +56,33 @@ bool Font::activateGlyph(wchar_t data, int flags) const
 	return !err;
 }
 
-Font::CachedGlyph const* Font::getGlyph(wchar_t data, Renderer* renderer) const
+RenderedGlyph::RenderedGlyph()
+{
+	texture = nullptr;
+}
+
+RenderedGlyph::~RenderedGlyph()
+{
+}
+
+RenderedGlyph::operator bool() const
+{
+	return texture != nullptr;
+}
+
+RenderedGlyph::RenderedGlyph(RenderedGlyph&& mov)
+{
+	*this = std::move(mov);
+}
+
+RenderedGlyph& RenderedGlyph::operator=(RenderedGlyph&& mov)
+{
+	memcpy(this, &mov, sizeof(RenderedGlyph));
+	memset(&mov, 0, sizeof(RenderedGlyph));
+	return *this;
+}
+
+RenderedGlyph const* Font::getGlyph(wchar_t data, Renderer* renderer) const
 {
 	//Attempt to lookup from cache
 	auto it = cache.find(data);
@@ -71,7 +97,7 @@ Font::CachedGlyph const* Font::getGlyph(wchar_t data, Renderer* renderer) const
 	//Load desired character glyph. If that fails, load fallback
 	if (!activateGlyph(data, FT_LOAD_RENDER)) activateGlyph(fallback3, FT_LOAD_RENDER);
 
-	CachedGlyph glyph;
+	RenderedGlyph glyph;
 	glyph.texture = renderer->renderFontGlyph(*this);
 	glyph.bearingX = font->glyph->bitmap_left;
 	glyph.bearingY = font->glyph->bitmap_top;

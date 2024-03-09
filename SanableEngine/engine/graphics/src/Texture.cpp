@@ -51,13 +51,15 @@ Texture::Texture(Renderer* ctx, int width, int height, int nChannels, void* data
 	int glChannelsDesc;
 	switch (nChannels)
 	{
-		case 1: glChannelsDesc = GL_R8; break;
+		case 1: glChannelsDesc = GL_RED; break;
 		case 2: glChannelsDesc = GL_RG; break;
 		case 3: glChannelsDesc = GL_RGB; break;
 		case 4: glChannelsDesc = GL_RGBA; break;
 		default: assert(false); break;
 	}
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, glChannelsDesc, width, height, 0, glChannelsDesc, GL_UNSIGNED_BYTE, data);
+
+	ctx->errorCheck();
 }
 
 Texture::~Texture()

@@ -14,6 +14,7 @@ LabelWidget::~LabelWidget()
 
 void LabelWidget::setText(const std::wstring& newText)
 {
+	this->text = newText;
 }
 
 const Material* LabelWidget::getMaterial() const
@@ -26,10 +27,6 @@ void LabelWidget::renderImmediate(Renderer* renderer)
 	Rect<float> r = transform.getRect();
 	auto depth = transform.getRenderDepth();
 
-	renderer->errorCheck();
-
 	constexpr SDL_Color col{ 1, 1, 1, 1 };
 	renderer->drawText(*font, col, text, Vector3f(r.x, r.y, depth));
-	
-	renderer->errorCheck();
 }
