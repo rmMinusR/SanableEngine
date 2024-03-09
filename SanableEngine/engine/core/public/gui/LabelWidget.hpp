@@ -12,7 +12,7 @@ class LabelWidget : public Widget
 	Font* font;
 	std::wstring text;
 public:
-	ENGINEGUI_API LabelWidget(Material* material, Font* font);
+	ENGINEGUI_API LabelWidget(HUD* hud, Material* material, Font* font);
 	ENGINEGUI_API virtual ~LabelWidget();
 
 	ENGINEGUI_API void setText(const std::wstring& newText);

@@ -17,7 +17,7 @@ public:
 	ENGINEGUI_API ~HUD();
 
 	ENGINEGUI_API MemoryManager* getMemory();
-
+	
 	ENGINEGUI_API void render(Renderer* renderer);
 
 	template<typename T, typename... TCtorArgs>

@@ -2,7 +2,8 @@
 
 #include "Renderer.hpp"
 
-LabelWidget::LabelWidget(Material* material, Font* font) :
+LabelWidget::LabelWidget(HUD* hud, Material* material, Font* font) :
+	Widget(hud),
 	material(material),
 	font(font)
 {

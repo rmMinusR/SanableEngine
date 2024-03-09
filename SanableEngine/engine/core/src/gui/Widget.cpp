@@ -5,7 +5,8 @@
 #include "Material.hpp"
 #include "Renderer.hpp"
 
-Widget::Widget()
+Widget::Widget(HUD* hud) :
+    hud(hud)
 {
 }
 

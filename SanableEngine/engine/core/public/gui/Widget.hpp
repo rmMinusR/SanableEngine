@@ -17,7 +17,7 @@ protected:
 public:
 	WidgetTransform transform;
 
-	ENGINEGUI_API Widget();
+	ENGINEGUI_API Widget(HUD* hud);
 	ENGINEGUI_API virtual ~Widget();
 
 	ENGINEGUI_API const ShaderProgram* getShader() const;

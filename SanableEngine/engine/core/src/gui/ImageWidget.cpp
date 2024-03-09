@@ -4,7 +4,8 @@
 #include "Renderer.hpp"
 #include "Texture.hpp"
 
-ImageWidget::ImageWidget(Material* material, Texture* texture) :
+ImageWidget::ImageWidget(HUD* hud, Material* material, Texture* texture) :
+	Widget(hud),
 	material(material),
 	texture(texture)
 {
