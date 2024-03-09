@@ -44,7 +44,30 @@ void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& colo
 	glEnd();
 }
 
-void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos)
+void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos)
+{
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	for (int i = 0; i < text.length(); ++i)
+	{
+		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
+		
+		drawTexture(
+			glyph->texture,
+			pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
+			glyph->texture->getNativeWidth(),
+			glyph->texture->getNativeHeight()
+		);
+		
+		//Advance position
+		pos.x += glyph->advance / 64.0f;
+	}
+
+	glDisable(GL_BLEND);
+}
+
+void Renderer::drawText(const Font& font, const std::wstring& text, Vector3f pos)
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

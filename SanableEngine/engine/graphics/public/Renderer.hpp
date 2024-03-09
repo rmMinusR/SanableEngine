@@ -36,7 +36,8 @@ public:
 	
 	//These all require that no shader is active to properly render
 	ENGINEGRAPHICS_API void drawRect(Vector3f center, float w, float h, const SDL_Color& color);
-	ENGINEGRAPHICS_API void drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos);
+	ENGINEGRAPHICS_API void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos); //Assumes you have no shader active
+	ENGINEGRAPHICS_API void drawText(const Font& font, const std::wstring& text, Vector3f pos); //Assumes you've already activated the shader
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y); //Obsolete
 	ENGINEGRAPHICS_API void drawTexture(const Texture* tex, Vector3f pos, float w, float h);
 

@@ -27,6 +27,6 @@ void LabelWidget::renderImmediate(Renderer* renderer)
 	Rect<float> r = transform.getRect();
 	auto depth = transform.getRenderDepth();
 
-	constexpr SDL_Color col{ 1, 1, 1, 1 };
-	renderer->drawText(*font, col, text, Vector3f(r.x, r.y, depth));
+	if (material) renderer->drawText(*font, text, Vector3f(r.x, r.y, depth));
+	else renderer->drawTextNonShadered(*font, text, Vector3f(r.x, r.y, depth));
 }
