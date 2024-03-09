@@ -11,5 +11,5 @@ out vec2 frag_uv;
 void main()
 {
     gl_Position = ViewProjection * vec4(Position, 1.0);
-    uv_frag = TexCoord;
+    frag_uv = TexCoord;
 }

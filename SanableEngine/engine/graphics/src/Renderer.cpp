@@ -19,12 +19,16 @@ Renderer::Renderer() :
 	owner(nullptr),
 	context(nullptr)
 {
+	dynQuad = std::move(Mesh::createQuad0WH(1, 1));
+	dynQuad.markDynamic();
 }
 
 Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	owner(owner),
 	context(context)
 {
+	dynQuad = std::move(Mesh::createQuad0WH(1, 1));
+	dynQuad.markDynamic();
 }
 
 void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
@@ -42,25 +46,34 @@ void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& colo
 
 void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wstring& text, Vector3f pos)
 {
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	for (int i = 0; i < text.length(); ++i)
 	{
 		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
 		
-		drawTexture(
-			glyph->texture,
-			pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
-			glyph->texture->getNativeWidth(),
-			glyph->texture->getNativeHeight()
-		);
+		//BAD HACK, FIXME by splitting CPU mesh and GPU mesh into separate classes
+		dynQuad.vertices[1].position = glm::vec3(glyph->texture->getNativeWidth(),                                 0, 0);
+		dynQuad.vertices[2].position = glm::vec3(                               0, glyph->texture->getNativeHeight(), 0);
+		dynQuad.vertices[3].position = glm::vec3(glyph->texture->getNativeWidth(), glyph->texture->getNativeHeight(), 0);
+		dynQuad.uploadToGPU();
+		
+		if (glyph->texture) glBindTexture(GL_TEXTURE_2D, glyph->texture->id);
+		dynQuad.renderImmediate();
+		
+		//drawTexture(
+		//	glyph->texture,
+		//	pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
+		//	glyph->texture->getNativeWidth(),
+		//	glyph->texture->getNativeHeight()
+		//);
 		
 		//Advance position
 		pos.x += glyph->advance / 64.0f;
 	}
 
-	//glDisable(GL_BLEND);
+	glDisable(GL_BLEND);
 }
 
 void Renderer::drawTexture(const Texture& tex, int x, int y)

@@ -56,9 +56,12 @@ bool Font::activateGlyph(wchar_t data, int flags) const
 	return !err;
 }
 
-RenderedGlyph::RenderedGlyph()
+RenderedGlyph::RenderedGlyph() :
+	texture(nullptr),
+	bearingX(0),
+	bearingY(0),
+	advance(0)
 {
-	texture = nullptr;
 }
 
 RenderedGlyph::~RenderedGlyph()
@@ -70,13 +73,15 @@ RenderedGlyph::operator bool() const
 	return texture != nullptr;
 }
 
-RenderedGlyph::RenderedGlyph(RenderedGlyph&& mov)
+RenderedGlyph::RenderedGlyph(RenderedGlyph&& mov) :
+	RenderedGlyph()
 {
 	*this = std::move(mov);
 }
 
 RenderedGlyph& RenderedGlyph::operator=(RenderedGlyph&& mov)
 {
+	if (texture) delete texture;
 	memcpy(this, &mov, sizeof(RenderedGlyph));
 	memset(&mov, 0, sizeof(RenderedGlyph));
 	return *this;
