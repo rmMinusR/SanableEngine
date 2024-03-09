@@ -28,6 +28,11 @@ const Material* RectangleRenderer::getMaterial() const
 	return nullptr;
 }
 
+void RectangleRenderer::loadModelTransform(Renderer* renderer) const
+{
+	renderer->loadTransform(*gameObject->getTransform());
+}
+
 void RectangleRenderer::renderImmediate(Renderer* renderer) const
 {
 	Vector3<float> pos = getGameObject()->getTransform()->getPosition();

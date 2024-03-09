@@ -27,6 +27,6 @@ void LabelWidget::renderImmediate(Renderer* renderer)
 	Rect<float> r = transform.getRect();
 	auto depth = transform.getRenderDepth();
 
-	if (material) renderer->drawText(*font, text, Vector3f(r.x, r.y, depth));
+	if (material) renderer->drawText(*font, *material, text);
 	else renderer->drawTextNonShadered(*font, text, Vector3f(r.x, r.y, depth));
 }

@@ -23,5 +23,6 @@ public:
 
 	PRIMITIVES_API virtual const Material* getMaterial() const override;
 protected:
+	PRIMITIVES_API virtual void loadModelTransform(Renderer*) const override;
 	PRIMITIVES_API virtual void renderImmediate(Renderer*) const override;
 };

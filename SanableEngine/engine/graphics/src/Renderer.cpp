@@ -3,6 +3,7 @@
 #include <SDL_render.h>
 #include <SDL_pixels.h>
 #include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -67,14 +68,23 @@ void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, V
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawText(const Font& font, const std::wstring& text, Vector3f pos)
+void Renderer::drawText(const Font& font, const Material& mat, const std::wstring& text)
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	glMatrixMode(GL_MODELVIEW);
+
+	Vector3f relpos;
+
 	for (int i = 0; i < text.length(); ++i)
 	{
+		//TODO special case for CR, LF, EOL (aka CRLF)
+
 		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
+		
+		glPushMatrix();
+		//glScalef(glyph->texture->getNativeWidth(), glyph->texture->getNativeHeight(), 1);
 		
 		//BAD HACK, FIXME by splitting CPU mesh and GPU mesh into separate classes
 		dynQuad.vertices[1].position = glm::vec3(glyph->texture->getNativeWidth(),                                 0, 0);
@@ -83,6 +93,8 @@ void Renderer::drawText(const Font& font, const std::wstring& text, Vector3f pos
 		dynQuad.uploadToGPU();
 		
 		if (glyph->texture) glBindTexture(GL_TEXTURE_2D, glyph->texture->id);
+		glTranslatef(relpos.x, relpos.y, 0);
+		mat.writeSharedUniforms(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
 		dynQuad.renderImmediate();
 		
 		//drawTexture(
@@ -91,9 +103,11 @@ void Renderer::drawText(const Font& font, const std::wstring& text, Vector3f pos
 		//	glyph->texture->getNativeWidth(),
 		//	glyph->texture->getNativeHeight()
 		//);
+
+		glPopMatrix();
 		
 		//Advance position
-		pos.x += glyph->advance / 64.0f;
+		relpos.x += glyph->advance / 64.0f;
 	}
 
 	glDisable(GL_BLEND);
@@ -116,6 +130,11 @@ void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h)
 	glTexCoord2i(0, 1); glVertex3f(pos.x  , pos.y+h, pos.z);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
+}
+
+void Renderer::loadTransform(const glm::mat4& mat)
+{
+	glLoadMatrixf(glm::value_ptr(mat));
 }
 
 Texture* Renderer::loadTexture(const std::filesystem::path& path)

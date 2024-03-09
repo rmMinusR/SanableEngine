@@ -17,5 +17,6 @@ public:
 
 	ENGINEGRAPHICS_API const Material* getMaterial() const override;
 protected:
-	ENGINEGRAPHICS_API void renderImmediate(Renderer* renderer) const override;
+	ENGINEGRAPHICS_API virtual void loadModelTransform(Renderer* renderer) const override;
+	ENGINEGRAPHICS_API virtual void renderImmediate(Renderer* renderer) const override;
 };

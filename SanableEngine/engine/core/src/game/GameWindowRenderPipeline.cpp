@@ -39,11 +39,14 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			const Material*, //Then by material
 			std::vector<const I3DRenderable*>
 		>
-	> renderables;
+	> renderables; //Note: No need for a CallBatcher here, we're guaranteed renderables will be grouped by type since our data source is a CallBatcher
 	game->get3DRenderables()->staticCall([&](const I3DRenderable* r)
 	{
 		renderables[r->getShader()][r->getMaterial()].push_back(r);
 	});
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
 
 	//Process buffer
 	Renderer* renderInterface = window->getRenderer();
@@ -61,6 +64,8 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 
 			for (const I3DRenderable* r : materialGroup.second)
 			{
+				r->loadModelTransform(renderInterface);
+
 				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderInterface, r);
 
 				assert(r->getMaterial() == materialGroup.first);
@@ -69,6 +74,8 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			}
 		}
 	}
+
+	glPopMatrix();
 
 	hud.render(renderInterface);
 }

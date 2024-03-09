@@ -27,11 +27,14 @@ void HUD::render(Renderer* renderer)
 			const Material*, //Then by material
 			std::vector<Widget*>
 		>
-	> renderables;
+	> renderables; //Note: No need for a CallBatcher here, we're guaranteed widgets will be grouped by type since our data source is a CallBatcher
 	widgets.staticCall([&](Widget* w)
 	{
 		renderables[w->getShader()][w->getMaterial()].push_back(w);
 	});
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
 
 	//Process buffer
 	for (const auto& shaderGroup : renderables)
@@ -48,6 +51,8 @@ void HUD::render(Renderer* renderer)
 
 			for (Widget* w : materialGroup.second)
 			{
+				w->loadModelTransform(renderer);
+
 				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderer, w);
 
 				assert(w->getMaterial() == materialGroup.first);
@@ -56,4 +61,6 @@ void HUD::render(Renderer* renderer)
 			}
 		}
 	}
+
+	glPopMatrix();
 }
