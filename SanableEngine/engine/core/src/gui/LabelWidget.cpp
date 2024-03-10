@@ -25,9 +25,11 @@ const Material* LabelWidget::getMaterial() const
 
 void LabelWidget::renderImmediate(Renderer* renderer)
 {
-	Rect<float> r = transform.getRect();
-	auto depth = transform.getRenderDepth();
-
 	if (material) renderer->drawText(*font, *material, text);
-	else renderer->drawTextNonShadered(*font, text, Vector3f(r.x, r.y, depth));
+	else
+	{
+		Rect<float> r = transform.getRect();
+		auto depth = transform.getRenderDepth();
+		renderer->drawTextNonShadered(*font, text, Vector3f(r.topLeft.x, r.topLeft.y, depth));
+	}
 }

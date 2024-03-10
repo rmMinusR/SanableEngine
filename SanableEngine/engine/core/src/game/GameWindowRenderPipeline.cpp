@@ -25,7 +25,7 @@ void GameWindowRenderPipeline::setup(Window* window)
 void GameWindowRenderPipeline::render(Rect<float> viewport)
 {
 	//Set projection matrix
-	if (Camera::getMain()) Camera::getMain()->beginFrame({ viewport.width, viewport.height, 0 });
+	if (Camera::getMain()) Camera::getMain()->beginFrame({ viewport.size.x, viewport.size.y, 0 });
 	else printf("WARNING: No main camera!");
 
 	//Reset screen
@@ -77,5 +77,5 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 
 	glPopMatrix();
 
-	hud.render(renderInterface);
+	hud.render(viewport, renderInterface);
 }

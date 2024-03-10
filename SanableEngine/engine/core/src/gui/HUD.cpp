@@ -5,8 +5,21 @@
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 
+void HUD::addWidget_internal(Widget* widget)
+{
+	widgets.add(widget);
+	if (!widget->transform.getParent()) makeRoot(widget);
+}
+
+void HUD::removeWidget_internal(Widget* widget)
+{
+	widgets.remove(widget);
+}
+
 HUD::HUD()
 {
+	root.setMinCornerRatio({ 0, 0 });
+	root.setMaxCornerRatio({ 0, 0 });
 }
 
 HUD::~HUD()
@@ -18,8 +31,10 @@ MemoryManager* HUD::getMemory()
 	return &memory;
 }
 
-void HUD::render(Renderer* renderer)
+void HUD::render(Rect<float> viewport, Renderer* renderer)
 {
+	root.setRectByOffsets(viewport);
+
 	//Collect objects to buffer
 	std::unordered_map<
 		const ShaderProgram*, //Group by shader
@@ -63,4 +78,9 @@ void HUD::render(Renderer* renderer)
 	}
 
 	glPopMatrix();
+}
+
+void HUD::makeRoot(Widget* widget)
+{
+	widget->transform.setParent(&root);
 }

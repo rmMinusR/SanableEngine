@@ -13,7 +13,7 @@ class PluginManagerView : public Widget
 	Material* material;
 
 public:
-	PluginManagerView(PluginManager* mgr, Material* material);
+	PluginManagerView(HUD* hud, PluginManager* mgr, Material* material);
 	~PluginManagerView();
 
 	virtual const Material* getMaterial() const override;

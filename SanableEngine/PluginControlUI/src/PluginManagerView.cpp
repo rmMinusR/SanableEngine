@@ -8,7 +8,8 @@
 #include "game/Game.hpp"
 #include "application/Application.hpp"
 
-PluginManagerView::PluginManagerView(PluginManager* mgr, Material* material) :
+PluginManagerView::PluginManagerView(HUD* hud, PluginManager* mgr, Material* material) :
+	Widget(hud),
 	material(material),
 	mgr(mgr)
 {

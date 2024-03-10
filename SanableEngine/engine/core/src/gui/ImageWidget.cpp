@@ -26,6 +26,7 @@ void ImageWidget::renderImmediate(Renderer* renderer)
 	auto depth = transform.getRenderDepth();
 	
 	renderer->errorCheck();
-	renderer->drawTexture(texture, Vector3f(r.x, r.y, depth), r.width, r.height);
+	//No need to send position: already applied via model matrix
+	renderer->drawTexture(texture, Vector3f(0, 0, depth), r.size.x, r.size.y);
 	renderer->errorCheck();
 }

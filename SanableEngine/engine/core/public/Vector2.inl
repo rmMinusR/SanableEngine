@@ -14,7 +14,6 @@ class Vector2
 public:
     Vector2();
     Vector2(const TObj x, const TObj y);
-    Vector2(const Vector2<TObj>& v);
     Vector2(const glm::vec2& v);
 
     // utility operations
@@ -94,13 +93,6 @@ Vector2<TObj>::Vector2()
     _v[1] = 0.0;
 }
 
-
-template <class TObj>
-Vector2<TObj>::Vector2(const Vector2<TObj>& v)
-{
-    _v[0] = v[0];
-    _v[1] = v[1];
-}
 
 template<class TObj>
 Vector2<TObj>::Vector2(const glm::vec2& v)

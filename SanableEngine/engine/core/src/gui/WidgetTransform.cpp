@@ -5,73 +5,80 @@
 
 WidgetTransform::WidgetTransform()
 {
+	parent = nullptr;
+	minCorner = UIAnchor::centered();
+	minCorner.offset -= Vector2f(50, 50);
+	maxCorner = UIAnchor::centered();
+	minCorner.offset += Vector2f(50, 50);
 }
 
-void WidgetTransform::setPivot(float x, float y)
+WidgetTransform::~WidgetTransform()
 {
-	pivotX = x;
-	pivotY = y;
 }
 
-void WidgetTransform::setLocalPosition(float anchorX, float anchorY, float offsetX, float offsetY)
+void WidgetTransform::fillParent()
 {
-	this->anchorX = anchorX;
-	this->anchorY = anchorY;
-	this->offsetX = offsetX;
-	this->offsetY = offsetY;
+	setMinCornerRatio ({ 0, 0 });
+	setMaxCornerRatio ({ 1, 1 });
+	setMinCornerOffset({ 0, 0 });
+	setMaxCornerOffset({ 0, 0 });
+}
+
+void WidgetTransform::setMinCornerRatio(const Vector2f& val, bool keepPosition)
+{
+	if (!keepPosition) minCorner.ratio = val;
+	else minCorner.setRatioKeepingPosition(val, parent->getLocalRect().size);
+}
+
+void WidgetTransform::setMaxCornerRatio(const Vector2f& val, bool keepPosition)
+{
+	if (!keepPosition) maxCorner.ratio = val;
+	else maxCorner.setRatioKeepingPosition(val, parent->getLocalRect().size);
+}
+
+void WidgetTransform::setMinCornerOffset(const Vector2f& val, bool keepPosition)
+{
+	if (!keepPosition) minCorner.offset = val;
+	else minCorner.setOffsetKeepingPosition(val, parent->getLocalRect().size);
+}
+
+void WidgetTransform::setMaxCornerOffset(const Vector2f& val, bool keepPosition)
+{
+	if (!keepPosition) maxCorner.offset = val;
+	else maxCorner.setOffsetKeepingPosition(val, parent->getLocalRect().size);
 }
 
 Rect<float> WidgetTransform::getRect() const
 {
 	Rect rect = getLocalRect();
-	if (parent)
-	{
-		Rect<float> parentRect = parent->getRect();
-		rect.x += parentRect.x;
-		rect.y += parentRect.y;
-	}
+	if (parent) rect.topLeft += parent->getRect().topLeft;
 	return rect;
 }
 
-void WidgetTransform::setRect(Rect<float> rect)
+void WidgetTransform::setRectByOffsets(Rect<float> rect)
 {
-	if (parent)
-	{
-		Rect<float> parentRect = parent->getRect();
-		rect.x -= parentRect.x;
-		rect.y -= parentRect.y;
-	}
-	setLocalRect(rect);
+	if (parent) rect.topLeft -= parent->getRect().topLeft;
+	setLocalRectByOffsets(rect);
 }
 
 Rect<float> WidgetTransform::getLocalRect() const
 {
-	Rect<float> r;
-	r.x = offsetX - width*pivotX;
-	r.y = offsetY - height*pivotY;
-	if (parent)
-	{
-		r.x += parent->width  * parent->anchorX;
-		r.y += parent->height * parent->anchorY;
-	}
-	r.width = width;
-	r.height = height;
-	return r;
+	Vector2f parentSize = parent ? parent->getLocalRect().size : Vector2f(0,0);
+	Vector2f localMin = minCorner.calcAnchor(parentSize);
+	Vector2f localMax = maxCorner.calcAnchor(parentSize);
+	return Rect<float>::fromMinMax(localMin, localMax);
 }
 
-void WidgetTransform::setLocalRect(const Rect<float>& rect)
+void WidgetTransform::setLocalRectByOffsets(const Rect<float>& rect)
 {
-	width = rect.width;
-	height = rect.height;
-	offsetX = rect.x + width*pivotX;
-	offsetY = rect.y + height*pivotY;
-	if (parent)
-	{
-		offsetX -= parent->width  * parent->anchorX;
-		offsetY -= parent->height * parent->anchorY;
-	}
+	minCorner.offset.zero();
+	maxCorner.offset.zero();
+	Vector2f parentSize = parent ? parent->getLocalRect().size : Vector2f(0,0);
+	minCorner.offset = rect.topLeft       - minCorner.calcAnchor(parentSize);
+	maxCorner.offset = rect.bottomRight() - maxCorner.calcAnchor(parentSize);
 }
 
+/*
 float WidgetTransform::getScale() const
 {
 	if (parent) return localScale * parent->getScale();
@@ -93,6 +100,7 @@ void WidgetTransform::setLocalScale(float val)
 {
 	localScale = val;
 }
+*/
 
 WidgetTransform* WidgetTransform::getParent() const
 {
@@ -141,8 +149,8 @@ WidgetTransform::operator glm::mat4() const
 	Rect<float> rect = getRect();
 	return glm::translate<float, glm::packed_highp>(
 			glm::identity<glm::mat4>(),
-			glm::vec3(rect.x, rect.y, getRenderDepth())
-		)
+			glm::vec3(rect.topLeft.x, rect.topLeft.y, getRenderDepth())
+		);
 		//TODO rotation component goes here
-		* glm::scale(glm::identity<glm::mat4>(), glm::vec3(getScale()));
+		//* glm::scale(glm::identity<glm::mat4>(), glm::vec3(getScale())); //TODO scale component goes here
 }

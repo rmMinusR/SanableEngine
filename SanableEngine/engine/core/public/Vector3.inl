@@ -15,7 +15,6 @@ class Vector3
 public:
     Vector3();
     Vector3(const TObj x, const TObj y, const TObj z);
-    Vector3(const Vector3<TObj>& v);
     Vector3(const Vector2<TObj>& xy, const TObj z);
     Vector3(const TObj x, const Vector2<TObj>& yz);
     Vector3(const glm::vec3& v);
@@ -35,7 +34,6 @@ public:
     const Vector3<TObj> abs() const;
 
     // operators
-    Vector3<TObj>& operator= (const Vector3<TObj>& v);        // assignment
     Vector3<TObj>& operator= (const glm::vec3& v);            // assignment (conversion)
     operator glm::vec3() const;                               // outbound conversion
 
@@ -122,14 +120,6 @@ Vector3<TObj>::Vector3()
     _v[2] = 0.0;
 }
 
-
-template <class TObj>
-Vector3<TObj>::Vector3(const Vector3<TObj>& v)
-{
-    _v[0] = v[0];
-    _v[1] = v[1];
-    _v[2] = v[2];
-}
 
 template<class TObj>
 Vector3<TObj>::Vector3(const Vector2<TObj>& xy, const TObj z)
@@ -255,15 +245,6 @@ Vector3<TObj> Vector3<TObj>::normalized() const
     Vector3<TObj> cpy = *this;
     cpy.normalize();
     return cpy;
-}
-
-template <class TObj>
-Vector3<TObj>& Vector3<TObj>::operator= (const Vector3<TObj>& v)
-{
-    _v[0] = v[0];
-    _v[1] = v[1];
-    _v[2] = v[2];
-    return *this;
 }
 
 template <class TObj>

@@ -20,7 +20,7 @@ Renderer::Renderer() :
 	owner(nullptr),
 	context(nullptr)
 {
-	dynQuad = std::move(Mesh::createQuad0WH(1, 1));
+	dynQuad = Mesh::createQuad0WH(1, 1);
 	dynQuad.markDynamic();
 }
 
@@ -28,7 +28,7 @@ Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	owner(owner),
 	context(context)
 {
-	dynQuad = std::move(Mesh::createQuad0WH(1, 1));
+	dynQuad = Mesh::createQuad0WH(1, 1);
 	dynQuad.markDynamic();
 }
 

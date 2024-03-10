@@ -68,7 +68,7 @@ void Window::draw() const
     glViewport(0, 0, width, height);
 
     //Delegate draw
-    if (renderPipeline) renderPipeline->render({ 0, 0, (float)width, (float)height });
+    if (renderPipeline) renderPipeline->render({ Vector2f(0,0), Vector2f(width, height) });
 
     //Swap back buffer
     SDL_GL_SwapWindow(handle);

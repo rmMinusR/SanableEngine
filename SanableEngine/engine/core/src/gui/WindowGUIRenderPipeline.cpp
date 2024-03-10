@@ -20,12 +20,12 @@ void WindowGUIRenderPipeline::render(Rect<float> viewport)
 	//Setup matrix
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, viewport.width, viewport.height, 0, zNear, zFar); //+Y is down
+	glOrtho(0, viewport.size.x, viewport.size.y, 0, zNear, zFar); //+Y is down
 
 	//Clear screen
 	glClearColor(0, 0, 0, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Render GUI
-	hud.render(window->getRenderer());
+	hud.render(viewport, window->getRenderer());
 }
