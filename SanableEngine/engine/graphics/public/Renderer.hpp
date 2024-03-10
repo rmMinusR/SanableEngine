@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include "dllapi.h"
 #include "Vector3.inl"
+#include "gui/Anchor2D.inl"
 #include "Mesh.hpp"
 
 class Application;

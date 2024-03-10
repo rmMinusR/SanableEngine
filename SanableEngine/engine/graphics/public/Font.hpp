@@ -7,6 +7,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include "Vector2.inl"
 #include "dllapi.h"
 
 
@@ -52,6 +53,7 @@ public:
 	ENGINEGRAPHICS_API RenderedGlyph& operator=(RenderedGlyph&& mov);
 };
 
+
 class Font
 {
 private:
@@ -70,4 +72,6 @@ public:
 	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, int size);
 	ENGINEGRAPHICS_API Font(const std::filesystem::path& path, int size, int index); //Some .ttf files have multiple fonts inside
 	ENGINEGRAPHICS_API ~Font();
+
+	ENGINEGRAPHICS_API Vector2f getRenderedSize(Renderer* renderer, const std::wstring& str) const;
 };

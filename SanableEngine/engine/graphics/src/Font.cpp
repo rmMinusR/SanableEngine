@@ -154,3 +154,16 @@ Font::~Font()
 		font = nullptr;
 	}
 }
+
+Vector2f Font::getRenderedSize(Renderer* renderer, const std::wstring& str) const
+{
+	Vector2f sz(0, this->size);
+	for (int i = 0; i < str.length(); ++i)
+	{
+		RenderedGlyph const* glyph = getGlyph(str[i], renderer);
+		if (!glyph) glyph = getFallbackGlyph(renderer);
+
+		sz.x += glyph->advance / 64.0f;
+	}
+	return sz;
+}

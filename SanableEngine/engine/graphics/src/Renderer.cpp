@@ -70,21 +70,22 @@ void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, V
 
 void Renderer::drawText(const Font& font, const Material& mat, const std::wstring& text)
 {
+	if (!dynQuad.isGPUReady()) dynQuad.uploadToGPU();
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	Vector2f size = font.getRenderedSize(this, text);
 	glMatrixMode(GL_MODELVIEW);
-
-	if (!dynQuad.isGPUReady()) dynQuad.uploadToGPU();
-
+	glPushMatrix();
+	glTranslatef(0, font.size, 0); //Text's default anchor is bottom-left of line; follow convention of using top-left corner to anchor
+	
 	Vector3f relpos;
-
 	for (int i = 0; i < text.length(); ++i)
 	{
 		//TODO special case for CR, LF, EOL (aka CRLF)
 
 		glPushMatrix();
-		glTranslatef(0, font.size, 0); //Follow convention of using top-left corner to anchor
 		glTranslatef(relpos.x, relpos.y, 0); //Apply current render root location
 
 		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
@@ -102,6 +103,8 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 		//Advance position
 		relpos.x += glyph->advance / 64.0f;
 	}
+
+	glPopMatrix();
 
 	glDisable(GL_BLEND);
 }

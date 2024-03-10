@@ -126,13 +126,13 @@ Vector3<TObj>::Vector3(const Vector2<TObj>& xy, const TObj z)
 {
     x = xy.x;
     y = xy.y;
-    z = z;
+    this->z = z;
 }
 
 template<class TObj>
 Vector3<TObj>::Vector3(const TObj x, const Vector2<TObj>& yz)
 {
-    x = x;
+    this->x = x;
     y = yz._v[0];
     z = yz._v[1];
 }
