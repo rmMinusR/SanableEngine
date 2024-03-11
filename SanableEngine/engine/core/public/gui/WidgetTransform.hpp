@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <ReflectionSpec.hpp>
 #include <glm/mat4x4.hpp>
 #include "Vector2.inl"
@@ -31,9 +32,12 @@ public:
 	//Trivially copyable and movable
 
 	//Utility shorthand presets
-	ENGINEGUI_API void fillParent();
-	ENGINEGUI_API void centerInParent(Vector2f ownSize); //Assumes own pivot = center
-	ENGINEGUI_API void snapToCorner(Vector2f corner); //Align own corner to specified corner in parent, without changing own size
+	ENGINEGUI_API void fillParent(float padding = 0);
+	ENGINEGUI_API void fillParentX(float padding = 0);
+	ENGINEGUI_API void fillParentY(float padding = 0);
+	ENGINEGUI_API void snapToCorner(Vector2f corner, std::optional<Vector2f> newSize = std::nullopt); //Align own corner to specified corner in parent. If no new size is given, current size will be maintained.
+	ENGINEGUI_API void setSizeByOffsets(Vector2f size, std::optional<Vector2f> pivot = std::nullopt); //Resize. If no pivot is given, the average of corner anchors will be used.
+	ENGINEGUI_API void setCenterByOffsets(Vector2f pos, std::optional<Vector2f> pivot = std::nullopt); //Reposition. If no pivot is given, the average of corner anchors will be used.
 
 	//Fine control
 	ENGINEGUI_API void setMinCornerRatio(const Vector2f& val, bool keepPosition = false);

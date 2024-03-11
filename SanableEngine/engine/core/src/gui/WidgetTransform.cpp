@@ -16,30 +16,50 @@ WidgetTransform::~WidgetTransform()
 {
 }
 
-void WidgetTransform::fillParent()
+void WidgetTransform::fillParent(float padding)
 {
-	setMinCornerRatio ({ 0, 0 });
-	setMaxCornerRatio ({ 1, 1 });
-	setMinCornerOffset({ 0, 0 });
-	setMaxCornerOffset({ 0, 0 });
+	fillParentX(padding);
+	fillParentY(padding);
 }
 
-void WidgetTransform::centerInParent(Vector2f ownSize)
+void WidgetTransform::fillParentX(float padding)
 {
-	setMinCornerRatio ({ 0.5f, 0.5f });
-	setMaxCornerRatio ({ 0.5f, 0.5f });
-	Vector2f extents = ownSize / 2;
-	setMinCornerOffset(-extents);
-	setMaxCornerOffset( extents);
+	minCorner.ratio .x = 0;
+	maxCorner.ratio .x = 1;
+	minCorner.offset.x =  padding;
+	maxCorner.offset.x = -padding;
 }
-	
-void WidgetTransform::snapToCorner(Vector2f corner)
+
+void WidgetTransform::fillParentY(float padding)
 {
-	Vector2f originalSize = getLocalRect().size;
+	minCorner.ratio .y = 0;
+	maxCorner.ratio .y = 1;
+	minCorner.offset.y = padding;
+	maxCorner.offset.y = -padding;
+}
+
+void WidgetTransform::snapToCorner(Vector2f corner, std::optional<Vector2f> size)
+{
+	Vector2f targetSize = size.value_or(getLocalRect().size);
 	setMinCornerRatio(corner);
 	setMaxCornerRatio(corner);
-	setMinCornerOffset(originalSize * corner);
-	setMaxCornerOffset(originalSize * (Vector2f(1,1)-corner) );
+	setMinCornerOffset(targetSize * corner);
+	setMaxCornerOffset(targetSize * (Vector2f(1,1)-corner) );
+}
+
+void WidgetTransform::setSizeByOffsets(Vector2f size, std::optional<Vector2f> _pivot)
+{
+	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
+	setMinCornerOffset(size * pivot);
+	setMaxCornerOffset(size * (Vector2f(1,1)-pivot) );
+}
+
+void WidgetTransform::setCenterByOffsets(Vector2f pos, std::optional<Vector2f> _pivot)
+{
+	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
+	Vector2f curPos = _pivot.value_or( (minCorner.offset+maxCorner.offset)/2 );
+	minCorner.offset += (pos-curPos)*pivot;
+	maxCorner.offset += (pos-curPos)*(Vector2f(1,1)-pivot);
 }
 
 void WidgetTransform::setMinCornerRatio(const Vector2f& val, bool keepPosition)
