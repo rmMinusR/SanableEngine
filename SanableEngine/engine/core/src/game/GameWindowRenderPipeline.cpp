@@ -77,5 +77,6 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 
 	glPopMatrix();
 
+	hud.tick(); //FIXME logic shouldn't be in render, move elsewhere
 	hud.render(viewport, renderInterface);
 }

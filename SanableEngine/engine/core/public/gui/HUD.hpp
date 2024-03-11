@@ -13,6 +13,11 @@ private:
 	MemoryManager memory; //TODO reload safety
 	WidgetTransform root;
 	
+	//Concurrency buffers
+	std::vector<Widget*> addQueue;
+	std::vector<Widget*> removeQueue;
+	void applyConcurrencyBuffers();
+
 	ENGINEGUI_API void addWidget_internal(Widget* widget);
 	ENGINEGUI_API void removeWidget_internal(Widget* widget);
 public:

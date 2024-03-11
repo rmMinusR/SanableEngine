@@ -5,15 +5,24 @@
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 
+void HUD::applyConcurrencyBuffers()
+{
+	for (Widget* w : addQueue) widgets.add(w);
+	addQueue.clear();
+
+	for (Widget* w : removeQueue) widgets.remove(w);
+	removeQueue.clear();
+}
+
 void HUD::addWidget_internal(Widget* widget)
 {
-	widgets.add(widget);
+	addQueue.push_back(widget);
 	if (!widget->transform.getParent()) widget->transform.setParent(getRootTransform());
 }
 
 void HUD::removeWidget_internal(Widget* widget)
 {
-	widgets.remove(widget);
+	removeQueue.push_back(widget);
 }
 
 HUD::HUD()
@@ -33,11 +42,15 @@ MemoryManager* HUD::getMemory()
 
 void HUD::tick()
 {
+	applyConcurrencyBuffers();
 	widgets.memberCall(&Widget::tick);
+	applyConcurrencyBuffers();
 }
 
 void HUD::render(Rect<float> viewport, Renderer* renderer)
 {
+	applyConcurrencyBuffers();
+	
 	root.setRectByOffsets(viewport);
 
 	//Collect objects to buffer
