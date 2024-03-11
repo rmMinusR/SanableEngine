@@ -14,6 +14,10 @@ Widget::~Widget()
 {
 }
 
+void Widget::tick()
+{
+}
+
 const ShaderProgram* Widget::getShader() const
 {
     const Material* material = getMaterial();

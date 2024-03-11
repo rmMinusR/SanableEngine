@@ -21,10 +21,10 @@ public:
 
 	ENGINEGUI_API MemoryManager* getMemory();
 	
+	ENGINEGUI_API void tick();
 	ENGINEGUI_API void render(Rect<float> viewport, Renderer* renderer);
 
-	//Makes a widget's parent root
-	ENGINEGUI_API void makeRoot(Widget* widget);
+	ENGINEGUI_API WidgetTransform const* getRootTransform() const;
 	
 	template<typename T, typename... TCtorArgs>
 	inline T* addWidget(TCtorArgs... ctorArgs)

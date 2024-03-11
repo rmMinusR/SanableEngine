@@ -22,7 +22,7 @@ private:
 	//UIAnchor pivot;
 	//float localScale = 1;
 	depth_t relativeRenderDepth = 0;
-	WidgetTransform* parent;
+	WidgetTransform const* parent;
 
 	//TODO cache
 public:
@@ -30,7 +30,7 @@ public:
 	ENGINEGUI_API ~WidgetTransform();
 	//Trivially copyable and movable
 
-	//Utility shorthand
+	//Utility shorthand presets
 	ENGINEGUI_API void fillParent();
 
 
@@ -50,8 +50,8 @@ public:
 	//ENGINEGUI_API float getLocalScale() const;
 	//ENGINEGUI_API void setLocalScale(float val);
 
-	ENGINEGUI_API WidgetTransform* getParent() const;
-	ENGINEGUI_API void setParent(WidgetTransform* parent);
+	ENGINEGUI_API WidgetTransform const* getParent() const;
+	ENGINEGUI_API void setParent(WidgetTransform const* parent);
 
 	ENGINEGUI_API void setRenderDepth(depth_t depth);
 	ENGINEGUI_API depth_t getRenderDepth() const;

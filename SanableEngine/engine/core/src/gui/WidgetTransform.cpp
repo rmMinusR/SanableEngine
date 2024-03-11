@@ -102,16 +102,16 @@ void WidgetTransform::setLocalScale(float val)
 }
 */
 
-WidgetTransform* WidgetTransform::getParent() const
+WidgetTransform const* WidgetTransform::getParent() const
 {
 	return parent;
 }
 
-void WidgetTransform::setParent(WidgetTransform* parent)
+void WidgetTransform::setParent(WidgetTransform const* parent)
 {
 	//Sanity check: can't cause loops
 	{
-		WidgetTransform* i = this->parent;
+		WidgetTransform const* i = this->parent;
 		while (i)
 		{
 			assert(i != this);

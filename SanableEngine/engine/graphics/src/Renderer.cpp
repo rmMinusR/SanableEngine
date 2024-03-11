@@ -75,7 +75,6 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	Vector2f size = font.getRenderedSize(this, text);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glTranslatef(0, font.size, 0); //Text's default anchor is bottom-left of line; follow convention of using top-left corner to anchor

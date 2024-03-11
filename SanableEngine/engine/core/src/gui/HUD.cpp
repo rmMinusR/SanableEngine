@@ -8,7 +8,7 @@
 void HUD::addWidget_internal(Widget* widget)
 {
 	widgets.add(widget);
-	if (!widget->transform.getParent()) makeRoot(widget);
+	if (!widget->transform.getParent()) widget->transform.setParent(getRootTransform());
 }
 
 void HUD::removeWidget_internal(Widget* widget)
@@ -29,6 +29,11 @@ HUD::~HUD()
 MemoryManager* HUD::getMemory()
 {
 	return &memory;
+}
+
+void HUD::tick()
+{
+	widgets.memberCall(&Widget::tick);
 }
 
 void HUD::render(Rect<float> viewport, Renderer* renderer)
@@ -80,7 +85,7 @@ void HUD::render(Rect<float> viewport, Renderer* renderer)
 	glPopMatrix();
 }
 
-void HUD::makeRoot(Widget* widget)
+WidgetTransform const* HUD::getRootTransform() const
 {
-	widget->transform.setParent(&root);
+	return &root;
 }
