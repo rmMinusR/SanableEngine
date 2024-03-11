@@ -32,8 +32,10 @@ public:
 
 	//Utility shorthand presets
 	ENGINEGUI_API void fillParent();
+	ENGINEGUI_API void centerInParent(Vector2f ownSize); //Assumes own pivot = center
+	ENGINEGUI_API void snapToCorner(Vector2f corner); //Align own corner to specified corner in parent, without changing own size
 
-
+	//Fine control
 	ENGINEGUI_API void setMinCornerRatio(const Vector2f& val, bool keepPosition = false);
 	ENGINEGUI_API void setMaxCornerRatio(const Vector2f& val, bool keepPosition = false);
 	ENGINEGUI_API void setMinCornerOffset(const Vector2f& val, bool keepPosition = false);

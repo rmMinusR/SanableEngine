@@ -24,6 +24,24 @@ void WidgetTransform::fillParent()
 	setMaxCornerOffset({ 0, 0 });
 }
 
+void WidgetTransform::centerInParent(Vector2f ownSize)
+{
+	setMinCornerRatio ({ 0.5f, 0.5f });
+	setMaxCornerRatio ({ 0.5f, 0.5f });
+	Vector2f extents = ownSize / 2;
+	setMinCornerOffset(-extents);
+	setMaxCornerOffset( extents);
+}
+	
+void WidgetTransform::snapToCorner(Vector2f corner)
+{
+	Vector2f originalSize = getLocalRect().size;
+	setMinCornerRatio(corner);
+	setMaxCornerRatio(corner);
+	setMinCornerOffset(originalSize * corner);
+	setMaxCornerOffset(originalSize * (Vector2f(1,1)-corner) );
+}
+
 void WidgetTransform::setMinCornerRatio(const Vector2f& val, bool keepPosition)
 {
 	if (!keepPosition) minCorner.ratio = val;
