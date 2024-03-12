@@ -3,18 +3,21 @@
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
 #include "gui/WindowGUIRenderPipeline.hpp"
+#include "gui/ImageWidget.hpp"
+#include "gui/LabelWidget.hpp"
+#include "gui/ButtonWidget.hpp"
 #include "application/Window.hpp"
 #include "PluginManagerView.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
+#include "Texture.hpp"
+#include "Font.hpp"
+#include "Resources.hpp"
 
 Game* game;
 PluginManagerView* ui;
 Window* ctlWindow;
 HUD* ctlGuiRoot;
-
-ShaderProgram* uiShader;
-Material* uiMaterial;
 
 PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* engine)
 {
@@ -37,15 +40,37 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
             std::unique_ptr<WindowGUIRenderPipeline> _renderer = std::make_unique<WindowGUIRenderPipeline>();
             WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, std::move(_renderer));
             ctlWindow = builder.build();
+            ctlGuiRoot = &static_cast<WindowGUIRenderPipeline*>(ctlWindow->getRenderPipeline())->hud;
         }
 
-        //Load UI shader/material. Must be done after creating Window or we get code 1282 (invalid operation)
-        uiShader = new ShaderProgram("resources/shaders/ui");
-        uiShader->load();
-        uiMaterial = new Material(uiShader);
+        //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
-        ctlGuiRoot = &static_cast<WindowGUIRenderPipeline*>(ctlWindow->getRenderPipeline())->hud;
-        ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), uiMaterial);
+        //Ready resources: images
+        ShaderProgram* uiShader = new ShaderProgram("resources/shaders/ui");
+        uiShader->load();
+        Resources::imageMat = new Material(uiShader);
+
+        //Ready resources: text
+        ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
+        if (!textShader->load()) assert(false);
+        Resources::textMat = new Material(textShader);
+        Resources::headerFont = new Font("resources/ui/fonts/arial.ttf", 48);
+        Resources::labelFont = new Font("resources/ui/fonts/arial.ttf", 24);
+
+        //Init UI elements
+        ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), nullptr);
+        
+        /*
+        Texture* texture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/blue_boxCheckmark.png");
+        ImageWidget* buttonBg = ctlGuiRoot->addWidget<ImageWidget>(nullptr, texture);
+
+        LabelWidget* buttonLabel = ctlGuiRoot->addWidget<LabelWidget>(textMat, font);
+        buttonLabel->setText(L"Text test!");
+
+        ButtonWidget* btn = ctlGuiRoot->addWidget<ButtonWidget>(buttonBg, buttonLabel);
+        btn->transform.setMinCornerOffset({ -100, -50 });
+        btn->transform.setMaxCornerOffset({  100,  50 });
+        */
 
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin
@@ -63,11 +88,6 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
     {
         ctlGuiRoot->removeWidget(ui);
         ui = nullptr;
-
-        delete uiMaterial;
-        uiMaterial = nullptr;
-        delete uiShader;
-        uiShader = nullptr;
 
         WindowBuilder::destroy(ctlWindow);
         ctlWindow = nullptr;
