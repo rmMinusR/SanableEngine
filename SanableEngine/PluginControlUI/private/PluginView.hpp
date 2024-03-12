@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ReflectionSpec.hpp>
 #include "gui/Widget.hpp"
 
 struct Plugin;
@@ -12,6 +13,8 @@ class PluginView : public Widget
 	LabelWidget* path;
 	LabelWidget* name;
 	LabelWidget* status;
+
+	void tryInit();
 
 public:
 	PluginView(HUD* hud);

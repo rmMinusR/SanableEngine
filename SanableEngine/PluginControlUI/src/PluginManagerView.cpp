@@ -55,8 +55,4 @@ const Material* PluginManagerView::getMaterial() const
 
 void PluginManagerView::renderImmediate(Renderer* target)
 {
-	mgr->enumeratePlugins([&](Plugin* p)
-	{
-		//TODO implement
-	});
 }
