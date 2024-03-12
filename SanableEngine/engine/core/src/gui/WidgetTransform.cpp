@@ -43,7 +43,7 @@ void WidgetTransform::snapToCorner(Vector2f corner, std::optional<Vector2f> size
 	Vector2f targetSize = size.value_or(getLocalRect().size);
 	setMinCornerRatio(corner);
 	setMaxCornerRatio(corner);
-	setMinCornerOffset(targetSize * corner);
+	setMinCornerOffset(targetSize * -corner);
 	setMaxCornerOffset(targetSize * (Vector2f(1,1)-corner) );
 }
 
@@ -57,9 +57,10 @@ void WidgetTransform::setSizeByOffsets(Vector2f size, std::optional<Vector2f> _p
 void WidgetTransform::setCenterByOffsets(Vector2f pos, std::optional<Vector2f> _pivot)
 {
 	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
-	Vector2f curPos = _pivot.value_or( (minCorner.offset+maxCorner.offset)/2 );
-	minCorner.offset += (pos-curPos)*pivot;
-	maxCorner.offset += (pos-curPos)*(Vector2f(1,1)-pivot);
+	Vector2f invPivot = Vector2f(1, 1)-pivot;
+	Vector2f curPos = minCorner.offset*invPivot + maxCorner.offset*pivot;
+	minCorner.offset += pos-curPos;
+	maxCorner.offset += pos-curPos;
 }
 
 void WidgetTransform::setMinCornerRatio(const Vector2f& val, bool keepPosition)

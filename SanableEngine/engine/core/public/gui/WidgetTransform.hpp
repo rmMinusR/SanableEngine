@@ -17,6 +17,29 @@ struct STIX_ENABLE_IMAGE_CAPTURE WidgetTransform
 public:
 	typedef int depth_t;
 
+	/*
+	struct CornerAnchorForm;
+	struct AnchorPivotForm;
+
+	struct CornerAnchorForm
+	{
+		UIAnchor minCorner;
+		UIAnchor maxCorner;
+
+		ENGINEGUI_API void toAnchorPivotForm(const Vector2f parentSize, AnchorPivotForm* out);
+	};
+
+	struct AnchorPivotForm
+	{
+		UIAnchor anchor;
+		Vector2f pivot; //Range 0-1
+		Vector2f flatSize; //Pixels
+		Vector2f inheritedSize; //Range 0-1
+
+		ENGINEGUI_API void toCornerForm(const Vector2f parentSize, CornerAnchorForm* out);
+	};
+	*/
+
 private:
 	UIAnchor minCorner;
 	UIAnchor maxCorner;
