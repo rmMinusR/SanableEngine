@@ -2,6 +2,7 @@
 
 #include <ofbx.h>
 #include <GL/glew.h>
+#include "Renderer.hpp"
 
 glm::vec3 toGlm(ofbx::Vec3 _v)
 {
@@ -20,27 +21,15 @@ glm::vec2 toGlm(ofbx::Vec2 _v)
 	return v;
 }
 
-Mesh::Mesh() :
-	VAO(0),
-	VBO(0),
-	EBO(0)
+CMesh::CMesh()
 {
 }
 
-Mesh::~Mesh()
-{
-	if (VAO) glDeleteVertexArrays(1, &VAO);
-	if (VBO) glDeleteBuffers(1, &VBO);
-	if (EBO) glDeleteBuffers(1, &EBO);
-}
-
-bool Mesh::load(const std::filesystem::path& path)
+CMesh::CMesh(const std::filesystem::path& path)
 {
 	FILE* fp;
 	errno_t err = fopen_s(&fp, path.u8string().c_str(), "rb");
-
 	assert(!err);
-	if (err) return false;
 
 	fseek(fp, 0, SEEK_END);
 	long file_size = ftell(fp);
@@ -49,9 +38,7 @@ bool Mesh::load(const std::filesystem::path& path)
 	fread(content, 1, file_size, fp);
 
 	ofbx::IScene* scene = ofbx::load((ofbx::u8*)content, file_size, (ofbx::u16)ofbx::LoadFlags::NONE);
-
 	assert(scene);
-	if (!scene) return false;
 
 	delete[] content;
 	fclose(fp);
@@ -88,49 +75,66 @@ bool Mesh::load(const std::filesystem::path& path)
 			for (int i = 0; i < nToAdd; ++i) triangles.push_back(buf[i]);
 		}
 	}
-
-	//printf("Verts: %i predicted / %i real\n", vertCount, out.vertices.size());
-	//printf("Tris: %i predicted / %i real\n", nTris, out.faces.size());
-
-	uploadToGPU();
-
-	return true;
 }
 
-void Mesh::uploadToGPU()
+CMesh::~CMesh()
 {
-	if (!VAO) glGenVertexArrays(1, &VAO);
-	if (!VBO) glGenBuffers(1, &VBO);
-	if (!EBO) glGenBuffers(1, &EBO);
+}
+
+GMesh::GMesh() :
+	VAO(0),
+	VBO(0),
+	EBO(0),
+	nTriangles(0)
+{
+}
+
+GMesh::GMesh(const CMesh& src) :
+	VAO(0),
+	VBO(0),
+	EBO(0),
+	nTriangles(0)
+{
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, src.vertices.size() * sizeof(CMesh::Vertex), &src.vertices[0], GL_STATIC_DRAW);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.size() * sizeof(decltype(triangles)::value_type), &triangles[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, src.triangles.size() * sizeof(decltype(src.triangles)::value_type), &src.triangles[0], GL_STATIC_DRAW);
+	nTriangles = src.triangles.size();
 	
 	//Positions
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(CMesh::Vertex), (void*)offsetof(CMesh::Vertex, position));
 	//Normals
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(CMesh::Vertex), (void*)offsetof(CMesh::Vertex, normal));
 	//UVs
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texCoord));
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(CMesh::Vertex), (void*)offsetof(CMesh::Vertex, texCoord));
 
 	glBindVertexArray(0);
 }
 
-void Mesh::renderImmediate() const
+GMesh::~GMesh()
+{
+	if (VAO) glDeleteVertexArrays(1, &VAO);
+	if (VBO) glDeleteBuffers(1, &VBO);
+	if (EBO) glDeleteBuffers(1, &EBO);
+}
+
+void GMesh::renderImmediate() const
 {
 	glColor4f(1, 1, 1, 1);
 
 	//Draw mesh
 	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, triangles.size(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, nTriangles, GL_UNSIGNED_INT, 0);
 
 	//Clear state
 	glBindVertexArray(0);

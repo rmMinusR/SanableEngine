@@ -7,12 +7,14 @@
 
 #include "dllapi.h"
 
-class Mesh
+
+class CMesh;
+class GMesh;
+
+
+//CPU-sided mesh
+class CMesh
 {
-	GLuint VAO;
-	GLuint VBO;
-	GLuint EBO;
-	
 public:
 	struct Vertex
 	{
@@ -24,16 +26,28 @@ public:
 
 	std::vector<unsigned int> triangles;
 
-	ENGINEGRAPHICS_API Mesh();
-	ENGINEGRAPHICS_API ~Mesh();
+	ENGINEGRAPHICS_API CMesh();
+	ENGINEGRAPHICS_API CMesh(const std::filesystem::path& path);
+	ENGINEGRAPHICS_API ~CMesh();
 
-	ENGINEGRAPHICS_API void uploadToGPU();
-	ENGINEGRAPHICS_API void renderImmediate() const;
-
-
-	//Loading functions
-	ENGINEGRAPHICS_API bool load(const std::filesystem::path& path);
+	//ENGINEGRAPHICS_API void renderImmediate() const;
 
 	//Primitives
-	ENGINEGRAPHICS_API static Mesh createCube(float size);
+	//ENGINEGRAPHICS_API static CMesh createCube(float size);
+};
+
+
+class GMesh
+{
+	GLuint VAO;
+	GLuint VBO;
+	GLuint EBO;
+	size_t nTriangles;
+
+public:
+	ENGINEGRAPHICS_API GMesh();
+	ENGINEGRAPHICS_API GMesh(const CMesh& src);
+	ENGINEGRAPHICS_API ~GMesh();
+
+	ENGINEGRAPHICS_API void renderImmediate() const;
 };

@@ -4,7 +4,7 @@
 
 #include <GL/glew.h>
 
-MeshRenderer::MeshRenderer(Mesh* mesh, Material* material) :
+MeshRenderer::MeshRenderer(GMesh* mesh, Material* material) :
 	mesh(mesh),
 	material(material)
 {

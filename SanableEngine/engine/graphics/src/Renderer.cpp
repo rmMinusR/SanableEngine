@@ -57,7 +57,7 @@ void Renderer::drawText(const Font& font, const SDL_Color& color, const std::wst
 	//SDL_FreeSurface(surf);
 }
 
-void Renderer::drawTexture(const Texture& tex, int x, int y)
+void Renderer::drawTexture(const GTexture& tex, int x, int y)
 {
 	ShaderProgram::clear();
 
