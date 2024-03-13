@@ -19,8 +19,8 @@ int main(int argc, char* argv[])
     //Init
     {
         GLSettings glSettings;
-        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, std::make_unique<GameWindowRenderPipeline>(&game));
-        mainWindow.setInputProcessor(std::make_unique<GameWindowInputProcessor>(&game));
+        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, new GameWindowRenderPipeline(&game));
+        mainWindow.setInputProcessor(new GameWindowInputProcessor(&game));
         engine.init(&game, glSettings, mainWindow, system, nullptr);
     }
 

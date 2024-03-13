@@ -122,7 +122,7 @@ void Application::shutdown()
     game->applyConcurrencyBuffers();
     pluginManager.unloadAll();
 
-    while (!windows.empty()) WindowBuilder::destroy(windows[windows.size()-1]);
+    while (!windows.empty()) delete windows[windows.size()-1];
     mainWindow = nullptr;
     
     //Clean up memory, GameObject pool first so remaining components are released
@@ -181,7 +181,7 @@ Window* Application::getMainWindow()
     return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
 }
 
-WindowBuilder Application::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
+WindowBuilder Application::buildWindow(const std::string& name, int width, int height, WindowRenderPipeline* renderPipeline)
 {
-    return WindowBuilder(this, name, width, height, glSettings, std::move(renderPipeline));
+    return WindowBuilder(this, name, width, height, glSettings, renderPipeline);
 }

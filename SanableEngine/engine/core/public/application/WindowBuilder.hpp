@@ -17,22 +17,21 @@ class WindowBuilder
 	GLSettings glSettings; //Provided by engine. DO NOT MESS WITH outside of platform main.
 
 	//Required
-	Application* engine;
+	Application* engine; //Not owned
 	std::string name;
 	Vector3<int> size;
-	std::unique_ptr<WindowRenderPipeline> renderPipeline;
+	WindowRenderPipeline* renderPipeline; //Owned by self, nulled on build
 
 	//Optional
 	std::optional<Vector3<int>> position;
-	std::unique_ptr<WindowInputProcessor> inputProcessor;
+	WindowInputProcessor* inputProcessor; //Owned by self, nulled on build
 	
-	WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
+	WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, WindowRenderPipeline* renderPipeline);
 	friend class Application;
 public:
 	ENGINEGRAPHICS_API ~WindowBuilder();
 
-	ENGINEGRAPHICS_API void setInputProcessor(std::unique_ptr<WindowInputProcessor>&& inputProcessor);
-
-	ENGINEGRAPHICS_API Window* build(); //Caller is responsible for returned ptr.
-	ENGINEGRAPHICS_API static void destroy(Window* window);
+	ENGINEGRAPHICS_API void setInputProcessor(WindowInputProcessor* inputProcessor);
+	
+	[[nodiscard]] ENGINEGRAPHICS_API Window* build();
 };

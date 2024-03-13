@@ -7,10 +7,13 @@
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 
-Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor) :
-    renderPipeline(std::move(renderPipeline)),
-    inputProcessor(std::move(inputProcessor)),
-    engine(engine)
+Window* Window::currentFocus = nullptr;
+
+Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, WindowRenderPipeline* renderPipeline, WindowInputProcessor* inputProcessor) :
+    renderPipeline(renderPipeline),
+    inputProcessor(inputProcessor),
+    engine(engine),
+    closeRequested(false)
 {
     SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
 
@@ -20,12 +23,16 @@ Window::Window(const std::string& name, int width, int height, const GLSettings&
     context = GLContext::create(handle, this);
     
     _interface = Renderer(this, context);
+    sdlID = SDL_GetWindowID(handle);
     
     printf("Window '%s' - OpenGL %s\n", name.c_str(), (char*)glGetString(GL_VERSION));
 }
 
 Window::~Window()
 {
+    std::vector<Window*>& windows = engine->windows;
+    windows.erase(std::find(windows.begin(), windows.end(), this));
+
     if (context)
     {
         GLContext::release(context, this);
@@ -59,6 +66,16 @@ int Window::getHeight() const
     return h;
 }
 
+bool Window::isFocused() const
+{
+    return currentFocus == this;
+}
+
+bool Window::wasCloseRequested() const
+{
+    return closeRequested;
+}
+
 void Window::draw() const
 {
     //Reset to default state
@@ -81,7 +98,28 @@ void Window::setActiveDrawTarget(const Window* w)
     assert(SDL_GL_GetCurrentContext() == w->context);
 }
 
-void Window::handleEvent(SDL_Event& ev) const
+void Window::handleEvent(SDL_Event& ev)
 {
+    if (ev.type == SDL_EventType::SDL_WINDOWEVENT)
+    {
+        switch (ev.window.event)
+        {
+        case SDL_WINDOWEVENT_FOCUS_GAINED:
+            Window::currentFocus = (Window*)this;
+            break;
+
+        case SDL_WINDOWEVENT_FOCUS_LOST:
+            if (Window::currentFocus == this) Window::currentFocus = nullptr;
+            break;
+
+        case SDL_WINDOWEVENT_CLOSE:
+            closeRequested = true;
+            break;
+        }
+
+        //Drawing stops when grabbing. This might fix? Or might not. Who knows.
+        //if (ev.window.event == SDL_WINDOWEVENT_MOVED || ev.window.event == SDL_WINDOWEVENT_RESIZED) draw();
+    }
+
     if (inputProcessor) inputProcessor->handleEvent(ev);
 }

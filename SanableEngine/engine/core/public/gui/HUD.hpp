@@ -29,6 +29,8 @@ public:
 	ENGINEGUI_API void tick();
 	ENGINEGUI_API void render(Rect<float> viewport, Renderer* renderer);
 
+	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(Widget*)>& visitor) const;
+
 	ENGINEGUI_API WidgetTransform const* getRootTransform() const;
 	
 	template<typename T, typename... TCtorArgs>

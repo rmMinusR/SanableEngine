@@ -1,6 +1,7 @@
 #include "gui/HUD.hpp"
 
 #include <unordered_map>
+#include <algorithm>
 
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
@@ -96,6 +97,14 @@ void HUD::render(Rect<float> viewport, Renderer* renderer)
 	}
 
 	glPopMatrix();
+}
+
+void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor) const
+{
+	std::vector<Widget*> hits;
+	widgets.staticCall([&](Widget* w) { if (w->transform.getRect().contains(pos)) hits.push_back(w); }); //FIXME inefficient as heck, especially without cached transforms
+	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform.getRenderDepth() > b->transform.getRenderDepth(); });
+	for (Widget* w : hits) visitor(w);
 }
 
 WidgetTransform const* HUD::getRootTransform() const
