@@ -34,6 +34,11 @@ public:
 
 	//Primitives
 	//ENGINEGRAPHICS_API static CMesh createCube(float size);
+
+	ENGINEGRAPHICS_API CMesh(CMesh&& mov);
+	ENGINEGRAPHICS_API CMesh& operator=(CMesh&& mov);
+	CMesh(const CMesh& cpy) = delete;
+	CMesh& operator=(const CMesh& cpy) = delete;
 };
 
 
@@ -50,4 +55,9 @@ public:
 	ENGINEGRAPHICS_API ~GMesh();
 
 	ENGINEGRAPHICS_API void renderImmediate() const;
+
+	ENGINEGRAPHICS_API GMesh(GMesh&& mov);
+	ENGINEGRAPHICS_API GMesh& operator=(GMesh&& mov);
+	GMesh(const GMesh& cpy) = delete;
+	GMesh& operator=(const GMesh& cpy) = delete;
 };

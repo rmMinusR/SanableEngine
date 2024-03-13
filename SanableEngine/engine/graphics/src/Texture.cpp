@@ -56,6 +56,8 @@ CTexture::CTexture(CTexture&& mov)
 
 CTexture& CTexture::operator=(CTexture&& mov)
 {
+	if (data) stbi_image_free(data);
+
 	width     = mov.width;
 	height    = mov.height;
 	nChannels = mov.nChannels;
@@ -114,6 +116,8 @@ GTexture::GTexture(GTexture&& mov)
 
 GTexture& GTexture::operator=(GTexture&& mov)
 {
+	if (this->id) glDeleteTextures(1, &id);
+
 	this->id = mov.id;
 	mov.id = 0;
 	

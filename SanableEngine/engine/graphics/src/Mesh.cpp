@@ -81,6 +81,18 @@ CMesh::~CMesh()
 {
 }
 
+CMesh::CMesh(CMesh&& mov)
+{
+	*this = std::move(mov); //Defer
+}
+
+CMesh& CMesh::operator=(CMesh&& mov)
+{
+	this->vertices  = std::move(mov.vertices);
+	this->triangles = std::move(mov.triangles);
+	return *this;
+}
+
 GMesh::GMesh() :
 	VAO(0),
 	VBO(0),
@@ -138,4 +150,22 @@ void GMesh::renderImmediate() const
 
 	//Clear state
 	glBindVertexArray(0);
+}
+
+GMesh::GMesh(GMesh&& mov)
+{
+	*this = std::move(mov); //Defer
+}
+
+GMesh& GMesh::operator=(GMesh&& mov)
+{
+	this->VAO = mov.VAO;
+	this->VBO = mov.VBO;
+	this->EBO = mov.EBO;
+	this->nTriangles = mov.nTriangles;
+
+	mov.VAO = 0;
+	mov.VBO = 0;
+	mov.EBO = 0;
+	mov.nTriangles = 0;
 }
