@@ -16,5 +16,7 @@ public:
 	ENGINEGUI_API WindowGUIInputProcessor(HUD* hud);
 	ENGINEGUI_API ~WindowGUIInputProcessor();
 
+	ENGINEGUI_API virtual void handleEvent(SDL_Event& ev) override;
+
 	ENGINEGUI_API void setPassthrough(std::unique_ptr<WindowInputProcessor>&& newPassthrough);
 };

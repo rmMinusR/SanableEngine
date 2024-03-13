@@ -18,6 +18,16 @@ void Widget::tick()
 {
 }
 
+bool Widget::onMouseDown(Vector2f pos)
+{
+    return false;
+}
+
+bool Widget::onMouseUp(Vector2f pos)
+{
+    return false;
+}
+
 const ShaderProgram* Widget::getShader() const
 {
     const Material* material = getMaterial();
