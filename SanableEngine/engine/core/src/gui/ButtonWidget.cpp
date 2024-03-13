@@ -37,3 +37,14 @@ const Material* ButtonWidget::getMaterial() const
 void ButtonWidget::renderImmediate(Renderer* renderer)
 {
 }
+
+void ButtonWidget::setCallback(const std::function<void()>& callback)
+{
+	this->callback = callback;
+}
+
+bool ButtonWidget::onMouseDown(Vector2f pos)
+{
+	if (callback) callback();
+	return true;
+}

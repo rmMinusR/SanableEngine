@@ -9,9 +9,9 @@
 
 Window* Window::currentFocus = nullptr;
 
-Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor) :
-    renderPipeline(std::move(renderPipeline)),
-    inputProcessor(std::move(inputProcessor)),
+Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, WindowRenderPipeline* renderPipeline, WindowInputProcessor* inputProcessor) :
+    renderPipeline(renderPipeline),
+    inputProcessor(inputProcessor),
     engine(engine),
     closeRequested(false)
 {
@@ -30,6 +30,9 @@ Window::Window(const std::string& name, int width, int height, const GLSettings&
 
 Window::~Window()
 {
+    std::vector<Window*>& windows = engine->windows;
+    windows.erase(std::find(windows.begin(), windows.end(), this));
+
     if (context)
     {
         GLContext::release(context, this);

@@ -18,6 +18,7 @@ public:
 protected:
 	Window* window;
 	ENGINECORE_API virtual void setup(Window* window);
+	friend class WindowBuilder;
 
 	ENGINECORE_API virtual void handleEvent(SDL_Event& ev);
 	friend class Window;
