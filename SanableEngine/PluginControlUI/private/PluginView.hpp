@@ -13,6 +13,8 @@ class PluginView : public Widget
 	LabelWidget* path;
 	LabelWidget* name;
 	LabelWidget* status;
+	//TODO manual control buttons
+	//TODO RTTI status + details button
 
 	void tryInit();
 
