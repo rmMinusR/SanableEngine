@@ -7,6 +7,7 @@
 #include <GL/glew.h>
 
 #include "dllapi.h"
+#include "Vector2.inl"
 
 
 class Renderer;
@@ -26,6 +27,7 @@ public:
 
 	ENGINEGRAPHICS_API int getWidth() const;
 	ENGINEGRAPHICS_API int getHeight() const;
+	ENGINEGRAPHICS_API Vector2<int> getSize() const;
 	ENGINEGRAPHICS_API int getNChannels() const;
 
 	ENGINEGRAPHICS_API virtual operator bool() const = 0;

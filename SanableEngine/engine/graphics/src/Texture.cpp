@@ -21,6 +21,11 @@ int Texture::getHeight() const
 	return height;
 }
 
+Vector2<int> Texture::getSize() const
+{
+	return Vector2<int>(width, height);
+}
+
 int Texture::getNChannels() const
 {
 	return nChannels;

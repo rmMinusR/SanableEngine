@@ -18,6 +18,7 @@ class GTexture;
 class Material;
 class ShaderProgram;
 class MeshRenderer;
+class Sprite;
 
 struct SDL_Color;
 
@@ -40,7 +41,7 @@ public:
 	ENGINEGRAPHICS_API void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos); //Assumes you have no shader active
 	ENGINEGRAPHICS_API void drawText(const Font& font, const Material& mat, const std::wstring& text); //Assumes you've already activated the material and set model matrix value
 	ENGINEGRAPHICS_API void drawTexture(const GTexture& tex, int x, int y); //Obsolete
-	ENGINEGRAPHICS_API void drawTexture(const GTexture* tex, Vector3f pos, float w, float h);
+	ENGINEGRAPHICS_API void drawTexture(const GTexture* tex, Vector3f pos, float w, float h, Sprite* sprite = nullptr); //If sprite is null, defaults to full UV of 0-1
 
 	ENGINEGRAPHICS_API void loadTransform(const glm::mat4&); //Makes no assumptions about which matrix is active or its state, just overwrites
 

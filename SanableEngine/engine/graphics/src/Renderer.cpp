@@ -15,6 +15,7 @@
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
 #include "Font.hpp"
+#include "Sprite.hpp"
 
 Renderer::Renderer() :
 	owner(nullptr),
@@ -109,15 +110,18 @@ void Renderer::drawTexture(const GTexture& tex, int x, int y)
 	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
 }
 
-void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h)
+void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h, Sprite* sprite)
 {
+	Vector2f uvLo = sprite ? sprite->uvs.topLeft       : Vector2f(0, 0);
+	Vector2f uvHi = sprite ? sprite->uvs.bottomRight() : Vector2f(1, 1);
+
 	if (tex) glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex3f(pos.x  , pos.y  , pos.z);
-	glTexCoord2i(1, 0); glVertex3f(pos.x+w, pos.y  , pos.z);
-	glTexCoord2i(1, 1); glVertex3f(pos.x+w, pos.y+h, pos.z);
-	glTexCoord2i(0, 1); glVertex3f(pos.x  , pos.y+h, pos.z);
+	glTexCoord2i(uvLo.x, uvLo.y); glVertex3f(pos.x  , pos.y  , pos.z);
+	glTexCoord2i(uvHi.x, uvLo.y); glVertex3f(pos.x+w, pos.y  , pos.z);
+	glTexCoord2i(uvHi.x, uvHi.y); glVertex3f(pos.x+w, pos.y+h, pos.z);
+	glTexCoord2i(uvLo.x, uvHi.y); glVertex3f(pos.x  , pos.y+h, pos.z);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 }
