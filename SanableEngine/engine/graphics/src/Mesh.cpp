@@ -79,6 +79,8 @@ CMesh::CMesh(const std::filesystem::path& path)
 			for (int i = 0; i < nToAdd; ++i) triangles.push_back(buf[i]);
 		}
 	}
+
+	scene->destroy();
 }
 
 CMesh::~CMesh()
