@@ -6,9 +6,10 @@ project("engine-core")
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_core_sources)
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src/application" engine_core_application_sources)
+aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src/data" engine_core_data_sources)
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src/game" engine_core_game_sources)
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src/gui" engine_core_gui_sources)
-list(APPEND engine_core_sources ${engine_core_application_sources} ${engine_core_game_sources} ${engine_core_gui_sources})
+list(APPEND engine_core_sources ${engine_core_application_sources} ${engine_core_data_sources} ${engine_core_game_sources} ${engine_core_gui_sources})
 declare_dll("engine-core" "" engine_core_sources)
 target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
@@ -23,6 +24,6 @@ target_include_directories("engine-core" INTERFACE "${CMAKE_CURRENT_LIST_DIR}/in
 # Declare install targets
 install_dll("engine-core" ".")
 
-stix_use_template(engine-core "${CMAKE_CURRENT_LIST_DIR}/template/rtti.template.cpp")
+stix_use_template(engine-core "${CMAKE_CURRENT_LIST_DIR}/rtti.template.cpp")
 stix_default_image_capture_status(engine-core disabled)
 stix_generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})
