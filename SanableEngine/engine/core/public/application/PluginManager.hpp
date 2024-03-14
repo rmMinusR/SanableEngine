@@ -23,7 +23,9 @@ private:
 	void hookAll();
 	void unhookAll(bool shutdown);
 
-	void reloadAll();
+	void forgetAll();
+
+	void reloadAll(); //TODO refactor into Application
 
 	PluginManager(Application* engine);
 	~PluginManager();

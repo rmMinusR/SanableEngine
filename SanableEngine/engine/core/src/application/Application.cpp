@@ -120,17 +120,20 @@ void Application::shutdown()
     game->applyConcurrencyBuffers();
     game->cleanup();
     game->applyConcurrencyBuffers();
-    pluginManager.unloadAll();
 
-    while (!windows.empty()) delete windows[windows.size()-1];
+    //If any plugins didn't clean up their window, do it for them
+    while (!windows.empty()) delete windows[windows.size()-1]; //Destructor will automatically erase the tail
     mainWindow = nullptr;
     
     //Clean up memory, GameObject pool first so remaining components are released
     memoryManager.destroyPool<GameObject>();
     memoryManager.cleanup();
 
-    //Type info shouldn't appear on the straggling allocations report
+    pluginManager.unloadAll();
+
+    //RTTI and plugin info shouldn't appear on the straggling allocations report
     GlobalTypeRegistry::clear();
+    pluginManager.forgetAll();
 
     system->Shutdown();
 }

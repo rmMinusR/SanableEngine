@@ -82,6 +82,12 @@ void PluginManager::unhookAll(bool shutdown)
 	for (Plugin* p : plugins) p->cleanup(shutdown);
 }
 
+void PluginManager::forgetAll()
+{
+	for (Plugin* p : plugins) delete p;
+	plugins.clear();
+}
+
 void PluginManager::reloadAll()
 {
 	std::cout << "Hot Reload Started\n";
