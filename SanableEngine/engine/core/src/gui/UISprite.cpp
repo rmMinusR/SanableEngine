@@ -1,5 +1,9 @@
 #include "gui/UISprite.hpp"
 
+UISprite::~UISprite()
+{
+}
+
 UISprite3x3::UISprite3x3(GTexture* tex) :
 	tex(tex)
 {
@@ -26,5 +30,28 @@ Sprite UISprite3x3::get(Vector2<int> index) const
 		uvs[index.x+0],
 		uvs[index.x+1]
 	));
+	return out;
+}
+
+UISpriteSparse::UISpriteSparse(GTexture* tex)
+{
+}
+
+UISpriteSparse::~UISpriteSparse()
+{
+}
+
+void UISpriteSparse::set(Vector2<int> index, Rect<float> uv)
+{
+	assert(0 <= index.x && index.x < 3);
+	assert(0 <= index.y && index.y < 3);
+
+	uvs[index.x + index.y*3] = uv;
+}
+
+Sprite UISpriteSparse::get(Vector2<int> index) const
+{
+	Sprite out(tex);
+	out.setUVRect(uvs[index.x + index.y*3]);
 	return out;
 }
