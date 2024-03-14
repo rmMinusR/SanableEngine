@@ -12,8 +12,17 @@ class CMesh;
 class GMesh;
 
 
+class Mesh
+{
+public:
+	ENGINEGRAPHICS_API virtual ~Mesh();
+
+	virtual void renderImmediate() const = 0;
+};
+
+
 //CPU-sided mesh
-class CMesh
+class CMesh : public Mesh
 {
 public:
 	struct Vertex
@@ -28,9 +37,9 @@ public:
 
 	ENGINEGRAPHICS_API CMesh();
 	ENGINEGRAPHICS_API CMesh(const std::filesystem::path& path);
-	ENGINEGRAPHICS_API ~CMesh();
+	ENGINEGRAPHICS_API virtual ~CMesh();
 
-	//ENGINEGRAPHICS_API void renderImmediate() const;
+	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
 
 	//Primitives
 	//ENGINEGRAPHICS_API static CMesh createCube(float size);
@@ -43,7 +52,8 @@ public:
 };
 
 
-class GMesh
+//GPU-sided mesh
+class GMesh : public Mesh
 {
 	GLuint VAO;
 	GLuint VBO;
@@ -53,9 +63,9 @@ class GMesh
 public:
 	ENGINEGRAPHICS_API GMesh();
 	ENGINEGRAPHICS_API GMesh(const CMesh& src, bool dynamic = false);
-	ENGINEGRAPHICS_API ~GMesh();
+	ENGINEGRAPHICS_API virtual ~GMesh();
 
-	ENGINEGRAPHICS_API void renderImmediate() const;
+	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
 
 	ENGINEGRAPHICS_API GMesh(GMesh&& mov);
 	ENGINEGRAPHICS_API GMesh& operator=(GMesh&& mov);

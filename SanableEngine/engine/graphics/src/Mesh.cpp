@@ -21,6 +21,10 @@ glm::vec2 toGlm(ofbx::Vec2 _v)
 	return v;
 }
 
+Mesh::~Mesh()
+{
+}
+
 CMesh::CMesh()
 {
 }
@@ -79,6 +83,29 @@ CMesh::CMesh(const std::filesystem::path& path)
 
 CMesh::~CMesh()
 {
+}
+
+void CMesh::renderImmediate() const
+{
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < triangles.size(); i += 3)
+	{
+		const Vertex& v0 = vertices[triangles[i+0]];
+		glTexCoord2f(v0.texCoord.x, v0.texCoord.y);
+		glNormal3f(v0.normal  .x, v0.normal  .y, v0.normal  .z);
+		glVertex3f(v0.position.x, v0.position.y, v0.position.z);
+
+		const Vertex& v1 = vertices[triangles[i+1]];
+		glTexCoord2f(v1.texCoord.x, v1.texCoord.y);
+		glNormal3f(v1.normal  .x, v1.normal  .y, v1.normal  .z);
+		glVertex3f(v1.position.x, v1.position.y, v1.position.z);
+
+		const Vertex& v2 = vertices[triangles[i+2]];
+		glTexCoord2f(v2.texCoord.x, v2.texCoord.y);
+		glNormal3f(v2.normal  .x, v2.normal  .y, v2.normal  .z);
+		glVertex3f(v2.position.x, v2.position.y, v2.position.z);
+	}
+	glEnd();
 }
 
 CMesh::CMesh(CMesh&& mov)

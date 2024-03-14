@@ -7,12 +7,31 @@
 
 #include "stb_image.h"
 
-CTexture::CTexture() :
-	width(0),
-	height(0),
-	nChannels(0),
-	data(nullptr)
+Texture::~Texture()
 {
+}
+
+int Texture::getWidth() const
+{
+	return width;
+}
+
+int Texture::getHeight() const
+{
+	return height;
+}
+
+int Texture::getNChannels() const
+{
+	return nChannels;
+}
+
+CTexture::CTexture()
+{
+	width = 0;
+	height = 0;
+	nChannels = 0;
+	data = nullptr;
 }
 
 CTexture::CTexture(const std::filesystem::path& path)
@@ -27,21 +46,6 @@ CTexture::~CTexture()
 		stbi_image_free(data);
 		data = nullptr;
 	}
-}
-
-int CTexture::getWidth() const
-{
-	return width;
-}
-
-int CTexture::getHeight() const
-{
-	return height;
-}
-
-int CTexture::getNChannels() const
-{
-	return nChannels;
 }
 
 CTexture::operator bool() const
@@ -71,12 +75,13 @@ CTexture& CTexture::operator=(CTexture&& mov)
 	return *this;
 }
 
-GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data) :
-	id(0),
-	width(width),
-	height(height),
-	nChannels(nChannels)
+GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data)
 {
+	this->width = width;
+	this->height = height;
+	this->nChannels = nChannels;
+	this->id = 0;
+
 	//Prep for GPU
 	glGenTextures(1, &id);
 	assert(id);
@@ -91,18 +96,19 @@ GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* da
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 }
 
-GTexture::GTexture(Renderer* ctx, const CTexture& src) :
-	id(0),
-	width(src.getWidth()),
-	height(src.getHeight()),
-	nChannels(src.getNChannels())
+GTexture::GTexture(Renderer* ctx, const CTexture& src)
 {
+	this->width = src.width;
+	this->height = src.height;
+	this->nChannels = src.nChannels;
+	this->id = 0;
+
 	//Prep for GPU
 	glGenTextures(1, &id);
 	assert(id);
 
 	//Send data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, src.data);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, src.width, src.height, 0, GL_RGB, GL_UNSIGNED_BYTE, src.data);
 }
 
 GTexture::~GTexture()
