@@ -34,10 +34,18 @@ void Game::cleanup()
     assert(isAlive);
     isAlive = false;
 
+    //Delete objects
     applyConcurrencyBuffers();
     for (GameObject* o : objects) destroy(o);
     applyConcurrencyBuffers();
 
+    //Delete vector backing memory so it doesn't falsely appear as leaked
+    objects           .clear(); objects           .shrink_to_fit();
+    componentAddBuffer.clear(); componentAddBuffer.shrink_to_fit();
+    componentDelBuffer.clear(); componentDelBuffer.shrink_to_fit();
+    objectAddBuffer   .clear(); objectAddBuffer   .shrink_to_fit();
+    objectDelBuffer   .clear(); objectDelBuffer   .shrink_to_fit();
+    
     delete inputSystem;
 }
 

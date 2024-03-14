@@ -131,7 +131,7 @@ void Application::shutdown()
 
     pluginManager.unloadAll();
 
-    //RTTI and plugin info shouldn't appear on the straggling allocations report
+    //RTTI and plugin info shouldn't appear on the leaks report
     GlobalTypeRegistry::clear();
     pluginManager.forgetAll();
 
