@@ -103,6 +103,12 @@ public:
 	ENGINE_RTTI_API void* upcast(void* obj, const TypeName& name) const;
 
 	/// <summary>
+	/// Test if the given object matches this type exactly. Does not test if object's type is derived from this.
+	/// Requires: captured ctor, virtual object
+	/// </summary>
+	ENGINE_RTTI_API bool matchesExact(void* obj) const;
+
+	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
 	/// </summary>
 	ENGINE_RTTI_INTERNAL( void doLateBinding(); )

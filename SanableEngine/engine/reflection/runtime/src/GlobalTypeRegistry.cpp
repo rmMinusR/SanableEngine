@@ -2,6 +2,7 @@
 
 #include <unordered_set>
 #include <cassert>
+#include <stdlib.h>
 
 std::unordered_map<GlobalTypeRegistry::module_key_t, ModuleTypeRegistry> GlobalTypeRegistry::modules;
 std::unordered_set<TypeName> GlobalTypeRegistry::dirtyTypes;
@@ -14,6 +15,18 @@ TypeInfo const* GlobalTypeRegistry::lookupType(const TypeName& name)
 		if (out) return out;
 	}
 	return nullptr;
+}
+
+ModuleTypeRegistry const* GlobalTypeRegistry::getModule(const module_key_t& key)
+{
+	return &modules.at(key);
+}
+
+void GlobalTypeRegistry::loadModule(std::string key, const ModuleTypeRegistry& newTypes)
+{
+	std::wstring wide(key.length(), ' ');
+	std::mbstowcs(wide.data(), key.data(), key.length());
+	loadModule(wide, newTypes);
 }
 
 void GlobalTypeRegistry::loadModule(module_key_t key, const ModuleTypeRegistry& newTypes)
@@ -29,6 +42,23 @@ void GlobalTypeRegistry::loadModule(module_key_t key, const ModuleTypeRegistry& 
 
 	//Finalize late-binding info
 	it->second.doLateBinding();
+}
+
+TypeInfo const* GlobalTypeRegistry::snipeType(void* obj, size_t size, TypeInfo const* hint)
+{
+	for (const auto& kv : modules)
+	{
+		TypeInfo const* out = kv.second.snipeType(obj, size, hint);
+		if (out) return out;
+	}
+	return nullptr;
+}
+
+void GlobalTypeRegistry::unloadModule(std::string key)
+{
+	std::wstring wide(key.length(), ' ');
+	std::mbstowcs(wide.data(), key.data(), key.length());
+	unloadModule(wide);
 }
 
 void GlobalTypeRegistry::unloadModule(module_key_t key)

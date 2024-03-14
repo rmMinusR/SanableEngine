@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <vector>
 
 #include "dllapi.h"
 
@@ -33,9 +34,10 @@ public:
 
 	void add(TObj* obj)
 	{
-		size_t insertIndex = 0;
-		while (insertIndex < objects.size() && getSortID(obj) > getSortID(objects[insertIndex])) insertIndex++;
-		objects.insert(objects.begin()+insertIndex, obj);
+		auto it = objects.begin();
+		while (it != objects.end() && getSortID(obj) > getSortID(*it)) ++it; //Group and order by vptr
+		while (it != objects.end() && obj > *it && getSortID(obj) == getSortID(*it)) ++it; //Then order within group by data location
+		objects.insert(it, obj);
 	}
 
 	void remove(TObj* obj)

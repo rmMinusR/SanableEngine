@@ -11,6 +11,8 @@ class GenericTypedMemoryPool;
 template<typename TObj>
 class TypedMemoryPool
 {
+	static_assert(!std::is_abstract_v<TObj>);
+
 private:
 	friend class MemoryManager;
 	GenericTypedMemoryPool* impl;

@@ -21,7 +21,8 @@ public:
 
 	PRIMITIVES_API void SetColor(SDL_Color newColor);
 
-	PRIMITIVES_API virtual Material* getMaterial() const override;
+	PRIMITIVES_API virtual const Material* getMaterial() const override;
 protected:
+	PRIMITIVES_API virtual void loadModelTransform(Renderer*) const override;
 	PRIMITIVES_API virtual void renderImmediate(Renderer*) const override;
 };

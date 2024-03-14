@@ -9,6 +9,7 @@
 class ShaderProgram;
 class Renderer;
 class I3DRenderable;
+class Widget;
 
 #define ValueBinding_VALUES_SHARED \
 	_X(ViewProjection) \
@@ -79,4 +80,8 @@ public:
 
 	ENGINEGRAPHICS_API void tryBindShared(Renderer* context) const;
 	ENGINEGRAPHICS_API void tryBindInstanced(Renderer* context, const I3DRenderable* target) const;
+	ENGINEGRAPHICS_API void tryBindInstanced(Renderer* context, const Widget* target) const;
+private:
+	bool tryBindInstanced_generic(Renderer* context) const; //Handles stuff common to both 3D objects and UI Widgets. Returns true if handled.
+	friend class Material;
 };

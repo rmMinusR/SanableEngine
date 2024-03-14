@@ -9,6 +9,7 @@
 #include "GlobalTypeRegistry.hpp"
 #include "application/Window.hpp"
 #include "game/Game.hpp"
+#include "MeshRenderer.hpp"
 #include "Camera.hpp"
 
 void Application::processEvents()
@@ -93,6 +94,7 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     memoryManager.init();
     memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module (avoiding nasty access violation errors)
     memoryManager.getSpecificPool<Camera>(true); //Same with Camera
+    memoryManager.getSpecificPool<MeshRenderer>(true); //And MeshRenderer
     memoryManager.ensureFresh();
 
     this->game = game;
@@ -102,6 +104,8 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     mainWindow = mainWindowBuilder.build();
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
+    pluginManager.loadAll();
+    pluginManager.hookAll();
 
     if (userInitCallback) (*userInitCallback)(this);
 }
@@ -111,15 +115,17 @@ void Application::shutdown()
     assert(isAlive);
     isAlive = false;
 
-    pluginManager.unhookAll(true);
+    game->applyConcurrencyBuffers();
+    pluginManager.unhookAll(true); //FIXME: Pools destroyed automatically here, but Component and GameObject need to interface with Game
+    game->applyConcurrencyBuffers();
+    game->cleanup();
+    game->applyConcurrencyBuffers();
     pluginManager.unloadAll();
 
-    game->cleanup();
-
-    while (!windows.empty()) WindowBuilder::destroy(windows[windows.size()-1]);
+    while (!windows.empty()) delete windows[windows.size()-1];
     mainWindow = nullptr;
     
-    //Clean up memory, GameObject pool first so components are released
+    //Clean up memory, GameObject pool first so remaining components are released
     memoryManager.destroyPool<GameObject>();
     memoryManager.cleanup();
 
@@ -165,7 +171,17 @@ StackAllocator* Application::getFrameAllocator()
     return &frameAllocator;
 }
 
-WindowBuilder Application::buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline)
+PluginManager* Application::getPluginManager()
 {
-    return WindowBuilder(this, name, width, height, glSettings, std::move(renderPipeline));
+    return &pluginManager;
+}
+
+Window* Application::getMainWindow()
+{
+    return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
+}
+
+WindowBuilder Application::buildWindow(const std::string& name, int width, int height, WindowRenderPipeline* renderPipeline)
+{
+    return WindowBuilder(this, name, width, height, glSettings, renderPipeline);
 }

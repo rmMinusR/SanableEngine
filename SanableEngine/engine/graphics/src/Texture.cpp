@@ -71,7 +71,7 @@ CTexture& CTexture::operator=(CTexture&& mov)
 	return *this;
 }
 
-GTexture::GTexture(int width, int height, int nChannels, SDL_GLContext ctx) :
+GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data) :
 	id(0),
 	width(width),
 	height(height),
@@ -81,11 +81,17 @@ GTexture::GTexture(int width, int height, int nChannels, SDL_GLContext ctx) :
 	glGenTextures(1, &id);
 	assert(id);
 
+	//Set filtering/wrapping modes
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
 	//Send data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 }
 
-GTexture::GTexture(const CTexture& src, SDL_GLContext ctx) :
+GTexture::GTexture(Renderer* ctx, const CTexture& src) :
 	id(0),
 	width(src.getWidth()),
 	height(src.getHeight()),

@@ -51,8 +51,8 @@ class GTexture
 	int height;
 	int nChannels;
 public:
-	ENGINEGRAPHICS_API GTexture(int width, int height, int nChannels, SDL_GLContext ctx); //FIXME should use own renderer instead?
-	ENGINEGRAPHICS_API GTexture(const CTexture& src, SDL_GLContext ctx); //FIXME should use own renderer instead?
+	ENGINEGRAPHICS_API GTexture(Renderer* ctx, int width, int height, int nChannels, void* data = nullptr);
+	ENGINEGRAPHICS_API GTexture(Renderer* ctx, const CTexture& src);
 	ENGINEGRAPHICS_API ~GTexture();
 
 	ENGINEGRAPHICS_API operator bool() const;

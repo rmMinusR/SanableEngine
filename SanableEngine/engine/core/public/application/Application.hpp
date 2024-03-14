@@ -30,6 +30,7 @@ private:
     GLSettings glSettings;
     std::vector<Window*> windows;
     friend class WindowBuilder;
+    friend class Window;
     Window* mainWindow = nullptr;
 
     void processEvents();
@@ -51,6 +52,8 @@ public:
     ENGINECORE_API gpr460::System* getSystem();
     ENGINECORE_API MemoryManager* getMemoryManager();
     ENGINECORE_API StackAllocator* getFrameAllocator();
+    ENGINECORE_API PluginManager* getPluginManager();
+    ENGINECORE_API Window* getMainWindow();
 
-    ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, std::unique_ptr<WindowRenderPipeline>&& renderPipeline);
+    ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, WindowRenderPipeline* renderPipeline); //Takes ownership of render pipeline
 };

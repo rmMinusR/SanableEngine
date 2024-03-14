@@ -21,15 +21,21 @@ private:
 	SDL_Window* handle;
 	SDL_GLContext context;
 	Renderer _interface;
-	std::unique_ptr<WindowRenderPipeline> renderPipeline;
-	std::unique_ptr<WindowInputProcessor> inputProcessor;
+	WindowRenderPipeline* renderPipeline;
+	WindowInputProcessor* inputProcessor;
+
+	int sdlID;
+	friend class WindowInputProcessor;
+	bool closeRequested;
 
 	Application* engine;
 	friend class Application;
 	void draw() const;
-	void handleEvent(SDL_Event& ev) const;
+	void handleEvent(SDL_Event& ev);
 
-	Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, std::unique_ptr<WindowRenderPipeline>&& renderPipeline, std::unique_ptr<WindowInputProcessor>&& inputProcessor);
+	static Window* currentFocus;
+
+	Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, WindowRenderPipeline* renderPipeline, WindowInputProcessor* inputProcessor);
 	friend class WindowBuilder;
 	friend struct thunk_utils<Window>;
 public:
@@ -43,6 +49,10 @@ public:
 	ENGINEGRAPHICS_API int getWidth() const;
 	ENGINEGRAPHICS_API int getHeight() const;
 	ENGINEGRAPHICS_API bool isFocused() const;
+	ENGINEGRAPHICS_API bool wasCloseRequested() const;
+
+	inline WindowRenderPipeline* getRenderPipeline() { return renderPipeline; }
+	inline WindowInputProcessor* getInputProcessor() { return inputProcessor; }
 
 	ENGINEGRAPHICS_API static void setActiveDrawTarget(const Window* w);
 };

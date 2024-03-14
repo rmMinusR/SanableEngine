@@ -25,6 +25,11 @@ Material::Material(ShaderProgram* shader) :
 	}
 }
 
+const ShaderProgram* Material::getShader() const
+{
+	return shader;
+}
+
 void Material::writeSharedUniforms(Renderer* context) const
 {
 	for (const ShaderUniform& uniform : sharedUniforms) uniform.tryBindShared(context);
@@ -36,7 +41,12 @@ void Material::writeInstanceUniforms(Renderer* context, const I3DRenderable* tar
 	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, target);
 }
 
-const ShaderProgram* Material::getShader() const
+void Material::writeInstanceUniforms(Renderer* context, const Widget* target) const
 {
-	return shader;
+	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, target);
+}
+
+void Material::writeInstanceUniforms_generic(Renderer* context) const
+{
+	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced_generic(context);
 }

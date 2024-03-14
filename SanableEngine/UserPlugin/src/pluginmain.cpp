@@ -21,13 +21,13 @@
 
 Application* application;
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, Application* application)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
 {
-    std::cout << "UserPlugin: plugin_preInit() called" << std::endl;
-    ::application = application;
+    std::cout << "UserPlugin: plugin_report() called" << std::endl;
 
-    report->name = "UserPlugin";
+    report->name = L"UserPlugin";
 
+    ::application = (Application*)application; //FIXME bad practice
 
     return true;
 }
@@ -104,8 +104,6 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         obstacle->getTransform()->setPosition(Vector3<float>(225, 225, -15));
         obstacle->CreateComponent<RectangleCollider>(50, 50);
         obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
-
-        application->buildWindow("Second window", 640, 480, nullptr).build();
     }
 
     return true;
@@ -123,8 +121,7 @@ PLUGIN_C_API(void) plugin_cleanup(bool shutdown)
         application->getGame()->destroy(staticObj);
 
         delete mesh;
-
-        application->getMemoryManager()->destroyPool<PlayerController>();
-        application->getMemoryManager()->destroyPool<ColliderColorChanger>();
+        delete shader;
+        delete material;
     }
 }

@@ -93,6 +93,28 @@ CMesh& CMesh::operator=(CMesh&& mov)
 	return *this;
 }
 
+CMesh CMesh::createQuad0WH(float w, float h)
+{
+	CMesh mesh;
+
+#define EMIT_VERTEX(x, y) mesh.vertices.push_back(CMesh::Vertex { glm::vec3(x*w, y*h, 0), glm::vec3(0, 0, 1), glm::vec2(x, y) })
+
+	//Tri 0: Verts 0-2
+	EMIT_VERTEX(0, 0);
+	EMIT_VERTEX(1, 0);
+	EMIT_VERTEX(0, 1);
+
+	//Tri 1: Verts 1-3
+	EMIT_VERTEX(1, 1);
+#undef EMIT_VERTEX
+
+	mesh.triangles = {
+		0, 1, 2,
+		2, 1, 3
+	};
+	return mesh;
+}
+
 GMesh::GMesh() :
 	VAO(0),
 	VBO(0),
@@ -101,12 +123,14 @@ GMesh::GMesh() :
 {
 }
 
-GMesh::GMesh(const CMesh& src) :
+GMesh::GMesh(const CMesh& src, bool dynamic) :
 	VAO(0),
 	VBO(0),
 	EBO(0),
 	nTriangles(0)
 {
+	auto usage = dynamic ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW;
+
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -114,12 +138,12 @@ GMesh::GMesh(const CMesh& src) :
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-	glBufferData(GL_ARRAY_BUFFER, src.vertices.size() * sizeof(CMesh::Vertex), &src.vertices[0], GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, src.triangles.size() * sizeof(decltype(src.triangles)::value_type), &src.triangles[0], GL_STATIC_DRAW);
-	nTriangles = src.triangles.size();
+	glBufferData(GL_ARRAY_BUFFER, src.vertices.size() * sizeof(CMesh::Vertex), &src.vertices[0], usage);
 	
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, src.triangles.size() * sizeof(decltype(src.triangles)::value_type), &src.triangles[0], usage);
+	nTriangles = src.triangles.size();
+
 	//Positions
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(CMesh::Vertex), (void*)offsetof(CMesh::Vertex, position));
@@ -168,4 +192,6 @@ GMesh& GMesh::operator=(GMesh&& mov)
 	mov.VBO = 0;
 	mov.EBO = 0;
 	mov.nTriangles = 0;
+
+	return *this;
 }

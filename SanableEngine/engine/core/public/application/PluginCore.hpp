@@ -14,19 +14,19 @@ class Application;
 
 //This file should be included by plugins so they can implement the following functions
 
-PLUGIN_C_API(bool) plugin_preInit(Plugin* const context, PluginReportedData* report, Application* engine);
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* engine);
 PLUGIN_C_API(bool) plugin_init(bool firstRun);
 PLUGIN_C_API(void) plugin_cleanup(bool shutdown);
 PLUGIN_C_API(void) plugin_reportTypes(ModuleTypeRegistry* report); //Most plugins should autogenerate this. You could also write one by hand, or omit it entirely, but it's strongly recommended.
 
-typedef bool (PLUGIN_C_API_SPEC *fp_plugin_preInit)(Plugin* const context, PluginReportedData* report, Application* engine);
+typedef bool (PLUGIN_C_API_SPEC *fp_plugin_report)(Plugin const* context, PluginReportedData* report, Application const* engine);
 typedef bool (PLUGIN_C_API_SPEC *fp_plugin_init   )(bool firstRun);
 typedef void (PLUGIN_C_API_SPEC *fp_plugin_cleanup)(bool shutdown);
 typedef void (PLUGIN_C_API_SPEC *fp_plugin_reportTypes)(ModuleTypeRegistry* report); //Optional, but strongly recommended.
 
 struct PluginReportedData
 {
-	std::string name;
+	std::wstring name;
 
 	//unsigned int versionID;
 	//std::string versionString;

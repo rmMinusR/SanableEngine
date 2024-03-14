@@ -23,9 +23,14 @@ void RectangleRenderer::SetColor(SDL_Color newColor)
 	color = newColor;
 }
 
-Material* RectangleRenderer::getMaterial() const
+const Material* RectangleRenderer::getMaterial() const
 {
 	return nullptr;
+}
+
+void RectangleRenderer::loadModelTransform(Renderer* renderer) const
+{
+	renderer->loadTransform(*gameObject->getTransform());
 }
 
 void RectangleRenderer::renderImmediate(Renderer* renderer) const

@@ -10,3 +10,6 @@
 [submodule "SanableEngine/libs/glew"]
 	path = SanableEngine/libs/glew
 	url = https://github.com/nigels-com/glew.git
+[submodule "SanableEngine/libs/freetype"]
+	path = SanableEngine/libs/freetype
+	url = https://github.com/freetype/freetype.git

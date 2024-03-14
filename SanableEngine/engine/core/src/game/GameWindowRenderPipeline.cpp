@@ -25,7 +25,7 @@ void GameWindowRenderPipeline::setup(Window* window)
 void GameWindowRenderPipeline::render(Rect<float> viewport)
 {
 	//Set projection matrix
-	if (Camera::getMain()) Camera::getMain()->beginFrame({ viewport.width, viewport.height, 0 });
+	if (Camera::getMain()) Camera::getMain()->beginFrame({ viewport.size.x, viewport.size.y, 0 });
 	else printf("WARNING: No main camera!");
 
 	//Reset screen
@@ -39,13 +39,14 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			const Material*, //Then by material
 			std::vector<const I3DRenderable*>
 		>
-	> renderables;
-	game->get3DRenderables()->staticCall([&](I3DRenderable* r)
+	> renderables; //Note: No need for a CallBatcher here, we're guaranteed renderables will be grouped by type since our data source is a CallBatcher
+	game->get3DRenderables()->staticCall([&](const I3DRenderable* r)
 	{
-		Material* material = r->getMaterial();
-		const ShaderProgram* shader = material ? material->getShader() : nullptr;
-		renderables[shader][material].push_back(r);
+		renderables[r->getShader()][r->getMaterial()].push_back(r);
 	});
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
 
 	//Process buffer
 	Renderer* renderInterface = window->getRenderer();
@@ -63,6 +64,8 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 
 			for (const I3DRenderable* r : materialGroup.second)
 			{
+				r->loadModelTransform(renderInterface);
+
 				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderInterface, r);
 
 				assert(r->getMaterial() == materialGroup.first);
@@ -71,4 +74,9 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			}
 		}
 	}
+
+	glPopMatrix();
+
+	hud.tick(); //FIXME logic shouldn't be in render, move elsewhere
+	hud.render(viewport, renderInterface);
 }

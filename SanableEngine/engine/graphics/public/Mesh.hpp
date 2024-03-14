@@ -34,6 +34,7 @@ public:
 
 	//Primitives
 	//ENGINEGRAPHICS_API static CMesh createCube(float size);
+	ENGINEGRAPHICS_API static CMesh createQuad0WH(float w, float h); //AA rect with one corner at (0,0) and the other at (w,h), normal Z+
 
 	ENGINEGRAPHICS_API CMesh(CMesh&& mov);
 	ENGINEGRAPHICS_API CMesh& operator=(CMesh&& mov);
@@ -51,7 +52,7 @@ class GMesh
 
 public:
 	ENGINEGRAPHICS_API GMesh();
-	ENGINEGRAPHICS_API GMesh(const CMesh& src);
+	ENGINEGRAPHICS_API GMesh(const CMesh& src, bool dynamic = false);
 	ENGINEGRAPHICS_API ~GMesh();
 
 	ENGINEGRAPHICS_API void renderImmediate() const;

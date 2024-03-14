@@ -20,10 +20,12 @@ typedef void* LibHandle;
 #include <vector>
 #include <string>
 
+#include "dllapi.h"
+#include "PluginCore.hpp"
+
 class ModuleTypeRegistry;
 class Application;
 class PluginManager;
-struct PluginReportedData;
 
 struct Plugin
 {
@@ -41,26 +43,36 @@ public:
 
 	PluginReportedData* reportedData;
 
-	__thiscall Plugin(const std::filesystem::path& path);
+	Plugin(const std::filesystem::path& path);
 	~Plugin();
 
 	Plugin(const Plugin& cpy) = delete;
-	__thiscall Plugin(Plugin&& mov) noexcept;
+	Plugin(Plugin&& mov) noexcept;
 
-	void* getSymbol(const char* name) const;
+	ENGINECORE_API void* getSymbol(const char* name) const;
+	ENGINECORE_API std::filesystem::path getPath() const;
+
+	ENGINECORE_API bool isCodeLoaded() const;
+	ENGINECORE_API bool isHooked() const;
 
 private:
 	friend class PluginManager;
 
 	std::filesystem::path path;
 	LibHandle dll;
+	bool wasEverLoaded = false;
+	bool wasEverHooked = false;
 
-	bool _dllGood() const;
+	struct EntryPoints
+	{
+		fp_plugin_report      report     = nullptr;
+		fp_plugin_init        init        = nullptr;
+		fp_plugin_cleanup     cleanup     = nullptr;
+		fp_plugin_reportTypes reportTypes = nullptr;
+	} entryPoints;
 
-	bool loadDLL();
-	bool preInit(Application* engine);
-	void tryRegisterTypes();
-	bool init(bool firstRun);
+	bool load(Application const* context);
+	bool init();
 	bool cleanup(bool shutdown);
-	void unloadDLL();
+	void unload(Application* context);
 };

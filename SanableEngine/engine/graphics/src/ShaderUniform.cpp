@@ -5,6 +5,7 @@
 #include "Camera.hpp"
 #include "MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
+#include "gui/Widget.hpp"
 
 const char* ShaderUniform::ValueBinding_getName(ValueBinding binding)
 {
@@ -122,15 +123,40 @@ void ShaderUniform::tryBindInstanced(Renderer* context, const I3DRenderable* tar
 {
 	if (getBindingStage() != BindingStage::BindInstanced) return;
 
+	if (tryBindInstanced_generic(context)) return;
+
 	switch (binding)
 	{
 	default: //Unhandled binding
 		assert(false);
 		break;
+	}
+}
 
-	case ValueBinding::GeometryTransform:
-		Transform* t = dynamic_cast<const Component*>(target)->getGameObject()->getTransform();
-		write((glm::mat4)*t); //Should we be using GL matrices instead of GLM? Does it matter?
+void ShaderUniform::tryBindInstanced(Renderer* context, const Widget* target) const
+{
+	if (getBindingStage() != BindingStage::BindInstanced) return;
+
+	if (tryBindInstanced_generic(context)) return;
+
+	switch (binding)
+	{
+	default: //Unhandled binding
+		assert(false);
 		break;
+	}
+}
+
+bool ShaderUniform::tryBindInstanced_generic(Renderer* context) const
+{
+	switch (binding)
+	{
+	case ValueBinding::GeometryTransform:
+		glm::mat4 mat; //Should we be using GL matrices instead of GLM? Does it matter?
+		glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(mat));
+		write(mat);
+		return true;
+
+	default: return false;
 	}
 }

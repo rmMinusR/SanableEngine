@@ -1,8 +1,10 @@
 #include "MeshRenderer.hpp"
 
 #include "Mesh.hpp"
+#include "Renderer.hpp"
 
 #include <GL/glew.h>
+#include <glm/gtc/type_ptr.hpp>
 
 MeshRenderer::MeshRenderer(GMesh* mesh, Material* material) :
 	mesh(mesh),
@@ -10,9 +12,14 @@ MeshRenderer::MeshRenderer(GMesh* mesh, Material* material) :
 {
 }
 
-Material* MeshRenderer::getMaterial() const
+const Material* MeshRenderer::getMaterial() const
 {
 	return material;
+}
+
+void MeshRenderer::loadModelTransform(Renderer* renderer) const
+{
+	renderer->loadTransform(*gameObject->getTransform());
 }
 
 void MeshRenderer::renderImmediate(Renderer* renderer) const
