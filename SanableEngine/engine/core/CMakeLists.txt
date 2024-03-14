@@ -15,7 +15,7 @@ target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/priv
 
 # Declare imports
 target_include_directories("engine-core" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} engine-memory engine-platform-abstract engine-assets glm::glm)
+target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} engine-memory engine-platform-abstract glm::glm)
 
 # Declare exports
 target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")

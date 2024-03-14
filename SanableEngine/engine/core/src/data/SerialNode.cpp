@@ -1,4 +1,4 @@
-#include "SerialNode.hpp"
+#include "data/SerialNode.hpp"
 
 #include <sstream>
 
@@ -9,6 +9,10 @@ void skipWhitespace(std::wistream& in)
 {
 	while (std::iswspace(in.get()));
 	in.unget(); //Correct for over-read
+}
+
+SerialNode::~SerialNode()
+{
 }
 
 SerialNode* SerialNode::parse(std::wistream& in, SerialFormat format)
@@ -72,9 +76,27 @@ SerialNode* SerialNode::parseJson(std::wistream& in)
 	}
 }
 
+SerialString::SerialString(contents_t contents) :
+	contents(contents)
+{
+}
+
+SerialString::~SerialString()
+{
+}
+
 SerialString* SerialString::parseJson(std::wistream& in)
 {
 	return new SerialString(jsonCaptureString(in));
+}
+
+SerialNumber::SerialNumber(contents_t contents) :
+	contents(contents)
+{
+}
+
+SerialNumber::~SerialNumber()
+{
 }
 
 SerialNumber* SerialNumber::parseJson(std::wistream& in)
@@ -98,6 +120,16 @@ readNext:
 	if (isDecimal) out = std::stof(buf.str());
 	else		   out = std::stoi(buf.str());
 	return new SerialNumber(out);
+}
+
+SerialObject::SerialObject(contents_t contents) :
+	contents(contents)
+{
+}
+
+SerialObject::~SerialObject()
+{
+	for (auto it : contents) delete it.second;
 }
 
 SerialObject* SerialObject::parseJson(std::wistream& in)
@@ -132,6 +164,16 @@ parseNext:
 	}
 
 	return new SerialObject(contents);
+}
+
+SerialArray::SerialArray(contents_t contents) :
+	contents(contents)
+{
+}
+
+SerialArray::~SerialArray()
+{
+	for (SerialNode* i : contents) delete i;
 }
 
 SerialArray* SerialArray::parseJson(std::wistream& in)

@@ -22,12 +22,12 @@ protected:
 	SerialNode() = default;
 
 public:
-	virtual ~SerialNode() = default;
+	ENGINEDATA_API virtual ~SerialNode();
 
-	ENGINEASSETS_API static SerialNode* parse(std::wistream& in, SerialFormat format);
+	ENGINEDATA_API static SerialNode* parse(std::wistream& in, SerialFormat format);
 
-	ENGINEASSETS_API static SerialNode* parseYaml(std::wistream& in, const wchar_t* indent = nullptr);
-	ENGINEASSETS_API static SerialNode* parseJson(std::wistream& in);
+	ENGINEDATA_API static SerialNode* parseYaml(std::wistream& in, const wchar_t* indent = nullptr);
+	ENGINEDATA_API static SerialNode* parseJson(std::wistream& in);
 };
 
 class SerialString : public SerialNode
@@ -39,8 +39,9 @@ private:
 	contents_t contents;
 
 public:
-	inline SerialString(contents_t contents) : contents(contents) {}
-	static SerialString* parseJson(std::wistream& in);
+	ENGINEDATA_API SerialString(contents_t contents);
+	ENGINEDATA_API virtual ~SerialString();
+	ENGINEDATA_API static SerialString* parseJson(std::wistream& in);
 };
 
 class SerialNumber : public SerialNode
@@ -52,8 +53,9 @@ private:
 	contents_t contents;
 
 public:
-	inline SerialNumber(contents_t contents) : contents(contents) {}
-	static SerialNumber* parseJson(std::wistream& in);
+	ENGINEDATA_API SerialNumber(contents_t contents);
+	ENGINEDATA_API virtual ~SerialNumber();
+	ENGINEDATA_API static SerialNumber* parseJson(std::wistream& in);
 };
 
 class SerialObject : public SerialNode
@@ -65,8 +67,9 @@ private:
 	contents_t contents;
 
 public:
-	inline SerialObject(contents_t contents) : contents(contents) {}
-	static SerialObject* parseJson(std::wistream& in);
+	ENGINEDATA_API SerialObject(contents_t contents);
+	ENGINEDATA_API virtual ~SerialObject();
+	ENGINEDATA_API static SerialObject* parseJson(std::wistream& in);
 };
 
 class SerialArray : public SerialNode
@@ -78,6 +81,7 @@ private:
 	contents_t contents;
 
 public:
-	inline SerialArray(contents_t contents) : contents(contents) {}
-	static SerialArray* parseJson(std::wistream& in);
+	ENGINEDATA_API SerialArray(contents_t contents);
+	ENGINEDATA_API virtual ~SerialArray();
+	ENGINEDATA_API static SerialArray* parseJson(std::wistream& in);
 };

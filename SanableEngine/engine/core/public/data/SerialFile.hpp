@@ -1,18 +1,15 @@
 #pragma once
 
-#include "FileAsset.hpp"
-#include "SerialNode.hpp"
-
+#include <filesystem>
 #include "dllapi.h"
 
-class SerialFile : public FileAsset
-{
-protected:
-	virtual void loadInternal() override;
-	virtual void unloadInternal() override;
+class SerialNode;
 
+class SerialFile
+{
 	SerialNode* rootNode;
 public:
-	ENGINEASSETS_API SerialFile(const std::filesystem::path&);
-	ENGINEASSETS_API SerialNode const* getRootNode() const;
+	ENGINEDATA_API SerialFile(const std::filesystem::path&);
+	ENGINEDATA_API ~SerialFile();
+	ENGINEDATA_API SerialNode const* getRootNode() const;
 };
