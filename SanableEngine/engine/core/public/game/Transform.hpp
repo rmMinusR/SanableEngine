@@ -5,7 +5,7 @@
 #include "../dllapi.h"
 
 #include <glm/gtc/quaternion.hpp>
-#include "Vector3.inl"
+#include "math/Vector3.inl"
 
 class ModuleTypeRegistry;
 

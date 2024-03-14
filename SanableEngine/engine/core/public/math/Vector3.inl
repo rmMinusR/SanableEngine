@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <glm/glm.hpp>
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 
 ///
 /// Template class for three element vectors.

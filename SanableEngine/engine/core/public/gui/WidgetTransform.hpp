@@ -3,10 +3,10 @@
 #include <optional>
 #include <ReflectionSpec.hpp>
 #include <glm/mat4x4.hpp>
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 #include "Anchor2D.inl"
 #include "dllapi.h"
-#include "Rect.hpp"
+#include "math/Rect.inl"
 
 typedef Anchor2D<float> UIAnchor;
 

@@ -7,7 +7,7 @@
 #include <SDL_video.h>
 #include <glm/glm.hpp>
 #include "dllapi.h"
-#include "Vector3.inl"
+#include "math/Vector3.inl"
 #include "gui/Anchor2D.inl"
 #include "Mesh.hpp"
 
