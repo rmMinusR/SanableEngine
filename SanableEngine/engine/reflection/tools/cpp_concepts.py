@@ -434,7 +434,7 @@ class FieldInfo(Member):
         ownerName = this.owner.absName
         if ownerName.startswith("::"): ownerName = ownerName[2:]
 
-        return [f'PUBLIC_CAST_GIVE_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName} {ownerName}::*);']
+        return [f'PUBLIC_CAST_GIVE_FIELD_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName});']
 
     def renderMain(this):
         # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
