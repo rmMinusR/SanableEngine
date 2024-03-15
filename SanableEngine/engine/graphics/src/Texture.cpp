@@ -105,3 +105,8 @@ int Texture::getNChannels() const
 {
 	return nChannels;
 }
+
+Texture::operator bool() const
+{
+	return id != 0;
+}

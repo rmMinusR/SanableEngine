@@ -5,6 +5,8 @@
 
 struct Plugin;
 class LabelWidget;
+class ButtonWidget;
+class ImageWidget;
 
 class PluginView : public Widget
 {
@@ -13,10 +15,20 @@ class PluginView : public Widget
 	LabelWidget* path;
 	LabelWidget* name;
 	LabelWidget* status;
+	
+	ButtonWidget* btnToggleLoaded;
+	ButtonWidget* btnToggleHooked;
+	ImageWidget* imgToggleLoadedBg;
+	ImageWidget* imgToggleHookedBg;
+	LabelWidget* lblToggleLoaded;
+	LabelWidget* lblToggleHooked;
 	//TODO manual control buttons
 	//TODO RTTI status + details button
 
 	void tryInit();
+
+	void _cbLoadClicked();
+	void _cbHookClicked();
 
 public:
 	PluginView(HUD* hud);

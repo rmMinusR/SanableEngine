@@ -34,4 +34,6 @@ public:
 	ENGINEGRAPHICS_API int getHeight() const;
 	ENGINEGRAPHICS_API Vector2<int> getSize() const;
 	ENGINEGRAPHICS_API int getNChannels() const;
+
+	ENGINEGRAPHICS_API operator bool() const;
 };

@@ -48,9 +48,11 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
-        ShaderProgram* uiShader = new ShaderProgram("resources/shaders/ui");
-        uiShader->load();
-        Resources::imageMat = new Material(uiShader);
+        //ShaderProgram* imgShader = new ShaderProgram("resources/ui/shaders/image");
+        //if (!imgShader->load()) assert(false);
+        //Resources::imageMat = new Material(imgShader);
+        Resources::buttonBackground = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/grey_panel.png");
+        assert(*Resources::buttonBackground);
 
         //Ready resources: text
         ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
@@ -62,19 +64,6 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         //Init UI elements
         ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), nullptr);
         
-        Texture* texture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/blue_boxCheckmark.png");
-        ImageWidget* buttonBg = ctlGuiRoot->addWidget<ImageWidget>(nullptr, texture);
-
-        LabelWidget* buttonLabel = ctlGuiRoot->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
-        buttonLabel->setText(L"Text test!");
-
-        ButtonWidget* btn = ctlGuiRoot->addWidget<ButtonWidget>(buttonBg, buttonLabel);
-        btn->transform.setMinCornerOffset({ -100, -50 });
-        btn->transform.setMaxCornerOffset({  100,  50 });
-        btn->setCallback([]() {
-            printf("Button clicked!\n");
-        });
-
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin
         Window::setActiveDrawTarget(game->getApplication()->getMainWindow());

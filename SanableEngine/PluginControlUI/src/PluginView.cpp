@@ -2,17 +2,23 @@
 
 #include "gui/HUD.hpp"
 #include "gui/LabelWidget.hpp"
+#include "gui/ButtonWidget.hpp"
+#include "gui/ImageWidget.hpp"
 #include "Resources.hpp"
 #include "application/Plugin.hpp"
 
 void PluginView::tryInit()
 {
 	/*
-	   o--------------o--------o
-	   |     name     | status |  50px
-	   o--------------o--------o
-	   |         path          |  50px
-	   o-----------------------o
+	              100%
+	   o------------------------o
+	   |          name          |  50px
+	   o------------------------o
+	   |          path          |  50px
+	   o----------o------o------o
+	   |  status  | load | hook |  50px
+	   o----------o------o------o
+	        40%      30%    30%
 	*/
 
 	if (!name)
@@ -23,15 +29,6 @@ void PluginView::tryInit()
 		name->transform.fillParentX();
 	}
 
-	if (!status)
-	{
-		status = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
-		status->align = UIAnchor({ 1, 0.5f }); //Status should be right-aligned
-		status->transform.setParent(&transform);
-		status->transform.snapToCorner(Vector2f(1, 0), Vector2f(0, 50));
-		status->transform.fillParentX();
-	}
-
 	if (!path)
 	{
 		path = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
@@ -40,6 +37,42 @@ void PluginView::tryInit()
 		path->transform.fillParentX();
 		path->transform.setCenterByOffsets(Vector2f(0, 50), Vector2f(0, 0));
 	}
+
+	if (!status)
+	{
+		status = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
+		status->transform.setParent(&transform);
+		status->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
+		status->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
+		status->transform.setMinCornerRatio(Vector2f(0, 0));
+		status->transform.setMaxCornerOffset(Vector2f(0.4f, 0));
+	}
+
+	if (!btnToggleLoaded)
+	{
+		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
+		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
+
+		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded);
+		btnToggleLoaded->transform.setParent(&transform);
+		btnToggleLoaded->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
+		btnToggleLoaded->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
+		btnToggleLoaded->transform.setMinCornerRatio(Vector2f(0.4f, 0));
+		btnToggleLoaded->transform.setMaxCornerRatio(Vector2f(0.7f, 0));
+	}
+
+	if (!btnToggleHooked)
+	{
+		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
+		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
+
+		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked);
+		btnToggleHooked->transform.setParent(&transform);
+		btnToggleHooked->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
+		btnToggleHooked->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
+		btnToggleHooked->transform.setMinCornerRatio(Vector2f(0.7f, 0));
+		btnToggleHooked->transform.setMaxCornerRatio(Vector2f(1, 0));
+	}
 }
 
 PluginView::PluginView(HUD* hud) :
@@ -47,7 +80,13 @@ PluginView::PluginView(HUD* hud) :
 	plugin(nullptr),
 	path(nullptr),
 	name(nullptr),
-	status(nullptr)
+	status(nullptr),
+	btnToggleLoaded(nullptr),
+	btnToggleHooked(nullptr),
+	imgToggleLoadedBg(nullptr),
+	imgToggleHookedBg(nullptr),
+	lblToggleLoaded(nullptr),
+	lblToggleHooked(nullptr)
 {	
 }
 
@@ -72,10 +111,10 @@ void PluginView::tick()
 
 	switch (plugin->status)
 	{
-		case Plugin::Status::NotLoaded   : status->setText(L"Not loaded"); break;
-		case Plugin::Status::DllLoaded   : status->setText(L"DLL loaded"); break;
-		case Plugin::Status::Registered  : status->setText(L"Registered"); break;
-		case Plugin::Status::Hooked      : status->setText(L"Hooked"    ); break;
+		case Plugin::Status::NotLoaded   : status->setText(L"Not loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
+		case Plugin::Status::DllLoaded   : status->setText(L"DLL loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
+		case Plugin::Status::Registered  : status->setText(L"Registered"); lblToggleLoaded->setText(L"Unload"      ); lblToggleHooked->setText(L"Hook"      ); break;
+		case Plugin::Status::Hooked      : status->setText(L"Hooked"    ); lblToggleLoaded->setText(L"Can't unload"); lblToggleHooked->setText(L"Unhook"    ); break;
 
 		default: assert(false); break;
 	}

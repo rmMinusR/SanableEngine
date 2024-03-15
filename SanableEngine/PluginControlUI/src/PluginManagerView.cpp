@@ -25,11 +25,14 @@ void PluginManagerView::tick()
 	std::vector<Plugin*> plugins;
 	mgr->enumeratePlugins([&](Plugin* p) { plugins.push_back(p); });
 
+	constexpr float viewHeight = 150;
+	constexpr float padding = 20;
+
 	//Ensure we have the right number of PluginViews
 	while (pluginViews.size() < plugins.size())
 	{
 		PluginView* view = hud->addWidget<PluginView>();
-		view->transform.snapToCorner({ 0, 0 }, Vector2f(0, 100));
+		view->transform.snapToCorner({ 0, 0 }, Vector2f(0, viewHeight));
 		view->transform.fillParentX();
 		pluginViews.push_back(view);
 	}
@@ -44,7 +47,7 @@ void PluginManagerView::tick()
 	for (int i = 0; i < plugins.size(); ++i)
 	{
 		pluginViews[i]->setViewed(plugins[i]);
-		pluginViews[i]->transform.setCenterByOffsets(Vector2f(0, i*120), Vector2f(0, 0));
+		pluginViews[i]->transform.setCenterByOffsets(Vector2f(0, i*(viewHeight+padding)), Vector2f(0, 0));
 	}
 }
 
