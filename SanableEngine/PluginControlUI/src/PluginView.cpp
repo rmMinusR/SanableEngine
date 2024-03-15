@@ -6,6 +6,7 @@
 #include "gui/ImageWidget.hpp"
 #include "Resources.hpp"
 #include "application/Plugin.hpp"
+#include "application/PluginManager.hpp"
 
 void PluginView::tryInit()
 {
@@ -59,6 +60,20 @@ void PluginView::tryInit()
 		btnToggleLoaded->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
 		btnToggleLoaded->transform.setMinCornerRatio(Vector2f(0.4f, 0));
 		btnToggleLoaded->transform.setMaxCornerRatio(Vector2f(0.7f, 0));
+
+		btnToggleLoaded->setCallback([&]() {
+			if (!this->plugin->isHooked())
+			{
+				if (this->plugin->isCodeLoaded())
+				{
+					this->mgr->unload(this->plugin);
+				}
+				else
+				{
+					this->mgr->load(this->plugin);
+				}
+			}
+		});
 	}
 
 	if (!btnToggleHooked)
@@ -72,6 +87,20 @@ void PluginView::tryInit()
 		btnToggleHooked->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
 		btnToggleHooked->transform.setMinCornerRatio(Vector2f(0.7f, 0));
 		btnToggleHooked->transform.setMaxCornerRatio(Vector2f(1, 0));
+
+		btnToggleHooked->setCallback([&]() {
+			if (this->plugin->isCodeLoaded())
+			{
+				if (this->plugin->isHooked())
+				{
+					this->mgr->unhook(this->plugin);
+				}
+				else
+				{
+					this->mgr->hook(this->plugin);
+				}
+			}
+		});
 	}
 }
 
@@ -94,9 +123,10 @@ PluginView::~PluginView()
 {
 }
 
-void PluginView::setViewed(Plugin* plugin)
+void PluginView::setViewed(Plugin* plugin, PluginManager* mgr)
 {
 	this->plugin = plugin;
+	this->mgr = mgr;
 	tryInit();
 }
 

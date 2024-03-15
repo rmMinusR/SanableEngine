@@ -46,7 +46,7 @@ void PluginManagerView::tick()
 	//Update plugin views
 	for (int i = 0; i < plugins.size(); ++i)
 	{
-		pluginViews[i]->setViewed(plugins[i]);
+		pluginViews[i]->setViewed(plugins[i], mgr);
 		pluginViews[i]->transform.setCenterByOffsets(Vector2f(0, i*(viewHeight+padding)), Vector2f(0, 0));
 	}
 }

@@ -49,6 +49,12 @@ void PluginManager::load(Plugin* plugin)
 	plugin->load(engine);
 }
 
+void PluginManager::unload(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	plugin->unload(engine);
+}
+
 void PluginManager::loadAll()
 {
 	for (Plugin* p : plugins) p->load(engine);

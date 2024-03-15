@@ -4,12 +4,14 @@
 #include "gui/Widget.hpp"
 
 struct Plugin;
+class PluginManager;
 class LabelWidget;
 class ButtonWidget;
 class ImageWidget;
 
 class PluginView : public Widget
 {
+	PluginManager* mgr;
 	Plugin* plugin;
 
 	LabelWidget* path;
@@ -27,14 +29,11 @@ class PluginView : public Widget
 
 	void tryInit();
 
-	void _cbLoadClicked();
-	void _cbHookClicked();
-
 public:
 	PluginView(HUD* hud);
 	~PluginView();
 
-	void setViewed(Plugin* plugin);
+	void setViewed(Plugin* plugin, PluginManager* mgr);
 
 	virtual void tick() override;
 
