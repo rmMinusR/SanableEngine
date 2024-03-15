@@ -7,14 +7,23 @@
 
 #include "dllapi.h"
 
+
+class CMesh;
+class GMesh;
+
+
 class Mesh
 {
-	GLuint VAO;
-	GLuint VBO;
-	GLuint EBO;
-	
-	bool dynamic;
+public:
+	ENGINEGRAPHICS_API virtual ~Mesh();
 
+	virtual void renderImmediate() const = 0;
+};
+
+
+//CPU-sided mesh
+class CMesh : public Mesh
+{
 public:
 	struct Vertex
 	{
@@ -26,24 +35,40 @@ public:
 
 	std::vector<unsigned int> triangles;
 
-	ENGINEGRAPHICS_API Mesh();
-	ENGINEGRAPHICS_API ~Mesh();
+	ENGINEGRAPHICS_API CMesh();
+	ENGINEGRAPHICS_API CMesh(const std::filesystem::path& path);
+	ENGINEGRAPHICS_API virtual ~CMesh();
 
-	Mesh(const Mesh& cpy) = delete;
-	Mesh operator=(const Mesh& cpy) = delete;
-	ENGINEGRAPHICS_API Mesh(Mesh&& mov);
-	ENGINEGRAPHICS_API Mesh& operator=(Mesh&& mov);
-
-	ENGINEGRAPHICS_API void markDynamic();
-
-	ENGINEGRAPHICS_API void uploadToGPU();
-	ENGINEGRAPHICS_API bool isGPUReady() const;
-	ENGINEGRAPHICS_API void renderImmediate() const;
-
-	//Loading functions
-	ENGINEGRAPHICS_API bool load(const std::filesystem::path& path);
+	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
 
 	//Primitives
-	ENGINEGRAPHICS_API static Mesh createCube(float size);
-	ENGINEGRAPHICS_API static Mesh createQuad0WH(float w, float h); //AA rect with one corner at (0,0) and the other at (w,h), normal Z+
+	//ENGINEGRAPHICS_API static CMesh createCube(float size);
+	ENGINEGRAPHICS_API static CMesh createQuad0WH(float w, float h); //AA rect with one corner at (0,0) and the other at (w,h), normal Z+
+
+	ENGINEGRAPHICS_API CMesh(CMesh&& mov);
+	ENGINEGRAPHICS_API CMesh& operator=(CMesh&& mov);
+	CMesh(const CMesh& cpy) = delete;
+	CMesh& operator=(const CMesh& cpy) = delete;
+};
+
+
+//GPU-sided mesh
+class GMesh : public Mesh
+{
+	GLuint VAO;
+	GLuint VBO;
+	GLuint EBO;
+	size_t nTriangles;
+
+public:
+	ENGINEGRAPHICS_API GMesh();
+	ENGINEGRAPHICS_API GMesh(const CMesh& src, bool dynamic = false);
+	ENGINEGRAPHICS_API virtual ~GMesh();
+
+	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
+
+	ENGINEGRAPHICS_API GMesh(GMesh&& mov);
+	ENGINEGRAPHICS_API GMesh& operator=(GMesh&& mov);
+	GMesh(const GMesh& cpy) = delete;
+	GMesh& operator=(const GMesh& cpy) = delete;
 };

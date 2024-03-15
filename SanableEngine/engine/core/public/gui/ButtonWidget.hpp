@@ -5,7 +5,6 @@
 
 #include "Widget.hpp"
 
-class Texture;
 class ImageWidget;
 
 class ButtonWidget : public Widget

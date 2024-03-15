@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 
 #include "dllapi.h"
+#include "Vector2.inl"
 
 class Renderer;
 
@@ -29,6 +30,8 @@ public:
 	Texture(const Texture& cpy) = delete;
 	Texture& operator=(const Texture& cpy) = delete;
 
-	inline int getNativeWidth () const { return width; }
-	inline int getNativeHeight() const { return height; }
+	ENGINEGRAPHICS_API int getWidth() const;
+	ENGINEGRAPHICS_API int getHeight() const;
+	ENGINEGRAPHICS_API Vector2<int> getSize() const;
+	ENGINEGRAPHICS_API int getNChannels() const;
 };

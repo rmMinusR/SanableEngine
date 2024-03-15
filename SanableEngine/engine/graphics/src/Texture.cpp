@@ -74,6 +74,8 @@ Texture::Texture(Texture&& mov)
 
 Texture& Texture::operator=(Texture&& mov)
 {
+	if (this->id) glDeleteTextures(1, &id);
+
 	this->id = mov.id;
 	mov.id = 0;
 
@@ -82,4 +84,24 @@ Texture& Texture::operator=(Texture&& mov)
 	this->nChannels = mov.nChannels;
 
 	return *this;
+}
+
+int Texture::getWidth() const
+{
+	return width;
+}
+
+int Texture::getHeight() const
+{
+	return height;
+}
+
+Vector2<int> Texture::getSize() const
+{
+	return Vector2<int>(width, height);
+}
+
+int Texture::getNChannels() const
+{
+	return nChannels;
 }

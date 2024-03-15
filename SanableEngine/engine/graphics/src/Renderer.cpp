@@ -15,21 +15,19 @@
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
 #include "Font.hpp"
+#include "Sprite.hpp"
 
 Renderer::Renderer() :
 	owner(nullptr),
 	context(nullptr)
 {
-	dynQuad = Mesh::createQuad0WH(1, 1);
-	dynQuad.markDynamic();
 }
 
 Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	owner(owner),
 	context(context)
 {
-	dynQuad = Mesh::createQuad0WH(1, 1);
-	dynQuad.markDynamic();
+	dynQuad = GMesh(CMesh::createQuad0WH(1, 1), true);
 }
 
 void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
@@ -57,8 +55,8 @@ void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, V
 		drawTexture(
 			glyph->texture,
 			pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
-			glyph->texture->getNativeWidth(),
-			glyph->texture->getNativeHeight()
+			glyph->texture->width,
+			glyph->texture->height
 		);
 		
 		//Advance position
@@ -70,8 +68,6 @@ void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, V
 
 void Renderer::drawText(const Font& font, const Material& mat, const std::wstring& text)
 {
-	if (!dynQuad.isGPUReady()) dynQuad.uploadToGPU();
-
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -92,7 +88,7 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 		
 		glBindTexture(GL_TEXTURE_2D, glyph->texture->id);
 		glTranslatef(glyph->bearingX, -glyph->bearingY, 0); //Apply glyph's requested offset for texture
-		glScalef(glyph->texture->getNativeWidth(), glyph->texture->getNativeHeight(), 1); //Apply glyph's requested size
+		glScalef(glyph->texture->width, glyph->texture->height, 1); //Apply glyph's requested size
 		mat.writeInstanceUniforms_generic(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
 
 		dynQuad.renderImmediate();
@@ -114,15 +110,18 @@ void Renderer::drawTexture(const Texture& tex, int x, int y)
 	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
 }
 
-void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h)
+void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h, Sprite* sprite)
 {
+	Vector2f uvLo = sprite ? sprite->uvs.topLeft       : Vector2f(0, 0);
+	Vector2f uvHi = sprite ? sprite->uvs.bottomRight() : Vector2f(1, 1);
+
 	if (tex) glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex3f(pos.x  , pos.y  , pos.z);
-	glTexCoord2i(1, 0); glVertex3f(pos.x+w, pos.y  , pos.z);
-	glTexCoord2i(1, 1); glVertex3f(pos.x+w, pos.y+h, pos.z);
-	glTexCoord2i(0, 1); glVertex3f(pos.x  , pos.y+h, pos.z);
+	glTexCoord2i(uvLo.x, uvLo.y); glVertex3f(pos.x  , pos.y  , pos.z);
+	glTexCoord2i(uvHi.x, uvLo.y); glVertex3f(pos.x+w, pos.y  , pos.z);
+	glTexCoord2i(uvHi.x, uvHi.y); glVertex3f(pos.x+w, pos.y+h, pos.z);
+	glTexCoord2i(uvLo.x, uvHi.y); glVertex3f(pos.x  , pos.y+h, pos.z);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 }
@@ -145,7 +144,8 @@ Texture* Renderer::newTexture(int width, int height, int nChannels, void* data)
 Texture* Renderer::renderFontGlyph(const Font& font)
 {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
-	Texture* out = newTexture(
+	Texture* out = new Texture(
+		this,
 		font.font->glyph->bitmap.width,
 		font.font->glyph->bitmap.rows,
 		1,

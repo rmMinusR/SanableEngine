@@ -37,7 +37,7 @@ GameObject* player;
 GameObject* obstacle;
 GameObject* staticObj;
 
-Mesh* mesh;
+GMesh* mesh;
 ShaderProgram* shader;
 Material* material;
 
@@ -57,9 +57,11 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         camera->CreateComponent<PlayerController>(0.01f);
         camera->CreateComponent<ManualObjectRotator>();
 
-        mesh = new Mesh();
-        //mesh->load("resources/bunny.fbx");
-        mesh->load("resources/dragon.fbx");
+        {
+            //CMesh cmesh("resources/bunny.fbx");
+            CMesh cmesh("resources/dragon.fbx");
+            mesh = new GMesh(cmesh);
+        }
 
         shader = new ShaderProgram("resources/shaders/fresnel");
         shader->load();

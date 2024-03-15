@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 
-MeshRenderer::MeshRenderer(Mesh* mesh, Material* material) :
+MeshRenderer::MeshRenderer(GMesh* mesh, Material* material) :
 	mesh(mesh),
 	material(material)
 {

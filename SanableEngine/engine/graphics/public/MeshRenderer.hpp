@@ -3,16 +3,16 @@
 #include "game/Component.hpp"
 #include "dllapi.h"
 
-class Mesh;
+class GMesh;
 class Material;
 class Renderer;
 
 class MeshRenderer : public Component, public I3DRenderable
 {
-	Mesh* mesh;
+	GMesh* mesh;
 	Material* material;
 public:
-	ENGINEGRAPHICS_API MeshRenderer(Mesh* mesh, Material* material);
+	ENGINEGRAPHICS_API MeshRenderer(GMesh* mesh, Material* material);
 	ENGINEGRAPHICS_API virtual ~MeshRenderer();
 
 	ENGINEGRAPHICS_API const Material* getMaterial() const override;
