@@ -53,6 +53,7 @@ void PluginView::tryInit()
 	{
 		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
+		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded);
 		btnToggleLoaded->transform.setParent(&transform);
@@ -80,6 +81,7 @@ void PluginView::tryInit()
 	{
 		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
+		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked);
 		btnToggleHooked->transform.setParent(&transform);
