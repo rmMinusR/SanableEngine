@@ -4,17 +4,17 @@
 #include "dllapi.h"
 #include "Rect.hpp"
 
-class GTexture;
+class Texture;
 
 class Sprite
 {
-	GTexture* tex;
+	Texture* tex;
 	Rect<float> uvs;
 
 	friend class Renderer;
 
 public:
-	ENGINEGRAPHICS_API Sprite(GTexture* tex);
+	ENGINEGRAPHICS_API Sprite(Texture* tex);
 	ENGINEGRAPHICS_API ~Sprite();
 
 	ENGINEGRAPHICS_API void setUVRect(Rect<float> uvs);
