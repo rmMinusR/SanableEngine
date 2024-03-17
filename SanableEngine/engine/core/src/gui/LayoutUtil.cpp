@@ -1,5 +1,35 @@
 #include "gui/LayoutUtil.hpp"
 
+#include "gui/WidgetTransform.hpp"
+
+void LayoutUtil::Stretch::vertical(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets)
+{
+	//Retrieve only weights
+	std::vector<float> weights;
+	weights.reserve(widgets.size());
+	for (const auto& p : widgets) weights.push_back(p.second);
+
+	//Defer
+	std::vector<UIRect> rects = vertical(container, weights);
+
+	//Apply
+	for (int i = 0; i < rects.size(); ++i) widgets[i].first->setRectByOffsets(rects[i]);
+}
+
+void LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets)
+{
+	//Retrieve only weights
+	std::vector<float> weights;
+	weights.reserve(widgets.size());
+	for (const auto& p : widgets) weights.push_back(p.second);
+
+	//Defer
+	std::vector<UIRect> rects = horizontal(container, weights);
+
+	//Apply
+	for (int i = 0; i < rects.size(); ++i) widgets[i].first->setRectByOffsets(rects[i]);
+}
+
 std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::vertical(UIRect container, const std::vector<float>& weights)
 {
 	float weightSum = 0;
@@ -8,6 +38,7 @@ std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::vertical(UIRect container, 
 	Vector2f cursor = container.topLeft;
 
 	std::vector<UIRect> out;
+	out.reserve(weights.size());
 	for (float w : weights)
 	{
 		float elementHeight = container.size.y * (w/weightSum);
@@ -26,6 +57,7 @@ std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container
 	Vector2f cursor = container.topLeft;
 
 	std::vector<UIRect> out;
+	out.reserve(weights.size());
 	for (float w : weights)
 	{
 		float elementHeight = container.size.x * (w/weightSum);
