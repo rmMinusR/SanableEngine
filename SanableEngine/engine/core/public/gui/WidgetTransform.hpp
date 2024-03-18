@@ -1,6 +1,8 @@
 #pragma once
 
 #include <optional>
+#include <vector>
+#include <functional>
 #include <ReflectionSpec.hpp>
 #include <glm/mat4x4.hpp>
 #include "Vector2.inl"
@@ -46,7 +48,8 @@ private:
 	//UIAnchor pivot;
 	//float localScale = 1;
 	depth_t relativeRenderDepth = 0;
-	WidgetTransform const* parent;
+	WidgetTransform* parent;
+	std::vector<WidgetTransform*> children;
 
 	//TODO cache
 public:
@@ -79,8 +82,11 @@ public:
 	//ENGINEGUI_API float getLocalScale() const;
 	//ENGINEGUI_API void setLocalScale(float val);
 
-	ENGINEGUI_API WidgetTransform const* getParent() const;
-	ENGINEGUI_API void setParent(WidgetTransform const* parent);
+	ENGINEGUI_API WidgetTransform* getParent() const;
+	ENGINEGUI_API void setParent(WidgetTransform* parent);
+	ENGINEGUI_API size_t getChildrenCount() const;
+	ENGINEGUI_API WidgetTransform* getChild(size_t which) const;
+	ENGINEGUI_API void visitChildren(const std::function<void(WidgetTransform*)>& visitor, bool recurse = false);
 
 	ENGINEGUI_API void setRenderDepth(depth_t depth);
 	ENGINEGUI_API depth_t getRenderDepth() const;
