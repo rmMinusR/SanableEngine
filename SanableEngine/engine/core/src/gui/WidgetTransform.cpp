@@ -141,12 +141,12 @@ void WidgetTransform::setLocalScale(float val)
 }
 */
 
-WidgetTransform const* WidgetTransform::getParent() const
+WidgetTransform* WidgetTransform::getParent() const
 {
 	return parent;
 }
 
-void WidgetTransform::setParent(WidgetTransform const* parent)
+void WidgetTransform::setParent(WidgetTransform* parent)
 {
 	//Sanity check: can't cause loops
 	{
@@ -158,7 +158,40 @@ void WidgetTransform::setParent(WidgetTransform const* parent)
 		}
 	}
 
+	//Remove self from parent's children list
+	if (this->parent)
+	{
+		auto it = std::find(this->parent->children.begin(), this->parent->children.end(), this);
+		if (it != this->parent->children.end()) this->parent->children.erase(it);
+	}
+
 	this->parent = parent;
+
+	//Add self to parent's children list
+	if (parent)
+	{
+		assert(std::find(parent->children.begin(), parent->children.end(), this) == parent->children.end());
+		parent->children.push_back(this);
+	}
+}
+
+size_t WidgetTransform::getChildrenCount() const
+{
+	return children.size();
+}
+
+WidgetTransform* WidgetTransform::getChild(size_t which) const
+{
+	return children[which];
+}
+
+void WidgetTransform::visitChildren(const std::function<void(WidgetTransform*)>& visitor, bool recurse)
+{
+	for (WidgetTransform* i : children)
+	{
+		visitor(i);
+		if (recurse) i->visitChildren(visitor, recurse);
+	}
 }
 
 void WidgetTransform::setRenderDepth(depth_t depth)

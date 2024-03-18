@@ -2,7 +2,7 @@
 
 #include "gui/WidgetTransform.hpp"
 
-void LayoutUtil::Stretch::vertical(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets)
+void LayoutUtil::Stretch::vertical(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets, Padding padding)
 {
 	//Retrieve only weights
 	std::vector<float> weights;
@@ -10,13 +10,13 @@ void LayoutUtil::Stretch::vertical(UIRect container, const std::vector<std::pair
 	for (const auto& p : widgets) weights.push_back(p.second);
 
 	//Defer
-	std::vector<UIRect> rects = vertical(container, weights);
+	std::vector<UIRect> rects = vertical(container, weights, padding);
 
 	//Apply
 	for (int i = 0; i < rects.size(); ++i) widgets[i].first->setRectByOffsets(rects[i]);
 }
 
-void LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets)
+void LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets, Padding padding)
 {
 	//Retrieve only weights
 	std::vector<float> weights;
@@ -24,7 +24,7 @@ void LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<std::pa
 	for (const auto& p : widgets) weights.push_back(p.second);
 
 	//Defer
-	std::vector<UIRect> rects = horizontal(container, weights);
+	std::vector<UIRect> rects = horizontal(container, weights, padding);
 
 	//Apply
 	for (int i = 0; i < rects.size(); ++i) widgets[i].first->setRectByOffsets(rects[i]);
@@ -60,9 +60,9 @@ std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container
 	out.reserve(weights.size());
 	for (float w : weights)
 	{
-		float elementHeight = container.size.x * (w/weightSum);
-		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(elementHeight, container.size.y)) ); //Output rect
-		cursor.x += elementHeight; //Advance cursor
+		float elementWidth = container.size.x * (w/weightSum);
+		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(elementWidth, container.size.y)) ); //Output rect
+		cursor.x += elementWidth; //Advance cursor
 	}
 
 	return out;
