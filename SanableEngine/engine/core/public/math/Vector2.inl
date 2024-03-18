@@ -22,6 +22,9 @@ public:
     Vector2<TObj>& normalize(); //inline version
     Vector2<TObj> normalized() const; //copying version
 
+    template<typename TCvt>
+    inline Vector2<TCvt> convert() const { return Vector2<TCvt>( TCvt(x), TCvt(y) ); }
+
     // math operations
     const TObj mgn() const;
     const TObj mgnSq() const;

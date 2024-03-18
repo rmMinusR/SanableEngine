@@ -13,12 +13,12 @@ public:
 private:
 	int priv;
 
-	static int privateFn()
+	static int privateStaticFn(int arg1, int arg2)
 	{
 		return 123;
 	}
 
-	int privateMemFn()
+	long privateMemFn(char arg1, void* arg2)
 	{
 		return 456;
 	}
@@ -29,14 +29,14 @@ public:
 		return offsetof(PublicCastTester, priv);
 	}
 
-	static auto get_privateFn() { return &privateFn; }
+	static auto get_privateFn() { return &privateStaticFn; }
 	static auto get_privateMemFn() { return &PublicCastTester::privateMemFn; }
 };
 
 //Test rig: grant access to members
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester_priv        , PublicCastTester, priv        , PUBLIC_CAST_PTR_TO_FIELD(PublicCastTester, int));
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester_privateFn   , PublicCastTester, privateFn   , PUBLIC_CAST_PTR_TO_STATIC_FN(PublicCastTester, int));
-PUBLIC_CAST_GIVE_ACCESS(PublicCastTester_privateMemFn, PublicCastTester, privateMemFn, PUBLIC_CAST_PTR_TO_BOUND_FN(PublicCastTester, int));
+PUBLIC_CAST_GIVE_FIELD_ACCESS    (PublicCastTester_priv           , PublicCastTester, priv           , int);
+PUBLIC_CAST_GIVE_STATIC_FN_ACCESS(PublicCastTester_privateStaticFn, PublicCastTester, privateStaticFn, int, int, int);
+PUBLIC_CAST_GIVE_BOUND_FN_ACCESS (PublicCastTester_privateMemFn   , PublicCastTester, privateMemFn   , long, char, void*);
 
 TEST_CASE("public_cast")
 {
@@ -74,9 +74,9 @@ TEST_CASE("public_cast")
 
 	SUBCASE("Static function")
 	{
-		auto fnPtr = DO_PUBLIC_CAST(PublicCastTester_privateFn);
+		auto fnPtr = DO_PUBLIC_CAST(PublicCastTester_privateStaticFn);
 		REQUIRE(fnPtr == PublicCastTester::get_privateFn());
-		int res = fnPtr();
+		int res = fnPtr(3, 6);
 		CHECK(res == 123);
 	}
 
@@ -85,7 +85,7 @@ TEST_CASE("public_cast")
 		PublicCastTester tester;
 		auto fp = DO_PUBLIC_CAST(PublicCastTester_privateMemFn);
 		REQUIRE(fp == PublicCastTester::get_privateMemFn());
-		int res = (tester.*fp)();
+		int res = (tester.*fp)(1, nullptr);
 		CHECK(res == 456);
 	}
 }

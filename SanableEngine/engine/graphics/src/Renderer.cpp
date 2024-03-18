@@ -15,6 +15,7 @@
 #include "Mesh.hpp"
 #include "MeshRenderer.hpp"
 #include "Font.hpp"
+#include "Sprite.hpp"
 
 Renderer::Renderer() :
 	owner(nullptr),
@@ -103,21 +104,24 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawTexture(const GTexture& tex, int x, int y)
+void Renderer::drawTexture(const Texture& tex, int x, int y)
 {
 	ShaderProgram::clear();
 	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
 }
 
-void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h)
+void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h, Sprite* sprite)
 {
+	Vector2f uvLo = sprite ? sprite->uvs.topLeft       : Vector2f(0, 0);
+	Vector2f uvHi = sprite ? sprite->uvs.bottomRight() : Vector2f(1, 1);
+
 	if (tex) glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
-	glTexCoord2i(0, 0); glVertex3f(pos.x  , pos.y  , pos.z);
-	glTexCoord2i(1, 0); glVertex3f(pos.x+w, pos.y  , pos.z);
-	glTexCoord2i(1, 1); glVertex3f(pos.x+w, pos.y+h, pos.z);
-	glTexCoord2i(0, 1); glVertex3f(pos.x  , pos.y+h, pos.z);
+	glTexCoord2i(uvLo.x, uvLo.y); glVertex3f(pos.x  , pos.y  , pos.z);
+	glTexCoord2i(uvHi.x, uvLo.y); glVertex3f(pos.x+w, pos.y  , pos.z);
+	glTexCoord2i(uvHi.x, uvHi.y); glVertex3f(pos.x+w, pos.y+h, pos.z);
+	glTexCoord2i(uvLo.x, uvHi.y); glVertex3f(pos.x  , pos.y+h, pos.z);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
 }
@@ -127,20 +131,20 @@ void Renderer::loadTransform(const glm::mat4& mat)
 	glLoadMatrixf(glm::value_ptr(mat));
 }
 
-GTexture* Renderer::loadTexture(const std::filesystem::path& path)
+Texture* Renderer::loadTexture(const std::filesystem::path& path)
 {
-	return new GTexture(this, CTexture(path));
+	return Texture::fromFile(path, this);
 }
 
-GTexture* Renderer::newTexture(int width, int height, int nChannels, void* data)
+Texture* Renderer::newTexture(int width, int height, int nChannels, void* data)
 {
-	return new GTexture(this, width, height, nChannels, data);
+	return new Texture(this, width, height, nChannels, data);
 }
 
-GTexture* Renderer::renderFontGlyph(const Font& font)
+Texture* Renderer::renderFontGlyph(const Font& font)
 {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
-	GTexture* out = new GTexture(
+	Texture* out = new Texture(
 		this,
 		font.font->glyph->bitmap.width,
 		font.font->glyph->bitmap.rows,
