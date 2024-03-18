@@ -4,7 +4,8 @@
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
 #include "gui/ImageWidget.hpp"
-#include "gui/LayoutUtil.hpp"
+#include "gui/HorizontalGroupWidget.hpp"
+#include "gui/VerticalGroupWidget.hpp"
 #include "Resources.hpp"
 #include "application/Plugin.hpp"
 #include "application/PluginManager.hpp"
@@ -34,34 +35,28 @@ void PluginView::tryInit()
 		assert(!lblToggleLoaded);
 		assert(!lblToggleHooked);
 
+		VerticalGroupWidget* inner = hud->addWidget<VerticalGroupWidget>();
+		inner->transform.setParent(&transform);
+
 		name = hud->addWidget<LabelWidget>(Resources::textMat, Resources::headerFont);
-		name->transform.setParent(&transform);
-		name->transform.snapToCorner(Vector2f(0, 0));
+		name->transform.setParent(&inner->transform);
 
 		path = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
-		path->transform.setParent(&transform);
-		path->transform.snapToCorner(Vector2f(0, 0));
+		path->transform.setParent(&inner->transform);
+
+		HorizontalGroupWidget* statusLine = hud->addWidget<HorizontalGroupWidget>();
+		statusLine->transform.setParent(&inner->transform);
 
 		status = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
-		status->transform.setParent(&transform);
-		status->transform.snapToCorner(Vector2f(0, 0));
-
-		LayoutUtil::Stretch::vertical(transform.getRect(),
-			{
-				{ &name  ->transform, 1 },
-				{ &path  ->transform, 1 },
-				{ &status->transform, 1 }
-			}
-		);
-		name->transform.fillParentX();
-		path->transform.fillParentX();
+		status->transform.setParent(&statusLine->transform);
+		statusLine->setFlexWeight(&status->transform, 4);
 
 		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded);
-		btnToggleLoaded->transform.setParent(&transform);
-		btnToggleLoaded->transform.snapToCorner(Vector2f(0, 0));
+		btnToggleLoaded->transform.setParent(&statusLine->transform);
+		statusLine->setFlexWeight(&btnToggleLoaded->transform, 3);
 		btnToggleLoaded->setCallback([&]() {
 			if (!this->plugin->isHooked())
 			{
@@ -80,8 +75,8 @@ void PluginView::tryInit()
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked);
-		btnToggleHooked->transform.setParent(&transform);
-		btnToggleHooked->transform.snapToCorner(Vector2f(0, 0));
+		btnToggleHooked->transform.setParent(&statusLine->transform);
+		statusLine->setFlexWeight(&btnToggleHooked->transform, 3);
 		btnToggleHooked->setCallback([&]() {
 			if (this->plugin->isCodeLoaded())
 			{
@@ -95,17 +90,6 @@ void PluginView::tryInit()
 				}
 			}
 		});
-
-		status->transform.fillParentX();
-		status->transform.setMaxCornerRatio(Vector2f(0, 0), true);
-		LayoutUtil::Stretch::horizontal(
-			status->transform.getRect(),
-			{
-				{ &status         ->transform, 40 },
-				{ &btnToggleLoaded->transform, 30 },
-				{ &btnToggleHooked->transform, 30 }
-			}
-		);
 	}
 }
 
