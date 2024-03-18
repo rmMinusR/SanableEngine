@@ -32,6 +32,7 @@ void PluginManagerView::tick()
 	while (pluginViews.size() < plugins.size())
 	{
 		PluginView* view = hud->addWidget<PluginView>();
+		view->transform.setParent(&transform);
 		view->transform.snapToCorner({ 0, 0 }, Vector2f(0, viewHeight));
 		view->transform.fillParentX();
 		pluginViews.push_back(view);

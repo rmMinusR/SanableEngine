@@ -4,6 +4,7 @@
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
 #include "gui/ImageWidget.hpp"
+#include "gui/LayoutUtil.hpp"
 #include "Resources.hpp"
 #include "application/Plugin.hpp"
 #include "application/PluginManager.hpp"
@@ -24,44 +25,43 @@ void PluginView::tryInit()
 
 	if (!name)
 	{
+		assert(!path);
+		assert(!status);
+		assert(!btnToggleHooked);
+		assert(!btnToggleLoaded);
+		assert(!imgToggleLoadedBg);
+		assert(!imgToggleHookedBg);
+		assert(!lblToggleLoaded);
+		assert(!lblToggleHooked);
+
 		name = hud->addWidget<LabelWidget>(Resources::textMat, Resources::headerFont);
 		name->transform.setParent(&transform);
-		name->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
-		name->transform.fillParentX();
-	}
+		name->transform.snapToCorner(Vector2f(0, 0));
 
-	if (!path)
-	{
 		path = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		path->transform.setParent(&transform);
-		path->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
-		path->transform.fillParentX();
-		path->transform.setCenterByOffsets(Vector2f(0, 50), Vector2f(0, 0));
-	}
+		path->transform.snapToCorner(Vector2f(0, 0));
 
-	if (!status)
-	{
 		status = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		status->transform.setParent(&transform);
-		status->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
-		status->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
-		status->transform.setMinCornerRatio(Vector2f(0, 0));
-		status->transform.setMaxCornerOffset(Vector2f(0.4f, 0));
-	}
+		status->transform.snapToCorner(Vector2f(0, 0));
 
-	if (!btnToggleLoaded)
-	{
+		LayoutUtil::Stretch::vertical(transform.getRect(),
+			{
+				{ &name  ->transform, 1 },
+				{ &path  ->transform, 1 },
+				{ &status->transform, 1 }
+			}
+		);
+		name->transform.fillParentX();
+		path->transform.fillParentX();
+
 		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
-
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded);
 		btnToggleLoaded->transform.setParent(&transform);
-		btnToggleLoaded->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
-		btnToggleLoaded->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
-		btnToggleLoaded->transform.setMinCornerRatio(Vector2f(0.4f, 0));
-		btnToggleLoaded->transform.setMaxCornerRatio(Vector2f(0.7f, 0));
-
+		btnToggleLoaded->transform.snapToCorner(Vector2f(0, 0));
 		btnToggleLoaded->setCallback([&]() {
 			if (!this->plugin->isHooked())
 			{
@@ -75,21 +75,13 @@ void PluginView::tryInit()
 				}
 			}
 		});
-	}
 
-	if (!btnToggleHooked)
-	{
 		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
-
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked);
 		btnToggleHooked->transform.setParent(&transform);
-		btnToggleHooked->transform.snapToCorner(Vector2f(0, 0), Vector2f(0, 50));
-		btnToggleHooked->transform.setCenterByOffsets(Vector2f(0, 100), Vector2f(0, 0));
-		btnToggleHooked->transform.setMinCornerRatio(Vector2f(0.7f, 0));
-		btnToggleHooked->transform.setMaxCornerRatio(Vector2f(1, 0));
-
+		btnToggleHooked->transform.snapToCorner(Vector2f(0, 0));
 		btnToggleHooked->setCallback([&]() {
 			if (this->plugin->isCodeLoaded())
 			{
@@ -103,6 +95,17 @@ void PluginView::tryInit()
 				}
 			}
 		});
+
+		status->transform.fillParentX();
+		status->transform.setMaxCornerRatio(Vector2f(0, 0), true);
+		LayoutUtil::Stretch::horizontal(
+			status->transform.getRect(),
+			{
+				{ &status         ->transform, 40 },
+				{ &btnToggleLoaded->transform, 30 },
+				{ &btnToggleHooked->transform, 30 }
+			}
+		);
 	}
 }
 
