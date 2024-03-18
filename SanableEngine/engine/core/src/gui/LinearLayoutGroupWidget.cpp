@@ -39,3 +39,12 @@ void LinearLayoutGroupWidget::setFlexWeight(WidgetTransform* widget, float weigh
 {
 	customWeights[widget] = weight;
 }
+
+const Material* LinearLayoutGroupWidget::getMaterial() const
+{
+	return nullptr;
+}
+
+void LinearLayoutGroupWidget::renderImmediate(Renderer* renderer)
+{
+}

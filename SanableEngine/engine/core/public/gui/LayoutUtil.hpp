@@ -7,7 +7,7 @@
 #include "Vector2.inl"
 #include "Rect.hpp"
 
-class WidgetTransform;
+struct WidgetTransform;
 
 namespace LayoutUtil
 {

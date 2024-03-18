@@ -16,8 +16,9 @@ public:
 	ENGINEGUI_API LinearLayoutGroupWidget(HUD* hud);
 	ENGINEGUI_API virtual ~LinearLayoutGroupWidget();
 
-	virtual void refreshLayout() override = 0;
-
 	ENGINEGUI_API void setFlexWeight(WidgetTransform* widget, float weight);
 	LayoutUtil::Padding padding;
+
+	ENGINEGUI_API virtual const Material* getMaterial() const override;
+	ENGINEGUI_API virtual void renderImmediate(Renderer* renderer) override;
 };
