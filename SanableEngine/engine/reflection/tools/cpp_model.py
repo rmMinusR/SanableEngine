@@ -195,6 +195,7 @@ class TypeInfo(Symbol):
         this.children: list[ParentInfo] = []
         this.parents: list[ParentInfo] = []
         this.members: list[Member] = []
+        this.friends: list[FriendInfo] = []
         
     def getMember(this, absName: AbsName) -> Member:
         for i in this.members:

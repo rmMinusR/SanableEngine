@@ -1,6 +1,40 @@
+from typing import Callable
 import cpp_model
-from clang.cindex import AccessSpecifier
+import config
+from clang.cindex import AccessSpecifier, TemplateArgumentKind
 from clang.cindex import *
+
+
+def buildAbsName(target: Cursor) -> cpp_model.AbsName:
+    out: list = [] # NOTE: This is in reverse order, corrected at end of function
+    
+    while type(target) == type(None) or target.kind == CursorKind.TRANSLATION_UNIT:
+        part = target.displayname
+        
+        # Strip leading C-style record type specifier
+        def stripexact(val: str, leading: str): return val[len(leading):] if val.startswith(leading) else val
+        part = stripexact(part, "enum ")
+        part = stripexact(part, "class ") # Since this is after "enum" it will also catch "enum class"
+        part = stripexact(part, "struct ")
+
+        # Handle template args
+        if target.get_num_template_arguments() > 0:
+            templateArgs = []
+            for idx in range(target.get_num_template_arguments()):
+                kind: TemplateArgumentKind = target.get_template_argument_kind(idx)
+                if kind == TemplateArgumentKind.TYPE:
+                    templateArgs.append(buildAbsName(target.get_template_argument_type(idx)))
+                elif kind == TemplateArgumentKind.INTEGRAL:
+                    templateArgs.append(target.get_template_argument_value(idx))
+                else:
+                    assert False, f"Template argument of kind {kind} not yet implemented" # TODO
+            part = cpp_model._TemplatedName(part, templateArgs)
+
+        out.append(part)
+        target = target.semantic_parent
+    
+    out.reverse()
+    return cpp_model.AbsName(out)
 
 
 def parse(module: cpp_model.Module, cursor: Cursor):
@@ -10,19 +44,34 @@ def parse(module: cpp_model.Module, cursor: Cursor):
             
     # Otherwise, defer then recurse
     elif cursor.kind in factories.keys():
-        obj: cpp_model.Symbol = factories[cursor.kind](cursor)
+        obj = None
+        for f in factories:
+            res = f(cursor)
+            if res != None:
+                assert obj == None or i == None, f"Multiple factories returned results for the same symbol ({buildAbsName(cursor)})"
+            obj = res
+
         if obj == None: return
         module.put(obj)
         for i in cursor.get_children(): parse(module, i)
 
     # Safety warning
     elif cursor.kind not in ignoredSymbols:
-        print(f"WARNING: Unhandled")
+        config.logger.warn(f"Unhandled symbol {cursor.kind} {buildAbsName(cursor)}")
 
 
-factories = {
+factories: list[ Callable[[Cursor], cpp_model.Symbol|None] ] = [
     
-}
+    buildParameterInfo,
+    
+    buildConstructorInfo,
+    buildDestructorInfo,
+    buildFieldInfo,
+    
+    buildParentInfo,
+    buildFriendInfo,
+    
+]
 
 
 ignoredSymbols = [
