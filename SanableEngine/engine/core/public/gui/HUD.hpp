@@ -33,6 +33,7 @@ public:
 	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(Widget*)>& visitor) const;
 
 	ENGINEGUI_API WidgetTransform const* getRootTransform() const;
+	ENGINEGUI_API WidgetTransform* getRootTransform();
 	
 	template<typename T, typename... TCtorArgs>
 	inline T* addWidget(TCtorArgs... ctorArgs)

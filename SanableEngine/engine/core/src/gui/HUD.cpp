@@ -122,3 +122,8 @@ WidgetTransform const* HUD::getRootTransform() const
 {
 	return &root;
 }
+
+WidgetTransform* HUD::getRootTransform()
+{
+	return &root;
+}
