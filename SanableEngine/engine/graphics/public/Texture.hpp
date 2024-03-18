@@ -6,7 +6,7 @@
 #include <GL/glew.h>
 
 #include "dllapi.h"
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 
 class Renderer;
 
