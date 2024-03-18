@@ -12,6 +12,10 @@ class _TemplatedName: # Local, relative only
     def __init__(this, baseName: str, parameters: list["AbsName" | ConstValue]):
         this.baseName = baseName
         this.parameters = parameters
+        
+    def __str__(this):
+        paramStrs = [str(i) for i in this.parameters]
+        return f"{this.baseName}<{', '.join(paramStrs)}>"
 AbsName = list[str | _TemplatedName]
         
 Annotation = str
@@ -200,15 +204,25 @@ class TypeInfo(Symbol):
         
 class Module:
     def __init__(this):
-        this.symbols: list[Symbol] = []
+        this.__symbols: dict[AbsName, Symbol] = []
 
     def get(this, absName: AbsName) -> Symbol:
-        for i in this.symbols:
-            if i.absName == absName: return i
-        return None
+        if absName in this.__symbols.keys(): return this.__symbols[absName]
+        else: return None
     
+    def put(this, symbol: Symbol):
+        existing = this.get(symbol.absName)
+        if existing != None:
+            # A symbol already exists with this name: check we aren't overwriting
+            if symbol.definition != None:
+                assert existing.definition == None, f"Tried to register {symbol.absName}, but a definition was already registered!"
+                this.__symbols[symbol.absName] = symbol
+        else:
+            # No symbol exists with this name: just put into symbols
+            this.__symbols[symbol.absName] = symbol
+
     def bind(this):
         binders = []
-        for i in this.symbols: binders += i.bind()
+        for i in this.__symbols.values(): binders += i.bind()
         binders.sort(key=lambda v: v[1])
         for i in binders: i()
