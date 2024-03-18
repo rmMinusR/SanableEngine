@@ -27,6 +27,7 @@ void WindowGUIRenderPipeline::render(Rect<float> viewport)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//Tick and render GUI
+	hud.refreshLayout(viewport);
 	hud.tick();
 	hud.render(viewport, window->getRenderer());
 }

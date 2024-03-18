@@ -41,6 +41,17 @@ MemoryManager* HUD::getMemory()
 	return &memory;
 }
 
+void HUD::refreshLayout(Rect<float> viewport)
+{
+	root.setRectByOffsets(viewport);
+
+	applyConcurrencyBuffers();
+	widgets.memberCall(&Widget::refreshLayout);
+	applyConcurrencyBuffers();
+
+	//TODO transform caching goes here
+}
+
 void HUD::tick()
 {
 	applyConcurrencyBuffers();
@@ -50,10 +61,10 @@ void HUD::tick()
 
 void HUD::render(Rect<float> viewport, Renderer* renderer)
 {
-	applyConcurrencyBuffers();
-	
 	root.setRectByOffsets(viewport);
 
+	applyConcurrencyBuffers();
+	
 	//Collect objects to buffer
 	std::unordered_map<
 		const ShaderProgram*, //Group by shader

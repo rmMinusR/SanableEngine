@@ -20,6 +20,7 @@ public:
 	ENGINEGUI_API Widget(HUD* hud);
 	ENGINEGUI_API virtual ~Widget();
 
+	ENGINEGUI_API virtual void refreshLayout(); //TODO refactor to separate interface? Will likely do when implementing caching for WidgetTransforms
 	ENGINEGUI_API virtual void tick();
 
 	//These should return true if they consume the click event

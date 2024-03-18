@@ -26,6 +26,7 @@ public:
 
 	ENGINEGUI_API MemoryManager* getMemory();
 	
+	ENGINEGUI_API void refreshLayout(Rect<float> viewport);
 	ENGINEGUI_API void tick();
 	ENGINEGUI_API void render(Rect<float> viewport, Renderer* renderer);
 
