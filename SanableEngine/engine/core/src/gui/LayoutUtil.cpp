@@ -60,9 +60,9 @@ std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container
 	out.reserve(weights.size());
 	for (float w : weights)
 	{
-		float elementHeight = container.size.x * (w/weightSum);
-		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(elementHeight, container.size.y)) ); //Output rect
-		cursor.x += elementHeight; //Advance cursor
+		float elementWidth = container.size.x * (w/weightSum);
+		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(elementWidth, container.size.y)) ); //Output rect
+		cursor.x += elementWidth; //Advance cursor
 	}
 
 	return out;
