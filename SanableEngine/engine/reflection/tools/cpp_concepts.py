@@ -48,7 +48,13 @@ def _typeGetAbsName(target: Type) -> str:
     pointedToType: Type = target.get_pointee()
     if pointedToType.kind != TypeKind.INVALID:
         # Pointer case: unwrap and abs-ify pointed-to type
-        out = _typeGetAbsName(pointedToType)+"*"
+        out = _typeGetAbsName(pointedToType)
+        if target.spelling.endswith("&"):
+            out += "&"
+        elif target.spelling.endswith("*"):
+            out += "*"
+        else:
+            assert False
 
     elif not hasMainDecl:
         # Primitive types
@@ -292,27 +298,7 @@ class ParameterInfo(Symbol):
     def __init__(this, module: "Module", cursor: Cursor):
         Symbol.__init__(this, module, cursor)
         this.__displayName: str = cursor.displayname
-        
-        # TODO very inefficient, optimize
-
-        # Find index of self
-        allParams: list[Cursor] = [i for i in cursor.semantic_parent.get_children() if i.kind == CursorKind.PARM_DECL]
-        selfParam = [i for i in allParams if i.displayname == this.__displayName][0]
-        selfIndex = allParams.index(selfParam) # Note: We aren't guaranteed that the same cursor is returned
-            
-        # Scan for args in parent name
-        parentName: str = cursor.semantic_parent.displayname
-        parentArgsBegin = len(parentName)-2
-        parenLevel = 1
-        while parenLevel > 0:
-            assert parentArgsBegin > 0
-            parentArgsBegin -= 1
-            if parentName[parentArgsBegin] == "(": parenLevel -= 1
-            if parentName[parentArgsBegin] == ")": parenLevel += 1
-        
-        parentArgs = [i.strip() for i in parentName[parentArgsBegin+1:-1].split(",")]
-        assert selfIndex < len(parentArgs)
-        this.__typeName = parentArgs[selfIndex]
+        this.__typeName = _typeGetAbsName(cursor.type)
 
     @staticmethod
     def matches(cursor: Cursor):
