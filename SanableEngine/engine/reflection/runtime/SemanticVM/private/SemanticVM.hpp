@@ -58,9 +58,4 @@ public:
 	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
 	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param>
 	void execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
-
-private:
-	SemanticMagic::id_t nextMagicID;
-public:
-	SemanticMagic::id_t requestMagicID();
 };

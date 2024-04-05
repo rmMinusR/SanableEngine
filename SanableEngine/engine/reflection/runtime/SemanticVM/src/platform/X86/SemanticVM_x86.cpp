@@ -520,8 +520,3 @@ void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<vo
 	SemanticKnownConst* const_rsp = rsp.tryGetKnownConst();
 	assert(const_rsp && const_rsp->value == 0); //TODO handle return value
 }
-
-SemanticMagic::id_t SemanticVM::requestMagicID()
-{
-	return nextMagicID++;
-}

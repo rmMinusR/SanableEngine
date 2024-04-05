@@ -24,21 +24,46 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 	}
 }
 
-void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
+struct branch_t
 {
-	//Prepare capstone disassembler
-	cs_insn* insn = cs_malloc(capstone_get_instance());
+	MachineState state;
+	bool keepExecuting;
 
-	//Prepare branch list
-	struct branch_t
+	//Stuff Capstone wants
+	const uint8_t* cursor;
+	uint64_t addr;
+
+	void parseNext(cs_insn* insn_out)
 	{
-		MachineState state;
-		bool keepExecuting;
-	};
-	std::vector<branch_t> branches = { {state, true} };
-	branches[0].state.setInsnPtr((uint_addr_t)fn);
+		//Capstone wants this data
+		addr = state.getInsnPtr();
+		cursor = (uint8_t*)addr;
+		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
 
-	while (true)
+		//Advance cursor and interpret next
+		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn_out);
+		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
+
+		//Update instruction pointer from Capstone
+		state.setInsnPtr(addr);
+		cursor = (uint8_t*)addr;
+	}
+};
+struct FunctionContext
+{
+	std::vector<branch_t> branches;
+
+	FunctionContext(MachineState initialState, void(*fn)())
+	{
+		pushBranch(initialState, fn);
+	}
+
+	void pushBranch(MachineState& state, void(*fn)())
+	{
+		branches.push_back({ state, true });
+		branches[0].state.setInsnPtr((uint_addr_t)fn);
+	}
+	void canonizeCoincidentBranches(bool debug)
 	{
 		//Canonize branches with the same cursor
 		for (int i = 0; i < branches.size(); ++i)
@@ -54,7 +79,9 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 				}
 			}
 		}
-
+	}
+	int getEarliestBranch() const
+	{
 		//Execute the cursor that's furthest behind
 		int toExecIndex = -1;
 		for (int i = 0; i < branches.size(); ++i)
@@ -64,25 +91,37 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 				toExecIndex = i;
 			}
 		}
+		return toExecIndex;
+	}
+
+private:
+	SemanticMagic::id_t nextMagicID = 0;
+public:
+	SemanticMagic::id_t requestMagicID() { return nextMagicID++; }
+};
+
+void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
+{
+	//Prepare capstone disassembler
+	cs_insn* insn = cs_malloc(capstone_get_instance());
+
+	FunctionContext context(state, fn);
+	while (true)
+	{
+		context.canonizeCoincidentBranches(debug);
+
+		//Execute the cursor that's furthest behind
+		int toExecIndex = context.getEarliestBranch();
 		if (toExecIndex == -1) break; //All branches have terminated
 
-		//Capstone wants this data
-		uint64_t addr = branches[toExecIndex].state.getInsnPtr();
-		const uint8_t* cursor = (uint8_t*)addr;
-		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
-
-		//Advance cursor and interpret next
-		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn);
-		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
-
-		//Update instruction pointer from Capstone
-		branches[toExecIndex].state.setInsnPtr(addr);
-		cursor = (uint8_t*)addr;
+		//Run Capstone
+		#define EXEC context.branches[toExecIndex]
+		EXEC.parseNext(insn);
 
 		//DEBUG
 		if (debug)
 		{
-			branches[toExecIndex].state.debugPrintWorkingSet();
+			EXEC.state.debugPrintWorkingSet();
 			for (int i = 0; i < indentLevel; ++i) printf(" |  "); //Indent
 			printf("[Branch %2i] ", toExecIndex);
 			printInstructionCursor(insn);
@@ -91,11 +130,11 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		//Execute current call frame, one opcode at a time
 		void(*callTarget)() = nullptr;
 		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
-		step(branches[toExecIndex].state, insn,
+		step(EXEC.state, insn,
 			[&](void* fn) { callTarget = (void(*)()) fn; }, //On CALL
 			[&]() { //On RET
-				branches[toExecIndex].keepExecuting = false;
-				if (debug) printf("   ; execution terminated", toExecIndex, cursor);
+				EXEC.keepExecuting = false;
+				if (debug) printf("   ; execution terminated", toExecIndex, EXEC.cursor);
 				return expectedReturnAddress;
 			},
 			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
@@ -103,24 +142,23 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		);
 		
 		//Handle jumping/branching
-		if (jmpTargets.size() == 1) state.setInsnPtr((uint_addr_t)jmpTargets[0]); //Determinate case: jump
+		if (jmpTargets.size() == 1) EXEC.state.setInsnPtr((uint_addr_t)jmpTargets[0]); //Determinate case: jump
 		else if (jmpTargets.size() > 1) //Indeterminate case: branch
 		{
-			for (void* i : jmpTargets) assert(i >= cursor && "Indeterminate looping not supported");
+			for (void* i : jmpTargets) assert(i >= EXEC.cursor && "Indeterminate looping not supported");
 
-			if (debug) printf("   ; Spawned branches ", toExecIndex, cursor);
-			branches[toExecIndex].state.setInsnPtr((uint_addr_t)jmpTargets[0]);
+			if (debug) printf("   ; Spawned branches ", toExecIndex, EXEC.cursor);
+			EXEC.state.setInsnPtr((uint_addr_t)jmpTargets[0]);
 			for (int i = 1; i < jmpTargets.size(); ++i)
 			{
 				if (debug) printf("#%i@%x ", i, jmpTargets[i]);
-				branches.push_back({ branches[toExecIndex].state, true }); //Can't reference toExec here in case the backing block reallocates
-				(branches.end()-1)->state.setInsnPtr((uint_addr_t)jmpTargets[i]);
+				context.pushBranch(EXEC.state, (void(*)())jmpTargets[i]); //Can't reference exec here in case the backing block reallocates
 			}
 		}
 
 		//DEBUG
 		if (debug) printf("\n");
-		if (branches[toExecIndex].keepExecuting) branches[toExecIndex].state.requireGood();
+		if (EXEC.keepExecuting) EXEC.state.requireGood();
 
 		//If we're supposed to call another function, do so
 		if (callTarget)
@@ -132,28 +170,30 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 				//TODO proper register detection
 				//std::vector<x86_reg> covariants = ???;
 				//assert(covariants.size() == 1);
-				branches[toExecIndex].state.setRegister(x86_reg::X86_REG_EAX, SemanticMagic(sizeof(void*), 0, requestMagicID()));
-				branches[toExecIndex].state.popStackFrame(); //Undo pushing stack frame
+				EXEC.state.setRegister(x86_reg::X86_REG_EAX, SemanticMagic(sizeof(void*), 0, context.requestMagicID()));
+				EXEC.state.popStackFrame(); //Undo pushing stack frame
 				if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
 			}
 			else if (std::find(sandboxed.begin(), sandboxed.end(), callTarget) != sandboxed.end())
 			{
 				//TODO implement
-				branches[toExecIndex].state.popStackFrame(); //TEMP: Undo pushing stack frame
+				EXEC.state.popStackFrame(); //TEMP: Undo pushing stack frame
 				if (debug) printf("Function is sandboxed, and will not be simulated.\n");
 			}
 			else
 			{
-				execFunc_internal(branches[toExecIndex].state, callTarget, (void(*)())cursor, indentLevel+1, allocators, sandboxed);
+				execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, allocators, sandboxed);
 			}
 		}
+
+		#undef EXEC
 	}
+
+	//Cleanup capstone disassembler
+	cs_free(insn, 1);
 
 	//Canonize all remaining states
 	std::vector<const MachineState*> divergentStates;
-	for (const branch_t& branch : branches) divergentStates.push_back(&branch.state);
+	for (const branch_t& branch : context.branches) divergentStates.push_back(&branch.state);
 	state = MachineState::merge(divergentStates); //TODO handle sandboxing
-	
-	//Cleanup capstone disassembler
-	cs_free(insn, 1);
 }
