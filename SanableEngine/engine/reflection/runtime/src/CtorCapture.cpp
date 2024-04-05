@@ -28,7 +28,7 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 {
 	//Simulate
 	MachineState canonicalState(true);
-	SemanticVM::execFunc(canonicalState, thunk, allocators, nofill);
+	SemanticVM().execFunc(canonicalState, thunk, allocators, nofill);
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);

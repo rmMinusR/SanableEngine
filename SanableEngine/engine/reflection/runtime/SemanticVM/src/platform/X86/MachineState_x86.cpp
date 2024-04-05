@@ -428,11 +428,8 @@ MachineState MachineState::merge(const std::vector<const MachineState*>& diverge
 		mergeMaps(canonical.constMemory.memory, state->constMemory.memory);
 		for (auto kv : state->magics)
 		{
-			//Trivial case: value not present, just copy memory space
-			if (!canonical.magics.count(kv.first)) canonical.magics.at(kv.first) = kv.second;
-
-			//Complex case: present in both, attempt merge
-			else mergeMaps(canonical.magics.at(kv.first).memory, kv.second.memory);
+			if (!canonical.magics.count(kv.first)) canonical.magics.emplace(kv); //Trivial case: value not present, just copy memory space
+			else mergeMaps(canonical.magics.at(kv.first).memory, kv.second.memory); //Complex case: present in both, attempt merge
 		}
 	}
 	return canonical;

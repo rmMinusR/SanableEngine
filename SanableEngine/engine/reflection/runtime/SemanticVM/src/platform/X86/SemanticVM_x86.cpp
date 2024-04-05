@@ -640,8 +640,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 				//TODO proper register detection
 				//std::vector<x86_reg> covariants = ???;
 				//assert(covariants.size() == 1);
-				//toExec->state.setRegister(covariants[0], SemanticMagic(0)); //TODO dynamic heap-object counting
-				branches[toExecIndex].state.setRegister(x86_reg::X86_REG_EAX, SemanticMagic(sizeof(void*), 0, 0)); //TODO dynamic heap-object counting
+				branches[toExecIndex].state.setRegister(x86_reg::X86_REG_EAX, SemanticMagic(sizeof(void*), 0, requestMagicID()));
 				branches[toExecIndex].state.popStackFrame(); //Undo pushing stack frame
 				if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
 			}
@@ -689,4 +688,9 @@ void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<vo
 	SemanticValue rsp = state.getRegister(X86_REG_RSP);
 	SemanticKnownConst* const_rsp = rsp.tryGetKnownConst();
 	assert(const_rsp && const_rsp->value == 0); //TODO handle return value
+}
+
+SemanticMagic::id_t SemanticVM::requestMagicID()
+{
+	return nextMagicID++;
 }

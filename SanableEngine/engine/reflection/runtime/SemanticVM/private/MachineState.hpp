@@ -41,6 +41,7 @@ public:
 private:
 	VMMemory constMemory; //General memory with known constant address
 	std::map<SemanticMagic::id_t, VMMemory> magics; //Memory of dynamic allocations and the "this" object
+	VMMemory& magicMemory(SemanticMagic::id_t id); //Creates if doesn't exist
 public:
 	MachineState(bool canReadHostMemory);
 
