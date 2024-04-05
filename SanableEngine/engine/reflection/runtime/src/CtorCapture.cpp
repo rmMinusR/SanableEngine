@@ -35,7 +35,8 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	for (size_t i = 0; i < objSize; ++i)
 	{
 		SemanticValue _byte = canonicalState.getMemory(SemanticMagic(1, i, 0), 1); //Allocation for "this" object will be first, so magic ID=0
-		if (auto* byte = _byte.tryGetKnownConst())
+		auto* byte = _byte.tryGetKnownConst();
+		if (byte && byte->isPositionIndependentAddr)
 		{
 			out.usage[i] = true;
 			out.bytes[i] = byte->value;
