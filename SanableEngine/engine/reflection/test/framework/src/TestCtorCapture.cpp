@@ -2,7 +2,7 @@
 
 #include "GlobalTypeRegistry.hpp"
 #include "ThunkUtils.hpp"
-#include "application/PluginCore.hpp"
+#include "EmittedRTTI.hpp"
 
 #include "Inheritance.hpp"
 #include "MultiInheritance.hpp"
