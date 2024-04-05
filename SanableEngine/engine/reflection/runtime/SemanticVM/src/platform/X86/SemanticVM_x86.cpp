@@ -46,26 +46,29 @@ bool isOperandIdentity(const cs_insn* insn, int id1, int id2)
 }
 
 
-void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
-{
-	#pragma region Data flow
+#pragma region Per-instruction-group step functions
 
+bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn)
+{
 	if (insn->id == x86_insn::X86_INS_LEA)
 	{
 		auto addr = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, addr);
 		if (debug) { printf("   ; = ") + addr.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_MOV)
 	{
 		auto val = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, val);
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_MOVABS)
 	{
 		auto val = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, val);
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_MOVSX || insn->id == x86_insn::X86_INS_MOVSXD)
 	{
@@ -79,16 +82,19 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
 
 		state.setOperand(insn, 0, val);
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_PUSH)
 	{
 		state.stackPush(state.getOperand(insn, 0));
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_POP)
 	{
 		auto val = state.stackPop(insn->detail->x86.operands[0].size);
 		state.setOperand(insn, 0, val);
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_XCHG)
 	{
@@ -102,13 +108,15 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val1.debugPrintValue(false);
 			printf(" | ")   + debugPrintOperand(state, insn, 1) + printf(":= ") + val1.debugPrintValue(false);
 		}
+
+		return true;
 	}
+	else return false;
+}
 
-	#pragma endregion
-
-	#pragma region Math
-
-	else if (insn->id == x86_insn::X86_INS_CMP)
+bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn)
+{
+	if (insn->id == x86_insn::X86_INS_CMP)
 	{
 		std::optional<bool> cf, of, sf, zf, af, pf;
 		SemanticValue op1 = state.getOperand(insn, 0);
@@ -165,6 +173,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("af=%s ", af.has_value() ? (af.value() ? "Y" : "N") : "U");
 			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
 		}
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_TEST)
 	{
@@ -205,9 +215,15 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("zf=%s ", zf.has_value() ? (zf.value() ? "Y" : "N") : "U");
 			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
 		}
-	}
 
-	else if (insn->id == x86_insn::X86_INS_SUB)
+		return true;
+	}
+	else return false;
+}
+
+bool SemanticVM::step_math(MachineState& state, const cs_insn* insn)
+{
+	if (insn->id == x86_insn::X86_INS_SUB)
 	{
 		SemanticValue op1 = state.getOperand(insn, 0);
 		SemanticValue op2 = state.getOperand(insn, 1);
@@ -216,6 +232,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_ADD)
 	{
@@ -226,6 +244,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_AND)
 	{
@@ -236,6 +256,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_OR)
 	{
@@ -246,6 +268,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_XOR)
 	{
@@ -256,18 +280,27 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_DEC)
 	{
 		auto op = state.getOperand(insn, 0);
 		state.setOperand(insn, 0, op-SemanticKnownConst(1, op.getSize(), false) );
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_INC)
 	{
 		auto op = state.getOperand(insn, 0);
 		state.setOperand(insn, 0, op+SemanticKnownConst(1, op.getSize(), false) );
+		return true;
 	}
-	else if (insn->id == x86_insn::X86_INS_SHL)
+	else return false;
+}
+
+bool SemanticVM::step_bitmath(MachineState& state, const cs_insn* insn)
+{
+	if (insn->id == x86_insn::X86_INS_SHL)
 	{
 		SemanticValue op1 = state.getOperand(insn, 0);
 		SemanticValue op2 = state.getOperand(insn, 1);
@@ -290,6 +323,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_SHR)
 	{
@@ -313,6 +347,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_SAL)
 	{
@@ -333,6 +368,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_SAR)
 	{
@@ -353,6 +389,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_ROL)
 	{
@@ -372,6 +409,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_ROR)
 	{
@@ -391,17 +429,20 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
+	
+	else return false;
+}
 
-	#pragma endregion
-
-	#pragma region Flow control
-
-	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
+bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void* ()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
+{
+	if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
 		SemanticKnownConst fp  = *state.getOperand(insn, 0).tryGetKnownConst();
 		state.pushStackFrame(fp);
 		pushCallStack((uint8_t*)fp.value); //Sanity check. Also no ROP nonsense
+		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{
@@ -412,10 +453,13 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 		void* poppedReturnAddr = popCallStack();
 		if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_NOP)
 	{
 		//Do nothing
+		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_BRANCH_RELATIVE)) //TODO: Really hope nobody uses absolute branching. Is that a thing?
 	{
@@ -442,19 +486,33 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 			if (debug) printf("   ; Determinate: %s", conditionMet.value() ? "Jumping" : "Not jumping");
 		}
+
+		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_JUMP))
 	{
 		SemanticValue addr = state.getOperand(insn, 0);
 		assert(!addr.isUnknown() && "Cannot jump to an unknown location");
 		jump((void*) addr.tryGetKnownConst()->value);
+		return true;
 	}
+	else return false;
+}
+
+#pragma endregion
+
+void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
+{
+	if (step_dataflow(state, insn)) {}
+	else if (step_cmpmath(state, insn)) {}
+	else if (step_math(state, insn)) {}
+	else if (step_bitmath(state, insn)) {}
+	else if (step_execflow(state, insn, pushCallStack, popCallStack, jump, fork)) {}
+
 	else if (insn->id == x86_insn::X86_INS_INT3 || insn->id == x86_insn::X86_INS_INT || insn->id == x86_insn::X86_INS_INTO || insn->id == x86_insn::X86_INS_INT1)
 	{
 		assert(false && "Caught an interrupt! Can't continue emulated execution.");
 	}
-
-	#pragma endregion
 
 	else
 	{

@@ -15,5 +15,8 @@ void_func_ptr platform_getRelFunc(const cs_insn& insn)
 bool platform_isIf(const cs_insn& insn)
 {
 	return !insn_in_group(insn, cs_group_type::CS_GRP_CALL)
-		&& (insn_in_group(insn, cs_group_type::CS_GRP_JUMP) || insn_in_group(insn, cs_group_type::CS_GRP_BRANCH_RELATIVE));
+		&& (insn_in_group(insn, cs_group_type::CS_GRP_BRANCH_RELATIVE) || (
+				insn_in_group(insn, cs_group_type::CS_GRP_JUMP) && insn.id != X86_INS_JMP //Unconditional JMP isn't a branchable
+			)
+		);
 }

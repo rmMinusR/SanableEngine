@@ -40,6 +40,7 @@ bool FunctionBytecodeWalker::advance()
 		if (jumpLoc > furthestKnownJump) furthestKnownJump = jumpLoc;
 		return true;
 	}
+	//TODO: Handle unconditional JMPs
 	//If it's a RETURN, continue only if we are allowed to JUMP to later
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{

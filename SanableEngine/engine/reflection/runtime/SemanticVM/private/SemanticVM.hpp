@@ -35,6 +35,18 @@ public:
 			const std::function<void*()>& popCallStack,
 			const std::function<void(void*)>& jump,
 			const std::function<void(const std::vector<void*>&)>& fork);
+	
+	//Per-instruction-group step functions: return true if handled
+	static bool step_dataflow(MachineState& state, const cs_insn* insn); //Data flow: MOV, LEA, PUSH, etc
+	static bool step_cmpmath(MachineState& state, const cs_insn* insn); //Math that might be relevant to branching: CMP, TEST
+	static bool step_math(MachineState& state, const cs_insn* insn); //Arithmetic: ADD, ADC, SUB, MUL
+	static bool step_bitmath(MachineState& state, const cs_insn* insn); //Bit twiddling: ROR, AND, XOR
+	static bool step_execflow(MachineState& state, const cs_insn* insn,
+		const std::function<void(void*)>& pushCallStack,
+		const std::function<void* ()>& popCallStack,
+		const std::function<void(void*)>& jump,
+		const std::function<void(const std::vector<void*>&)>& fork); //Flow of execution: JMP, NOP, CALL, RET
+
 
 	/// <summary>
 	/// Deterministically simulate an entire function (until its final RET is reached).
