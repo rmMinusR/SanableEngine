@@ -5,13 +5,14 @@
 
 #include "CapstoneWrapper.hpp"
 
+x86_reg MachineState::getUnderlyingRegister(x86_reg id) const
+{
+	return __registerMappings.count(id) ? __registerMappings.at(id) : id;
+}
 
 MachineState::MachineState(bool canReadHostMemory) :
 	canReadHostMemory(canReadHostMemory)
 {
-	//Allow registers to share memory without heap allocation
-	for (size_t i = 0; i < nRegisters; ++i) __registerMappings[i] = (x86_reg)i;
-
 	//General-purpose registers share memory. Set those up.
 	//See https://en.wikibooks.org/wiki/X86_Assembly/X86_Architecture#General-Purpose_Registers_(GPR)_-_16-bit_naming_conventions
 #define DECL_REGISTER_GROUP_IDENTITY(suffix) __registerMappings[X86_REG_##suffix] = __registerMappings[X86_REG_R##suffix] = __registerMappings[X86_REG_E##suffix] = X86_REG_##suffix;
@@ -49,14 +50,13 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 
 SemanticValue MachineState::getRegister(x86_reg id) const
 {
-	x86_reg mappedId = __registerMappings[id];
-	auto it = __registerStorage.find(mappedId);
+	auto it = __registerStorage.find(getUnderlyingRegister(id));
 	return it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
 }
 
 void MachineState::setRegister(x86_reg id, SemanticValue val)
 {
-	x86_reg mappedId = __registerMappings[id];
+	x86_reg mappedId = getUnderlyingRegister(id);
 	if (mappedId == X86_REG_EFLAGS) //Needs special handling: must maintain that this is SemanticFlags
 	{
 		SemanticFlags _val;

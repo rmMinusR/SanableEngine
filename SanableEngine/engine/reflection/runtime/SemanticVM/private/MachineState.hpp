@@ -19,7 +19,8 @@ public:
 
 private:
 	std::map<x86_reg, SemanticValue> __registerStorage;
-	x86_reg __registerMappings[nRegisters];
+	std::map<x86_reg, x86_reg> __registerMappings;
+	x86_reg getUnderlyingRegister(x86_reg id) const;
 	bool canReadHostMemory;
 public:
 	SemanticValue decodeMemAddr(const x86_op_mem&) const;
