@@ -40,7 +40,7 @@ public:
 
 private:
 	VMMemory constMemory; //General memory with known constant address
-	VMMemory thisMemory; //Memory of the "this" object
+	std::map<SemanticMagic::id_t, VMMemory> magics; //Memory of dynamic allocations and the "this" object
 public:
 	MachineState(bool canReadHostMemory);
 
@@ -52,11 +52,11 @@ public:
 	SemanticValue getMemory(void*              location, size_t size, bool tryHostMemory) const;
 	SemanticValue getMemory(SemanticValue      location, size_t size) const;
 	SemanticValue getMemory(SemanticKnownConst location, size_t size) const;
-	SemanticValue getMemory(SemanticThisPtr    location, size_t size) const;
+	SemanticValue getMemory(SemanticMagic      location, size_t size) const;
 	void setMemory(void*              location, SemanticValue value, size_t size); //"size" only used if value is unknown
 	void setMemory(SemanticValue      location, SemanticValue value, size_t size);
 	void setMemory(SemanticKnownConst location, SemanticValue value, size_t size);
-	void setMemory(SemanticThisPtr    location, SemanticValue value, size_t size);
+	void setMemory(SemanticMagic      location, SemanticValue value, size_t size);
 
 	uint_addr_t getInsnPtr() const;
 	void setInsnPtr(uint_addr_t val);

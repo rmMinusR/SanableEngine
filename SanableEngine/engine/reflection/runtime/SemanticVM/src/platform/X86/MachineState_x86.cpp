@@ -33,7 +33,7 @@ void MachineState::reset()
 	__registerStorage.clear();
 
 	constMemory.reset();
-	thisMemory.reset();
+	magics.clear();
 }
 
 SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
@@ -61,7 +61,7 @@ void MachineState::setRegister(x86_reg id, SemanticValue val)
 	{
 		SemanticFlags _val;
 			 if (val.isUnknown()) _val = SemanticFlags();
-		else if (val.tryGetThisPtr()) _val = SemanticFlags(); //Treat ThisPtr as unknown
+		else if (val.tryGetMagic()) _val = SemanticFlags(); //Treat ThisPtr as if it were unknown
 		else if (auto* f = val.tryGetFlags()) _val = *f;
 		else if (auto* c = val.tryGetKnownConst()) { _val.bits = c->value; _val.bitsKnown = ~(~0ull << (8*c->size) ); }
 		else assert(false && "Unhandled value type");
@@ -363,8 +363,8 @@ SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
 
 	const auto* aConst = a.tryGetKnownConst();
 	const auto* bConst = b.tryGetKnownConst();
-	const auto* aThis  = a.tryGetThisPtr();
-	const auto* bThis  = b.tryGetThisPtr();
+	const auto* aMagic = a.tryGetMagic();
+	const auto* bMagic = b.tryGetMagic();
 	const auto* aFlags = a.tryGetFlags();
 	const auto* bFlags = b.tryGetFlags();
 
@@ -373,7 +373,7 @@ SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
 	if (bFlags && bFlags->bitsKnown == ~0ull) bConst = (const SemanticKnownConst*) bFlags;
 
 	if (aConst && bConst && aConst->bound() == bConst->bound()) return a;
-	else if (aThis && bThis && aThis->offset == bThis->offset) return a;
+	else if (aMagic && bMagic && aMagic->offset == bMagic->offset && aMagic->id == bMagic->id) return a;
 	else if (aFlags && bFlags)
 	{
 		SemanticFlags flags;
@@ -426,7 +426,14 @@ MachineState MachineState::merge(const std::vector<const MachineState*>& diverge
 		const MachineState* state = divergentStates[stateID];
 		mergeMaps(canonical.__registerStorage , state->__registerStorage );
 		mergeMaps(canonical.constMemory.memory, state->constMemory.memory);
-		mergeMaps(canonical.thisMemory .memory, state->thisMemory .memory);
+		for (auto kv : state->magics)
+		{
+			//Trivial case: value not present, just copy memory space
+			if (!canonical.magics.count(kv.first)) canonical.magics.at(kv.first) = kv.second;
+
+			//Complex case: present in both, attempt merge
+			else mergeMaps(canonical.magics.at(kv.first).memory, kv.second.memory);
+		}
 	}
 	return canonical;
 }

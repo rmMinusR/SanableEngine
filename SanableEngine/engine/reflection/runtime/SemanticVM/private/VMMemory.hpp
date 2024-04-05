@@ -13,7 +13,7 @@ struct MachineState;
 class VMMemory
 {
 	friend struct MachineState;
-	std::map<uint8_t*, SemanticValue> memory;
+	std::map<uint8_t*, SemanticValue> memory; //Main memory
 public:
 	void reset();
 

@@ -6,12 +6,14 @@
 #include "FunctionBytecodeWalker.hpp"
 #include "SemanticVM.hpp"
 
+/*
 ptrdiff_t _captureCastOffset(const DetectedConstants& image, void(*castThunk)())
 {
 	MachineState canonicalState(true);
+	SemanticMagic _this; //TODO
 	for (int i = 0; i < image.bytes.size(); ++i)
 	{
-		if (image.usage[i]) canonicalState.setMemory(SemanticThisPtr(i), SemanticKnownConst(image.bytes[i], 1, false), 1);
+		if (image.usage[i]) canonicalState.setMemory(_this, SemanticKnownConst(image.bytes[i], 1, false), 1);
 	}
 
 	//Simulate
@@ -20,6 +22,7 @@ ptrdiff_t _captureCastOffset(const DetectedConstants& image, void(*castThunk)())
 	assert(false); //TODO implement
 	return ptrdiff_t();
 }
+*/
 
 DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill)
 {
@@ -31,7 +34,7 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	DetectedConstants out(objSize);
 	for (size_t i = 0; i < objSize; ++i)
 	{
-		SemanticValue _byte = canonicalState.getMemory(SemanticThisPtr{ i }, 1);
+		SemanticValue _byte = canonicalState.getMemory(SemanticMagic(1, i, 0), 1); //Allocation for "this" object will be first, so magic ID=0
 		if (auto* byte = _byte.tryGetKnownConst())
 		{
 			out.usage[i] = true;
