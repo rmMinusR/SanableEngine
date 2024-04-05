@@ -7,6 +7,7 @@
 
 #include "capstone/capstone.h"
 
+#include "CapstoneWrapper.hpp"
 #include "SemanticValue.hpp"
 #include "VMMemory.hpp"
 
@@ -57,6 +58,9 @@ public:
 	void setMemory(SemanticKnownConst location, SemanticValue value, size_t size);
 	void setMemory(SemanticThisPtr    location, SemanticValue value, size_t size);
 
+	uint_addr_t getInsnPtr() const;
+	void setInsnPtr(uint_addr_t val);
+
 	void stackPush(SemanticValue value);
 	SemanticValue stackPop(size_t nBytes);
 	void pushStackFrame(SemanticKnownConst fp);
@@ -69,6 +73,8 @@ public:
 	//void unwindStack(const StackVisitor& visitor) const;
 
 	int debugPrintWorkingSet() const; //On register-based machines, prints critical registers. On stack-based machines, prints stack head.
+	const char* checkGood() const; //Check that all critical pieces (stack and instruction pointers) are valid. If an error has occurred, returns an error string.
+	void requireGood() const; //Like checkGood, but asserts on failure
 
 	static MachineState merge(const std::vector<const MachineState*>& divergentStates);
 };

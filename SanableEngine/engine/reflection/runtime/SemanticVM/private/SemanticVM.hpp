@@ -45,7 +45,8 @@ public:
 		const std::function<void(void*)>& pushCallStack,
 		const std::function<void* ()>& popCallStack,
 		const std::function<void(void*)>& jump,
-		const std::function<void(const std::vector<void*>&)>& fork); //Flow of execution: JMP, NOP, CALL, RET
+		const std::function<void(const std::vector<void*>&)>& fork); //Flow of execution: JMP, NOP, CALL, RET, but not INT
+	static void step_invalidate(MachineState& state, const cs_insn* insn); //Quick utility to invalidate all register state from the given instruction
 
 
 	/// <summary>

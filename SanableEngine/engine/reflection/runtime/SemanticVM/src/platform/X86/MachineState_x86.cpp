@@ -136,6 +136,16 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue v
 	}
 }
 
+uint_addr_t MachineState::getInsnPtr() const
+{
+	return getRegister(X86_REG_RIP).tryGetKnownConst()->value;
+}
+
+void MachineState::setInsnPtr(uint_addr_t val)
+{
+	setRegister(X86_REG_RIP, SemanticKnownConst(val, sizeof(uint_addr_t), true)); //Ensure RIP is up to date
+}
+
 void MachineState::stackPush(SemanticValue value)
 {
 	assert(value.getSize() > 0);
@@ -328,6 +338,22 @@ int MachineState::debugPrintWorkingSet() const
 	//bytesWritten += printf(" | rbp=");
 	//bytesWritten += getRegister(X86_REG_RBP).debugPrintValue();
 	return bytesWritten;
+}
+
+const char* MachineState::checkGood() const
+{
+	if (!getRegister(X86_REG_RSP).tryGetKnownConst()) return "Lost track of stack pointer!";
+	if (!getRegister(X86_REG_RIP).tryGetKnownConst()) return "Lost track of instruction pointer!";
+	return nullptr;
+}
+
+void MachineState::requireGood() const
+{
+	if (const char* err = checkGood(); err)
+	{
+		printf("\n\n%s! This should never happen!\n", err);
+		assert(false);
+	}
 }
 
 SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)

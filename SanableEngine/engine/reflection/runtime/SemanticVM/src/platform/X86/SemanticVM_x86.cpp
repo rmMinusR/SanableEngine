@@ -499,6 +499,17 @@ bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const s
 	else return false;
 }
 
+void SemanticVM::step_invalidate(MachineState& state, const cs_insn* insn)
+{
+	//Unhandled operation: Just invalidate all relevant register state
+	cs_regs  regsRead,  regsWritten;
+	uint8_t nRegsRead, nRegsWritten;
+	cs_regs_access(capstone_get_instance(), insn,
+		regsRead   , &nRegsRead,
+		regsWritten, &nRegsWritten);
+	for (int i = 0; i < nRegsWritten; ++i) state.setRegister((x86_reg)regsWritten[i], SemanticUnknown(sizeof(void*)) ); //TODO read correct size
+}
+
 #pragma endregion
 
 void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
@@ -517,13 +528,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 	else
 	{
 		printf("WARNING: Unknown operation\n");
-		//Unhandled operation: Just invalidate all relevant register state
-		cs_regs  regsRead,  regsWritten;
-		uint8_t nRegsRead, nRegsWritten;
-		cs_regs_access(capstone_get_instance(), insn,
-			regsRead   , &nRegsRead,
-			regsWritten, &nRegsWritten);
-		for (int i = 0; i < nRegsWritten; ++i) state.setRegister((x86_reg)regsWritten[i], SemanticUnknown(sizeof(void*)) ); //TODO read correct size
+		step_invalidate(state, insn);
 	}
 }
 
@@ -535,13 +540,11 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 	//Prepare branch list
 	struct branch_t
 	{
-		const uint8_t* cursor;
 		MachineState state;
 		bool keepExecuting;
 	};
-	std::vector<branch_t> branches = {
-		{ (uint8_t*)fn, state, true }
-	};
+	std::vector<branch_t> branches = { {state, true} };
+	branches[0].state.setInsnPtr((uint_addr_t)fn);
 
 	while (true)
 	{
@@ -550,7 +553,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		{
 			for (int j = i+1; j < branches.size(); ++j)
 			{
-				if (branches[i].cursor == branches[j].cursor && branches[i].keepExecuting && branches[j].keepExecuting)
+				if (branches[i].state.getInsnPtr() == branches[j].state.getInsnPtr() && branches[i].keepExecuting && branches[j].keepExecuting)
 				{
 					if (debug) printf("Branch #%i merged into #%i\n", j, i);
 					branches[i].state = MachineState::merge({ &branches[i].state, &branches[j].state }); //Canonize state
@@ -564,22 +567,25 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		int toExecIndex = -1;
 		for (int i = 0; i < branches.size(); ++i)
 		{
-			if (branches[i].keepExecuting && (toExecIndex == -1 || branches[i].cursor < branches[toExecIndex].cursor))
+			if (branches[i].keepExecuting && (toExecIndex == -1 || branches[i].state.getInsnPtr() < branches[toExecIndex].state.getInsnPtr()))
 			{
 				toExecIndex = i;
 			}
 		}
 		if (toExecIndex == -1) break; //All branches have terminated
 
-		//Advance cursor and interpret next
-		uint64_t addr = (uint64_t)(uint_addr_t)(branches[toExecIndex].cursor);
+		//Capstone wants this data
+		uint64_t addr = branches[toExecIndex].state.getInsnPtr();
+		const uint8_t* cursor = (uint8_t*)addr;
 		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
-		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &branches[toExecIndex].cursor, &allowedToProcess, &addr, insn);
+
+		//Advance cursor and interpret next
+		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn);
 		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
-		
-		//Update emulated instruction pointer
-		SemanticValue rip = branches[toExecIndex].state.getRegister(X86_REG_RIP);
-		branches[toExecIndex].state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, rip.getSize(), true) ); //Ensure RIP is up to date
+
+		//Update instruction pointer from Capstone
+		branches[toExecIndex].state.setInsnPtr(addr);
+		cursor = (uint8_t*)addr;
 
 		//DEBUG
 		if (debug)
@@ -597,7 +603,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 			[&](void* fn) { callTarget = (void(*)()) fn; }, //On CALL
 			[&]() { //On RET
 				branches[toExecIndex].keepExecuting = false;
-				if (debug) printf("   ; execution terminated", toExecIndex, branches[toExecIndex].cursor);
+				if (debug) printf("   ; execution terminated", toExecIndex, cursor);
 				return expectedReturnAddress;
 			},
 			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
@@ -605,23 +611,24 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		);
 		
 		//Handle jumping/branching
-		if (jmpTargets.size() == 1) branches[toExecIndex].cursor = (uint8_t*)jmpTargets[0]; //Determinate case: jump
+		if (jmpTargets.size() == 1) state.setInsnPtr((uint_addr_t)jmpTargets[0]); //Determinate case: jump
 		else if (jmpTargets.size() > 1) //Indeterminate case: branch
 		{
-			for (void* i : jmpTargets) assert(i >= branches[toExecIndex].cursor && "Indeterminate looping not supported");
+			for (void* i : jmpTargets) assert(i >= cursor && "Indeterminate looping not supported");
 
-			if (debug) printf("   ; Spawned branches ", toExecIndex, branches[toExecIndex].cursor);
-			branches[toExecIndex].cursor = (uint8_t*)jmpTargets[0];
+			if (debug) printf("   ; Spawned branches ", toExecIndex, cursor);
+			branches[toExecIndex].state.setInsnPtr((uint_addr_t)jmpTargets[0]);
 			for (int i = 1; i < jmpTargets.size(); ++i)
 			{
 				if (debug) printf("#%i@%x ", i, jmpTargets[i]);
-				branches.push_back({ (uint8_t*)jmpTargets[i], branches[toExecIndex].state, true }); //Can't reference toExec here in case the backing block reallocates
+				branches.push_back({ branches[toExecIndex].state, true }); //Can't reference toExec here in case the backing block reallocates
+				(branches.end()-1)->state.setInsnPtr((uint_addr_t)jmpTargets[i]);
 			}
 		}
 
 		//DEBUG
 		if (debug) printf("\n");
-		assert(branches[toExecIndex].state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
+		if (branches[toExecIndex].keepExecuting) branches[toExecIndex].state.requireGood();
 
 		//If we're supposed to call another function, do so
 		if (callTarget)
@@ -646,7 +653,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 			}
 			else
 			{
-				execFunc_internal(branches[toExecIndex].state, callTarget, (void(*)())branches[toExecIndex].cursor, indentLevel+1, allocators, sandboxed);
+				execFunc_internal(branches[toExecIndex].state, callTarget, (void(*)())cursor, indentLevel+1, allocators, sandboxed);
 			}
 		}
 	}
