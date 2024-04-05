@@ -34,6 +34,7 @@ void* platform_getRelAddr(const cs_insn& insn);
 int printInstructionCursor(const cs_insn* insn);
 
 bool platform_isIf(const cs_insn& insn);
+bool platform_isInterrupt(const cs_insn& insn);
 
 
 #if INTPTR_MAX == INT64_MAX

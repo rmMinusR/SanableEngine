@@ -32,7 +32,7 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 	bool isSigned() const;
 	void setSign(bool sign);
 };
-struct SemanticMagic /// Represents a magic value (such as heap allocations, or the "this" pointer) plus some offset. Typically lives in EAX for __thiscall.
+struct SemanticMagic /// Represents a magic value (such as heap allocations, or the "this" pointer) plus some offset. Typically lives in ECX for __thiscall, or returned in EAX by malloc.
 {
 	size_t size;
 	size_t offset;
