@@ -54,12 +54,10 @@ struct FunctionContext
 
 	std::vector<branch_t> branches;
 	cs_insn* insn;
-	std::vector<void(*)()> allocators; //Functions that allocate memory, and should instead "return" a new SemanticMagic value
-	std::vector<void(*)()> sandboxed; //Functions that shouldn't be allowed to touch memory
+	SemanticVM::ExecutionOptions opt;
 
-	FunctionContext(MachineState initialState, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed) :
-		allocators(allocators),
-		sandboxed(sandboxed)
+	FunctionContext(MachineState initialState, void(*fn)(), const SemanticVM::ExecutionOptions& opt) :
+		opt(opt)
 	{
 		pushBranch(initialState, fn);
 		insn = cs_malloc(capstone_get_instance());
@@ -110,7 +108,7 @@ struct FunctionContext
 	bool callSpecial(int srcBranchID, void(*targetFn)(), bool debug)
 	{
 		branch_t& src = branches[srcBranchID];
-		if (std::find(allocators.begin(), allocators.end(), targetFn) != allocators.end())
+		if (std::find(opt.allocators.begin(), opt.allocators.end(), targetFn) != opt.allocators.end())
 		{
 			//No need to call function, just mark that we're creating a new heap object
 
@@ -122,7 +120,7 @@ struct FunctionContext
 			if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
 			return true;
 		}
-		else if (std::find(sandboxed.begin(), sandboxed.end(), targetFn) != sandboxed.end())
+		else if (std::find(opt.sandboxed.begin(), opt.sandboxed.end(), targetFn) != opt.sandboxed.end())
 		{
 			//TODO implement
 			src.state.popStackFrame(); //TEMP: Undo pushing stack frame
@@ -139,9 +137,9 @@ public:
 	SemanticMagic requestAllocation() { return SemanticMagic(sizeof(void*), 0, requestMagicID()); }
 };
 
-void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
+void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const ExecutionOptions& opt)
 {
-	FunctionContext context(state, fn, allocators, sandboxed);
+	FunctionContext context(state, fn, opt);
 	while (true)
 	{
 		context.canonizeCoincidentBranches(debug);
@@ -200,7 +198,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		if (callTarget)
 		{
 			bool special = context.callSpecial(toExecIndex, callTarget, debug);
-			if (!special) execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, allocators, sandboxed);
+			if (!special) execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, opt);
 		}
 
 		#undef EXEC

@@ -497,7 +497,7 @@ void SemanticVM::step_invalidate(MachineState& state, const cs_insn* insn)
 
 #pragma endregion
 
-void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
+void SemanticVM::execFunc(MachineState& state, void(*fn)(), const ExecutionOptions& opt)
 {
 	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
 
@@ -513,7 +513,7 @@ void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<vo
 	}
 
 	//Invoke
-	execFunc_internal(state, fn, nullptr, 0, allocators, sandboxed);
+	execFunc_internal(state, fn, nullptr, 0, opt);
 
 	//Ensure output parity
 	SemanticValue rsp = state.getRegister(X86_REG_RSP);

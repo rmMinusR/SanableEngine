@@ -8,8 +8,17 @@ struct FunctionContext;
 
 class SemanticVM
 {
+public:
 	friend struct FunctionContext;
 
+	struct ExecutionOptions
+	{
+		bool canReadHostMemory = false;
+		std::vector<void(*)()> allocators; /// Relevant memory-allocating functions, such as malloc or operator new
+		std::vector<void(*)()> sandboxed; /// Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.
+	};
+
+private:
 	/// <summary>
 	/// Simulate an entire function WITHOUT any preamble, or memory/register setup.
 	/// If branches occur, only shared known constants/magics will be considered canonical.
@@ -18,9 +27,8 @@ class SemanticVM
 	/// <param name="fn">Function to simulate</param>
 	/// <param name="expectedReturnAddress">Expected return address, or null if indeterminate/unchecked</param>
 	/// <param name="indentLevel">For debugging</param>
-	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
-	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param> //TODO: Proper covariant detection, only updating stack pointers and invalidating registers written
-	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
+	/// <param name="opt">Additional options for execution</param>
+	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const ExecutionOptions& opt);
 	
 public:
 	static bool debug; //Default false. Set true to enable debugging.
@@ -59,7 +67,6 @@ public:
 	/// </summary>
 	/// <param name="state">Starting state. Modified once complete to reflect altered values.</param>
 	/// <param name="fn">Function to simulate. NOTE: Arguments and return values are currently not supported.</param>
-	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
-	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param>
-	static void execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
+	/// <param name="opt">Additional options for execution</param>
+	static void execFunc(MachineState& state, void(*fn)(), const ExecutionOptions& opt);
 };
