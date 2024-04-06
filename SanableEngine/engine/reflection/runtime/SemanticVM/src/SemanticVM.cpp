@@ -24,38 +24,50 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 	}
 }
 
-struct branch_t
-{
-	MachineState state;
-	bool keepExecuting;
-
-	//Stuff Capstone wants
-	const uint8_t* cursor;
-	uint64_t addr;
-
-	void parseNext(cs_insn* insn_out)
-	{
-		//Capstone wants this data
-		addr = state.getInsnPtr();
-		cursor = (uint8_t*)addr;
-		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
-
-		//Advance cursor and interpret next
-		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn_out);
-		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
-
-		//Update instruction pointer from Capstone
-		state.setInsnPtr(addr);
-		cursor = (uint8_t*)addr;
-	}
-};
+//Helpers for execFunc and its siblings
 struct FunctionContext
 {
-	std::vector<branch_t> branches;
+	struct branch_t
+	{
+		MachineState state;
+		bool keepExecuting;
 
-	FunctionContext(MachineState initialState, void(*fn)())
+		//Stuff Capstone wants
+		const uint8_t* cursor;
+		uint64_t addr;
+
+		void parseNext(cs_insn* insn_out)
+		{
+			//Stuff that Capstone wants in a rather jank format
+			addr = state.getInsnPtr();
+			cursor = (uint8_t*)addr;
+			size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
+
+			//Advance cursor and interpret next
+			bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn_out);
+			assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
+
+			//Update instruction pointer from Capstone
+			state.setInsnPtr(addr);
+		}
+	};
+
+	std::vector<branch_t> branches;
+	cs_insn* insn;
+	std::vector<void(*)()> allocators; //Functions that allocate memory, and should instead "return" a new SemanticMagic value
+	std::vector<void(*)()> sandboxed; //Functions that shouldn't be allowed to touch memory
+
+	FunctionContext(MachineState initialState, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed) :
+		allocators(allocators),
+		sandboxed(sandboxed)
 	{
 		pushBranch(initialState, fn);
+		insn = cs_malloc(capstone_get_instance());
+	}
+
+	~FunctionContext()
+	{
+		cs_free(insn, 1);
 	}
 
 	void pushBranch(MachineState& state, void(*fn)())
@@ -93,19 +105,43 @@ struct FunctionContext
 		}
 		return toExecIndex;
 	}
+	
+	//Returns true if handled, false if standard behavior
+	bool callSpecial(int srcBranchID, void(*targetFn)(), bool debug)
+	{
+		branch_t& src = branches[srcBranchID];
+		if (std::find(allocators.begin(), allocators.end(), targetFn) != allocators.end())
+		{
+			//No need to call function, just mark that we're creating a new heap object
+
+			//TODO proper register detection
+			//std::vector<x86_reg> covariants = ???;
+			//assert(covariants.size() == 1);
+			src.state.setRegister(x86_reg::X86_REG_EAX, requestAllocation());
+			src.state.popStackFrame(); //Undo pushing stack frame
+			if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
+			return true;
+		}
+		else if (std::find(sandboxed.begin(), sandboxed.end(), targetFn) != sandboxed.end())
+		{
+			//TODO implement
+			src.state.popStackFrame(); //TEMP: Undo pushing stack frame
+			if (debug) printf("Function is sandboxed, and will not be simulated.\n");
+			return true;
+		}
+		else return false;
+	}
 
 private:
 	SemanticMagic::id_t nextMagicID = 0;
 public:
 	SemanticMagic::id_t requestMagicID() { return nextMagicID++; }
+	SemanticMagic requestAllocation() { return SemanticMagic(sizeof(void*), 0, requestMagicID()); }
 };
 
 void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
 {
-	//Prepare capstone disassembler
-	cs_insn* insn = cs_malloc(capstone_get_instance());
-
-	FunctionContext context(state, fn);
+	FunctionContext context(state, fn, allocators, sandboxed);
 	while (true)
 	{
 		context.canonizeCoincidentBranches(debug);
@@ -116,7 +152,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 
 		//Run Capstone
 		#define EXEC context.branches[toExecIndex]
-		EXEC.parseNext(insn);
+		EXEC.parseNext(context.insn);
 
 		//DEBUG
 		if (debug)
@@ -124,13 +160,13 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 			EXEC.state.debugPrintWorkingSet();
 			for (int i = 0; i < indentLevel; ++i) printf(" |  "); //Indent
 			printf("[Branch %2i] ", toExecIndex);
-			printInstructionCursor(insn);
+			printInstructionCursor(context.insn);
 		}
 
 		//Execute current call frame, one opcode at a time
 		void(*callTarget)() = nullptr;
 		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
-		step(EXEC.state, insn,
+		step(EXEC.state, context.insn,
 			[&](void* fn) { callTarget = (void(*)()) fn; }, //On CALL
 			[&]() { //On RET
 				EXEC.keepExecuting = false;
@@ -163,37 +199,15 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		//If we're supposed to call another function, do so
 		if (callTarget)
 		{
-			if (std::find(allocators.begin(), allocators.end(), callTarget) != allocators.end())
-			{
-				//No need to call function, just mark that we're creating a new heap object
-				
-				//TODO proper register detection
-				//std::vector<x86_reg> covariants = ???;
-				//assert(covariants.size() == 1);
-				EXEC.state.setRegister(x86_reg::X86_REG_EAX, SemanticMagic(sizeof(void*), 0, context.requestMagicID()));
-				EXEC.state.popStackFrame(); //Undo pushing stack frame
-				if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
-			}
-			else if (std::find(sandboxed.begin(), sandboxed.end(), callTarget) != sandboxed.end())
-			{
-				//TODO implement
-				EXEC.state.popStackFrame(); //TEMP: Undo pushing stack frame
-				if (debug) printf("Function is sandboxed, and will not be simulated.\n");
-			}
-			else
-			{
-				execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, allocators, sandboxed);
-			}
+			bool special = context.callSpecial(toExecIndex, callTarget, debug);
+			if (!special) execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, allocators, sandboxed);
 		}
 
 		#undef EXEC
 	}
 
-	//Cleanup capstone disassembler
-	cs_free(insn, 1);
-
 	//Canonize all remaining states
 	std::vector<const MachineState*> divergentStates;
-	for (const branch_t& branch : context.branches) divergentStates.push_back(&branch.state);
+	for (const auto& branch : context.branches) divergentStates.push_back(&branch.state);
 	state = MachineState::merge(divergentStates); //TODO handle sandboxing
 }

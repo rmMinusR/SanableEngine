@@ -4,8 +4,12 @@
 
 #include "MachineState.hpp"
 
+struct FunctionContext;
+
 class SemanticVM
 {
+	friend struct FunctionContext;
+
 	/// <summary>
 	/// Simulate an entire function WITHOUT any preamble, or memory/register setup.
 	/// If branches occur, only shared known constants/magics will be considered canonical.
@@ -16,7 +20,7 @@ class SemanticVM
 	/// <param name="indentLevel">For debugging</param>
 	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
 	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param> //TODO: Proper covariant detection, only updating stack pointers and invalidating registers written
-	void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
+	static void execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
 	
 public:
 	static bool debug; //Default false. Set true to enable debugging.
@@ -57,5 +61,5 @@ public:
 	/// <param name="fn">Function to simulate. NOTE: Arguments and return values are currently not supported.</param>
 	/// <param name="allocators">Relevant memory-allocating functions, such as malloc or operator new</param>
 	/// <param name="sandboxed">Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.</param>
-	void execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
+	static void execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed);
 };
