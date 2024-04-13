@@ -434,3 +434,10 @@ MachineState MachineState::merge(const std::vector<const MachineState*>& diverge
 	}
 	return canonical;
 }
+
+void MachineState::copyCriticals(MachineState& dst, const MachineState& src)
+{
+	dst.setRegister(X86_REG_RIP, src.getRegister(X86_REG_RIP));
+	dst.setRegister(X86_REG_RSP, src.getRegister(X86_REG_RSP));
+	dst.setRegister(X86_REG_RBP, src.getRegister(X86_REG_RBP));
+}

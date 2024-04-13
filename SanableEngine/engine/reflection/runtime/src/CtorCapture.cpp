@@ -32,6 +32,7 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	options.canReadHostMemory = true;
 	options.allocators = allocators;
 	options.sandboxed = nofill;
+	options.continueOnError = true;
 	SemanticVM().execFunc(canonicalState, thunk, options);
 
 	//Read from state.thisMemory into DetectedConstants

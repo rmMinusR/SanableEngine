@@ -79,4 +79,5 @@ public:
 	void requireGood() const; //Like checkGood, but asserts on failure
 
 	static MachineState merge(const std::vector<const MachineState*>& divergentStates);
+	static void copyCriticals(MachineState& dst, const MachineState& src);
 };

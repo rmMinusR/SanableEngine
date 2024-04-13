@@ -33,7 +33,7 @@ bool isOperandIdentity(const cs_insn* insn, int id1, int id2)
 
 #pragma region Per-instruction-group step functions
 
-bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn)
+bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
 {
 	if (insn->id == x86_insn::X86_INS_LEA)
 	{
@@ -62,7 +62,7 @@ bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn)
 		size_t targetSize = insn->detail->x86.operands[0].size;
 		if (SemanticKnownConst* c = val.tryGetKnownConst()) val = c->signExtend(targetSize);
 		else if (val.isUnknown()) val = SemanticUnknown(targetSize);
-		else assert(false && "Value type cannot be sign-extended");
+		else reportError("Value type cannot be sign-extended");
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
 
@@ -99,7 +99,7 @@ bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn)
 	else return false;
 }
 
-bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn)
+bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
 {
 	if (insn->id == x86_insn::X86_INS_CMP)
 	{
@@ -134,7 +134,7 @@ bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn)
 		{
 			cf = of = sf = zf = af = pf = std::nullopt;
 		}
-		else assert(false && "Cannot compare: Unhandled case");
+		else reportError("Cannot compare: Unhandled case");
 		
 		//Write back flags
 		SemanticFlags flags = *state.getRegister(X86_REG_EFLAGS).tryGetFlags();
@@ -179,7 +179,7 @@ bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn)
 		{
 			sf = zf = pf = std::nullopt;
 		}
-		else assert(false && "Cannot compare: Unhandled case");
+		else reportError("Cannot compare: Unhandled case");
 		
 		//Write back flags
 		SemanticFlags flags = *state.getRegister(X86_REG_EFLAGS).tryGetFlags();
@@ -206,7 +206,7 @@ bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn)
 	else return false;
 }
 
-bool SemanticVM::step_math(MachineState& state, const cs_insn* insn)
+bool SemanticVM::step_math(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
 {
 	if (insn->id == x86_insn::X86_INS_SUB)
 	{
@@ -283,7 +283,7 @@ bool SemanticVM::step_math(MachineState& state, const cs_insn* insn)
 	else return false;
 }
 
-bool SemanticVM::step_bitmath(MachineState& state, const cs_insn* insn)
+bool SemanticVM::step_bitmath(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
 {
 	if (insn->id == x86_insn::X86_INS_SHL)
 	{
@@ -420,7 +420,7 @@ bool SemanticVM::step_bitmath(MachineState& state, const cs_insn* insn)
 	else return false;
 }
 
-bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void* ()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
+bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError, const std::function<void(void*)>& pushCallStack, const std::function<void* ()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
 {
 	if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
@@ -437,7 +437,7 @@ bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const s
 		if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
 
 		void* poppedReturnAddr = popCallStack();
-		if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
+		if (poppedReturnAddr && poppedReturnAddr != (void*)returnAddr.tryGetKnownConst()->value) reportError("Attempted to return, but return address did not match");
 
 		return true;
 	}
@@ -452,8 +452,8 @@ bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const s
 
 		auto* ifBranch = state.getOperand(insn, 0).tryGetKnownConst();
 		auto* noBranch = state.getRegister(x86_reg::X86_REG_RIP).tryGetKnownConst();
-		assert(ifBranch && "Attempted to branch to an indeterminate location!");
-		assert(noBranch && "Attempted to branch to an indeterminate location!");
+		if (!ifBranch) reportError("Attempted to branch to an indeterminate location!");
+		if (!noBranch) reportError("Attempted to branch to an indeterminate location!");
 
 		//Indeterminate case: fork
 		if (!conditionMet.has_value())
@@ -477,8 +477,8 @@ bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const s
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_JUMP))
 	{
 		SemanticValue addr = state.getOperand(insn, 0);
-		assert(!addr.isUnknown() && "Cannot jump to an unknown location");
-		jump((void*) addr.tryGetKnownConst()->value);
+		if (addr.getType() != SemanticValue::Type::KnownConst) reportError("Cannot jump to an unknown/indeterminate location");
+		else jump((void*) addr.tryGetKnownConst()->value);
 		return true;
 	}
 	else return false;
