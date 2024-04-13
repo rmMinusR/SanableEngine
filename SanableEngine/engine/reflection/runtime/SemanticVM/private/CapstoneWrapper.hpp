@@ -36,6 +36,8 @@ int printInstructionCursor(const cs_insn* insn);
 bool platform_isIf(const cs_insn& insn);
 bool platform_isInterrupt(const cs_insn& insn);
 
+void* unwrapAliasFunction(void(*fn)()); //If function is an alias (ie. local-module memset aliasing to stdlib's memset), return the pointed-to function. Otherwise returns the original function.
+
 
 #if INTPTR_MAX == INT64_MAX
 typedef uint64_t uint_addr_t;

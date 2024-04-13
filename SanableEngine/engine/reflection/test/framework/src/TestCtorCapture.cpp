@@ -7,6 +7,7 @@
 #include "Inheritance.hpp"
 #include "MultiInheritance.hpp"
 #include "VirtualInheritance.hpp"
+#include "TypeBuilder.hpp"
 
 template<typename T>
 void testCtorCaptureV2();

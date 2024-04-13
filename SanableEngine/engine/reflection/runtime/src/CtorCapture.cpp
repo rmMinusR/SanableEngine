@@ -26,13 +26,19 @@ ptrdiff_t _captureCastOffset(const DetectedConstants& image, void(*castThunk)())
 
 DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill)
 {
-	//Simulate
-	MachineState canonicalState(true);
+	//Setup
 	SemanticVM::ExecutionOptions options;
 	options.canReadHostMemory = true;
 	options.allocators = allocators;
 	options.sandboxed = nofill;
 	options.continueOnError = true;
+
+	//Unwrap aliases
+	for (auto i : allocators) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
+	for (auto i : nofill    ) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.sandboxed .push_back(i); }
+
+	//Simulate
+	MachineState canonicalState(true);
 	SemanticVM().execFunc(canonicalState, thunk, options);
 
 	//Read from state.thisMemory into DetectedConstants

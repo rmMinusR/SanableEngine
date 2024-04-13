@@ -1,6 +1,9 @@
-#include "ThunkUtils.hpp"
-
 #include "CapstoneWrapper.hpp"
+
+#include <cassert>
+
+#include "ThunkUtils.hpp"
+#include "MachineState.hpp"
 
 void* platform_getRelAddr(const cs_insn& insn)
 {
@@ -24,4 +27,27 @@ bool platform_isIf(const cs_insn& insn)
 bool platform_isInterrupt(const cs_insn& insn)
 {
 	return insn.id == x86_insn::X86_INS_INT3 || insn.id == x86_insn::X86_INS_INT || insn.id == x86_insn::X86_INS_INTO || insn.id == x86_insn::X86_INS_INT1;
+}
+
+void* unwrapAliasFunction(void(*fn)())
+{
+	cs_insn* insn = cs_malloc(capstone_get_instance());
+
+	//Disassemble one instruction
+	const uint8_t* cursor = (uint8_t*)fn;
+	uint_addr_t addr = (uint_addr_t)cursor;
+	size_t allowedToProcess = sizeof(cs_insn::bytes);
+	bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn);
+	assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
+
+	if (insn->id == X86_INS_JMP || insn->id == X86_INS_LJMP) //Unconditional, indirect jump. TODO this might not work outside of Clang/MSVC
+	{
+		MachineState dummyState(true);
+		dummyState.setInsnPtr(addr);
+		SemanticValue tgt = dummyState.getOperand(insn, 0);
+		if (SemanticKnownConst* k = tgt.tryGetKnownConst()) fn = (void(*)())(uint_addr_t)k->bound();
+	}
+
+	cs_free(insn, 1);
+	return (void*)fn;
 }
