@@ -55,6 +55,21 @@ bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn, const s
 		state.setOperand(insn, 0, val);
 		return true;
 	}
+	else if (insn->id == x86_insn::X86_INS_MOVZX)
+	{
+		auto val = state.getOperand(insn, 1);
+
+		if (SemanticKnownConst* c = val.tryGetKnownConst()) *c = c->zeroExtend(insn->detail->x86.operands[0].size);
+		else if (SemanticFlags* f = val.tryGetFlags())
+		{
+			uint64_t mask = (~0ull)<<(val.getSize()*8) & ~( (~0ull)<<(insn->detail->x86.operands[0].size*8) );
+			f->bits &= ~mask;
+			f->bitsKnown |= mask;
+		}
+
+		state.setOperand(insn, 0, val);
+		return true;
+	}
 	else if (insn->id == x86_insn::X86_INS_MOVSX || insn->id == x86_insn::X86_INS_MOVSXD)
 	{
 		SemanticValue val = state.getOperand(insn, 1);
@@ -225,6 +240,46 @@ bool SemanticVM::step_math(MachineState& state, const cs_insn* insn, const std::
 		SemanticValue op1 = state.getOperand(insn, 0);
 		SemanticValue op2 = state.getOperand(insn, 1);
 		SemanticValue val = op1+op2;
+		state.setOperand(insn, 0, val);
+		//TODO adjust flags
+
+		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
+	}
+	else if (insn->id == x86_insn::X86_INS_MUL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue val = SemanticUnknown(op1.getSize());
+
+		SemanticKnownConst* c1 = op1.tryGetKnownConst();
+		SemanticKnownConst* c2 = op2.tryGetKnownConst();
+		if (c1 && c2)
+		{
+			val = SemanticKnownConst(c1->bound()*c2->bound(), op1.getSize(), false);
+		}
+
+		state.setOperand(insn, 0, val);
+		//TODO adjust flags
+
+		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
+	}
+	else if (insn->id == x86_insn::X86_INS_IMUL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue val = SemanticUnknown(op1.getSize());
+
+		SemanticKnownConst* c1 = op1.tryGetKnownConst();
+		SemanticKnownConst* c2 = op2.tryGetKnownConst();
+		if (c1 && c2)
+		{
+			val = SemanticKnownConst(c1->asSigned()*c2->asSigned(), sizeof(uint64_t), false).signExtend(op1.getSize());
+		}
+
 		state.setOperand(insn, 0, val);
 		//TODO adjust flags
 

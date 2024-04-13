@@ -60,6 +60,17 @@ SemanticKnownConst SemanticKnownConst::signExtend(size_t targetSizeBytes) const
 	return SemanticKnownConst(val, targetSizeBytes, false);
 }
 
+SemanticKnownConst SemanticKnownConst::zeroExtend(size_t targetSizeBytes) const
+{
+	uint64_t val = 0;
+	     if (size == 1) val = uint8_t ((uint64_t)value);
+	else if (size == 2) val = uint16_t((uint64_t)value);
+	else if (size == 4) val = uint32_t((uint64_t)value);
+	else if (size == 8) val = uint64_t((uint64_t)value);
+	else assert(false);
+	return SemanticKnownConst(val, targetSizeBytes, false);
+}
+
 bool SemanticKnownConst::isSigned() const
 {
 	     if (size == 1) return int8_t ((int64_t)value) < 0;
@@ -71,11 +82,13 @@ bool SemanticKnownConst::isSigned() const
 
 void SemanticKnownConst::setSign(bool sign)
 {
-	     if (size == 1) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
-	else if (size == 2) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
-	else if (size == 4) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
-	else if (size == 8) value = (sign?-1:1) * abs((int64_t)signExtend(sizeof(int64_t)).value);
-	else assert(false);
+	value = abs(asSigned());
+	if (sign) value = -value;
+}
+
+int64_t SemanticKnownConst::asSigned() const
+{
+	return (int64_t)signExtend(sizeof(int64_t)).value;
 }
 
 SemanticMagic::SemanticMagic(size_t size, size_t offset, id_t id) :
@@ -273,17 +286,6 @@ SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs)
 			return v;
 		},
 		nullptr //flags + flags
-	);
-}
-
-SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs)
-{
-	return SemanticValue_doMathOp(lhs, rhs,
-		[](SemanticKnownConst arg1, SemanticKnownConst arg2) { return SemanticKnownConst(arg1.bound() * arg2.bound(), arg1.size, arg1.isPositionIndependentAddr && !arg2.isPositionIndependentAddr && arg2.bound()==1); },
-		nullptr, //const * this
-		nullptr, //this * const
-		nullptr, //this * this
-		nullptr //flags * flags
 	);
 }
 

@@ -29,8 +29,10 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 	uint64_t bound() const;
 	uint64_t mask() const; //Also equivalent to unsigned max or signed -1
 	SemanticKnownConst signExtend(size_t targetSizeBytes) const;
+	SemanticKnownConst zeroExtend(size_t targetSizeBytes) const;
 	bool isSigned() const;
 	void setSign(bool sign);
+	int64_t asSigned() const;
 };
 struct SemanticMagic /// Represents a magic value (such as heap allocations, or the "this" pointer) plus some offset. Typically lives in ECX for __thiscall, or returned in EAX by malloc.
 {
@@ -114,13 +116,13 @@ public:
 
 SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs);
-SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs);
+//SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator&(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator|(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator^(const SemanticValue& lhs, const SemanticValue& rhs);
 inline SemanticValue& operator+=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs + rhs; return lhs; }
 inline SemanticValue& operator-=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs - rhs; return lhs; }
-inline SemanticValue& operator*=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs * rhs; return lhs; }
+//inline SemanticValue& operator*=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs * rhs; return lhs; }
 inline SemanticValue& operator&=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs & rhs; return lhs; }
 inline SemanticValue& operator|=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs | rhs; return lhs; }
 inline SemanticValue& operator^=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs ^ rhs; return lhs; }

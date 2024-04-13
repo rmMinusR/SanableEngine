@@ -42,7 +42,7 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 	std::optional<SemanticValue> addr;
 #define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*), false)) + (val))
 	if (mem.base  != X86_REG_INVALID) addValue( getRegister(mem.base) );
-	if (mem.index != X86_REG_INVALID) addValue( getRegister(mem.index) * SemanticKnownConst(mem.scale, sizeof(void*), false) );
+	if (mem.index != X86_REG_INVALID) addValue(SemanticKnownConst(getRegister(mem.index).tryGetKnownConst()->bound() * SemanticKnownConst(mem.scale, sizeof(void*), false).bound(), sizeof(void*), false));
 	assert(mem.segment == X86_REG_INVALID); //FIXME: I'm not dealing with that right now
 	addValue( SemanticKnownConst(mem.disp, sizeof(void*), false) );
 	return addr.value();
