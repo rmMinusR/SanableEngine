@@ -471,7 +471,7 @@ class ParentInfo(Member):
         return this.module.lookup(this.absName)
     
     def renderMain(this):
-        return f"builder.addParent<{this.owner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
+        return f"builder.addParent<{this.owner.absName}, {this.absName}>({this.visibility}, {this.virtualness.value});"
 
 
 class FriendInfo(Member):
