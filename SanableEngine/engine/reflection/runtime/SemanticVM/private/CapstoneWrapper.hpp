@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "capstone/capstone.h"
 
 
@@ -37,6 +39,11 @@ bool platform_isIf(const cs_insn& insn);
 bool platform_isInterrupt(const cs_insn& insn);
 
 void* unwrapAliasFunction(void(*fn)()); //If function is an alias (ie. local-module memset aliasing to stdlib's memset), return the pointed-to function. Otherwise returns the original function.
+
+//Note: These will only work on functions with linear execution
+void foreachSubFunction(void(*fn)(), const std::function<void( void(*)() )>& visitor);
+void* getSubFunction(void(*fn)(), int index);
+void* getLastSubFunction(void(*fn)());
 
 
 #if INTPTR_MAX == INT64_MAX

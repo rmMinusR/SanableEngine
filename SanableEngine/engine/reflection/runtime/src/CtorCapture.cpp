@@ -32,6 +32,7 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	options.allocators = allocators;
 	options.sandboxed = nofill;
 	options.continueOnError = true;
+	options.executeSubFunctions = false;
 
 	//Unwrap aliases
 	for (auto i : allocators) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
@@ -39,7 +40,7 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 
 	//Simulate
 	MachineState canonicalState(true);
-	SemanticVM().execFunc(canonicalState, thunk, options);
+	SemanticVM().execFunc(canonicalState, (void(*)())getLastSubFunction(thunk), options);
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);

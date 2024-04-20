@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+#include "SemanticValue.hpp"
+#include "MachineState.hpp"
+
 csh capstone_instance;
 
 void capstone_check_error(cs_err code)
@@ -58,4 +61,66 @@ int printInstructionCursor(const cs_insn* insn)
 	//for (int i = 0; i < 8-insn->size; ++i) bytesWritten += printf("   "); //Pad
 	                                       bytesWritten += printf("%s %s", insn->mnemonic, insn->op_str); //Write disassembly
 	return bytesWritten;
+}
+
+void foreachSubFunction(void(*fn)(), const std::function<void( void(*)() )>& visitor)
+{
+	cs_insn* insn = cs_malloc(capstone_get_instance());
+	
+	const uint8_t* cursor = (uint8_t*)fn;
+	uint_addr_t addr = (uint_addr_t)cursor;
+
+	while (true)
+	{
+		//Disassemble one instruction at a time
+		size_t allowedToProcess = sizeof(cs_insn::bytes);
+		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &cursor, &allowedToProcess, &addr, insn);
+		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
+
+		if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_CALL))
+		{
+			MachineState dummyState(true);
+			dummyState.setInsnPtr(addr);
+			SemanticValue tgt = dummyState.getOperand(insn, 0);
+			if (SemanticKnownConst* k = tgt.tryGetKnownConst()) visitor( (void(*)())(uint_addr_t)k->bound() );
+			break;
+		}
+		else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_BRANCH_RELATIVE))
+		{
+			assert(false && "Cannot determine subfunction: caller is non-linear");
+			break;
+		}
+		else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_RET))
+		{
+			//Returned. Cannot process further.
+			break;
+		}
+	}
+
+	cs_free(insn, 1);
+}
+
+void* getSubFunction(void(*fn)(), int index)
+{
+	void* out = nullptr;
+	foreachSubFunction(fn,
+		[&](void(*i)())
+		{
+			if (index == 0) out = (void*)i;
+			--index;
+		}
+	);
+	return out;
+}
+
+void* getLastSubFunction(void(*fn)())
+{
+	void* out = nullptr;
+	foreachSubFunction(fn,
+		[&](void(*i)())
+		{
+			out = (void*)i;
+		}
+	);
+	return out;
 }

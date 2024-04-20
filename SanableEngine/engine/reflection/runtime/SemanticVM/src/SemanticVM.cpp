@@ -202,8 +202,12 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 		//If we're supposed to call another function, do so
 		if (callTarget)
 		{
-			bool special = context.callSpecial(toExecIndex, callTarget, debug, indentLevel);
-			if (!special) execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, opt);
+			if (opt.executeSubFunctions) //FIXME this won't catch idioms like push rip > jmp %func%
+			{
+				bool special = context.callSpecial(toExecIndex, callTarget, debug, indentLevel);
+				if (!special) execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, opt);
+			}
+			else EXEC.state.popStackFrame(); //Undo CALL
 		}
 
 		#undef EXEC

@@ -19,6 +19,7 @@ public:
 		std::vector<void(*)()> sandboxed; /// Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.
 		bool isSandboxAllowList = false; /// If true, inverts the behavior of sandboxed.
 		bool continueOnError = false;
+		bool executeSubFunctions = true;
 
 		inline bool canExec(void(*fn)())
 		{
