@@ -30,6 +30,12 @@ const ShaderProgram* Material::getShader() const
 	return shader;
 }
 
+const ShaderUniform* Material::getUserUniform(const std::string& name) const
+{
+	for (const ShaderUniform& i : userConfigurable) if (i.name == name) return &i;
+	return nullptr;
+}
+
 void Material::writeSharedUniforms(Renderer* context) const
 {
 	for (const ShaderUniform& uniform : sharedUniforms) uniform.tryBindShared(context);
