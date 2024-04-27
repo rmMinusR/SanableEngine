@@ -35,6 +35,7 @@ void PluginManagerView::tick()
 		view->transform.setParent(&transform);
 		view->transform.snapToCorner({ 0, 0 }, Vector2f(0, viewHeight));
 		view->transform.fillParentX();
+		view->transform.setCenterByOffsets(Vector2f(0, pluginViews.size()*(viewHeight+padding)), Vector2f(0, 0));
 		pluginViews.push_back(view);
 	}
 	while (pluginViews.size() > plugins.size())
@@ -48,7 +49,6 @@ void PluginManagerView::tick()
 	for (int i = 0; i < plugins.size(); ++i)
 	{
 		pluginViews[i]->setViewed(plugins[i], mgr);
-		pluginViews[i]->transform.setCenterByOffsets(Vector2f(0, i*(viewHeight+padding)), Vector2f(0, 0));
 	}
 }
 

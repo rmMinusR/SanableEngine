@@ -37,6 +37,7 @@ void PluginView::tryInit()
 
 		VerticalGroupWidget* inner = hud->addWidget<VerticalGroupWidget>();
 		inner->transform.setParent(&transform);
+		inner->transform.fillParent();
 
 		name = hud->addWidget<LabelWidget>(Resources::textMat, Resources::headerFont);
 		name->transform.setParent(&inner->transform);

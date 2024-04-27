@@ -14,19 +14,11 @@ LinearLayoutGroupWidget::~LinearLayoutGroupWidget()
 
 void LinearLayoutGroupWidget::updateWeightsCache()
 {
-	//Clear former children that aren't children anymore
-	//TODO probably inefficient
-	_weightsCache.erase(std::find_if(
-		_weightsCache.end(),
-		_weightsCache.end(),
-		[&](std::pair<WidgetTransform*, float> i) { return i.first->getParent() != &transform; }
-	));
-
-	//Clear weightsHelper
+	//Clear and make space
 	_weightsCache.clear();
-	if (_weightsCache.capacity() < transform.getChildrenCount()) _weightsCache.resize(transform.getChildrenCount());
+	if (_weightsCache.capacity() < transform.getChildrenCount()) _weightsCache.reserve(transform.getChildrenCount());
 	
-	//Repopulate weightsHelper
+	//Repopulate
 	transform.visitChildren([&](WidgetTransform* i)
 	{
 		auto it = customWeights.find(i);
