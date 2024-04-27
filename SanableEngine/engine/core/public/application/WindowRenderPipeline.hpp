@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../dllapi.h"
-#include "Rect.hpp"
+#include "math/Rect.inl"
 
 class Window;
 class WindowBuilder;

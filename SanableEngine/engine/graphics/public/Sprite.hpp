@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Vector2.inl"
 #include "dllapi.h"
-#include "Rect.hpp"
+#include "math/Vector2.inl"
+#include "math/Rect.inl"
 
 class Texture;
 

@@ -4,8 +4,8 @@
 
 #include "dllapi.h"
 
-#include "Vector2.inl"
-#include "Rect.hpp"
+#include "math/Vector2.inl"
+#include "math/Rect.inl"
 
 struct WidgetTransform;
 

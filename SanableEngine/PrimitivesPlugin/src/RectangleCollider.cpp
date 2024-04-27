@@ -1,6 +1,6 @@
 #include "RectangleCollider.hpp"
 
-#include "Vector3.inl"
+#include "math/Vector3.inl"
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
 

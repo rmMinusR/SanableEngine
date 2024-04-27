@@ -5,21 +5,22 @@
 #include "../dllapi.h"
 
 #include <glm/gtc/quaternion.hpp>
-#include "Vector3.inl"
+#include "math/Vector3.inl"
 
 class ModuleTypeRegistry;
 
 class Transform
 {
-private:
-	Transform* parent;
-	std::vector<Transform*> children;
-	struct Data
+public:
+	struct Data //TEMPFIX: Must be public public_cast to work
 	{
 		Vector3<float> position;
 		glm::quat rotation = glm::quat(1, 0, 0, 0);
 		Vector3<float> scale = Vector3<float>(1, 1, 1); //Note: global scale is lossy, and is calculated WAY differently
 	};
+private:
+	Transform* parent;
+	std::vector<Transform*> children;
 	Data local;
 
 	//Flyweight

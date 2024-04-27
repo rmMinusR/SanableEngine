@@ -6,7 +6,7 @@ project("engine-shared")
 include ("${CMAKE_CURRENT_LIST_DIR}/reflection/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/memory/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/platform/abstract/CMakeLists.txt")
-include ("${CMAKE_CURRENT_LIST_DIR}/assets/CMakeLists.txt")
+#include ("${CMAKE_CURRENT_LIST_DIR}/assets/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/core/CMakeLists.txt")
 include ("${CMAKE_CURRENT_LIST_DIR}/graphics/CMakeLists.txt")
 

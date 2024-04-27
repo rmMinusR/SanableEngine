@@ -8,7 +8,7 @@ int debugPrintSignedHex(int64_t val);
 
 #define _XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN() \
 	_X(KnownConst) \
-	_X(ThisPtr) \
+	_X(Magic) \
 	_X(Flags)
 #define _XM_FOREACH_SEMANTICVALUE_TYPE() \
 	_X(Unknown) _XM_FOREACH_SEMANTICVALUE_TYPE_EXCEPT_UNKNOWN()
@@ -29,14 +29,18 @@ struct SemanticKnownConst /// A continuous span of known bytes. Combination with
 	uint64_t bound() const;
 	uint64_t mask() const; //Also equivalent to unsigned max or signed -1
 	SemanticKnownConst signExtend(size_t targetSizeBytes) const;
+	SemanticKnownConst zeroExtend(size_t targetSizeBytes) const;
 	bool isSigned() const;
 	void setSign(bool sign);
+	int64_t asSigned() const;
 };
-struct SemanticThisPtr /// Represents the "this" keyword plus some offset. Typically lives in eCX/rCX/CX.
+struct SemanticMagic /// Represents a magic value (such as heap allocations, or the "this" pointer) plus some offset. Typically lives in ECX for __thiscall, or returned in EAX by malloc.
 {
-	size_t size = sizeof(void*);
-	size_t offset = 0;
-	SemanticThisPtr(size_t offset);
+	size_t size;
+	size_t offset;
+	typedef int64_t id_t;
+	id_t id;
+	SemanticMagic(size_t size, size_t offset, id_t id);
 };
 struct SemanticFlags /// Represents a bitfield of at most 64 bits, each of which can be in a known or unknown state
 {
@@ -112,13 +116,13 @@ public:
 
 SemanticValue operator+(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator-(const SemanticValue& lhs, const SemanticValue& rhs);
-SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs);
+//SemanticValue operator*(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator&(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator|(const SemanticValue& lhs, const SemanticValue& rhs);
 SemanticValue operator^(const SemanticValue& lhs, const SemanticValue& rhs);
 inline SemanticValue& operator+=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs + rhs; return lhs; }
 inline SemanticValue& operator-=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs - rhs; return lhs; }
-inline SemanticValue& operator*=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs * rhs; return lhs; }
+//inline SemanticValue& operator*=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs * rhs; return lhs; }
 inline SemanticValue& operator&=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs & rhs; return lhs; }
 inline SemanticValue& operator|=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs | rhs; return lhs; }
 inline SemanticValue& operator^=(SemanticValue& lhs, const SemanticValue& rhs) { lhs = lhs ^ rhs; return lhs; }

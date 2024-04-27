@@ -5,21 +5,6 @@
 #include "CapstoneWrapper.hpp"
 #include "FunctionBytecodeWalker.hpp"
 
-void pad(int& charsPrinted, int desiredWidth)
-{
-	if (charsPrinted < desiredWidth)
-	{
-		printf("%*c", desiredWidth-charsPrinted, ' ');
-		charsPrinted = desiredWidth;
-	}
-}
-
-int pad_inline(int charsPrinted, int desiredWidth)
-{
-	pad(charsPrinted, desiredWidth);
-	return charsPrinted;
-}
-
 int debugPrintOperand(const MachineState& state, const cs_insn* insn, int opId)
 {
 	if (insn->detail->x86.operands[opId].type == X86_OP_MEM)
@@ -46,26 +31,44 @@ bool isOperandIdentity(const cs_insn* insn, int id1, int id2)
 }
 
 
-void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
-{
-	#pragma region Data flow
+#pragma region Per-instruction-group step functions
 
+bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
+{
 	if (insn->id == x86_insn::X86_INS_LEA)
 	{
 		auto addr = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, addr);
 		if (debug) { printf("   ; = ") + addr.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_MOV)
 	{
 		auto val = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, val);
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_MOVABS)
 	{
 		auto val = state.getOperand(insn, 1);
 		state.setOperand(insn, 0, val);
+		return true;
+	}
+	else if (insn->id == x86_insn::X86_INS_MOVZX)
+	{
+		auto val = state.getOperand(insn, 1);
+
+		if (SemanticKnownConst* c = val.tryGetKnownConst()) *c = c->zeroExtend(insn->detail->x86.operands[0].size);
+		else if (SemanticFlags* f = val.tryGetFlags())
+		{
+			uint64_t mask = (~0ull)<<(val.getSize()*8) & ~( (~0ull)<<(insn->detail->x86.operands[0].size*8) );
+			f->bits &= ~mask;
+			f->bitsKnown |= mask;
+		}
+
+		state.setOperand(insn, 0, val);
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_MOVSX || insn->id == x86_insn::X86_INS_MOVSXD)
 	{
@@ -74,21 +77,24 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		size_t targetSize = insn->detail->x86.operands[0].size;
 		if (SemanticKnownConst* c = val.tryGetKnownConst()) val = c->signExtend(targetSize);
 		else if (val.isUnknown()) val = SemanticUnknown(targetSize);
-		else assert(false && "Value type cannot be sign-extended");
+		else reportError("Value type cannot be sign-extended");
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
 
 		state.setOperand(insn, 0, val);
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_PUSH)
 	{
 		state.stackPush(state.getOperand(insn, 0));
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_POP)
 	{
 		auto val = state.stackPop(insn->detail->x86.operands[0].size);
 		state.setOperand(insn, 0, val);
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_XCHG)
 	{
@@ -102,13 +108,15 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val1.debugPrintValue(false);
 			printf(" | ")   + debugPrintOperand(state, insn, 1) + printf(":= ") + val1.debugPrintValue(false);
 		}
+
+		return true;
 	}
+	else return false;
+}
 
-	#pragma endregion
-
-	#pragma region Math
-
-	else if (insn->id == x86_insn::X86_INS_CMP)
+bool SemanticVM::step_cmpmath(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
+{
+	if (insn->id == x86_insn::X86_INS_CMP)
 	{
 		std::optional<bool> cf, of, sf, zf, af, pf;
 		SemanticValue op1 = state.getOperand(insn, 0);
@@ -141,7 +149,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		{
 			cf = of = sf = zf = af = pf = std::nullopt;
 		}
-		else assert(false && "Cannot compare: Unhandled case");
+		else reportError("Cannot compare: Unhandled case");
 		
 		//Write back flags
 		SemanticFlags flags = *state.getRegister(X86_REG_EFLAGS).tryGetFlags();
@@ -165,6 +173,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("af=%s ", af.has_value() ? (af.value() ? "Y" : "N") : "U");
 			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
 		}
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_TEST)
 	{
@@ -184,7 +194,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		{
 			sf = zf = pf = std::nullopt;
 		}
-		else assert(false && "Cannot compare: Unhandled case");
+		else reportError("Cannot compare: Unhandled case");
 		
 		//Write back flags
 		SemanticFlags flags = *state.getRegister(X86_REG_EFLAGS).tryGetFlags();
@@ -205,9 +215,15 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 			printf("zf=%s ", zf.has_value() ? (zf.value() ? "Y" : "N") : "U");
 			printf("pf=%s ", pf.has_value() ? (pf.value() ? "Y" : "N") : "U");
 		}
-	}
 
-	else if (insn->id == x86_insn::X86_INS_SUB)
+		return true;
+	}
+	else return false;
+}
+
+bool SemanticVM::step_math(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
+{
+	if (insn->id == x86_insn::X86_INS_SUB)
 	{
 		SemanticValue op1 = state.getOperand(insn, 0);
 		SemanticValue op2 = state.getOperand(insn, 1);
@@ -216,6 +232,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_ADD)
 	{
@@ -226,6 +244,48 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
+	}
+	else if (insn->id == x86_insn::X86_INS_MUL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue val = SemanticUnknown(op1.getSize());
+
+		SemanticKnownConst* c1 = op1.tryGetKnownConst();
+		SemanticKnownConst* c2 = op2.tryGetKnownConst();
+		if (c1 && c2)
+		{
+			val = SemanticKnownConst(c1->bound()*c2->bound(), op1.getSize(), false);
+		}
+
+		state.setOperand(insn, 0, val);
+		//TODO adjust flags
+
+		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
+	}
+	else if (insn->id == x86_insn::X86_INS_IMUL)
+	{
+		SemanticValue op1 = state.getOperand(insn, 0);
+		SemanticValue op2 = state.getOperand(insn, 1);
+		SemanticValue val = SemanticUnknown(op1.getSize());
+
+		SemanticKnownConst* c1 = op1.tryGetKnownConst();
+		SemanticKnownConst* c2 = op2.tryGetKnownConst();
+		if (c1 && c2)
+		{
+			val = SemanticKnownConst(c1->asSigned()*c2->asSigned(), sizeof(uint64_t), false).signExtend(op1.getSize());
+		}
+
+		state.setOperand(insn, 0, val);
+		//TODO adjust flags
+
+		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_AND)
 	{
@@ -236,6 +296,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_OR)
 	{
@@ -246,6 +308,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_XOR)
 	{
@@ -256,18 +320,27 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		//TODO adjust flags
 
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_DEC)
 	{
 		auto op = state.getOperand(insn, 0);
 		state.setOperand(insn, 0, op-SemanticKnownConst(1, op.getSize(), false) );
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_INC)
 	{
 		auto op = state.getOperand(insn, 0);
 		state.setOperand(insn, 0, op+SemanticKnownConst(1, op.getSize(), false) );
+		return true;
 	}
-	else if (insn->id == x86_insn::X86_INS_SHL)
+	else return false;
+}
+
+bool SemanticVM::step_bitmath(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError)
+{
+	if (insn->id == x86_insn::X86_INS_SHL)
 	{
 		SemanticValue op1 = state.getOperand(insn, 0);
 		SemanticValue op2 = state.getOperand(insn, 1);
@@ -290,6 +363,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_SHR)
 	{
@@ -313,6 +387,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_SAL)
 	{
@@ -333,6 +408,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_SAR)
 	{
@@ -353,6 +429,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_ROL)
 	{
@@ -372,6 +449,7 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_ROR)
 	{
@@ -391,17 +469,20 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		}
 		state.setOperand(insn, 0, result);
 		if (debug) { printf("   ; := ") + result.debugPrintValue(false); }
+		return true;
 	}
+	
+	else return false;
+}
 
-	#pragma endregion
-
-	#pragma region Flow control
-
-	else if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
+bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError, const std::function<void(void*)>& pushCallStack, const std::function<void* ()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
+{
+	if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
 		SemanticKnownConst fp  = *state.getOperand(insn, 0).tryGetKnownConst();
 		state.pushStackFrame(fp);
 		pushCallStack((uint8_t*)fp.value); //Sanity check. Also no ROP nonsense
+		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{
@@ -411,11 +492,14 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 		if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
 
 		void* poppedReturnAddr = popCallStack();
-		if (poppedReturnAddr) assert(poppedReturnAddr == (void*)returnAddr.tryGetKnownConst()->value);
+		if (poppedReturnAddr && poppedReturnAddr != (void*)returnAddr.tryGetKnownConst()->value) reportError("Attempted to return, but return address did not match");
+
+		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_NOP)
 	{
 		//Do nothing
+		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_BRANCH_RELATIVE)) //TODO: Really hope nobody uses absolute branching. Is that a thing?
 	{
@@ -423,8 +507,8 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 		auto* ifBranch = state.getOperand(insn, 0).tryGetKnownConst();
 		auto* noBranch = state.getRegister(x86_reg::X86_REG_RIP).tryGetKnownConst();
-		assert(ifBranch && "Attempted to branch to an indeterminate location!");
-		assert(noBranch && "Attempted to branch to an indeterminate location!");
+		if (!ifBranch) reportError("Attempted to branch to an indeterminate location!");
+		if (!noBranch) reportError("Attempted to branch to an indeterminate location!");
 
 		//Indeterminate case: fork
 		if (!conditionMet.has_value())
@@ -442,167 +526,33 @@ void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::funct
 
 			if (debug) printf("   ; Determinate: %s", conditionMet.value() ? "Jumping" : "Not jumping");
 		}
+
+		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_JUMP))
 	{
 		SemanticValue addr = state.getOperand(insn, 0);
-		assert(!addr.isUnknown() && "Cannot jump to an unknown location");
-		jump((void*) addr.tryGetKnownConst()->value);
+		if (addr.getType() != SemanticValue::Type::KnownConst) reportError("Cannot jump to an unknown/indeterminate location");
+		else jump((void*) addr.tryGetKnownConst()->value);
+		return true;
 	}
-	else if (insn->id == x86_insn::X86_INS_INT3 || insn->id == x86_insn::X86_INS_INT || insn->id == x86_insn::X86_INS_INTO || insn->id == x86_insn::X86_INS_INT1)
-	{
-		assert(false && "Caught an interrupt! Can't continue emulated execution.");
-	}
-
-	#pragma endregion
-
-	else
-	{
-		printf("WARNING: Unknown operation\n");
-		//Unhandled operation: Just invalidate all relevant register state
-		cs_regs  regsRead,  regsWritten;
-		uint8_t nRegsRead, nRegsWritten;
-		cs_regs_access(capstone_get_instance(), insn,
-			regsRead   , &nRegsRead,
-			regsWritten, &nRegsWritten);
-		for (int i = 0; i < nRegsWritten; ++i) state.setRegister((x86_reg)regsWritten[i], SemanticUnknown(sizeof(void*)) ); //TODO read correct size
-	}
+	else return false;
 }
 
-void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expectedReturnAddress)(), int indentLevel, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
+void SemanticVM::step_invalidate(MachineState& state, const cs_insn* insn)
 {
-	//Prepare capstone disassembler
-	cs_insn* insn = cs_malloc(capstone_get_instance());
-
-	//Prepare branch list
-	struct branch_t
-	{
-		const uint8_t* cursor;
-		MachineState state;
-		bool keepExecuting;
-	};
-	std::vector<branch_t> branches = {
-		{ (uint8_t*)fn, state, true }
-	};
-
-	while (true)
-	{
-		//Canonize branches with the same cursor
-		for (int i = 0; i < branches.size(); ++i)
-		{
-			for (int j = i+1; j < branches.size(); ++j)
-			{
-				if (branches[i].cursor == branches[j].cursor && branches[i].keepExecuting && branches[j].keepExecuting)
-				{
-					if (debug) printf("Branch #%i merged into #%i\n", j, i);
-					branches[i].state = MachineState::merge({ &branches[i].state, &branches[j].state }); //Canonize state
-					branches.erase(branches.begin()+i); //Erase copy
-					j--; //Don't skip!
-				}
-			}
-		}
-
-		//Execute the cursor that's furthest behind
-		int toExecIndex = -1;
-		for (int i = 0; i < branches.size(); ++i)
-		{
-			if (branches[i].keepExecuting && (toExecIndex == -1 || branches[i].cursor < branches[toExecIndex].cursor))
-			{
-				toExecIndex = i;
-			}
-		}
-		if (toExecIndex == -1) break; //All branches have terminated
-
-		//Advance cursor and interpret next
-		uint64_t addr = (uint64_t)(uint_addr_t)(branches[toExecIndex].cursor);
-		size_t allowedToProcess = sizeof(cs_insn::bytes); //No way to know for sure, but we can do some stuff with JUMP/RET detection to figure it out
-		bool disassemblyGood = cs_disasm_iter(capstone_get_instance(), &branches[toExecIndex].cursor, &allowedToProcess, &addr, insn);
-		assert(disassemblyGood && "An internal error occurred with the Capstone disassembler.");
-		
-		//Update emulated instruction pointer
-		SemanticValue rip = branches[toExecIndex].state.getRegister(X86_REG_RIP);
-		branches[toExecIndex].state.setRegister(X86_REG_RIP, SemanticKnownConst(addr, rip.getSize(), true) ); //Ensure RIP is up to date
-
-		//DEBUG
-		if (debug)
-		{
-			branches[toExecIndex].state.debugPrintWorkingSet();
-			for (int i = 0; i < indentLevel; ++i) printf(" |  "); //Indent
-			printf("[Branch %2i] ", toExecIndex);
-			printInstructionCursor(insn);
-		}
-
-		//Execute current call frame, one opcode at a time
-		void(*callTarget)() = nullptr;
-		std::vector<void*> jmpTargets; //Empty if no JMP, 1 element if determinate JMP, 2+ elements if indeterminate JMP
-		step(branches[toExecIndex].state, insn,
-			[&](void* fn) { callTarget = (void(*)()) fn; }, //On CALL
-			[&]() { //On RET
-				branches[toExecIndex].keepExecuting = false;
-				if (debug) printf("   ; execution terminated", toExecIndex, branches[toExecIndex].cursor);
-				return expectedReturnAddress;
-			},
-			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
-			[&](const std::vector<void*>& forks) { jmpTargets = forks; } //On fork
-		);
-		
-		//Handle jumping/branching
-		if (jmpTargets.size() == 1) branches[toExecIndex].cursor = (uint8_t*)jmpTargets[0]; //Determinate case: jump
-		else if (jmpTargets.size() > 1) //Indeterminate case: branch
-		{
-			for (void* i : jmpTargets) assert(i >= branches[toExecIndex].cursor && "Indeterminate looping not supported");
-
-			if (debug) printf("   ; Spawned branches ", toExecIndex, branches[toExecIndex].cursor);
-			branches[toExecIndex].cursor = (uint8_t*)jmpTargets[0];
-			for (int i = 1; i < jmpTargets.size(); ++i)
-			{
-				if (debug) printf("#%i@%x ", i, jmpTargets[i]);
-				branches.push_back({ (uint8_t*)jmpTargets[i], branches[toExecIndex].state, true }); //Can't reference toExec here in case the backing block reallocates
-			}
-		}
-
-		//DEBUG
-		if (debug) printf("\n");
-		assert(branches[toExecIndex].state.getRegister(X86_REG_RSP).tryGetKnownConst() && "Lost track of RSP! This should never happen!");
-
-		//If we're supposed to call another function, do so
-		if (callTarget)
-		{
-			if (std::find(allocators.begin(), allocators.end(), callTarget) != allocators.end())
-			{
-				//No need to call function, just mark that we're creating a new heap object
-				
-				//TODO proper register detection
-				//std::vector<x86_reg> covariants = ???;
-				//assert(covariants.size() == 1);
-				//toExec->state.setRegister(covariants[0], SemanticThisPtr(0)); //TODO dynamic heap-object counting
-				branches[toExecIndex].state.setRegister(x86_reg::X86_REG_EAX, SemanticThisPtr(0)); //TODO dynamic heap-object counting
-				branches[toExecIndex].state.popStackFrame(); //Undo pushing stack frame
-				if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
-			}
-			else if (std::find(sandboxed.begin(), sandboxed.end(), callTarget) != sandboxed.end())
-			{
-				//TODO implement
-				branches[toExecIndex].state.popStackFrame(); //TEMP: Undo pushing stack frame
-				if (debug) printf("Function is sandboxed, and will not be simulated.\n");
-			}
-			else
-			{
-				execFunc_internal(branches[toExecIndex].state, callTarget, (void(*)())branches[toExecIndex].cursor, indentLevel+1, allocators, sandboxed);
-			}
-		}
-	}
-
-	//Canonize all remaining states
-	std::vector<const MachineState*> divergentStates;
-	for (const branch_t& branch : branches) divergentStates.push_back(&branch.state);
-	state = MachineState::merge(divergentStates); //TODO handle sandboxing
-	
-	//Cleanup capstone disassembler
-	cs_free(insn, 1);
+	//Unhandled operation: Just invalidate all relevant register state
+	cs_regs  regsRead,  regsWritten;
+	uint8_t nRegsRead, nRegsWritten;
+	cs_regs_access(capstone_get_instance(), insn,
+		regsRead   , &nRegsRead,
+		regsWritten, &nRegsWritten);
+	for (int i = 0; i < nRegsWritten; ++i) state.setRegister((x86_reg)regsWritten[i], SemanticUnknown(sizeof(void*)) ); //TODO read correct size
 }
 
-void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& sandboxed)
+#pragma endregion
+
+void SemanticVM::execFunc(MachineState& state, void(*fn)(), const ExecutionOptions& opt)
 {
 	//assert(callConv == CallConv::ThisCall); //That's all we're supporting right now
 
@@ -618,7 +568,7 @@ void SemanticVM::execFunc(MachineState& state, void(*fn)(), const std::vector<vo
 	}
 
 	//Invoke
-	execFunc_internal(state, fn, nullptr, 0, allocators, sandboxed);
+	execFunc_internal(state, fn, nullptr, 0, opt);
 
 	//Ensure output parity
 	SemanticValue rsp = state.getRegister(X86_REG_RSP);

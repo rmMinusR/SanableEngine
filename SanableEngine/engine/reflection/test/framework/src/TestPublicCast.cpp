@@ -12,6 +12,7 @@ public:
 	int pub;
 private:
 	int priv;
+	static int privStatic;
 
 	static int privateStaticFn(int arg1, int arg2)
 	{
@@ -29,50 +30,89 @@ public:
 		return offsetof(PublicCastTester, priv);
 	}
 
+	int* get_priv() { return &priv; }
+	static int* get_privStatic() { return &privStatic; }
+
 	static auto get_privateFn() { return &privateStaticFn; }
 	static auto get_privateMemFn() { return &PublicCastTester::privateMemFn; }
 };
+int PublicCastTester::privStatic = 0;
+
 
 //Test rig: grant access to members
-PUBLIC_CAST_GIVE_FIELD_ACCESS    (PublicCastTester_priv           , PublicCastTester, priv           , int);
-PUBLIC_CAST_GIVE_STATIC_FN_ACCESS(PublicCastTester_privateStaticFn, PublicCastTester, privateStaticFn, int, int, int);
-PUBLIC_CAST_GIVE_BOUND_FN_ACCESS (PublicCastTester_privateMemFn   , PublicCastTester, privateMemFn   , long, char, void*);
+PUBLIC_CAST_GIVE_FIELD_ACCESS     (PublicCastTester_priv           , PublicCastTester, priv           , int);
+PUBLIC_CAST_GIVE_STATIC_VAR_ACCESS(PublicCastTester_privStatic     , PublicCastTester, privStatic     , int);
+PUBLIC_CAST_GIVE_STATIC_FN_ACCESS (PublicCastTester_privateStaticFn, PublicCastTester, privateStaticFn, int, int, int);
+PUBLIC_CAST_GIVE_BOUND_FN_ACCESS  (PublicCastTester_privateMemFn   , PublicCastTester, privateMemFn   , long, char, void*);
 
-TEST_CASE("public_cast")
+TEST_SUITE("public_cast")
 {
-	SUBCASE("Basic assignment")
+	TEST_CASE("Member variables")
 	{
 		PublicCastTester tester;
-		tester.*DO_PUBLIC_CAST(PublicCastTester_priv) = 2;
+		REQUIRE(&(tester.*DO_PUBLIC_CAST(PublicCastTester_priv)) == tester.get_priv());
+
+		SUBCASE("Assignment")
+		{
+			tester.*DO_PUBLIC_CAST(PublicCastTester_priv) = 2;
+			CHECK(*tester.get_priv() == 2);
+			tester.*DO_PUBLIC_CAST(PublicCastTester_priv) = 5;
+			CHECK(*tester.get_priv() == 5);
+		}
+
+		SUBCASE("Offsetof (manual, no instance)")
+		{
+			PublicCastTester* _tester = nullptr;
+			ptrdiff_t diff = (char*)std::addressof(_tester->*DO_PUBLIC_CAST(PublicCastTester_priv)) - (char*)_tester;
+			CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		}
+
+		SUBCASE("Offsetof (manual, corrupted instance)")
+		{
+			PublicCastTester* _tester = reinterpret_cast<PublicCastTester*>(0xDEADBEEF);
+			ptrdiff_t diff = (char*)std::addressof(_tester->*DO_PUBLIC_CAST(PublicCastTester_priv)) - (char*)_tester;
+			CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		}
+		
+		SUBCASE("Offsetof (manual, concrete instance)")
+		{
+			ptrdiff_t diff = (char*)std::addressof(tester.*DO_PUBLIC_CAST(PublicCastTester_priv)) - (char*)&tester;
+			CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		}
+		
+		SUBCASE("Offsetof (macroed, no instance)")
+		{
+			ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF_LAMBDA(PublicCastTester_priv, PublicCastTester)(nullptr);
+			CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		}
+
+		SUBCASE("Offsetof (macroed, corrupted instance)")
+		{
+			PublicCastTester* _tester = reinterpret_cast<PublicCastTester*>(0xDEADBEEF);
+			ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF_LAMBDA(PublicCastTester_priv, PublicCastTester)(_tester);
+			CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		}
+
+		SUBCASE("Offsetof (macroed, concrete instance)")
+		{
+			ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF_LAMBDA(PublicCastTester_priv, PublicCastTester)(&tester);
+			CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		}
 	}
 
-	SUBCASE("Offsetof member variable (manual, explicit)")
+	TEST_CASE("Static variables")
 	{
-		PublicCastTester* tester = reinterpret_cast<PublicCastTester*>(0xDEADBEEF);
-		ptrdiff_t diff = (char*)std::addressof(tester->*DO_PUBLIC_CAST(PublicCastTester_priv)) - (char*)tester;
-		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
+		SUBCASE("Assignment")
+		{
+			REQUIRE(DO_PUBLIC_CAST(PublicCastTester_privStatic) == PublicCastTester::get_privStatic());
+			*DO_PUBLIC_CAST(PublicCastTester_privStatic) = 2;
+			CHECK(*PublicCastTester::get_privStatic() == 2);
+			*DO_PUBLIC_CAST(PublicCastTester_privStatic) = 5;
+			CHECK(*PublicCastTester::get_privStatic() == 5);
+		}
 	}
-
-	SUBCASE("Offsetof member variable (macroed)")
-	{
-		ptrdiff_t diff = DO_PUBLIC_CAST_OFFSETOF_LAMBDA(PublicCastTester_priv, PublicCastTester)(nullptr);
-		CHECK(diff == PublicCastTester::builtin_offsetof_priv());
-	}
-
-	/*
-	//Disabled: Experimental and unproven. Must be regarded as unreliable.
-	SUBCASE("Offsetof member variable (by reinterpret)")
-	{
-		auto boundPtr = DO_PUBLIC_CAST(PublicCastTester_priv);
-
-		uint16_t raw;
-		memcpy(&raw, &boundPtr, sizeof(raw));
-
-		CHECK(raw == PublicCastTester::builtin_offsetof_priv());
-	}
-	*/
-
-	SUBCASE("Static function")
+	
+	TEST_CASE("Static function")
 	{
 		auto fnPtr = DO_PUBLIC_CAST(PublicCastTester_privateStaticFn);
 		REQUIRE(fnPtr == PublicCastTester::get_privateFn());
@@ -80,7 +120,7 @@ TEST_CASE("public_cast")
 		CHECK(res == 123);
 	}
 
-	SUBCASE("Member function")
+	TEST_CASE("Member function")
 	{
 		PublicCastTester tester;
 		auto fp = DO_PUBLIC_CAST(PublicCastTester_privateMemFn);

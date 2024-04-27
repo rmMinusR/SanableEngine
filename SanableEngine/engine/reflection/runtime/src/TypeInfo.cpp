@@ -222,8 +222,7 @@ void TypeInfo::doLateBinding()
 	walkFields(
 		[&](const FieldInfo& fi) {
 			ptrdiff_t root = fi.offset + (ptrdiff_t)this->upcast(nullptr, fi.owner);
-			//Note: cannot detect usage clobbering here. If the field is default-constructed, explicit fields will incorrectly be marked as ImplicitConst in the previous step.
-			//TODO: Detect default construction in RTTI generation step?
+			assert(byteUsage[root] != ByteUsage::ImplicitConst && "Attempted to overwrite data (usage clobbering)");
 			memset(byteUsage+root, (uint8_t)ByteUsage::ExplicitField, fi.size);
 		},
 		MemberVisibility::All,

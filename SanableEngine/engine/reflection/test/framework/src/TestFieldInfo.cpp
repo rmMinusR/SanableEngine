@@ -2,7 +2,7 @@
 
 #include "GlobalTypeRegistry.hpp"
 #include "MemberInfo.hpp"
-#include "application/PluginCore.hpp"
+#include "EmittedRTTI.hpp"
 
 #include "SimpleStruct.hpp"
 

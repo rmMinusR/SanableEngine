@@ -2,11 +2,12 @@
 
 #include "GlobalTypeRegistry.hpp"
 #include "ThunkUtils.hpp"
-#include "application/PluginCore.hpp"
+#include "EmittedRTTI.hpp"
 
 #include "Inheritance.hpp"
 #include "MultiInheritance.hpp"
 #include "VirtualInheritance.hpp"
+#include "TypeBuilder.hpp"
 
 template<typename T>
 void testCtorCaptureV2();
@@ -24,10 +25,7 @@ TEST_CASE("Ctor capture: Simple case")
 	//Simple case
 	SUBCASE("Derived1") { testCtorCaptureV2<Derived1>(); }
 	SUBCASE("Derived2") { testCtorCaptureV2<Derived2>(); }
-	SUBCASE("GrandchildOfBase")
-	{ 
-		testCtorCaptureV2<GrandchildOfBase>();
-	}
+	SUBCASE("GrandchildOfBase") { testCtorCaptureV2<GrandchildOfBase>(); }
 }
 
 TEST_CASE("Ctor capture: Multiple case")
@@ -51,6 +49,17 @@ TEST_CASE("Ctor capture: Virtual case")
 template<typename T>
 void testCtorCaptureV2()
 {
+	SUBCASE("Parity: not empty")
+	{
+		DetectedConstants vtables = thunk_utils<T>::template analyzeConstructor<>();
+	
+		size_t vtableByteCount = 0;
+		for (size_t i = 0; i < sizeof(T); ++i) if (vtables.usage[i]) ++vtableByteCount;
+	
+		CHECK( std::is_polymorphic<T>::value == bool(vtableByteCount) );
+		CHECK( (vtableByteCount%sizeof(void*)) == 0 );
+	}
+
 	SUBCASE("Parity vs self")
 	{
 		//printf("============== BEGIN %s v2/v2 parity check ==============\n\n", typeid(T).name());
