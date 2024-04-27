@@ -83,7 +83,6 @@ void foreachSubFunction(void(*fn)(), const std::function<void( void(*)() )>& vis
 			dummyState.setInsnPtr(addr);
 			SemanticValue tgt = dummyState.getOperand(insn, 0);
 			if (SemanticKnownConst* k = tgt.tryGetKnownConst()) visitor( (void(*)())(uint_addr_t)k->bound() );
-			break;
 		}
 		else if (carray_contains(insn->detail->groups, insn->detail->groups_count, cs_group_type::CS_GRP_BRANCH_RELATIVE))
 		{
