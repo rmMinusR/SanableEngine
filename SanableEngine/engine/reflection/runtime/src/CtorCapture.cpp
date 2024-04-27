@@ -30,17 +30,19 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	SemanticVM::ExecutionOptions options;
 	options.canReadHostMemory = true;
 	options.allocators = allocators;
-	options.sandboxed = nofill;
 	options.continueOnError = true;
 	options.executeSubFunctions = false;
 
+	//Only allow constructor and thunk to run (GCC: full-constructor, which has vtables. We don't care about base constructor.)
+	options.isSandboxAllowList = true;
+	options.sandboxed = { thunk, (void(*)())getLastSubFunction(thunk) };
+
 	//Unwrap aliases
 	for (auto i : allocators) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
-	for (auto i : nofill    ) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.sandboxed .push_back(i); }
-
+	
 	//Simulate
 	MachineState canonicalState(true);
-	SemanticVM().execFunc(canonicalState, (void(*)())getLastSubFunction(thunk), options);
+	SemanticVM().execFunc(canonicalState, thunk, options);
 
 	//Read from state.thisMemory into DetectedConstants
 	DetectedConstants out(objSize);
