@@ -6,10 +6,16 @@
 #include "Font.hpp"
 
 LabelWidget::LabelWidget(HUD* hud, Material* material, Font* font) :
+	LabelWidget(hud, material, font, SDL_Color{ 255, 255, 255, 255 })
+{
+}
+
+LabelWidget::LabelWidget(HUD* hud, Material* material, Font* font, const SDL_Color& color) :
 	Widget(hud),
 	material(material),
 	font(font),
-	align(Vector2f(0, 0.5f))
+	align(Vector2f(0, 0.5f)),
+	color(color)
 {
 }
 
@@ -40,7 +46,7 @@ const Material* LabelWidget::getMaterial() const
 
 void LabelWidget::renderImmediate(Renderer* renderer)
 {
-	if (material) renderer->drawText(*font, *material, text);
+	if (material) renderer->drawText(*font, *material, text, color);
 	else
 	{
 		auto depth = transform.getRenderDepth();

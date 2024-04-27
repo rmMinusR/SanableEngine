@@ -66,10 +66,13 @@ void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, V
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawText(const Font& font, const Material& mat, const std::wstring& text)
+void Renderer::drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color)
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	const ShaderUniform* uTextColor = mat.getUserUniform("textColor");
+	if (uTextColor) uTextColor->write(glm::vec3(color.r, color.g, color.b));
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
