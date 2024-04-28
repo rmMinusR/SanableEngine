@@ -5,7 +5,7 @@
 #include "dllapi.h"
 #include "TypeName.hpp"
 
-struct MemberInfo
+struct MemberInfo //TODO rename: Callables are members, but don't appear in object layout
 {
 	size_t size;
 	ptrdiff_t offset;
