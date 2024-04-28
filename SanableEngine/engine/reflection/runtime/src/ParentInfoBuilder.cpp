@@ -2,15 +2,11 @@
 
 #include <cassert>
 
-ParentInfoBuilder::ParentInfoBuilder(const TypeName& parentType, size_t ownSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness) :
-	data(),
+ParentInfoBuilder::ParentInfoBuilder(const TypeName& ownerType, const TypeName& parentType, size_t ownSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness) :
+	data(parentSize, -1, ownerType, parentType, visibility),
 	ownSize(ownSize),
 	upcastFn(upcastFn)
 {
-	data.size = parentSize;
-	data.typeName = parentType;
-	data.visibility = visibility;
-	data.virtualness = virtualness;
 }
 
 ParentInfo ParentInfoBuilder::buildFromClassImage(char* image)

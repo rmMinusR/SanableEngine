@@ -11,14 +11,5 @@ FieldInfoBuilder::FieldInfoBuilder(const TypeName& declaredType, const std::stri
 
 FieldInfo FieldInfoBuilder::build(const TypeName& ownerName, const void* ownerImage) const
 {
-	FieldInfo f;
-
-	f.owner = ownerName;
-	f.type = declaredType;
-	f.name = name;
-	f.size = size;
-	f.offset = accessor(ownerImage);
-	f.visibility = visibility;
-
-	return f;
+	return FieldInfo(size, accessor(ownerImage), ownerName, declaredType, name, visibility);;
 }

@@ -119,6 +119,39 @@ const FieldInfo* TypeInfo::getField(const std::string& name, MemberVisibility vi
 	return nullptr;
 }
 
+std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibility visibilityFlags, bool includeInherited, bool makeComplete) const
+{
+	//If referring to self, nothing to do
+	if (name == this->name) return std::nullopt;
+
+	//Check immediate parents first
+	for (const ParentInfo& parent : parents)
+	{
+		if (parent.typeName == name) return parent;
+	}
+
+	//Recurse if allowed
+	if (includeInherited)
+	{
+		for (const ParentInfo& parent : parents)
+		{
+			std::optional<ParentInfo> baseOfVbase = parent.typeName.resolve()->getParent(name, visibilityFlags, includeInherited);
+			if (baseOfVbase.has_value() && baseOfVbase.value().virtualness == ParentInfo::Virtualness::NonVirtual)
+			{
+				if (makeComplete)
+				{
+					baseOfVbase.value().owner = this->name;
+					baseOfVbase.value().offset += parent.offset;
+				}
+				return baseOfVbase.value();
+			}
+		}
+	}
+
+	//Not a parent
+	return std::nullopt;
+}
+
 void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
 {
 	//Recurse into parents first
@@ -170,36 +203,17 @@ void TypeInfo::vptrJam(void* obj) const
 	}
 }
 
-void* TypeInfo::upcast(void* obj, const TypeName& name) const
+void* TypeInfo::upcast(void* obj, const TypeName& parentTypeName) const
 {
-	//If referring to self, nothing to do
-	if (name == this->name) return obj;
+	std::optional<ParentInfo> parent = getParent(parentTypeName);
+	if (parent.has_value()) return upcast(obj, parent.value()); //Defer
+	else return nullptr; //Not a parent
+}
 
-	//Try inherited virtuals first
-	for (const ParentInfo& parent : parents)
-	{
-		if (parent.virtualness == ParentInfo::Virtualness::VirtualInherited)
-		{
-			void* objAsImmediateParent = ((char*)obj) + parent.offset;
-		
-			//Try matching parent, recursing
-			void* out = parent.typeName.resolve()->upcast(objAsImmediateParent, name);
-			if (out) return out;
-		}
-	}
-
-	//Then try normal inherited
-	for (const ParentInfo& parent : parents)
-	{
-		void* objAsImmediateParent = ((char*)obj) + parent.offset;
-		
-		//Try matching parent, recursing
-		void* out = parent.typeName.resolve()->upcast(objAsImmediateParent, name);
-		if (out) return out;
-	}
-	
-	//Not a parent
-	return nullptr;
+void* TypeInfo::upcast(void* obj, const ParentInfo& parentType) const
+{
+	assert(parentType.typeName == this->name);
+	return ((char*)obj)+parentType.offset;
 }
 
 bool TypeInfo::matchesExact(void* obj) const

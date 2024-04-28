@@ -81,6 +81,18 @@ public:
 											bool includeInherited = true) const;
 
 	/// <summary>
+	/// Look up a parent by name
+	/// </summary>
+	/// <param name="name">Name of parent</param>
+	/// <param name="visibilityFlags">What parents should be visible or ignored</param>
+	/// <param name="includeInherited">If true, recurse into parents</param>
+	/// <param name="makeComplete">If true, and also includeInherited, grandparent ParentInfos will be adjusted to be valid for this type</param>
+	ENGINE_RTTI_API std::optional<ParentInfo> getParent(const TypeName& name,
+											MemberVisibility visibilityFlags = MemberVisibility::Public,
+											bool includeInherited = true,
+											bool makeComplete = true) const;
+
+	/// <summary>
 	/// Visit every field in this type matching the given query.
 	/// </summary>
 	/// <param name="visitor">Function to run on every FieldInfo</param>
@@ -100,7 +112,8 @@ public:
 	/// Cast to a parent. Returns null if no parent found.
 	/// </summary>
 	/// <param name="obj">Object to cast</param>
-	ENGINE_RTTI_API void* upcast(void* obj, const TypeName& name) const;
+	ENGINE_RTTI_API void* upcast(void* obj, const TypeName& parentTypeName) const;
+	ENGINE_RTTI_API void* upcast(void* obj, const ParentInfo& parentType) const;
 
 	/// <summary>
 	/// Test if the given object matches this type exactly. Does not test if object's type is derived from this.

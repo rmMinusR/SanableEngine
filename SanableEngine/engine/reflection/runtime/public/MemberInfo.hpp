@@ -1,15 +1,18 @@
 #pragma once
 
-#include "dllapi.h"
-
 #include <cstddef>
+
+#include "dllapi.h"
+#include "TypeName.hpp"
 
 struct MemberInfo
 {
 	size_t size;
 	ptrdiff_t offset;
+	TypeName owner;
 
 protected:
+	MemberInfo(size_t size, ptrdiff_t offset, const TypeName& owner);
 	ENGINE_RTTI_API void* getAddr(void* objInstance) const;
 };
 
