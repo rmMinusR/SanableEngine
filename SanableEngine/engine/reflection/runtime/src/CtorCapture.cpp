@@ -31,7 +31,6 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	options.canReadHostMemory = true;
 	options.allocators = allocators;
 	options.continueOnError = true;
-	options.executeSubFunctions = false;
 
 	//Only allow constructor and thunk to run (GCC: full-constructor, which has vtables. We don't care about base constructor.)
 	options.isSandboxAllowList = true;

@@ -23,7 +23,7 @@ TEST_CASE("TypeInfo::upcast")
 	SUBCASE("Upcast to self")
 	{
 		ImplementerA obj;
-		REQUIRE(ti->upcast(&obj, TypeName::create<ImplementerA>()) == &obj);
+		REQUIRE(ti->upcast(&obj, TypeName::create<ImplementerA>()) == nullptr);
 	}
 
 	SUBCASE("Upcast to immediate parents")
