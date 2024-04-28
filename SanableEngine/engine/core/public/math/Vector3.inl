@@ -2,7 +2,7 @@
 
 #include <cmath>
 #include <glm/glm.hpp>
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 
 ///
 /// Template class for three element vectors.
@@ -24,6 +24,9 @@ public:
     Vector3<TObj>& set(const TObj x, const TObj y, const TObj z);
     Vector3<TObj>& normalize(); //inline version
     Vector3<TObj> normalized() const; //copying version
+
+    template<typename TCvt>
+    inline Vector3<TCvt> convert() const { return Vector3<TCvt>( TCvt(x), TCvt(y), TCvt(z) ); }
 
     // math operations
     const TObj mgn() const;

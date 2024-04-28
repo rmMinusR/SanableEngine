@@ -4,7 +4,7 @@
 #include <optional>
 #include <string>
 #include "../dllapi.h"
-#include "Vector3.inl"
+#include "math/Vector3.inl"
 #include "WindowRenderPipeline.hpp"
 #include "WindowInputProcessor.hpp"
 #include "GLSettings.hpp"

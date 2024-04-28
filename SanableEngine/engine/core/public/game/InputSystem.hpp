@@ -2,7 +2,7 @@
 
 #include <SDL_scancode.h>
 #include "../dllapi.h"
-#include "Vector3.inl"
+#include "math/Vector3.inl"
 
 class GameWindowInputProcessor;
 class Game;

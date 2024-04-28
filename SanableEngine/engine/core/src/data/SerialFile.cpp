@@ -1,19 +1,11 @@
-#include "SerialFile.hpp"
+#include "data/SerialFile.hpp"
 
 #include <fstream>
+#include <cassert>
+#include "data/SerialNode.hpp"
 
 SerialFile::SerialFile(const std::filesystem::path& path) :
-	FileAsset(path),
 	rootNode(nullptr)
-{
-}
-
-SerialNode const* SerialFile::getRootNode() const
-{
-	return rootNode;
-}
-
-void SerialFile::loadInternal()
 {
 	std::wifstream in;
 	in.open(path);
@@ -22,8 +14,12 @@ void SerialFile::loadInternal()
 	in.close();
 }
 
-void SerialFile::unloadInternal()
+SerialFile::~SerialFile()
 {
-	delete rootNode;
-	rootNode = nullptr;
+	if (rootNode) delete rootNode;
+}
+
+SerialNode const* SerialFile::getRootNode() const
+{
+	return rootNode;
 }

@@ -14,6 +14,10 @@ Widget::~Widget()
 {
 }
 
+void Widget::refreshLayout()
+{
+}
+
 void Widget::tick()
 {
 }

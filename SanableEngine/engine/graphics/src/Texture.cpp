@@ -7,8 +7,83 @@
 
 #include "stb_image.h"
 
+#include "Renderer.hpp"
+#include "application/Window.hpp"
+
+Texture* Texture::fromFile(const std::filesystem::path& path, Renderer* ctx)
+{
+	//Load onto CPU
+	int width, height, nChannels;
+	void* data = stbi_load(path.u8string().c_str(), &width, &height, &nChannels, 0);
+	assert(data);
+	//cpu = IMG_Load(path.u8string().c_str());
+	//assert(cpu);
+	
+	Texture* out = new Texture(ctx, width, height, nChannels, data);
+
+	//Cleanup
+	stbi_image_free(data);
+
+	return out;
+}
+
+Texture::Texture(Renderer* ctx, int width, int height, int nChannels, void* data) :
+	id(0),
+	width(width),
+	height(height),
+	nChannels(nChannels)
+{
+	Window::setActiveDrawTarget(ctx->getOwner());
+
+	glGenTextures(1, &id);
+	assert(id);
+
+	glBindTexture(GL_TEXTURE_2D, id);
+
+	//Set filtering/wrapping modes
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	//Send data to GPU
+	//TODO better channels description detection
+	int glChannelsDesc;
+	switch (nChannels)
+	{
+		case 1: glChannelsDesc = GL_RED; break;
+		case 2: glChannelsDesc = GL_RG; break;
+		case 3: glChannelsDesc = GL_RGB; break;
+		case 4: glChannelsDesc = GL_RGBA; break;
+		default: assert(false); break;
+	}
+	glTexImage2D(GL_TEXTURE_2D, 0, glChannelsDesc, width, height, 0, glChannelsDesc, GL_UNSIGNED_BYTE, data);
+
+	ctx->errorCheck();
+}
+
 Texture::~Texture()
 {
+	glDeleteTextures(1, &id);
+}
+
+Texture::Texture(Texture&& mov)
+{
+	*this = std::move(mov); //Defer
+}
+
+Texture& Texture::operator=(Texture&& mov)
+{
+	if (this->id) glDeleteTextures(1, &id);
+
+	this->id = mov.id;
+	mov.id = 0;
+
+	this->width = mov.width;
+	this->height = mov.height;
+	this->nChannels = mov.nChannels;
+
+	return *this;
 }
 
 int Texture::getWidth() const
@@ -21,121 +96,17 @@ int Texture::getHeight() const
 	return height;
 }
 
+Vector2<int> Texture::getSize() const
+{
+	return Vector2<int>(width, height);
+}
+
 int Texture::getNChannels() const
 {
 	return nChannels;
 }
 
-CTexture::CTexture()
-{
-	width = 0;
-	height = 0;
-	nChannels = 0;
-	data = nullptr;
-}
-
-CTexture::CTexture(const std::filesystem::path& path)
-{
-	data = stbi_load(path.u8string().c_str(), &width, &height, &nChannels, 0);
-}
-
-CTexture::~CTexture()
-{
-	if (data)
-	{
-		stbi_image_free(data);
-		data = nullptr;
-	}
-}
-
-CTexture::operator bool() const
-{
-	return data != nullptr;
-}
-
-CTexture::CTexture(CTexture&& mov)
-{
-	*this = std::move(mov);
-}
-
-CTexture& CTexture::operator=(CTexture&& mov)
-{
-	if (data) stbi_image_free(data);
-
-	width     = mov.width;
-	height    = mov.height;
-	nChannels = mov.nChannels;
-	data      = mov.data;
-
-	mov.width = 0;
-	mov.height = 0;
-	mov.nChannels = 0;
-	mov.data = nullptr;
-
-	return *this;
-}
-
-GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data)
-{
-	this->width = width;
-	this->height = height;
-	this->nChannels = nChannels;
-	this->id = 0;
-
-	//Prep for GPU
-	glGenTextures(1, &id);
-	assert(id);
-
-	//Set filtering/wrapping modes
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-	//Send data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-}
-
-GTexture::GTexture(Renderer* ctx, const CTexture& src)
-{
-	this->width = src.width;
-	this->height = src.height;
-	this->nChannels = src.nChannels;
-	this->id = 0;
-
-	//Prep for GPU
-	glGenTextures(1, &id);
-	assert(id);
-
-	//Send data to GPU
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, src.width, src.height, 0, GL_RGB, GL_UNSIGNED_BYTE, src.data);
-}
-
-GTexture::~GTexture()
-{
-	glDeleteTextures(1, &id);
-}
-
-GTexture::operator bool() const
+Texture::operator bool() const
 {
 	return id != 0;
-}
-
-GTexture::GTexture(GTexture&& mov)
-{
-	*this = std::move(mov); //Defer
-}
-
-GTexture& GTexture::operator=(GTexture&& mov)
-{
-	if (this->id) glDeleteTextures(1, &id);
-
-	this->id = mov.id;
-	mov.id = 0;
-	
-	this->width = mov.width;
-	this->height = mov.height;
-	this->nChannels = mov.nChannels;
-
-	return *this;
 }

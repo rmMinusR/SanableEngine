@@ -19,8 +19,8 @@ ParentInfo ParentInfoBuilder::buildFromClassImage(char* image)
 
 	//Detect offset
 	void* parentAddr = upcastFn(image);
-	assert( image <= parentAddr && parentAddr < image+ownSize); //FIXME some implementations could theoretically allocate virtual bases on the heap. Figure it out... later.
 	data.offset = size_t( ((char*)parentAddr) - image );
+	assert( 0 <= data.offset && data.offset < ownSize ); //FIXME some implementations could theoretically allocate virtual bases on the heap. Figure it out... later.
 
 	return data;
 }

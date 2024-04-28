@@ -7,7 +7,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 #include "dllapi.h"
 
 
@@ -30,12 +30,12 @@ public:
 
 
 class Renderer;
-class GTexture;
+class Texture;
 class Font;
 
 class RenderedGlyph
 {
-	GTexture* texture;
+	Texture* texture;
 	int bearingX;
 	int bearingY;
 	int advance;

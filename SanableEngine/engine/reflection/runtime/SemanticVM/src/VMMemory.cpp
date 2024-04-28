@@ -15,7 +15,7 @@ void VMMemory::set(void* _location, SemanticValue value, size_t size)
 	{
 		for (size_t i = 0; i < val->size; ++i) memory.insert_or_assign(location+i, SemanticKnownConst(val->byte(i), 1, val->isPositionIndependentAddr));
 	}
-	else if (value.tryGetThisPtr())
+	else if (value.tryGetMagic())
 	{
 		//Just hope there's no shearing
 		for (size_t i = 0; i < sizeof(void*); ++i) memory.insert_or_assign(location+i, value);
@@ -43,14 +43,14 @@ SemanticValue VMMemory::get(void* _location, size_t size) const
 		//If bytes are different types, abort
 		for (size_t i = 1; i < size; ++i) if (type != memory.at(location+i).getType()) return SemanticUnknown(size);
 
-		//If ThisPtr, ensure same offset
-		if (type == SemanticValue::Type::ThisPtr)
+		//If magic, ensure same offset and ID
+		if (type == SemanticValue::Type::Magic)
 		{
-			decltype(SemanticThisPtr::offset) expectedOffset = memory.at(location).tryGetThisPtr()->offset;
+			auto expected = memory.at(location).tryGetMagic();
 			for (size_t i = 1; i < size; ++i)
 			{
-				auto* pThis = memory.at(location+i).tryGetThisPtr();
-				if (pThis->offset != expectedOffset) return SemanticUnknown(size); //Something went *very* wrong, since we're shearing offsets on a magic value
+				auto* pMagic = memory.at(location+i).tryGetMagic();
+				if (pMagic->offset != expected->offset || pMagic->id != expected->id) return SemanticUnknown(size); //Something went *very* wrong, since we're shearing offsets/IDs on a magic value
 			}
 		}
 	}
@@ -67,9 +67,10 @@ SemanticValue VMMemory::get(void* _location, size_t size) const
 		}
 		return knownConst;
 	}
-	else if (type == SemanticValue::Type::ThisPtr)
+	else if (type == SemanticValue::Type::Magic)
 	{
-		return SemanticThisPtr(memory.at(location).tryGetThisPtr()->offset);
+		auto v = memory.at(location).tryGetMagic();
+		return SemanticMagic(size, v->offset, v->id);
 	}
 	else if (type == SemanticValue::Type::Unknown)
 	{

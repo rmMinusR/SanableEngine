@@ -4,7 +4,7 @@
 
 #include <GL/glew.h>
 
-#include "Rect.hpp"
+#include "math/Rect.inl"
 #include "Renderer.hpp"
 #include "game/Component.hpp"
 

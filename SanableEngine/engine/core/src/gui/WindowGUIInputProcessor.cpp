@@ -1,6 +1,6 @@
 #include "gui/WindowGUIInputProcessor.hpp"
 
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 #include "gui/HUD.hpp"
 #include "application/Window.hpp"
 

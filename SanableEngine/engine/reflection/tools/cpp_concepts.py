@@ -48,7 +48,16 @@ def _typeGetAbsName(target: Type) -> str:
     pointedToType: Type = target.get_pointee()
     if pointedToType.kind != TypeKind.INVALID:
         # Pointer case: unwrap and abs-ify pointed-to type
-        out = _typeGetAbsName(pointedToType)+"*"
+        out = _typeGetAbsName(pointedToType)
+        cvUnwrapped = cvpUnwrapTypeName(target.spelling, unwrapPointers=False)
+        if cvUnwrapped.endswith("&"):
+            out += "&"
+        elif cvUnwrapped.endswith("*"):
+            out += "*"
+        elif cvUnwrapped.endswith("]"):
+            out += cvUnwrapped[cvUnwrapped.rfind("["):]
+        else:
+            assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
 
     elif not hasMainDecl:
         # Primitive types
@@ -99,23 +108,34 @@ def _typeGetAbsName(target: Type) -> str:
     return out
 
 
-def cvpUnwrapTypeName(name: str) -> str:
+def cvpUnwrapTypeName(name: str, unwrapCv=True, unwrapPointers=True, unwrapArrays=True) -> str:
     # Preprocess name
     name = name.strip()
 
     # Pointers
-    if name.endswith("*"):
-        return cvpUnwrapTypeName(name[:-1])
+    if unwrapPointers:
+        if name[-1] in "*&":
+            return cvpUnwrapTypeName(name[:-1], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
 
-    # const/volatile qualifiers (before name)
-    for symbolToStrip in ["const ", "volatile "]:
-        if name.startswith(symbolToStrip):
-            return cvpUnwrapTypeName(name[len(symbolToStrip):])
+    # Arrays
+    if unwrapArrays:
+        if name.endswith("]"):
+            return cvpUnwrapTypeName(name[:name.rfind("[")], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
 
-    # const/volatile qualifiers (after name)
-    for symbolToStrip in [" const", " volatile"]:
-        if name.endswith(symbolToStrip):
-            return cvpUnwrapTypeName(name[:-len(symbolToStrip)])
+    # Outer const/volatile
+    if unwrapCv:
+        # const/volatile qualifiers (after name) - will only be present if already a ptr
+        for symbolToStrip in ["const", "volatile"]:
+            if name.endswith(symbolToStrip):
+                charBeforeSymbol = name[-len(symbolToStrip)-1]
+                if not (charBeforeSymbol.isalnum() or charBeforeSymbol == "_"):
+                    return cvpUnwrapTypeName(name[:-len(symbolToStrip)], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
+            
+        if name[-1] not in "*&":
+            # const/volatile qualifiers (before name) - only if not already a ptr
+            for symbolToStrip in ["const ", "volatile "]:
+                if name.startswith(symbolToStrip):
+                    return cvpUnwrapTypeName(name[len(symbolToStrip):], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
 
     # Nothing to strip
     return name
@@ -434,7 +454,7 @@ class FieldInfo(Member):
         ownerName = this.owner.absName
         if ownerName.startswith("::"): ownerName = ownerName[2:]
 
-        return [f'PUBLIC_CAST_GIVE_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName} {ownerName}::*);']
+        return [f'PUBLIC_CAST_GIVE_FIELD_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName});']
 
     def renderMain(this):
         # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
@@ -471,7 +491,7 @@ class ParentInfo(Member):
         return this.module.lookup(this.absName)
     
     def renderMain(this):
-        return f"builder.addParent<{this.owner.absName}, {this.absName}>({this.visibility}, {this.virtualness});"
+        return f"builder.addParent<{this.owner.absName}, {this.absName}>({this.visibility}, {this.virtualness.value});"
 
 
 class FriendInfo(Member):

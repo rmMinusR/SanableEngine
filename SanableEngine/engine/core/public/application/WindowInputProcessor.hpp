@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Vector2.inl"
+#include "math/Vector2.inl"
 #include "../dllapi.h"
 
 #include <SDL_events.h>

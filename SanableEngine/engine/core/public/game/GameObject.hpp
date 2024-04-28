@@ -12,7 +12,6 @@
 class ModuleTypeRegistry;
 class Component;
 class Game;
-struct HotswapTypeData;
 
 class GameObject
 {

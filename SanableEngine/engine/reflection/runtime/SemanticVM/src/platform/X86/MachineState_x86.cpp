@@ -5,13 +5,14 @@
 
 #include "CapstoneWrapper.hpp"
 
+x86_reg MachineState::getUnderlyingRegister(x86_reg id) const
+{
+	return __registerMappings.count(id) ? __registerMappings.at(id) : id;
+}
 
 MachineState::MachineState(bool canReadHostMemory) :
 	canReadHostMemory(canReadHostMemory)
 {
-	//Allow registers to share memory without heap allocation
-	for (size_t i = 0; i < nRegisters; ++i) __registerMappings[i] = (x86_reg)i;
-
 	//General-purpose registers share memory. Set those up.
 	//See https://en.wikibooks.org/wiki/X86_Assembly/X86_Architecture#General-Purpose_Registers_(GPR)_-_16-bit_naming_conventions
 #define DECL_REGISTER_GROUP_IDENTITY(suffix) __registerMappings[X86_REG_##suffix] = __registerMappings[X86_REG_R##suffix] = __registerMappings[X86_REG_E##suffix] = X86_REG_##suffix;
@@ -23,7 +24,19 @@ MachineState::MachineState(bool canReadHostMemory) :
 	DECL_REGISTER_GROUP_IDENTITY(BP);
 	DECL_REGISTER_GROUP_IDENTITY(SI);
 	DECL_REGISTER_GROUP_IDENTITY(DI);
-	
+#undef DECL_REGISTER_GROUP_IDENTITY
+
+#define DECL_REGISTER_GROUP_IDENTITY(id) __registerMappings[X86_REG_R##id] = __registerMappings[X86_REG_R##id##B] = __registerMappings[X86_REG_R##id##D] = __registerMappings[X86_REG_R##id##W] = X86_REG_R##id;
+	DECL_REGISTER_GROUP_IDENTITY(8);
+	DECL_REGISTER_GROUP_IDENTITY(9);
+	DECL_REGISTER_GROUP_IDENTITY(10);
+	DECL_REGISTER_GROUP_IDENTITY(11);
+	DECL_REGISTER_GROUP_IDENTITY(12);
+	DECL_REGISTER_GROUP_IDENTITY(13);
+	DECL_REGISTER_GROUP_IDENTITY(14);
+	DECL_REGISTER_GROUP_IDENTITY(15);
+#undef DECL_REGISTER_GROUP_IDENTITY
+
 	//Set up all registers in default state
 	reset();
 };
@@ -33,7 +46,7 @@ void MachineState::reset()
 	__registerStorage.clear();
 
 	constMemory.reset();
-	thisMemory.reset();
+	magics.clear();
 }
 
 SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
@@ -41,7 +54,7 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 	std::optional<SemanticValue> addr;
 #define addValue(val) (addr = addr.value_or(SemanticKnownConst(0, sizeof(void*), false)) + (val))
 	if (mem.base  != X86_REG_INVALID) addValue( getRegister(mem.base) );
-	if (mem.index != X86_REG_INVALID) addValue( getRegister(mem.index) * SemanticKnownConst(mem.scale, sizeof(void*), false) );
+	if (mem.index != X86_REG_INVALID) addValue(SemanticKnownConst(getRegister(mem.index).tryGetKnownConst()->bound() * SemanticKnownConst(mem.scale, sizeof(void*), false).bound(), sizeof(void*), false));
 	assert(mem.segment == X86_REG_INVALID); //FIXME: I'm not dealing with that right now
 	addValue( SemanticKnownConst(mem.disp, sizeof(void*), false) );
 	return addr.value();
@@ -49,19 +62,18 @@ SemanticValue MachineState::decodeMemAddr(const x86_op_mem& mem) const
 
 SemanticValue MachineState::getRegister(x86_reg id) const
 {
-	x86_reg mappedId = __registerMappings[id];
-	auto it = __registerStorage.find(mappedId);
+	auto it = __registerStorage.find(getUnderlyingRegister(id));
 	return it!=__registerStorage.end() ? it->second : SemanticUnknown(0);
 }
 
 void MachineState::setRegister(x86_reg id, SemanticValue val)
 {
-	x86_reg mappedId = __registerMappings[id];
+	x86_reg mappedId = getUnderlyingRegister(id);
 	if (mappedId == X86_REG_EFLAGS) //Needs special handling: must maintain that this is SemanticFlags
 	{
 		SemanticFlags _val;
 			 if (val.isUnknown()) _val = SemanticFlags();
-		else if (val.tryGetThisPtr()) _val = SemanticFlags(); //Treat ThisPtr as unknown
+		else if (val.tryGetMagic()) _val = SemanticFlags(); //Treat ThisPtr as if it were unknown
 		else if (auto* f = val.tryGetFlags()) _val = *f;
 		else if (auto* c = val.tryGetKnownConst()) { _val.bits = c->value; _val.bitsKnown = ~(~0ull << (8*c->size) ); }
 		else assert(false && "Unhandled value type");
@@ -134,6 +146,16 @@ void MachineState::setOperand(const cs_insn* insn, size_t index, SemanticValue v
 	default:
 		assert(false);
 	}
+}
+
+uint_addr_t MachineState::getInsnPtr() const
+{
+	return getRegister(X86_REG_RIP).tryGetKnownConst()->value;
+}
+
+void MachineState::setInsnPtr(uint_addr_t val)
+{
+	setRegister(X86_REG_RIP, SemanticKnownConst(val, sizeof(uint_addr_t), true)); //Ensure RIP is up to date
 }
 
 void MachineState::stackPush(SemanticValue value)
@@ -330,6 +352,22 @@ int MachineState::debugPrintWorkingSet() const
 	return bytesWritten;
 }
 
+const char* MachineState::checkGood() const
+{
+	if (!getRegister(X86_REG_RSP).tryGetKnownConst()) return "Lost track of stack pointer!";
+	if (!getRegister(X86_REG_RIP).tryGetKnownConst()) return "Lost track of instruction pointer!";
+	return nullptr;
+}
+
+void MachineState::requireGood() const
+{
+	if (const char* err = checkGood(); err)
+	{
+		printf("\n\n%s! This should never happen!\n", err);
+		assert(false);
+	}
+}
+
 SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
 {
 	SemanticUnknown unknown(std::max(a.getSize(), b.getSize()));
@@ -337,8 +375,8 @@ SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
 
 	const auto* aConst = a.tryGetKnownConst();
 	const auto* bConst = b.tryGetKnownConst();
-	const auto* aThis  = a.tryGetThisPtr();
-	const auto* bThis  = b.tryGetThisPtr();
+	const auto* aMagic = a.tryGetMagic();
+	const auto* bMagic = b.tryGetMagic();
 	const auto* aFlags = a.tryGetFlags();
 	const auto* bFlags = b.tryGetFlags();
 
@@ -347,7 +385,7 @@ SemanticValue mergeValues(const SemanticValue& a, const SemanticValue& b)
 	if (bFlags && bFlags->bitsKnown == ~0ull) bConst = (const SemanticKnownConst*) bFlags;
 
 	if (aConst && bConst && aConst->bound() == bConst->bound()) return a;
-	else if (aThis && bThis && aThis->offset == bThis->offset) return a;
+	else if (aMagic && bMagic && aMagic->offset == bMagic->offset && aMagic->id == bMagic->id) return a;
 	else if (aFlags && bFlags)
 	{
 		SemanticFlags flags;
@@ -400,7 +438,18 @@ MachineState MachineState::merge(const std::vector<const MachineState*>& diverge
 		const MachineState* state = divergentStates[stateID];
 		mergeMaps(canonical.__registerStorage , state->__registerStorage );
 		mergeMaps(canonical.constMemory.memory, state->constMemory.memory);
-		mergeMaps(canonical.thisMemory .memory, state->thisMemory .memory);
+		for (auto kv : state->magics)
+		{
+			if (!canonical.magics.count(kv.first)) canonical.magics.emplace(kv); //Trivial case: value not present, just copy memory space
+			else mergeMaps(canonical.magics.at(kv.first).memory, kv.second.memory); //Complex case: present in both, attempt merge
+		}
 	}
 	return canonical;
+}
+
+void MachineState::copyCriticals(MachineState& dst, const MachineState& src)
+{
+	dst.setRegister(X86_REG_RIP, src.getRegister(X86_REG_RIP));
+	dst.setRegister(X86_REG_RSP, src.getRegister(X86_REG_RSP));
+	dst.setRegister(X86_REG_RBP, src.getRegister(X86_REG_RBP));
 }
