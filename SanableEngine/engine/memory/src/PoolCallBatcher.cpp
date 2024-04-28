@@ -29,10 +29,11 @@ void PoolCallBatcher::ensureFresh(MemoryManager* src, bool force)
 		src->foreachPool(
 			[&](const GenericTypedMemoryPool* pool)
 			{
-				const TypeInfo* ti = pool->getContentsType();
-				if (ti && ti->isDerivedFrom(baseTypeName))
+				const TypeInfo* t = pool->getContentsType();
+				if (t)
 				{
-					cachedPoolList.push_back(CachedPool{ pool, ti->getParent(baseTypeName) });
+					std::optional<ParentInfo> p = t->getParent(baseTypeName);
+					if (p.has_value()) cachedPoolList.push_back(CachedPool{ pool, p.value() });
 				}
 			}
 		);

@@ -35,7 +35,9 @@ public:
 		{
 			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
 			{
-				(static_cast<TObj*>(*it)->*func)(funcArgs...);
+				void* rawObj = *it;
+				TObj* obj = (TObj*) i.pool->getContentsType()->upcast(obj, i.caster);
+				(obj->*func)(funcArgs...);
 			}
 		}
 	}
@@ -48,7 +50,9 @@ public:
 		{
 			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
 			{
-				func(static_cast<TObj*>(*it), funcArgs...);
+				void* rawObj = *it;
+				TObj* obj = (TObj*) i.pool->getContentsType()->upcast(obj, i.caster);
+				func(obj, funcArgs...);
 			}
 		}
 	}
