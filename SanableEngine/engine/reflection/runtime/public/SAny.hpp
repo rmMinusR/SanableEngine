@@ -20,7 +20,7 @@ public:
 	ENGINE_RTTI_API ~SAnyRef();
 
 	template<typename T>
-	SAnyRef make(T* obj) { return SAnyRef(obj, TypeName::create<T>()); }
+	static SAnyRef make(T* obj) { return SAnyRef(obj, TypeName::create<T>()); } //TODO attempt to snipe RTTI and checK, just to be sure? Casting should handle most of it though.
 
 	ENGINE_RTTI_API TypeName getType() const;
 	template<typename T>
