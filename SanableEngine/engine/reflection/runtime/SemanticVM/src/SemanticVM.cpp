@@ -114,9 +114,13 @@ bool FunctionContext::callSpecial(int srcBranchID, void(*targetFn)(), bool debug
 	}
 	else if (!opt.canExec(targetFn))
 	{
-		MachineState sandbox = src.state;
-		SemanticVM::execFunc_internal(sandbox, targetFn, (void(*)())src.cursor, currentIndentLevel+1, opt);
-		MachineState::copyCriticals(src.state, sandbox);
+		if (opt.executeSandbox)
+		{
+			MachineState sandbox = src.state;
+			SemanticVM::execFunc_internal(sandbox, targetFn, (void(*)())src.cursor, currentIndentLevel + 1, opt);
+			MachineState::copyCriticals(src.state, sandbox);
+		}
+		else src.state.popStackFrame();
 		if (debug) printf("Function is sandboxed. Only propagating stack and instruction pointer changes.\n");
 		return true;
 	}
