@@ -2,6 +2,15 @@
 
 #include "GlobalTypeRegistry.hpp"
 
+void MemoryManager::registerPool(GenericTypedMemoryPool* pool)
+{
+	pools.push_back(pool);
+
+	//Update state hash
+	poolStateHash ^= std::hash<TypeName>()(pool->getContentsTypeName());
+	poolStateHash = (poolStateHash*1103515245)+12345; //From glibc's rand()
+}
+
 GenericTypedMemoryPool* MemoryManager::getSpecificPool(const TypeName& typeName)
 {
 	//Search for pool matching typename
@@ -10,6 +19,16 @@ GenericTypedMemoryPool* MemoryManager::getSpecificPool(const TypeName& typeName)
 
 	//Nothing found!
 	return nullptr;
+}
+
+void MemoryManager::foreachPool(const std::function<void(GenericTypedMemoryPool*)>& visitor)
+{
+	for (GenericTypedMemoryPool* i : pools) visitor(i);
+}
+
+void MemoryManager::foreachPool(const std::function<void(const GenericTypedMemoryPool*)>& visitor) const
+{
+	for (const GenericTypedMemoryPool* i : pools) visitor(i);
 }
 
 void MemoryManager::destroyPool(const TypeName& type)
@@ -22,12 +41,14 @@ void MemoryManager::destroyPool(const TypeName& type)
 	}
 }
 
-void MemoryManager::init()
+MemoryManager::MemoryManager()
 {
-	//Nothing to do here
+	poolStateHash = rand();
+	poolStateHash <<= 32;
+	poolStateHash |= rand();
 }
 
-void MemoryManager::cleanup()
+MemoryManager::~MemoryManager()
 {
 	for (GenericTypedMemoryPool* i : pools)
 	{
@@ -67,4 +88,9 @@ void MemoryManager::ensureFresh()
 void MemoryManager::updatePointers(const MemoryMapper& remapper)
 {
 	//TODO implement
+}
+
+uint64_t MemoryManager::getPoolStateHash() const
+{
+	return poolStateHash;
 }

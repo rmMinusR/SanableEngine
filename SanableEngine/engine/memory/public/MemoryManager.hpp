@@ -2,20 +2,28 @@
 
 #include <unordered_map>
 #include <vector>
+#include <functional>
 #include "TypedMemoryPool.hpp"
 
 class GameObject;
 class Application;
 struct TypeInfo;
 class PluginManager;
+class PoolCallBatcher;
 
 class MemoryManager
 {
 private:
 	std::vector<GenericTypedMemoryPool*> pools;
 	//std::unordered_map<std::string, RawMemoryPool*> pools;
+	ENGINEMEM_API void registerPool(GenericTypedMemoryPool* pool);
+
+	uint64_t poolStateHash;
 
 public:
+	ENGINEMEM_API MemoryManager();
+	ENGINEMEM_API ~MemoryManager();
+
 	ENGINEMEM_API GenericTypedMemoryPool* getSpecificPool(const TypeName& type);
 	template<typename TObj>
 	inline TypedMemoryPool<TObj>* getSpecificPool(bool fallbackCreate);
@@ -26,19 +34,22 @@ public:
 	template<typename TObj>
 	void destroy(TObj* obj);
 
+	ENGINEMEM_API void foreachPool(const std::function<void(GenericTypedMemoryPool*)>& visitor);
+	ENGINEMEM_API void foreachPool(const std::function<void(const GenericTypedMemoryPool*)>& visitor) const;
+
 	ENGINEMEM_API void destroyPool(const TypeName& type);
 	template<typename TObj>
 	inline void destroyPool() { destroyPool(TypeName::create<TObj>()); }
 
 private:
-	ENGINEMEM_API void init();
-	ENGINEMEM_API void cleanup();
 	friend class Application;
-
 	friend class PluginManager;
 
 	ENGINEMEM_API void ensureFresh();
 	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
+
+	friend class PoolCallBatcher;
+	ENGINEMEM_API uint64_t getPoolStateHash() const;
 };
 
 template<typename TObj>
@@ -50,7 +61,7 @@ inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate
 	if (!out && fallbackCreate)
 	{
 		out = GenericTypedMemoryPool::create<TObj>();
-		pools.push_back(out);
+		registerPool(out);
 		return out->getView<TObj>();
 	}
 

@@ -202,6 +202,23 @@ void* TypeInfo::upcast(void* obj, const TypeName& name) const
 	return nullptr;
 }
 
+bool TypeInfo::isDerivedFrom(const TypeName& type, bool grandparents) const
+{
+	//Check
+	for (const ParentInfo& p : parents) if (p.typeName == type) return true;
+
+	//Recurse
+	if (grandparents)
+	{
+		for (const ParentInfo& p : parents)
+		{
+			if (p.typeName.resolve()->isDerivedFrom(type, grandparents)) return true;
+		}
+	}
+
+	return false;
+}
+
 bool TypeInfo::matchesExact(void* obj) const
 {
 	assert(byteUsage);

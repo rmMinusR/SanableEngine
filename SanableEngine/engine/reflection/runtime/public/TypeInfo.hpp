@@ -103,6 +103,13 @@ public:
 	ENGINE_RTTI_API void* upcast(void* obj, const TypeName& name) const;
 
 	/// <summary>
+	/// Check if this type inherits from the given type
+	/// </summary>
+	/// <param name="type">Type to check against</param>
+	/// <param name="grandparents">If false, don't check grandparents</param>
+	ENGINE_RTTI_API bool isDerivedFrom(const TypeName& type, bool grandparents = true) const;
+	
+	/// <summary>
 	/// Test if the given object matches this type exactly. Does not test if object's type is derived from this.
 	/// Requires: captured ctor, virtual object
 	/// </summary>
