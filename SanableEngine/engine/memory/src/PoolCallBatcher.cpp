@@ -13,6 +13,11 @@ void PoolCallBatcher::clear()
 	cachedPoolList.clear();
 }
 
+size_t PoolCallBatcher::count() const
+{
+	return cachedPoolList.size();
+}
+
 void PoolCallBatcher::ensureFresh(MemoryManager* src, bool force)
 {
 	uint64_t newHash = src->getPoolStateHash();
@@ -25,7 +30,10 @@ void PoolCallBatcher::ensureFresh(MemoryManager* src, bool force)
 			[&](const GenericTypedMemoryPool* pool)
 			{
 				const TypeInfo* ti = pool->getContentsType();
-				if (ti && ti->isDerivedFrom(baseTypeName)) cachedPoolList.push_back(pool);
+				if (ti && ti->isDerivedFrom(baseTypeName))
+				{
+					cachedPoolList.push_back(CachedPool{ pool, ti->getParent(baseTypeName) });
+				}
 			}
 		);
 	}

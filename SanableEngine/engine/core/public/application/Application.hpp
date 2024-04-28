@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <optional>
 
 #include <ReflectionSpec.hpp>
 #include "MemoryManager.hpp"
@@ -21,7 +22,7 @@ private:
 
     bool isAlive;
     gpr460::System* system;
-    MemoryManager memoryManager;
+    std::optional<MemoryManager> memoryManager; //Optional so we can do late initialization/early destruction
     StackAllocator frameAllocator; //Temp memory that will be reset every frame
     constexpr static size_t frameAllocatorSize = 4096;
     PluginManager pluginManager;

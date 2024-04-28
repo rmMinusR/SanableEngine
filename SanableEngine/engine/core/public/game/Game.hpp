@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "../dllapi.h"
-#include "CallBatcher.inl"
+#include "PoolCallBatcher.hpp"
 
 class Application;
 class PluginManager;
@@ -26,10 +26,10 @@ class Game
     friend class GameObject;
     friend class PluginManager;
 
-    CallBatcher<IUpdatable   > updateList;
-    CallBatcher<I3DRenderable> _3dRenderList;
+    PoolCallBatcher updateList;
+    PoolCallBatcher _3dRenderList;
 
-    void refreshCallBatchers();
+    void refreshCallBatchers(bool force = false);
 
     void destroyImmediate(GameObject* go);
     void destroyImmediate(Component* c);
@@ -47,7 +47,7 @@ public:
     int frame = 0;
 
 	ENGINECORE_API InputSystem* getInput();
-	ENGINECORE_API const CallBatcher<I3DRenderable>* get3DRenderables();
+	ENGINECORE_API const PoolCallBatcher* get3DRenderables() const;
 
     ENGINECORE_API GameObject* addGameObject();
     ENGINECORE_API void destroy(GameObject* go);

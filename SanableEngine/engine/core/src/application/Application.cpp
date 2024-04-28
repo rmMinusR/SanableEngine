@@ -91,11 +91,11 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
         GlobalTypeRegistry::loadModule("Application", m);
     }
 
-    memoryManager.init();
-    memoryManager.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module (avoiding nasty access violation errors)
-    memoryManager.getSpecificPool<Camera>(true); //Same with Camera
-    memoryManager.getSpecificPool<MeshRenderer>(true); //And MeshRenderer
-    memoryManager.ensureFresh();
+    memoryManager.emplace();
+    memoryManager.value().getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module (avoiding nasty access violation errors)
+    memoryManager.value().getSpecificPool<Camera>(true); //Same with Camera
+    memoryManager.value().getSpecificPool<MeshRenderer>(true); //And MeshRenderer
+    memoryManager.value().ensureFresh();
 
     this->game = game;
     game->init(this);
@@ -108,6 +108,8 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     pluginManager.hookAll();
 
     if (userInitCallback) (*userInitCallback)(this);
+    memoryManager.value().ensureFresh();
+    game->refreshCallBatchers();
 }
 
 void Application::shutdown()
@@ -125,16 +127,14 @@ void Application::shutdown()
     while (!windows.empty()) delete windows[windows.size()-1]; //Destructor will automatically erase the tail
     mainWindow = nullptr;
     
-    //Clean up memory, GameObject pool first so remaining components are released
-    memoryManager.destroyPool<GameObject>();
-    memoryManager.cleanup();
-
-    pluginManager.unloadAll();
+    memoryManager.value().destroyPool<GameObject>(); //Clean up memory, GameObject pool first so remaining components are released
+    pluginManager.unloadAll(); //Unload plugin code, handling destructors of globals in module
 
     //RTTI and plugin info shouldn't appear on the leaks report
     GlobalTypeRegistry::clear();
     pluginManager.forgetAll();
 
+    memoryManager.reset(); //Finish cleaning up memory
     system->Shutdown();
 }
 
@@ -150,7 +150,9 @@ void Application::frameStep(void* arg)
     engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
 
     engine->processEvents();
+    engine->game->refreshCallBatchers(false);
     engine->game->tick();
+    engine->game->refreshCallBatchers(false);
     for (Window* w : engine->windows) w->draw();
 }
 
@@ -166,7 +168,7 @@ gpr460::System* Application::getSystem()
 
 MemoryManager* Application::getMemoryManager()
 {
-    return &memoryManager;
+    return &memoryManager.value();
 }
 
 StackAllocator* Application::getFrameAllocator()

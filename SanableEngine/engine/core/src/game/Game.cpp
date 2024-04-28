@@ -9,7 +9,9 @@
 Game::Game() :
     application(nullptr),
     inputSystem(nullptr),
-    isAlive(false)
+    isAlive(false),
+    updateList   (TypeName::create<IUpdatable   >()),
+    _3dRenderList(TypeName::create<I3DRenderable>())
 {
 }
 
@@ -69,22 +71,10 @@ void Game::applyConcurrencyBuffers()
     componentAddBuffer.clear();
 }
 
-void Game::refreshCallBatchers()
+void Game::refreshCallBatchers(bool force)
 {
-    updateList.clear();
-    _3dRenderList.clear();
-
-    for (GameObject* go : objects)
-    {
-        for (Component* c : go->components)
-        {
-            IUpdatable* u = dynamic_cast<IUpdatable*>(c);
-            if (u) updateList.add(u);
-
-            I3DRenderable* r = dynamic_cast<I3DRenderable*>(c);
-            if (r) _3dRenderList.add(r);
-        }
-    }
+    updateList   .ensureFresh(application->getMemoryManager(), force);
+    _3dRenderList.ensureFresh(application->getMemoryManager(), force);
 }
 
 GameObject* Game::addGameObject()
@@ -132,7 +122,7 @@ InputSystem* Game::getInput()
     return inputSystem;
 }
 
-const CallBatcher<I3DRenderable>* Game::get3DRenderables()
+const PoolCallBatcher* Game::get3DRenderables() const
 {
     return &_3dRenderList;
 }

@@ -112,7 +112,7 @@ void PluginManager::reloadAll()
 	engine->getMemoryManager()->ensureFresh();
 
     std::cout << "Refreshing pointers... (call batchers)\n";
-	engine->getGame()->refreshCallBatchers();
+	engine->getGame()->refreshCallBatchers(true);
 
     std::cout << "Applying plugin hooks...\n";
     hookAll();
