@@ -32,10 +32,10 @@ void FieldInfo::blitValue(void* objInstance, void* value) const
 	memcpy(getAddr(objInstance), value, type.resolve()->size);
 }
 
-ParentInfo::ParentInfo(size_t size, ptrdiff_t offset, const TypeName& owner, const TypeName& typeName, MemberVisibility visibility) :
+ParentInfo::ParentInfo(size_t size, ptrdiff_t offset, const TypeName& owner, const TypeName& typeName, MemberVisibility visibility, Virtualness virtualness) :
 	MemberInfo(size, offset, owner),
 	typeName(typeName),
-	visibility(visibility)
+	visibility(visibility),
+	virtualness(virtualness)
 {
-
 }

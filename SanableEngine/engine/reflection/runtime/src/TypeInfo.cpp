@@ -212,7 +212,7 @@ void* TypeInfo::upcast(void* obj, const TypeName& parentTypeName) const
 
 void* TypeInfo::upcast(void* obj, const ParentInfo& parentType) const
 {
-	assert(parentType.typeName == this->name);
+	assert(parentType.owner == this->name);
 	return ((char*)obj)+parentType.offset;
 }
 
