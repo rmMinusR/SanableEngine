@@ -412,7 +412,7 @@ class BoundFuncInfo(Virtualizable, Callable):
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
-        if this.isTemplate: return []
+        if this.isTemplate or this.isDeleted: return []
 
         tailArgs = [ 
             (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
@@ -438,11 +438,14 @@ class BoundFuncInfo(Virtualizable, Callable):
         ]
     
     def renderMain(this):
-        if not this.isTemplate:
-            paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-            return f"builder.addMemberFunction(stix::MemberFunction::make(DO_PUBLIC_CAST({this.pubCastKey})), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
+        if not this.isDeleted:
+            if not this.isTemplate:
+                paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+                return f"builder.addMemberFunction(stix::MemberFunction::make(DO_PUBLIC_CAST({this.pubCastKey})), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
+            else:
+                return f"//Cannot capture template function {this.absName}"
         else:
-            return f"//Cannot capture template function {this.absName}"
+            return f"//Cannot capture deleted function {this.absName}"
 
 
 class ConstructorInfo(Member, Callable):
@@ -460,12 +463,16 @@ class ConstructorInfo(Member, Callable):
         return cursor.kind == CursorKind.CONSTRUCTOR
     
     def renderMain(this):
-        owner:TypeInfo = this.owner
-        if this.visibility == Member.Visibility.Public or owner.isFriended(lambda f: f"thunk_utils<{owner.absName}>" in f.targetName):
-            paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-            return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
+        if not this.isDeleted:
+            owner:TypeInfo = this.owner
+            if this.visibility == Member.Visibility.Public or owner.isFriended(lambda f: f"thunk_utils<{owner.absName}>" in f.targetName):
+                paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+                return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
+            else:
+                return f"//Inaccessible constructor {this.absName}"
         else:
-            return f"//Inaccessible constructor {this.absName}"
+            return f"//Cannot capture deleted constructor {this.absName}"
+        
 
 
 class DestructorInfo(Virtualizable):
