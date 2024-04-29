@@ -39,6 +39,9 @@ def _isTemplate(kind: CursorKind):
     ]
 
 def _typeGetAbsName(target: Type) -> str:
+    # Special case: Can't deduce auto, decltype(auto)
+    if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
+    
     out: str
 
     mainDecl: Cursor = target.get_declaration()
@@ -394,6 +397,7 @@ class BoundFuncInfo(Virtualizable, Callable):
         Virtualizable.__init__(this, module, cursor, owner)
         Callable.__init__(this, module, cursor)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
+        this.returnTypeName = _typeGetAbsName(cursor.result_type)
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -404,7 +408,9 @@ class BoundFuncInfo(Virtualizable, Callable):
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
     def renderMain(this):
-        return f"builder.addMemberFunction(stix::MemberFunction::make(&{this.absReferenceableName}), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});" # TODO parameterize stix::MemberFunction::make in case of function overloading
+        eraserTemplateArgs = ", ".join([this.returnTypeName, this.owner.absName] + [i.typeName for i in this.parameters]) # Can't rely on template arg deduction in case of overloading
+        paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+        return f"builder.addMemberFunction(stix::MemberFunction::make<{eraserTemplateArgs}>(&{this.absReferenceableName}), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
 
 
 class ConstructorInfo(Member, Callable):
