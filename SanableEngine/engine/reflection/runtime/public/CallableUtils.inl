@@ -25,11 +25,14 @@ namespace FuncPtrAliases
 namespace CallableUtils
 {
 	//Helper for verifying if provided static type list matches dynamic type list
+	inline static TypeName _getRepresentedType(const SAnyRef & t) { return t.getType(); }
+	inline static TypeName _getRepresentedType(const TypeName& t) { return t; }
+
 	template<typename It, typename TArgsHead, typename... TArgsTail>
 	static void checkArgs(It it, It end)
 	{
 		assert(it != end);
-		assert(it->getType() == TypeName::create<TArgsHead>());
+		assert(_getRepresentedType(*it) == TypeName::create<TArgsHead>());
 		checkArgs<It, TArgsTail...>(it+1, end);
 	}
 	template<typename It> static void checkArgs(It it, It end) { assert(it == end); } //Tail case

@@ -4,18 +4,7 @@
 
 #include "TypeInfo.hpp"
 
-ParameterInfo::ParameterInfo(const TypeName& type, const std::string& name) :
-	type(type),
-	name(name)
-{
-}
-
-ParameterInfo::~ParameterInfo()
-{
-}
-
-Callable::Callable(TypeName returnType, TypeName owner, std::vector<ParameterInfo> parameters) :
-	owner(owner),
+Callable::Callable(const TypeName& returnType, const std::vector<TypeName>& parameters) :
 	returnType(returnType),
 	parameters(parameters)
 {
@@ -25,8 +14,9 @@ Callable::~Callable()
 {
 }
 
-CallableMember::CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Member::fully_erased_binder_t binder, void(CallableUtils::Member::BinderSurrogate::*fn)()) :
-	Callable(returnType, owner, parameters),
+CallableMember::CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters, CallableUtils::Member::fully_erased_binder_t binder, void(CallableUtils::Member::BinderSurrogate::*fn)()) :
+	Callable(returnType, parameters),
+	owner(owner),
 	binder(binder),
 	fn(fn)
 {
@@ -61,8 +51,8 @@ void CallableMember::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const s
 	binder(fn, returnValue, thisObj, parameters); //This will implicitly reinterpret fn to the right type when we enter the binder function itself
 }
 
-CallableStatic::CallableStatic(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn) :
-	Callable(returnType, owner, parameters),
+CallableStatic::CallableStatic(const TypeName& returnType, const std::vector<TypeName>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn) :
+	Callable(returnType, parameters),
 	binder(binder),
 	fn(fn)
 {
