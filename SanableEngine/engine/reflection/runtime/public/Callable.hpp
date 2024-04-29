@@ -27,8 +27,9 @@ public:
 	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
 	
 	template<typename TReturn, typename TOwner, typename... TArgs>
-	static CallableMember make(TReturn(TOwner::* fn)(TArgs...), const std::vector<TypeName>& parameters)
+	static CallableMember make(TReturn(TOwner::* fn)(TArgs...))
 	{
+		std::vector<TypeName> parameters = TypeName::createPack<TArgs...>();
 		CallableUtils::checkArgs<std::vector<TypeName>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
 		auto eraser = &CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
 		return CallableMember(
@@ -56,8 +57,9 @@ public:
 	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const;
 
 	template<typename TReturn, typename... TArgs>
-	static CallableStatic make(TReturn(*fn)(TArgs...), const std::vector<TypeName>& parameters)
+	static CallableStatic make(TReturn(*fn)(TArgs...))
 	{
+		std::vector<TypeName> parameters = TypeName::createPack<TArgs...>();
 		CallableUtils::checkArgs<std::vector<TypeName>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
 		auto eraser = &CallableUtils::Static::TypeEraser<TReturn>::template impl<TArgs...>;
 		return CallableStatic(

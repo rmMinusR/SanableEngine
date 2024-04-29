@@ -59,7 +59,7 @@ TEST_CASE("Function type erasure")
 		{
 			SUBCASE("void()")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::incCanary, {});
+				CallableMember fn = CallableMember::make(&MyCallable::incCanary);
 
 				MyCallable obj;
 				obj.canary = 0;
@@ -70,7 +70,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("int()")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::incCanary2, {});
+				CallableMember fn = CallableMember::make(&MyCallable::incCanary2);
 
 				MyCallable obj;
 				obj.canary = 0;
@@ -83,7 +83,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("void(int)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::setCanary, { TypeName::create<int>() });
+				CallableMember fn = CallableMember::make(&MyCallable::setCanary);
 
 				MyCallable obj;
 				obj.canary = 0;
@@ -95,7 +95,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("int(int)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::sum, { TypeName::create<int>(), TypeName::create<int>() });
+				CallableMember fn = CallableMember::make(&MyCallable::sum);
 
 				MyCallable obj;
 				int result;
@@ -111,7 +111,7 @@ TEST_CASE("Function type erasure")
 		{
 			SUBCASE("void(struct*)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::passStructPtr, { TypeName::create<MyCallable*>() });
+				CallableMember fn = CallableMember::make(&MyCallable::passStructPtr);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -123,7 +123,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("void(struct&)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::passStructRef, { TypeName::create<MyCallable&>() });
+				CallableMember fn = CallableMember::make(&MyCallable::passStructRef);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -134,7 +134,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct*(struct*)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::passthroughStructPtr, { TypeName::create<MyCallable*>() });
+				CallableMember fn = CallableMember::make(&MyCallable::passthroughStructPtr);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -147,7 +147,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct&(struct&)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::passthroughStructRef, { TypeName::create<MyCallable&>() });
+				CallableMember fn = CallableMember::make(&MyCallable::passthroughStructRef);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -163,7 +163,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objB;
 				objA.ptrCanary = &objB;
 
-				CallableMember fn = CallableMember::make(&MyCallable::returnStructPtr, {});
+				CallableMember fn = CallableMember::make(&MyCallable::returnStructPtr);
 
 				MyCallable* returnVal;
 				fn.invoke(SAnyRef::make(&returnVal), SAnyRef::make(&objA), {});
@@ -178,7 +178,7 @@ TEST_CASE("Function type erasure")
 				objA.ptrCanary = &objB;
 				objB.canary = 456;
 
-				CallableMember fn = CallableMember::make(&MyCallable::returnStructRef, {});
+				CallableMember fn = CallableMember::make(&MyCallable::returnStructRef);
 
 				MyCallable returnVal;
 				fn.invoke(SAnyRef::make(&returnVal), SAnyRef::make(&objA), {});
@@ -191,7 +191,7 @@ TEST_CASE("Function type erasure")
 		{
 			SUBCASE("void(struct)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::passStruct, { TypeName::create<MyCallable>() });
+				CallableMember fn = CallableMember::make(&MyCallable::passStruct);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -203,7 +203,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct(struct)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::passthroughStruct, { TypeName::create<MyCallable>() });
+				CallableMember fn = CallableMember::make(&MyCallable::passthroughStruct);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -217,7 +217,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct()")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::returnStruct, {});
+				CallableMember fn = CallableMember::make(&MyCallable::returnStruct);
 
 				MyCallable objA;
 				MyCallable objB;
@@ -253,7 +253,7 @@ TEST_CASE("Function type erasure")
 		{
 			SUBCASE("void()")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::incCanary, {});
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::incCanary);
 
 				fn.invoke(SAnyRef(), {});
 
@@ -262,7 +262,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("int()")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::incCanary2, {});
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::incCanary2);
 
 				int result;
 				fn.invoke(SAnyRef::make(&result), {});
@@ -273,7 +273,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("void(int)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::setCanary, { TypeName::create<int>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::setCanary);
 
 				int val = 20;
 				fn.invoke(SAnyRef(), { SAnyRef::make(&val) });
@@ -283,7 +283,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("int(int)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::sum, { TypeName::create<int>(), TypeName::create<int>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::sum);
 
 				int result;
 				int a = 2;
@@ -299,7 +299,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("void(struct*)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStructPtr, { TypeName::create<MyCallable*>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStructPtr);
 
 				MyCallable objB;
 				MyCallable* objB_ptr = &objB;
@@ -310,7 +310,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("void(struct&)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStructRef, { TypeName::create<MyCallable&>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStructRef);
 
 				MyCallable objB;
 				fn.invoke(SAnyRef(), { SAnyRef::make(&objB) });
@@ -320,7 +320,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct*(struct*)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStructPtr, { TypeName::create<MyCallable*>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStructPtr);
 
 				MyCallable objB;
 				MyCallable* objB_ptr = &objB;
@@ -332,7 +332,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct&(struct&)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStructRef, { TypeName::create<MyCallable&>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStructRef);
 
 				MyCallable objB;
 				MyCallable returnVal;
@@ -346,7 +346,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objB;
 				MyCallable_Static::ptrCanary = &objB;
 
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStructPtr, {});
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStructPtr);
 
 				MyCallable* returnVal;
 				fn.invoke(SAnyRef::make(&returnVal), {});
@@ -360,7 +360,7 @@ TEST_CASE("Function type erasure")
 				MyCallable_Static::ptrCanary = &objB;
 				objB.canary = 456;
 
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStructRef, {});
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStructRef);
 
 				MyCallable returnVal;
 				fn.invoke(SAnyRef::make(&returnVal), {});
@@ -373,7 +373,7 @@ TEST_CASE("Function type erasure")
 		{
 			SUBCASE("void(struct)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStruct, { TypeName::create<MyCallable>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStruct);
 
 				MyCallable objB;
 				objB.canary = 873;
@@ -384,7 +384,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct(struct)")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStruct, { TypeName::create<MyCallable>() });
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStruct);
 
 				MyCallable objB;
 				objB.canary = 873;
@@ -397,7 +397,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("struct()")
 			{
-				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStruct, {});
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStruct);
 
 				MyCallable objB;
 				objB.canary = 873;
