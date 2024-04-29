@@ -60,7 +60,7 @@ namespace CallableUtils
 
 				//Invoke
 				TOwner& _this = thisObj.get<TOwner>();
-				returnValue.get<TReturn>() = (_this.*fn)( (parameters[I].get<TArgs>()) ...);
+				returnValue.get<TReturn>() = (_this.*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
 			}
 		};
 
@@ -84,7 +84,7 @@ namespace CallableUtils
 
 				//Invoke
 				TOwner& _this = thisObj.get<TOwner>();
-				(_this.*fn)( (parameters[I].get<TArgs>()) ...);
+				(_this.*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
 			}
 		};
 
