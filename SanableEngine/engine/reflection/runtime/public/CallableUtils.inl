@@ -97,4 +97,65 @@ namespace CallableUtils
 
 		typedef void(BinderSurrogate::* erased_fp_t)();
 	}
+
+
+	namespace Static
+	{
+		template<typename TReturn, bool returnsVoid = std::is_same_v<TReturn, void>>
+		struct TypeEraser;
+
+		template<typename TReturn>
+		struct TypeEraser<TReturn, false>
+		{
+			template<typename... TArgs>
+			static void impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters)
+			{
+				__impl(fn, returnValue, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+			}
+			
+		private:
+			template<typename... TArgs, size_t... I>
+			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			{
+				//No need to check return type or owner type matching; this is handled in SAny::get
+			
+				//Check parameters match exactly
+				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+
+				//Invoke
+				returnValue.get<TReturn>() = (*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
+			}
+		};
+
+		template<typename TReturn>
+		struct TypeEraser<TReturn, true>
+		{
+			template<typename... TArgs>
+			static void impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters)
+			{
+				__impl(fn, returnValue, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+			}
+			
+		private:
+			template<typename... TArgs, size_t... I>
+			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			{
+				//No need to check return type or owner type matching; this is handled in SAny::get
+			
+				//Check parameters match exactly
+				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+
+				//Invoke
+				(*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
+			}
+		};
+
+
+		template<typename TReturn, typename... TArgs>
+		using binder_t = void(*)(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters);
+
+		using fully_erased_binder_t = binder_t<void>;
+
+		typedef void(*erased_fp_t)();
+	}
 }

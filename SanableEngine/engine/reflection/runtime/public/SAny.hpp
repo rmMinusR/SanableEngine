@@ -5,6 +5,7 @@
 #include "TypeName.hpp"
 
 class CallableMember;
+class CallableStatic;
 
 //Pass objects by reference while also erasing their type. Similar to Object in Java/C#/Python.
 //Does not own the given object; should never be saved in an object.
@@ -14,6 +15,7 @@ class SAnyRef
 	TypeName type;
 
 	friend class CallableMember;
+	friend class CallableStatic;
 
 	ENGINE_RTTI_API void* get_internal(const TypeName& asType) const;
 	ENGINE_RTTI_API SAnyRef(void* data, const TypeName& type);

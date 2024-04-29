@@ -61,3 +61,36 @@ public:
 		);
 	}
 };
+
+class CallableStatic
+{
+public:
+	TypeName returnType;
+	TypeName owner; //Might not be valid
+	std::vector<ParameterInfo> parameters;
+
+	ENGINE_RTTI_API ~CallableStatic();
+
+	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const;
+protected:
+	ENGINE_RTTI_API CallableStatic(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn);
+
+	//All SAnyRefs guaranteed valid when called
+	CallableUtils::Static::fully_erased_binder_t binder;
+	CallableUtils::Static::erased_fp_t fn;
+
+public:
+	template<typename TReturn, typename TOwner, typename... TArgs>
+	static CallableStatic make(TReturn(*fn)(TArgs...), const std::vector<ParameterInfo>& parameters)
+	{
+		ParameterInfo::checkStaticMatchesDynamic<std::vector<ParameterInfo>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
+		auto eraser = &CallableUtils::Static::TypeEraser<TReturn>::template impl<TArgs...>;
+		return CallableStatic(
+			TypeName::create<TOwner>(),
+			TypeName::create<TReturn>(),
+			parameters,
+			(CallableUtils::Static::fully_erased_binder_t) eraser,
+			(CallableUtils::Static::erased_fp_t) fn
+		);
+	}
+};

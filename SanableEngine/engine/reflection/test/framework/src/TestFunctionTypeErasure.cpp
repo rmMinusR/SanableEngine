@@ -1,6 +1,6 @@
 #include <doctest/doctest.h>
 
-#include "CallableMember.hpp"
+#include "Callable.hpp"
 
 struct MyCallable
 {
