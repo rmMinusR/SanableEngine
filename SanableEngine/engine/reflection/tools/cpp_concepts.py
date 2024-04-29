@@ -247,7 +247,7 @@ class Member(Symbol):
     
     @property
     def pubCastKey(this):
-        invalidTokens = ["::", "<", ">", "*", " "]
+        invalidTokens = ["::", "<", ">", "*", " ", "(", ")", ","]
         out = this.absName
         for i in invalidTokens: out = out.replace(i, "_")
         return out
@@ -409,11 +409,33 @@ class BoundFuncInfo(Virtualizable, Callable):
             CursorKind.FUNCTION_TEMPLATE
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
+    def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
+        tailArgs = [ 
+            (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
+            for i in
+            ([this.returnTypeName]+[i.typeName for i in this.parameters]) # Return value and params, in that order
+        ]
+
+        ownerName = this.owner.absName
+        if ownerName.startswith("::"): ownerName = ownerName[2:]
+
+        formatter = {
+            "key": this.pubCastKey,
+            "TClass": this.owner.absName,
+            "returnType": this.returnTypeName,
+            "params": ", ".join([i.typeName for i in this.parameters]),
+            "name": this.relReferenceableName
+        }
+        return [
+            'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
+		    'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params});'.format_map(formatter) + ' };',
+		    'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
+        ]
+    
     def renderMain(this):
         if not this.isTemplate:
-            eraserTemplateArgs = ", ".join([this.returnTypeName, this.owner.absName] + [i.typeName for i in this.parameters]) # Can't rely on template arg deduction in case of overloading
             paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-            return f"builder.addMemberFunction(stix::MemberFunction::make<{eraserTemplateArgs}>(&{this.absReferenceableName}), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
+            return f"builder.addMemberFunction(stix::MemberFunction::make(DO_PUBLIC_CAST({this.pubCastKey})), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
         else:
             return f"//Cannot capture template function {this.absName}"
 
