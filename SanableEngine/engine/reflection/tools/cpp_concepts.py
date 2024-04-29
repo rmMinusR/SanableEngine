@@ -247,9 +247,10 @@ class Member(Symbol):
     
     @property
     def pubCastKey(this):
-        invalidTokens = ["::", "<", ">", "*", " ", "(", ")", ","]
         out = this.absName
-        for i in invalidTokens: out = out.replace(i, "_")
+        for i in range(len(out)):
+            if out.isascii() and not (out[i].isalnum() or out[i] == "_"): # Special characters in ASCII range
+                out = out[:i] + "_" + out[i+1:] # Replace that character with an underscore
         return out
 
     
@@ -411,6 +412,8 @@ class BoundFuncInfo(Virtualizable, Callable):
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
+        if this.isTemplate: return []
+
         tailArgs = [ 
             (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
             for i in
@@ -863,12 +866,14 @@ ignoredSymbols = [
     CursorKind.DECL_REF_EXPR,
     CursorKind.CALL_EXPR, # Appears to be related to decltype/declval in template parameters?
     CursorKind.DECL_REF_EXPR,
+    
+    # Not sure if I care yet
+    CursorKind.LINKAGE_SPEC,
 
     # TODO reimplement global variable support
     CursorKind.VAR_DECL,
 
     # TODO reimplement function support
-    CursorKind.FUNCTION_DECL,
     CursorKind.CONVERSION_FUNCTION,
     CursorKind.CXX_METHOD,
 

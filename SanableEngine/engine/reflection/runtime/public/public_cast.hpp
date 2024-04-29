@@ -80,7 +80,7 @@ namespace public_cast
 	#define PUBLIC_CAST_KEY_OF(key) __PUBLIC_CAST_KEY__##key
 	#define PUBLIC_CAST_DECLARE_KEY_BARE(key) struct PUBLIC_CAST_KEY_OF(key) {}
 	#define PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name) \
-		template struct ::public_cast::_access_giver<__PUBLIC_CAST_KEY__##key, &TClass::name>
+		template struct ::public_cast::_access_giver<__PUBLIC_CAST_KEY__##key, static_cast<::public_cast::_type_lut<__PUBLIC_CAST_KEY__##key>::ptr_t>(&TClass::name)>
 
 	#pragma endregion
 
