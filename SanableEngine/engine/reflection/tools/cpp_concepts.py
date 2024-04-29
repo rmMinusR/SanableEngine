@@ -189,11 +189,14 @@ class Symbol:
         this.astKind = cursor.kind
         this.relName = cursor.displayname
         this.absName = _getAbsName(cursor)
+        this.relReferenceableName = cursor.spelling
+        this.absReferenceableName = this.absName[:-len(this.relName)] + this.relReferenceableName
         this.isDefinition = cursor.is_definition()
         this.sourceFile = SourceFile(cursor.location.file.name)
 
         # Detect annotations passed by clang::annotate
         this.annotations = Annotations.getAll(cursor)
+
     
     def __repr__(this):
         return this.absName
@@ -401,7 +404,7 @@ class BoundFuncInfo(Virtualizable, Callable):
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
     def renderMain(this):
-        return f"//BoundFuncInfo: {this.absName}" # TODO capture address
+        return f"builder.addMemberFunction(stix::MemberFunction::make(&{this.absReferenceableName}), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});" # TODO parameterize stix::MemberFunction::make in case of function overloading
 
 
 class ConstructorInfo(Member, Callable):
