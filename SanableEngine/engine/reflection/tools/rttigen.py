@@ -97,14 +97,14 @@ if args.cache != None:
     else:
         config.logger.info("Cannot reuse cache")
 
-config.logger.log(100, "Parsing...")
+config.logger.user("Parsing...")
 targetModule.parseTU(sourceFiles)
 
 config.logger.info("Finalizing...")
 targetModule.finalize()
 if args.cache != None: targetModule.save(args.cache)
 
-config.logger.log(100, f"Rendering to {args.output}")
+config.logger.user(f"Rendering to {args.output}")
 
 with open(args.template_file, "r") as f:
     template = "".join(f.readlines())
