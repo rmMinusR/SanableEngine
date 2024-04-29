@@ -1,5 +1,6 @@
 ﻿from ast import Param
 from enum import Enum
+import zlib
 import itertools
 import os
 from types import NoneType
@@ -108,7 +109,6 @@ def _typeGetAbsName(target: Type) -> str:
     if target.is_restrict_qualified():
         out = addQualifier(out, "restrict")
 
-    print(f"Abs-ifying type: {target.spelling} -> {out}")
     return out
 
 
@@ -692,7 +692,10 @@ class Module:
     def __init__(this, defaultImageCaptureStatus="enabled", defaultImageCaptureBackend="disassembly"):
         this.__symbols: dict[str, Symbol] = dict()
         this.__sourceFiles: set[SourceFile] = set()
-        this.version = 2
+        with open(__file__, "r") as thisFile:
+            thisFileContent = "".join(thisFile.readlines())
+            this.version = zlib.adler32(thisFileContent.encode("utf-8"))
+            del thisFileContent
         this.defaultImageCaptureStatus  = defaultImageCaptureStatus
         this.defaultImageCaptureBackend = defaultImageCaptureBackend
     
