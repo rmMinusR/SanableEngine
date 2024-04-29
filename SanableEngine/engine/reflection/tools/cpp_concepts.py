@@ -105,7 +105,6 @@ def _typeGetAbsName(target: Type) -> str:
     if target.is_restrict_qualified():
         out = addQualifier(out, "restrict")
 
-    print(f"Abs-ifying type: {target.spelling} -> {out}")
     return out
 
 
