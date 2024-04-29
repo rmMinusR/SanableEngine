@@ -14,10 +14,11 @@ stix::Function::~Function()
 {
 }
 
-stix::MemberFunction::MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters,
+stix::MemberFunction::MemberFunction(const TypeName& owner, bool ownerIsConst, const TypeName& returnType, const std::vector<TypeName>& parameters,
 	                                 detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn) :
 	Function(returnType, parameters),
 	owner(owner),
+	ownerIsConst(ownerIsConst),
 	binder(binder),
 	fn(fn)
 {

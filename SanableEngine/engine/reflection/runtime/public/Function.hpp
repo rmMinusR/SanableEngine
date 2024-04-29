@@ -29,12 +29,19 @@ namespace stix
 		ENGINE_RTTI_API virtual ~MemberFunction();
 		ENGINE_RTTI_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
 	
+		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...)      ) { return make_internal(fn, false); }
+		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...) const) { return make_internal( (TReturn(TOwner::*)(TArgs...)) fn, true); }
+
+	protected:
+		ENGINE_RTTI_API MemberFunction(const TypeName& owner, bool ownerIsConst, const TypeName& returnType, const std::vector<TypeName>& parameters,
+			                           detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn);
+
 		template<typename TReturn, typename TOwner, typename... TArgs>
-		static MemberFunction make(TReturn(TOwner::* fn)(TArgs...))
+		static MemberFunction make_internal(TReturn(TOwner::* fn)(TArgs...), bool ownerIsConst)
 		{
 			std::vector<TypeName> parameters = TypeName::createPack<TArgs...>();
 			detail::CallableUtils::checkArgs<std::vector<TypeName>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
-			auto eraser = &detail::CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
+			detail::CallableUtils::Member::fully_erased_binder_t eraser = &detail::CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
 
 			static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn));
 			union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
@@ -44,27 +51,12 @@ namespace stix
 			} reinterpreter;
 			reinterpreter._fn = fn;
 
-			return MemberFunction(
-				TypeName::create<TOwner>(),
-				TypeName::create<TReturn>(),
-				parameters,
-				(detail::CallableUtils::Member::fully_erased_binder_t) eraser,
-				reinterpreter._erased
-			);
+			return MemberFunction(TypeName::create<TOwner>(), ownerIsConst, TypeName::create<TReturn>(), parameters, eraser, reinterpreter._erased);
 		}
-
-		template<typename TReturn, typename TOwner, typename... TArgs>
-		static MemberFunction make(TReturn(TOwner::* fn)(TArgs...) const)
-		{
-			return make<TReturn, TOwner, TArgs...>( (TReturn(TOwner::*)(TArgs...)) fn ); //Defer to main impl. TODO erase constness too
-		}
-
-	protected:
-		ENGINE_RTTI_API MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters,
-			                           detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn);
 
 		//All SAnyRefs guaranteed valid when called
 		TypeName owner;
+		bool ownerIsConst; //TODO safety check on invoke
 		detail::CallableUtils::Member::fully_erased_binder_t binder;
 		detail::CallableUtils::Member::erased_fp_t fn;
 	};
