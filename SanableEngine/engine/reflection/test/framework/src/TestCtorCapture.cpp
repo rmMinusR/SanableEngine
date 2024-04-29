@@ -89,14 +89,14 @@ void testCtorCaptureV2()
 			//Get baseline from old version
 			uint8_t dummy[sizeof(T)];
 			memset(dummy, fill, sizeof(T));
-			ty->vptrJam(dummy);
+			ty->layout.vptrJam(dummy);
 
 			//New version
 			bool wasPreZeroed = true; //TODO detect pre-zeroing
 			DetectedConstants vtables = thunk_utils<T>::template analyzeConstructor<>();
 
 			//Unmark explicit fields
-			ty->walkFields(
+			ty->layout.walkFields(
 				[&](const FieldInfo& fi)
 				{
 					for (int i = 0; i < fi.size; ++i) vtables.usage[fi.offset + i] = false;

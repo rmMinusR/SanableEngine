@@ -50,7 +50,7 @@ void CallableMember::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const s
 	if (!returnValue && !returnsVoid)
 	{
 		//Create a temporary
-		size_t returnValSize = returnType.resolve()->size;
+		size_t returnValSize = returnType.resolve()->layout.size;
 		void* tempReturnVal = STACK_ALLOC(returnValSize);
 		memset(tempReturnVal, 0, returnValSize);
 		returnValue = SAnyRef(tempReturnVal, returnType);
@@ -78,7 +78,7 @@ void CallableStatic::invoke(SAnyRef returnValue, const std::vector<SAnyRef>& par
 	if (!returnValue && !returnsVoid)
 	{
 		//Create a temporary
-		size_t returnValSize = returnType.resolve()->size;
+		size_t returnValSize = returnType.resolve()->layout.size;
 		void* tempReturnVal = STACK_ALLOC(returnValSize);
 		memset(tempReturnVal, 0, returnValSize);
 		returnValue = SAnyRef(tempReturnVal, returnType);

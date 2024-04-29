@@ -29,7 +29,7 @@ void* FieldInfo::getValue(void* objInstance) const
 
 void FieldInfo::blitValue(void* objInstance, void* value) const
 {
-	memcpy(getAddr(objInstance), value, type.resolve()->size);
+	memcpy(getAddr(objInstance), value, type.resolve()->layout.size);
 }
 
 ParentInfo::ParentInfo(size_t size, ptrdiff_t offset, const TypeName& owner, const TypeName& typeName, MemberVisibility visibility, Virtualness virtualness) :

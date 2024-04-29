@@ -32,7 +32,7 @@ TEST_CASE("Implicit constant capture (multiple inheritance)")
 		CHECK(obj->foo() == 1);
 		CHECK(obj->bar() == 2);
 
-		tb->vptrJam(obj); //Transmute
+		tb->layout.vptrJam(obj); //Transmute
 
 		CHECK(obj->a == 1); //Didn't change, since it was already initted
 		CHECK(obj->foo() == 3); //Changed since it's tied to vptr
@@ -57,7 +57,7 @@ TEST_CASE("Implicit constant capture (multiple inheritance)")
 		CHECK(obj->foo() == 3);
 		CHECK(obj->bar() == 4);
 
-		ta->vptrJam(obj); //Transmute
+		ta->layout.vptrJam(obj); //Transmute
 
 		CHECK(obj->a == 2); //Didn't change, since it was already initted
 		CHECK(obj->foo() == 1); //Changed since it's tied to vptr

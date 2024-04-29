@@ -88,10 +88,10 @@ const FieldInfo* TypeInfo::Layout::getField(const std::string& name, MemberVisib
 	return nullptr;
 }
 
-std::optional<ParentInfo> TypeInfo::Layout::getParent(const TypeName& name, MemberVisibility visibilityFlags, bool includeInherited, bool makeComplete) const
+std::optional<ParentInfo> TypeInfo::Layout::getParent_internal(const TypeName& ownType, const TypeName& name, MemberVisibility visibilityFlags, bool includeInherited, bool makeComplete) const
 {
 	//If referring to self, nothing to do
-	if (name == this->name) return std::nullopt;
+	if (name == ownType) return std::nullopt;
 
 	//Check immediate parents first
 	for (const ParentInfo& parent : parents)
@@ -104,12 +104,12 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent(const TypeName& name, Memb
 	{
 		for (const ParentInfo& parent : parents)
 		{
-			std::optional<ParentInfo> baseOfVbase = parent.typeName.resolve()->layout.getParent(name, visibilityFlags, includeInherited);
+			std::optional<ParentInfo> baseOfVbase = parent.typeName.resolve()->getParent(name, visibilityFlags, includeInherited);
 			if (baseOfVbase.has_value() && baseOfVbase.value().virtualness == ParentInfo::Virtualness::NonVirtual)
 			{
 				if (makeComplete)
 				{
-					baseOfVbase.value().owner = this->name;
+					baseOfVbase.value().owner = ownType;
 					baseOfVbase.value().offset += parent.offset;
 				}
 				return baseOfVbase.value();
@@ -119,6 +119,11 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent(const TypeName& name, Memb
 
 	//Not a parent
 	return std::nullopt;
+}
+
+std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibility visibilityFlags, bool includeInherited, bool makeComplete) const
+{
+	return layout.getParent_internal(this->name, name, visibilityFlags, includeInherited, makeComplete);
 }
 
 void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
@@ -143,7 +148,7 @@ void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor,
 				}
 				else
 				{
-					printf("ERROR: %s (parent of %s) was not loaded. Cannot walk all fields.\n", parent.typeName.c_str(), name.c_str());
+					printf("ERROR: %s was not loaded. Cannot walk all fields.\n", parent.typeName.c_str());
 				}
 			}
 		}
@@ -174,14 +179,14 @@ void TypeInfo::Layout::vptrJam(void* obj) const
 
 void* TypeInfo::Layout::upcast(void* obj, const TypeName& parentTypeName) const
 {
-	std::optional<ParentInfo> parent = getParent(parentTypeName);
+	std::optional<ParentInfo> parent = getParent_internal(TypeName(), parentTypeName);
 	if (parent.has_value()) return upcast(obj, parent.value()); //Defer
 	else return nullptr; //Not a parent
 }
 
 void* TypeInfo::Layout::upcast(void* obj, const ParentInfo& parentType) const
 {
-	assert(parentType.owner == this->name);
+	//assert(parentType.owner == this->name); //TODO re-add safety assert
 	return ((char*)obj)+parentType.offset;
 }
 

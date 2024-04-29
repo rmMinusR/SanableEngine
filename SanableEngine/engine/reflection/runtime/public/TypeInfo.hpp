@@ -45,14 +45,6 @@ public:
 		std::vector<ByteUsage> byteUsage; //Each value maps directly onto implicitValues' corresponding byte
 		std::vector<char> implicitValues; //Implicitly generated members (read: vptrs)
 
-	public:
-		/// <summary>
-		/// Look up a field by name. Returns nullptr if not found.
-		/// </summary>
-		ENGINE_RTTI_API const FieldInfo* getField(const std::string& name,
-												MemberVisibility visibilityFlags = MemberVisibility::Public,
-												bool includeInherited = true) const;
-
 		/// <summary>
 		/// Look up a parent by name
 		/// </summary>
@@ -60,10 +52,17 @@ public:
 		/// <param name="visibilityFlags">What parents should be visible or ignored</param>
 		/// <param name="includeInherited">If true, recurse into parents</param>
 		/// <param name="makeComplete">If true, and also includeInherited, grandparent ParentInfos will be adjusted to be valid for this type</param>
-		ENGINE_RTTI_API std::optional<ParentInfo> getParent(const TypeName& name,
+		std::optional<ParentInfo> getParent_internal(const TypeName& ownType, const TypeName& name,
 												MemberVisibility visibilityFlags = MemberVisibility::Public,
 												bool includeInherited = true,
 												bool makeComplete = true) const;
+	public:
+		/// <summary>
+		/// Look up a field by name. Returns nullptr if not found.
+		/// </summary>
+		ENGINE_RTTI_API const FieldInfo* getField(const std::string& name,
+												MemberVisibility visibilityFlags = MemberVisibility::Public,
+												bool includeInherited = true) const;
 
 		/// <summary>
 		/// Visit every field in this type matching the given query.
@@ -95,7 +94,7 @@ public:
 		ENGINE_RTTI_API bool matchesExact(void* obj) const;
 
 		friend class TypeBuilder; //Only thing allowed to touch all member data.
-		friend class TypeInfo;
+		friend struct TypeInfo;
 	} layout;
 
 	struct Capabilities
@@ -157,6 +156,17 @@ public:
 	/// <returns>Whether a live copy was present</returns>
 	ENGINE_RTTI_API bool tryRefresh();
 
+	/// <summary>
+	/// Look up a parent by name
+	/// </summary>
+	/// <param name="name">Name of parent</param>
+	/// <param name="visibilityFlags">What parents should be visible or ignored</param>
+	/// <param name="includeInherited">If true, recurse into parents</param>
+	/// <param name="makeComplete">If true, and also includeInherited, grandparent ParentInfos will be adjusted to be valid for this type</param>
+	ENGINE_RTTI_API std::optional<ParentInfo> getParent(const TypeName& name,
+											MemberVisibility visibilityFlags = MemberVisibility::Public,
+											bool includeInherited = true,
+											bool makeComplete = true) const;
 
 	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
@@ -180,7 +190,7 @@ public:
 		out.name = TypeName::create<TObj>();
 		out.layout.size = sizeof(TObj);
 		out.layout.align = alignof(TObj);
-		out.capabilities.dtor = thunk_utils<TObj>::dtor;
+		out.capabilities.rawDtor = thunk_utils<TObj>::dtor;
 		out.create_internalFinalize();
 		return out;
 	}
