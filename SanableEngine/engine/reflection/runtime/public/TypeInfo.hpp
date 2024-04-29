@@ -10,7 +10,7 @@
 #include "TypeName.hpp"
 #include "ParentInfo.hpp"
 #include "FieldInfo.hpp"
-#include "Callable.hpp"
+#include "Function.hpp"
 
 class TypeBuilder;
 
@@ -103,14 +103,14 @@ public:
 
 		struct MemberFuncRecord
 		{
-			CallableMember fn;
+			stix::MemberFunction fn;
 			MemberVisibility visibility;
 			bool isVirtual;
 		};
 
 		struct StaticFuncRecord
 		{
-			CallableStatic fn;
+			stix::StaticFunction fn;
 			MemberVisibility visibility;
 		};
 
@@ -122,7 +122,7 @@ public:
 		std::vector<ConstructorRecord> constructors;
 		struct DestructorRecord
 		{
-			std::optional<CallableMember> ctor; //nullopt if we couldn't capture it
+			std::optional<stix::MemberFunction> ctor; //nullopt if we couldn't capture it
 			MemberVisibility visibility;
 			bool isVirtual;
 		};

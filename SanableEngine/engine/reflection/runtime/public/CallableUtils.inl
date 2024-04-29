@@ -22,7 +22,7 @@ namespace FuncPtrAliases
 }
 
 //Ugly templated type erasure utils for binding concrete functions to be callable with SAnys
-namespace CallableUtils
+namespace stix::detail::CallableUtils
 {
 	//Helper for verifying if provided static type list matches dynamic type list
 	inline static TypeName _getRepresentedType(const SAnyRef & t) { return t.getType(); }

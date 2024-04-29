@@ -63,9 +63,9 @@ public:
 		addField_internal(TypeName::create<TField>(), name, sizeof(TField), accessor, MemberVisibility::Public); // TODO extract visibility in RTTI generation step
 	}
 
-	ENGINE_RTTI_API void addMemberFunction(const CallableMember& func, MemberVisibility visibility, bool isVirtual); //Order independent
-	ENGINE_RTTI_API void addStaticFunction(const CallableStatic& func, MemberVisibility visibility); //Order independent
-	ENGINE_RTTI_API void addConstructor(const CallableStatic& thunk, MemberVisibility visibility); //Order independent
+	ENGINE_RTTI_API void addMemberFunction(const stix::MemberFunction& func, MemberVisibility visibility, bool isVirtual); //Order independent
+	ENGINE_RTTI_API void addStaticFunction(const stix::StaticFunction& func, MemberVisibility visibility); //Order independent
+	ENGINE_RTTI_API void addConstructor(const stix::StaticFunction& thunk, MemberVisibility visibility); //Order independent
 
 	//Only call once all fields and parents are registered
 	template<typename TObj, typename... TCtorArgs>

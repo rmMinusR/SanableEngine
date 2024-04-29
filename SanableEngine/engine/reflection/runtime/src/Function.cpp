@@ -1,28 +1,28 @@
-#include "Callable.hpp"
+#include "Function.hpp"
 
 #include <cassert>
 
 #include "TypeInfo.hpp"
 
-Callable::Callable(const TypeName& returnType, const std::vector<TypeName>& parameters) :
+stix::Function::Function(const TypeName& returnType, const std::vector<TypeName>& parameters) :
 	returnType(returnType),
 	parameters(parameters)
 {
 }
 
-Callable::~Callable()
+stix::Function::~Function()
 {
 }
 
-CallableMember::CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters, CallableUtils::Member::fully_erased_binder_t binder, void(CallableUtils::Member::BinderSurrogate::*fn)()) :
-	Callable(returnType, parameters),
+stix::MemberFunction::MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters, detail::CallableUtils::Member::fully_erased_binder_t binder, void(detail::CallableUtils::Member::BinderSurrogate::*fn)()) :
+	Function(returnType, parameters),
 	owner(owner),
 	binder(binder),
 	fn(fn)
 {
 }
 
-CallableMember::~CallableMember()
+stix::MemberFunction::~MemberFunction()
 {
 }
 
@@ -32,7 +32,7 @@ CallableMember::~CallableMember()
 #define STACK_ALLOC alloca
 #endif
 
-void CallableMember::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const
+void stix::MemberFunction::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const
 {
 	assert(thisObj);
 
@@ -51,18 +51,18 @@ void CallableMember::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const s
 	binder(fn, returnValue, thisObj, parameters); //This will implicitly reinterpret fn to the right type when we enter the binder function itself
 }
 
-CallableStatic::CallableStatic(const TypeName& returnType, const std::vector<TypeName>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn) :
-	Callable(returnType, parameters),
+stix::StaticFunction::StaticFunction(const TypeName& returnType, const std::vector<TypeName>& parameters, detail::CallableUtils::Static::fully_erased_binder_t binder, detail::CallableUtils::Static::erased_fp_t fn) :
+	Function(returnType, parameters),
 	binder(binder),
 	fn(fn)
 {
 }
 
-CallableStatic::~CallableStatic()
+stix::StaticFunction::~StaticFunction()
 {
 }
 
-void CallableStatic::invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const
+void stix::StaticFunction::invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const
 {
 	bool returnsVoid = returnType==TypeName::create<void>();
 	if (!returnValue && !returnsVoid)

@@ -37,7 +37,7 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	options.sandboxed = { thunk, (void(*)())getLastSubFunction(thunk) };
 
 	//Unwrap aliases
-	for (auto i : allocators) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
+	for (auto i : allocators) { auto unwrapped = unwrapAliaFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
 	
 	//Simulate
 	MachineState canonicalState(true);

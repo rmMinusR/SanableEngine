@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-void* SAnyRef::get_internal(const TypeName& asType) const
+void* stix::SAnyRef::get_internal(const TypeName& asType) const
 {
 	if (!data) return nullptr;
 
@@ -10,7 +10,7 @@ void* SAnyRef::get_internal(const TypeName& asType) const
 	return data;
 }
 
-SAnyRef::SAnyRef(void* data, const TypeName& type) :
+stix::SAnyRef::SAnyRef(void* data, const TypeName& type) :
 	data(data),
 	type(type)
 {
@@ -18,28 +18,28 @@ SAnyRef::SAnyRef(void* data, const TypeName& type) :
 	assert(type.isValid());
 }
 
-SAnyRef::SAnyRef() :
+stix::SAnyRef::SAnyRef() :
 	data(nullptr),
 	type()
 {
 }
 
-SAnyRef::~SAnyRef()
+stix::SAnyRef::~SAnyRef()
 {
 }
 
-TypeName SAnyRef::getType() const
+TypeName stix::SAnyRef::getType() const
 {
 	return type;
 }
 
-SAnyRef::operator bool() const
+stix::SAnyRef::operator bool() const
 {
 	return data;
 
 }
 
-bool SAnyRef::has_value() const
+bool stix::SAnyRef::has_value() const
 {
 	return data;
 }
