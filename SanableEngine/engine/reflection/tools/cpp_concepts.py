@@ -4,6 +4,7 @@ import itertools
 import os
 from types import NoneType
 from typing import Generator
+import typing
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
@@ -428,8 +429,12 @@ class ConstructorInfo(Member, Callable):
         return cursor.kind == CursorKind.CONSTRUCTOR
     
     def renderMain(this):
-        paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-        return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
+        owner:TypeInfo = this.owner
+        if this.visibility == Member.Visibility.Public or owner.isFriended(lambda f: f"thunk_utils<{owner.absName}>" in f.targetName):
+            paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+            return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
+        else:
+            return f"//inaccessible constructor {this.absName}"
 
 
 class DestructorInfo(Virtualizable):
@@ -602,11 +607,14 @@ class TypeInfo(Symbol):
             out.extend(i.renderPreDecls())
         return out
 
+    def isFriended(this, selector:typing.Callable[[FriendInfo],bool]):
+        return any([ (isinstance(i, FriendInfo) and selector(i)) for i in this.__contents ])
+
     def __renderImageCapture_cdo(this):
         # Gather valid constructors
         ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, this.module.defaultImageCaptureStatus) )]
         hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
-        isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "TypeBuilder" in i.targetName) for i in this.__contents ])
+        isGeneratorFnFriended = this.isFriended(lambda f: "TypeBuilder" in f.targetName)
         if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
         ctors.sort(key=lambda i: len(i.parameters))
         
