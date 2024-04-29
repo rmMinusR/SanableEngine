@@ -418,18 +418,18 @@ class ConstructorInfo(Member, Callable):
         Member.__init__(this, module, cursor, owner)
         Callable.__init__(this, module, cursor)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
-        
-        this.__parameters: list[ParameterInfo] = []
-        for i in cursor.get_children():
-            if ParameterInfo.matches(i):
-                this.__parameters.append(ParameterInfo(module, i))
+
+        thunkTemplateArgs = ", ".join([i.typeName for i in this.parameters]) # Can't rely on template arg deduction in case of overloading
+        this.absReferenceableName = f"::thunk_utils<{owner.absName}>::thunk_newInPlace<{thunkTemplateArgs}>"
+        this.relReferenceableName = ""
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.CONSTRUCTOR
     
     def renderMain(this):
-        return None
+        paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+        return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
 
 
 class DestructorInfo(Virtualizable):

@@ -17,20 +17,23 @@ struct thunk_utils
 {
 	thunk_utils() = delete;
 	
+	template<typename... Args>
+	static void thunk_newInPlace(T* obj, Args... args) { new(obj) T(std::forward<Args>(args)...); }
+
 private:
 	//Helper for SemanticVM ThisPtr detection. Dllimport'ed functions such as malloc may have
 	//separate callsite addresses per translation unit (even if deferring to a shared libc)
 	template<int> static void* dummyAllocator() { return nullptr; }
 
 	template<typename... Args>
-	static void thunk_newInPlace(Args... args) { new(dummyAllocator<0>()) T(std::forward<Args>(args)...); }
+	static void _simulated_thunk_newInPlace(Args... args) { new(dummyAllocator<0>()) T(std::forward<Args>(args)...); }
 public:
 	template<typename... Args>
 	static inline DetectedConstants analyzeConstructor()
 	{
 		return _captureVtablesInternal(
 			sizeof(T),
-			(void(*)()) &thunk_newInPlace<Args...>,
+			(void(*)()) &_simulated_thunk_newInPlace<Args...>,
 			{
 				(void(*)()) &dummyAllocator<0>,
 				(void(*)()) &malloc,
