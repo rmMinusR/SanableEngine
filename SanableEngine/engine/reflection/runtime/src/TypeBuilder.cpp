@@ -18,17 +18,17 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 
 void TypeBuilder::addMemberFunction(const CallableMember& func, MemberVisibility visibility, bool isVirtual)
 {
-	type.capabilities.memberFuncs.push_back(func);
+	type.capabilities.memberFuncs.push_back(TypeInfo::Capabilities::MemberFuncRecord{ func, visibility, isVirtual });
 }
 
 void TypeBuilder::addStaticFunction(const CallableStatic& func, MemberVisibility visibility)
 {
-	type.capabilities.staticFuncs.push_back(func);
+	type.capabilities.staticFuncs.push_back(TypeInfo::Capabilities::StaticFuncRecord{ func, visibility });
 }
 
 void TypeBuilder::addConstructor(const CallableStatic& thunk, MemberVisibility visibility)
 {
-	type.capabilities.constructors.push_back(thunk);
+	type.capabilities.constructors.push_back(TypeInfo::Capabilities::ConstructorRecord{ thunk, visibility });
 }
 
 void TypeBuilder::captureClassImage_v1_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor)

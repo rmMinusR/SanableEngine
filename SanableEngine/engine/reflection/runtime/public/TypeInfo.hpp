@@ -114,10 +114,12 @@ public:
 			MemberVisibility visibility;
 		};
 
+		typedef StaticFuncRecord ConstructorRecord;
+
 		//These do not include parents' funcs/ctors/dtors. Should they?
 		std::vector<MemberFuncRecord> memberFuncs;
 		std::vector<StaticFuncRecord> staticFuncs;
-		std::vector<StaticFuncRecord> constructors;
+		std::vector<ConstructorRecord> constructors;
 		struct DestructorRecord
 		{
 			std::optional<CallableMember> ctor; //nullopt if we couldn't capture it
