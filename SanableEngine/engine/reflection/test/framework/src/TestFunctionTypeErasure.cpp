@@ -4,7 +4,10 @@
 
 struct MyCallable
 {
+	char padding[64];
+
 	int canary;
+	inline MyCallable(int canaryVal = 0) : canary(canaryVal) {}
 
 	inline void incCanary() { ++canary; }
 	inline int incCanary2() { return ++canary; }
@@ -18,8 +21,12 @@ struct MyCallable
 	inline void passStructRef(MyCallable& v) { ptrCanary = &v; }
 	inline MyCallable* passthroughStructPtr(MyCallable* v) { return ptrCanary = v; }
 	inline MyCallable& passthroughStructRef(MyCallable& v) { return *(ptrCanary = &v); }
-	inline MyCallable* returnStructPtr(MyCallable* v) { return  ptrCanary; }
-	inline MyCallable& returnStructRef(MyCallable& v) { return *ptrCanary; }
+	inline MyCallable* returnStructPtr() { return  ptrCanary; }
+	inline MyCallable& returnStructRef() { return *ptrCanary; }
+
+
+	inline void passStruct_copyCanary(MyCallable v) { this->canary = v.canary; }
+	inline MyCallable returnStruct() { MyCallable v; v.canary = 123; return v; }
 };
 
 TEST_CASE("Function type erasure")
@@ -80,17 +87,87 @@ TEST_CASE("Function type erasure")
 
 		//TODO
 		
-		/*
 		SUBCASE("Pointers and references")
 		{
-			SUBCASE("void(struct*)") {}
-			SUBCASE("void(struct&)") {}
-			SUBCASE("struct*(struct*)") {}
-			SUBCASE("struct&(struct&)") {}
-			SUBCASE("struct*()") {}
-			SUBCASE("struct&()") {}
+			SUBCASE("void(struct*)")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::passStructPtr, { ParameterInfo(TypeName::create<MyCallable*>(), "v") });
+
+				MyCallable objA;
+				MyCallable objB;
+				MyCallable* objB_ptr = &objB;
+				fn.invoke(SAnyRef(), SAnyRef::make(&objA), { SAnyRef::make(&objB_ptr) });
+
+				CHECK(objA.ptrCanary == &objB);
+			}
+
+			SUBCASE("void(struct&)")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::passStructRef, { ParameterInfo(TypeName::create<MyCallable&>(), "v") });
+
+				MyCallable objA;
+				MyCallable objB;
+				fn.invoke(SAnyRef(), SAnyRef::make(&objA), { SAnyRef::make(&objB) });
+
+				CHECK(objA.ptrCanary == &objB);
+			}
+
+			SUBCASE("struct*(struct*)")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::passthroughStructPtr, { ParameterInfo(TypeName::create<MyCallable*>(), "v") });
+
+				MyCallable objA;
+				MyCallable objB;
+				MyCallable* objB_ptr = &objB;
+				MyCallable* returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), SAnyRef::make(&objA), { SAnyRef::make(&objB_ptr) });
+
+				CHECK(objA.ptrCanary == &objB);
+			}
+
+			SUBCASE("struct&(struct&)")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::passthroughStructRef, { ParameterInfo(TypeName::create<MyCallable&>(), "v") });
+
+				MyCallable objA;
+				MyCallable objB;
+				MyCallable returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), SAnyRef::make(&objA), { SAnyRef::make(&objB) });
+
+				CHECK(objA.ptrCanary == &objB);
+			}
+
+			SUBCASE("struct*()")
+			{
+				MyCallable objA;
+				MyCallable objB;
+				objA.ptrCanary = &objB;
+
+				CallableMember fn = CallableMember::make(&MyCallable::returnStructPtr, {});
+
+				MyCallable* returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), SAnyRef::make(&objA), {});
+
+				CHECK(returnVal == objA.ptrCanary);
+			}
+
+			SUBCASE("struct&()")
+			{
+				MyCallable objA;
+				MyCallable objB;
+				objA.ptrCanary = &objB;
+				objB.canary = 456;
+
+				CallableMember fn = CallableMember::make(&MyCallable::returnStructRef, {});
+
+				MyCallable returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), SAnyRef::make(&objA), {});
+
+				CHECK(returnVal.canary == objB.canary);
+			}
 		}
 
+		/*
 		SUBCASE("Const")
 		{
 			SUBCASE("void(const struct*)") {}
