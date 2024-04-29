@@ -399,6 +399,7 @@ class BoundFuncInfo(Virtualizable, Callable):
         Callable.__init__(this, module, cursor)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         this.returnTypeName = _typeGetAbsName(cursor.result_type)
+        this.isTemplate = (cursor.kind == CursorKind.FUNCTION_TEMPLATE)
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -409,9 +410,12 @@ class BoundFuncInfo(Virtualizable, Callable):
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
     def renderMain(this):
-        eraserTemplateArgs = ", ".join([this.returnTypeName, this.owner.absName] + [i.typeName for i in this.parameters]) # Can't rely on template arg deduction in case of overloading
-        paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-        return f"builder.addMemberFunction(stix::MemberFunction::make<{eraserTemplateArgs}>(&{this.absReferenceableName}), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
+        if not this.isTemplate:
+            eraserTemplateArgs = ", ".join([this.returnTypeName, this.owner.absName] + [i.typeName for i in this.parameters]) # Can't rely on template arg deduction in case of overloading
+            paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+            return f"builder.addMemberFunction(stix::MemberFunction::make<{eraserTemplateArgs}>(&{this.absReferenceableName}), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
+        else:
+            return f"//Cannot capture template function {this.absName}"
 
 
 class ConstructorInfo(Member, Callable):
@@ -434,7 +438,7 @@ class ConstructorInfo(Member, Callable):
             paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
             return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
         else:
-            return f"//inaccessible constructor {this.absName}"
+            return f"//Inaccessible constructor {this.absName}"
 
 
 class DestructorInfo(Virtualizable):
