@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "TypeName.hpp"
 
 class CallableMember;
@@ -24,7 +26,7 @@ public:
 
 	ENGINE_RTTI_API TypeName getType() const;
 	template<typename T>
-	T* get() const { return get_internal(TypeName::create<T>()); }
+	std::remove_reference_t<T>& get() const { return *(std::remove_reference_t<T>*)get_internal(TypeName::create<T>()); }
 
 	ENGINE_RTTI_API operator bool() const;
 	ENGINE_RTTI_API bool has_value() const;

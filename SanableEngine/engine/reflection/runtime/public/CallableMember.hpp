@@ -14,8 +14,18 @@ struct ParameterInfo
 	TypeName type;
 	std::string name;
 
-	ParameterInfo(const TypeName& type, const std::string& name);
-	~ParameterInfo();
+	ENGINE_RTTI_API ParameterInfo(const TypeName& type, const std::string& name);
+	ENGINE_RTTI_API ~ParameterInfo();
+
+	//Helper for verifying if provided static type list matches dynamic type list
+	template<typename It, typename TArgsHead, typename... TArgsTail>
+	static void checkStaticMatchesDynamic(It it, It end)
+	{
+		assert(it != end);
+		assert(it->type == TypeName::create<TArgsHead>());
+		checkStaticMatchesDynamic<It, TArgsTail...>(it+1, end);
+	}
+	template<typename It> static void checkStaticMatchesDynamic(It it, It end) { assert(it == end); } //Tail case
 };
 
 
@@ -26,7 +36,7 @@ public:
 	TypeName owner;
 	std::vector<ParameterInfo> parameters;
 
-	virtual ~CallableMember();
+	ENGINE_RTTI_API ~CallableMember();
 
 	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
 protected:
@@ -38,13 +48,15 @@ protected:
 
 public:
 	template<typename TReturn, typename TOwner, typename... TArgs>
-	static CallableMember make(TReturn(TOwner::* fn)(TArgs...))
+	static CallableMember make(TReturn(TOwner::* fn)(TArgs...), const std::vector<ParameterInfo>& parameters)
 	{
+		ParameterInfo::checkStaticMatchesDynamic<std::vector<ParameterInfo>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
+		auto eraser = &CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
 		return CallableMember(
 			TypeName::create<TOwner>(),
 			TypeName::create<TReturn>(),
-			{ TypeName::create<TArgs>()... },
-			(CallableUtils::Member::fully_erased_binder_t) &CallableUtils::Member::_impl<TReturn>::impl,
+			parameters,
+			(CallableUtils::Member::fully_erased_binder_t) eraser,
 			(CallableUtils::Member::erased_fp_t) fn
 		);
 	}

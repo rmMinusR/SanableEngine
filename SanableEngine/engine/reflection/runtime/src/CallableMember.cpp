@@ -48,5 +48,5 @@ void CallableMember::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const s
 	}
 
 	//Invoke
-	binder(fn, returnValue, thisObj, parameters);
+	binder(fn, returnValue, thisObj, parameters); //This will implicitly reinterpret fn to the right type when we enter the binder function itself
 }

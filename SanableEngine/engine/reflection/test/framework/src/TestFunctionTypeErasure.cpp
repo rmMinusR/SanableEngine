@@ -30,7 +30,7 @@ TEST_CASE("Function type erasure")
 		{
 			SUBCASE("void()")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::incCanary);
+				CallableMember fn = CallableMember::make(&MyCallable::incCanary, {});
 
 				MyCallable obj;
 				obj.canary = 0;
@@ -41,7 +41,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("int()")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::incCanary2);
+				CallableMember fn = CallableMember::make(&MyCallable::incCanary2, {});
 
 				MyCallable obj;
 				obj.canary = 0;
@@ -54,7 +54,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("void(int)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::setCanary);
+				CallableMember fn = CallableMember::make(&MyCallable::setCanary, { ParameterInfo(TypeName::create<int>(), "v") });
 
 				MyCallable obj;
 				obj.canary = 0;
@@ -66,7 +66,7 @@ TEST_CASE("Function type erasure")
 
 			SUBCASE("int(int)")
 			{
-				CallableMember fn = CallableMember::make(&MyCallable::sum);
+				CallableMember fn = CallableMember::make(&MyCallable::sum, { ParameterInfo(TypeName::create<int>(), "a"), ParameterInfo(TypeName::create<int>(), "b") });
 
 				MyCallable obj;
 				int result;

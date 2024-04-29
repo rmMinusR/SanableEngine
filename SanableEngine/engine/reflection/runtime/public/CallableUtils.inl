@@ -2,50 +2,89 @@
 
 #include <cassert>
 #include <vector>
+#include <utility>
 
 #include "TypeName.hpp"
 #include "SAny.hpp"
 
-//Ugly templated type erasure utils for binding concrete functions to be callable with SAnys
 
+namespace FuncPtrAliases
+{
+	template<typename TReturn, typename... TArgs>
+	struct Static { typedef TReturn(*ptr_t)(TArgs...); };
+
+	template<typename TReturn, typename TOwner, typename... TArgs>
+	struct Member
+	{
+		typedef TReturn(TOwner::*normal_t)(TArgs...);
+		typedef TReturn(TOwner::*const_t)(TArgs...) const;
+	};
+}
+
+//Ugly templated type erasure utils for binding concrete functions to be callable with SAnys
 namespace CallableUtils
 {
+	//Helper for verifying if provided static type list matches dynamic type list
+	template<typename It, typename TArgsHead, typename... TArgsTail>
+	static void checkArgs(It it, It end)
+	{
+		assert(it != end);
+		assert(it->getType() == TypeName::create<TArgsHead>());
+		checkArgs<It, TArgsTail...>(it+1, end);
+	}
+	template<typename It> static void checkArgs(It it, It end) { assert(it == end); } //Tail case
+	
+
 	namespace Member
 	{
 		template<typename TReturn, bool returnsVoid = std::is_same_v<TReturn, void>>
-		struct _impl;
+		struct TypeEraser;
 
 		template<typename TReturn>
-		struct _impl<TReturn, false>
+		struct TypeEraser<TReturn, false>
 		{
 			template<typename TOwner, typename... TArgs>
 			static void impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
 			{
+				__impl(fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+			}
+			
+		private:
+			template<typename TOwner, typename... TArgs, size_t... I>
+			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				assert(parameters.size() == sizeof...(TArgs));
-				typedef std::make_index_sequence<sizeof...(TArgs)> ArgIDs;
-				assert(*parameters[ArgIDs].getType() == TypeName::create<TArgs>() && ...);
+				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
 
-				*returnValue.get<TReturn>() = thisObj.get<TOwner>()->fn( std::forward(*parameters[ArgIDs].get<TArgs>()) ...);
+				//Invoke
+				TOwner& _this = thisObj.get<TOwner>();
+				returnValue.get<TReturn>() = (_this.*fn)( (parameters[I].get<TArgs>()) ...);
 			}
 		};
 
 		template<typename TReturn>
-		struct _impl<TReturn, true>
+		struct TypeEraser<TReturn, true>
 		{
 			template<typename TOwner, typename... TArgs>
-			static void impl(TReturn(TOwner::* fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
+			static void impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
+			{
+				__impl(fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+			}
+			
+		private:
+			template<typename TOwner, typename... TArgs, size_t... I>
+			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
-
+			
 				//Check parameters match exactly
-				assert(parameters.size() == sizeof...(TArgs));
-				typedef std::make_index_sequence<sizeof...(TArgs)> ArgIDs;
-				assert(*parameters[ArgIDs].getType() == TypeName::create<TArgs>() && ...);
+				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
 
-				thisObj.get<TOwner>()->fn( std::forward(*parameters[ArgIDs].get<TArgs>()) ...);
+				//Invoke
+				TOwner& _this = thisObj.get<TOwner>();
+				(_this.*fn)( (parameters[I].get<TArgs>()) ...);
 			}
 		};
 
