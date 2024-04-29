@@ -104,6 +104,12 @@ namespace public_cast
 		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
 
 	//NOTE: If return type is a template with commas, you will need to write this by hand or the C preprocessor will mangle it
+	#define PUBLIC_CAST_GIVE_BOUND_CONST_FN_ACCESS(key, TClass, name, returnType, /*args*/...) \
+		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
+		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (TClass::*)(__VA_ARGS__) const; }; \
+		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
+
+	//NOTE: If return type is a template with commas, you will need to write this by hand or the C preprocessor will mangle it
 	#define PUBLIC_CAST_GIVE_STATIC_FN_ACCESS(key, TClass, name, returnType, /*args*/...) \
 		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
 		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (*)(__VA_ARGS__); }; \

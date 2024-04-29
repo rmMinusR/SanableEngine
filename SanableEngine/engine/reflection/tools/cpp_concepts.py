@@ -400,6 +400,7 @@ class BoundFuncInfo(Virtualizable, Callable):
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         this.returnTypeName = _typeGetAbsName(cursor.result_type)
         this.isTemplate = (cursor.kind == CursorKind.FUNCTION_TEMPLATE)
+        this.isConstMethod = cursor.is_const_method()
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -424,11 +425,12 @@ class BoundFuncInfo(Virtualizable, Callable):
             "TClass": this.owner.absName,
             "returnType": this.returnTypeName,
             "params": ", ".join([i.typeName for i in this.parameters]),
-            "name": this.relReferenceableName
+            "name": this.relReferenceableName,
+            "this_maybe_const": " const" if this.isConstMethod else ""
         }
         return [
             'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
-		    'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params});'.format_map(formatter) + ' };',
+		    'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_maybe_const};'.format_map(formatter) + ' };',
 		    'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
         ]
     
