@@ -14,10 +14,19 @@ ParameterInfo::~ParameterInfo()
 {
 }
 
-CallableMember::CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Member::fully_erased_binder_t binder, void(CallableUtils::Member::BinderSurrogate::*fn)()) :
+Callable::Callable(TypeName returnType, TypeName owner, std::vector<ParameterInfo> parameters) :
 	owner(owner),
 	returnType(returnType),
-	parameters(parameters),
+	parameters(parameters)
+{
+}
+
+Callable::~Callable()
+{
+}
+
+CallableMember::CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Member::fully_erased_binder_t binder, void(CallableUtils::Member::BinderSurrogate::*fn)()) :
+	Callable(returnType, owner, parameters),
 	binder(binder),
 	fn(fn)
 {
@@ -53,9 +62,7 @@ void CallableMember::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const s
 }
 
 CallableStatic::CallableStatic(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn) :
-	owner(owner),
-	returnType(returnType),
-	parameters(parameters),
+	Callable(returnType, owner, parameters),
 	binder(binder),
 	fn(fn)
 {

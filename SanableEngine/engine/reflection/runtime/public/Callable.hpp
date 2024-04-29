@@ -29,24 +29,24 @@ struct ParameterInfo
 };
 
 
-class CallableMember
+class Callable
 {
 public:
 	TypeName returnType;
 	TypeName owner;
 	std::vector<ParameterInfo> parameters;
 
-	ENGINE_RTTI_API ~CallableMember();
-
-	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
+	ENGINE_RTTI_API virtual ~Callable();
 protected:
-	ENGINE_RTTI_API CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Member::fully_erased_binder_t binder, CallableUtils::Member::erased_fp_t fn);
+	Callable(TypeName returnType, TypeName owner, std::vector<ParameterInfo> parameters);
+};
 
-	//All SAnyRefs guaranteed valid when called
-	CallableUtils::Member::fully_erased_binder_t binder;
-	CallableUtils::Member::erased_fp_t fn;
-
+class CallableMember : public Callable
+{
 public:
+	ENGINE_RTTI_API virtual ~CallableMember();
+	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
+	
 	template<typename TReturn, typename TOwner, typename... TArgs>
 	static CallableMember make(TReturn(TOwner::* fn)(TArgs...), const std::vector<ParameterInfo>& parameters)
 	{
@@ -60,26 +60,21 @@ public:
 			(CallableUtils::Member::erased_fp_t) fn
 		);
 	}
-};
 
-class CallableStatic
-{
-public:
-	TypeName returnType;
-	TypeName owner; //Might not be valid
-	std::vector<ParameterInfo> parameters;
-
-	ENGINE_RTTI_API ~CallableStatic();
-
-	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const;
 protected:
-	ENGINE_RTTI_API CallableStatic(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn);
+	ENGINE_RTTI_API CallableMember(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Member::fully_erased_binder_t binder, CallableUtils::Member::erased_fp_t fn);
 
 	//All SAnyRefs guaranteed valid when called
-	CallableUtils::Static::fully_erased_binder_t binder;
-	CallableUtils::Static::erased_fp_t fn;
+	CallableUtils::Member::fully_erased_binder_t binder;
+	CallableUtils::Member::erased_fp_t fn;
+};
 
+class CallableStatic : public Callable
+{
 public:
+	ENGINE_RTTI_API virtual ~CallableStatic();
+	ENGINE_RTTI_API void invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const;
+
 	template<typename TReturn, typename... TArgs>
 	static CallableStatic make(TReturn(*fn)(TArgs...), const std::vector<ParameterInfo>& parameters)
 	{
@@ -107,4 +102,11 @@ public:
 			(CallableUtils::Static::erased_fp_t) fn
 		);
 	}
+
+protected:
+	ENGINE_RTTI_API CallableStatic(const TypeName& owner, const TypeName& returnType, const std::vector<ParameterInfo>& parameters, CallableUtils::Static::fully_erased_binder_t binder, CallableUtils::Static::erased_fp_t fn);
+
+	//All SAnyRefs guaranteed valid when called
+	CallableUtils::Static::fully_erased_binder_t binder;
+	CallableUtils::Static::erased_fp_t fn;
 };
