@@ -16,14 +16,14 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 	pendingFields.emplace_back(declaredType, name, size, accessor, visibility);
 }
 
-void TypeBuilder::addMemberFunction(const stix::MemberFunction& func, MemberVisibility visibility, bool isVirtual)
+void TypeBuilder::addMemberFunction(const stix::MemberFunction& func, const std::string& name, MemberVisibility visibility, bool isVirtual)
 {
-	type.capabilities.memberFuncs.push_back(TypeInfo::Capabilities::MemberFuncRecord{ func, visibility, isVirtual });
+	type.capabilities.memberFuncs.push_back(TypeInfo::Capabilities::MemberFuncRecord{ func, name, visibility, isVirtual });
 }
 
-void TypeBuilder::addStaticFunction(const stix::StaticFunction& func, MemberVisibility visibility)
+void TypeBuilder::addStaticFunction(const stix::StaticFunction& func, const std::string& name, MemberVisibility visibility)
 {
-	type.capabilities.staticFuncs.push_back(TypeInfo::Capabilities::StaticFuncRecord{ func, visibility });
+	type.capabilities.staticFuncs.push_back(TypeInfo::Capabilities::StaticFuncRecord{ func, name, visibility });
 }
 
 void TypeBuilder::addConstructor(const stix::StaticFunction& thunk, MemberVisibility visibility)

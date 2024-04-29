@@ -104,6 +104,7 @@ public:
 		struct MemberFuncRecord
 		{
 			stix::MemberFunction fn;
+			std::string name;
 			MemberVisibility visibility;
 			bool isVirtual;
 		};
@@ -111,21 +112,27 @@ public:
 		struct StaticFuncRecord
 		{
 			stix::StaticFunction fn;
+			std::string name;
 			MemberVisibility visibility;
 		};
 
-		typedef StaticFuncRecord ConstructorRecord;
+		struct ConstructorRecord
+		{
+			stix::StaticFunction thunk;
+			MemberVisibility visibility;
+		};
 
-		//These do not include parents' funcs/ctors/dtors. Should they?
-		std::vector<MemberFuncRecord> memberFuncs;
-		std::vector<StaticFuncRecord> staticFuncs;
-		std::vector<ConstructorRecord> constructors;
 		struct DestructorRecord
 		{
 			std::optional<stix::MemberFunction> ctor; //nullopt if we couldn't capture it
 			MemberVisibility visibility;
 			bool isVirtual;
 		};
+		
+		//These do not include parents' funcs/ctors/dtors. Should they?
+		std::vector<MemberFuncRecord> memberFuncs;
+		std::vector<StaticFuncRecord> staticFuncs;
+		std::vector<ConstructorRecord> constructors;
 		std::optional<DestructorRecord> richDtor; //Detects implicit dtors using standard C++. If nullopt, destructor is deleted.
 
 	} capabilities;
