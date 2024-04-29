@@ -80,8 +80,22 @@ protected:
 	CallableUtils::Static::erased_fp_t fn;
 
 public:
-	template<typename TReturn, typename TOwner, typename... TArgs>
+	template<typename TReturn, typename... TArgs>
 	static CallableStatic make(TReturn(*fn)(TArgs...), const std::vector<ParameterInfo>& parameters)
+	{
+		ParameterInfo::checkStaticMatchesDynamic<std::vector<ParameterInfo>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
+		auto eraser = &CallableUtils::Static::TypeEraser<TReturn>::template impl<TArgs...>;
+		return CallableStatic(
+			TypeName(),
+			TypeName::create<TReturn>(),
+			parameters,
+			(CallableUtils::Static::fully_erased_binder_t) eraser,
+			(CallableUtils::Static::erased_fp_t) fn
+		);
+	}
+	
+	template<typename TOwner, typename TReturn, typename... TArgs>
+	static CallableStatic makeWithOwner(TReturn(*fn)(TArgs...), const std::vector<ParameterInfo>& parameters)
 	{
 		ParameterInfo::checkStaticMatchesDynamic<std::vector<ParameterInfo>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
 		auto eraser = &CallableUtils::Static::TypeEraser<TReturn>::template impl<TArgs...>;

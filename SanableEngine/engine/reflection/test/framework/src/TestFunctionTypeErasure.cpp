@@ -28,6 +28,29 @@ struct MyCallable
 	inline MyCallable  returnStruct   () { return *ptrCanary; }
 };
 
+namespace MyCallable_Static //Functions exactly the same as MyCallable, except everything is static
+{
+	int canary;
+	
+	inline void incCanary() { ++canary; }
+	inline int incCanary2() { return ++canary; }
+
+	inline void setCanary(int val) { canary = val; }
+	inline int sum(int a, int b) { return a + b; }
+
+
+	MyCallable* ptrCanary;
+	inline void passStructPtr(MyCallable* v) { ptrCanary =  v; }
+	inline void passStructRef(MyCallable& v) { ptrCanary = &v; }
+	inline void passStruct   (MyCallable  v) { canary    =  v.canary; }
+	inline MyCallable* passthroughStructPtr(MyCallable* v) { return ptrCanary = v; }
+	inline MyCallable& passthroughStructRef(MyCallable& v) { return *(ptrCanary = &v); }
+	inline MyCallable  passthroughStruct   (MyCallable  v) { canary = v.canary; return v; }
+	inline MyCallable* returnStructPtr() { return  ptrCanary; }
+	inline MyCallable& returnStructRef() { return *ptrCanary; }
+	inline MyCallable  returnStruct   () { return *ptrCanary; }
+};
+
 TEST_CASE("Function type erasure")
 {
 	SUBCASE("Member")
@@ -202,6 +225,185 @@ TEST_CASE("Function type erasure")
 				objA.ptrCanary = &objB;
 				MyCallable result;
 				fn.invoke(SAnyRef::make(&result), SAnyRef::make(&objA), {});
+
+				CHECK(result.canary == objB.canary);
+			}
+		}
+
+		/*
+		SUBCASE("Const")
+		{
+			SUBCASE("void(const struct*)") {}
+			SUBCASE("void(const struct&)") {}
+			SUBCASE("void(const struct)") {}
+			SUBCASE("const struct*()") {}
+			SUBCASE("const struct&()") {}
+			SUBCASE("const struct()") {}
+		}
+		// */
+	}
+
+	
+	SUBCASE("Static")
+	{
+		MyCallable_Static::canary = 0;
+		MyCallable_Static::ptrCanary = nullptr;
+
+		SUBCASE("Primitive types")
+		{
+			SUBCASE("void()")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::incCanary, {});
+
+				fn.invoke(SAnyRef(), {});
+
+				CHECK(MyCallable_Static::canary == 1);
+			}
+
+			SUBCASE("int()")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::incCanary2, {});
+
+				int result;
+				fn.invoke(SAnyRef::make(&result), {});
+
+				CHECK(MyCallable_Static::canary == 1);
+				CHECK(result == 1);
+			}
+
+			SUBCASE("void(int)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::setCanary, { ParameterInfo(TypeName::create<int>(), "v") });
+
+				int val = 20;
+				fn.invoke(SAnyRef(), { SAnyRef::make(&val) });
+
+				CHECK(MyCallable_Static::canary == val);
+			}
+
+			SUBCASE("int(int)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::sum, { ParameterInfo(TypeName::create<int>(), "a"), ParameterInfo(TypeName::create<int>(), "b") });
+
+				int result;
+				int a = 2;
+				int b = 3;
+				fn.invoke(SAnyRef::make(&result), { SAnyRef::make(&a), SAnyRef::make(&b) });
+
+				CHECK(result == a+b);
+			}
+		}
+
+		SUBCASE("Pointers and references")
+		{
+
+			SUBCASE("void(struct*)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStructPtr, { ParameterInfo(TypeName::create<MyCallable*>(), "v") });
+
+				MyCallable objB;
+				MyCallable* objB_ptr = &objB;
+				fn.invoke(SAnyRef(), { SAnyRef::make(&objB_ptr) });
+
+				CHECK(MyCallable_Static::ptrCanary == &objB);
+			}
+
+			SUBCASE("void(struct&)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStructRef, { ParameterInfo(TypeName::create<MyCallable&>(), "v") });
+
+				MyCallable objB;
+				fn.invoke(SAnyRef(), { SAnyRef::make(&objB) });
+
+				CHECK(MyCallable_Static::ptrCanary == &objB);
+			}
+
+			SUBCASE("struct*(struct*)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStructPtr, { ParameterInfo(TypeName::create<MyCallable*>(), "v") });
+
+				MyCallable objB;
+				MyCallable* objB_ptr = &objB;
+				MyCallable* returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), { SAnyRef::make(&objB_ptr) });
+
+				CHECK(MyCallable_Static::ptrCanary == &objB);
+			}
+
+			SUBCASE("struct&(struct&)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStructRef, { ParameterInfo(TypeName::create<MyCallable&>(), "v") });
+
+				MyCallable objB;
+				MyCallable returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), { SAnyRef::make(&objB) });
+
+				CHECK(MyCallable_Static::ptrCanary == &objB);
+			}
+
+			SUBCASE("struct*()")
+			{
+				MyCallable objB;
+				MyCallable_Static::ptrCanary = &objB;
+
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStructPtr, {});
+
+				MyCallable* returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), {});
+
+				CHECK(returnVal == MyCallable_Static::ptrCanary);
+			}
+
+			SUBCASE("struct&()")
+			{
+				MyCallable objB;
+				MyCallable_Static::ptrCanary = &objB;
+				objB.canary = 456;
+
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStructRef, {});
+
+				MyCallable returnVal;
+				fn.invoke(SAnyRef::make(&returnVal), {});
+
+				CHECK(returnVal.canary == objB.canary);
+			}
+		}
+
+		SUBCASE("Raw structs")
+		{
+			SUBCASE("void(struct)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passStruct, { ParameterInfo(TypeName::create<MyCallable>(), "v") });
+
+				MyCallable objB;
+				objB.canary = 873;
+				fn.invoke(SAnyRef(), { SAnyRef::make(&objB) });
+
+				CHECK(MyCallable_Static::canary == objB.canary);
+			}
+
+			SUBCASE("struct(struct)")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::passthroughStruct, { ParameterInfo(TypeName::create<MyCallable>(), "v") });
+
+				MyCallable objB;
+				objB.canary = 873;
+				MyCallable result;
+				fn.invoke(SAnyRef::make(&result), { SAnyRef::make(&objB) });
+
+				CHECK(MyCallable_Static::canary == objB.canary);
+				CHECK(result.canary == objB.canary);
+			}
+
+			SUBCASE("struct()")
+			{
+				CallableStatic fn = CallableStatic::make(&MyCallable_Static::returnStruct, {});
+
+				MyCallable objB;
+				objB.canary = 873;
+				MyCallable_Static::ptrCanary = &objB;
+				MyCallable result;
+				fn.invoke(SAnyRef::make(&result), {});
 
 				CHECK(result.canary == objB.canary);
 			}
