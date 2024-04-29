@@ -3,6 +3,7 @@
 #include <cassert>
 #include <vector>
 #include <utility>
+#include <variant>
 
 #include "TypeName.hpp"
 #include "SAny.hpp"
@@ -41,6 +42,14 @@ namespace stix::detail::CallableUtils
 
 	namespace Member
 	{
+		struct BinderSurrogate { inline virtual void _virtual() {} };
+		struct BinderSurrogateDerived : virtual BinderSurrogate { inline virtual void _virtual() override {} };
+		constexpr static size_t erased_fp_target_size = std::max( sizeof(&BinderSurrogate::_virtual), sizeof(&BinderSurrogateDerived::_virtual) );
+		using erased_fp_t = decltype(&BinderSurrogateDerived::_virtual);
+		static_assert(erased_fp_target_size <= sizeof(erased_fp_t) && sizeof(erased_fp_t) < erased_fp_target_size+sizeof(void*));
+		using fully_erased_binder_t = void(*)(erased_fp_t fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters);
+
+
 		template<typename TReturn, bool returnsVoid = std::is_same_v<TReturn, void>>
 		struct TypeEraser;
 
@@ -48,9 +57,18 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, false>
 		{
 			template<typename TOwner, typename... TArgs>
-			static void impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
+			static void impl(erased_fp_t erased_fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
 			{
-				__impl(fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+				typedef TReturn(TOwner::* fn_t)(TArgs...);
+				static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn_t));
+				union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
+				{
+					fn_t _fn;
+					detail::CallableUtils::Member::erased_fp_t _erased;
+				} reinterpreter;
+				reinterpreter._erased = erased_fn;
+
+				__impl(reinterpreter._fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
 			}
 			
 		private:
@@ -72,9 +90,18 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, true>
 		{
 			template<typename TOwner, typename... TArgs>
-			static void impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
+			static void impl(erased_fp_t erased_fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
 			{
-				__impl(fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+				typedef TReturn(TOwner::* fn_t)(TArgs...);
+				static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn_t));
+				union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
+				{
+					fn_t _fn;
+					detail::CallableUtils::Member::erased_fp_t _erased;
+				} reinterpreter;
+				reinterpreter._erased = erased_fn;
+
+				__impl(reinterpreter._fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
 			}
 			
 		private:
@@ -91,15 +118,6 @@ namespace stix::detail::CallableUtils
 				(_this.*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
 			}
 		};
-
-
-		template<typename TReturn, typename TOwner, typename... TArgs>
-		using binder_t = void(*)(TReturn(TOwner::* fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters);
-
-		struct BinderSurrogate {};
-		using fully_erased_binder_t = binder_t<void, BinderSurrogate>;
-
-		typedef void(BinderSurrogate::* erased_fp_t)();
 	}
 
 

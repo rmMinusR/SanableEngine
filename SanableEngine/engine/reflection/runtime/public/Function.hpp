@@ -35,17 +35,33 @@ namespace stix
 			std::vector<TypeName> parameters = TypeName::createPack<TArgs...>();
 			detail::CallableUtils::checkArgs<std::vector<TypeName>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
 			auto eraser = &detail::CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
+
+			static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn));
+			union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
+			{
+				decltype(fn) _fn;
+				detail::CallableUtils::Member::erased_fp_t _erased;
+			} reinterpreter;
+			reinterpreter._fn = fn;
+
 			return MemberFunction(
 				TypeName::create<TOwner>(),
 				TypeName::create<TReturn>(),
 				parameters,
 				(detail::CallableUtils::Member::fully_erased_binder_t) eraser,
-				(detail::CallableUtils::Member::erased_fp_t) fn
+				reinterpreter._erased
 			);
 		}
 
+		template<typename TReturn, typename TOwner, typename... TArgs>
+		static MemberFunction make(TReturn(TOwner::* fn)(TArgs...) const)
+		{
+			return make<TReturn, TOwner, TArgs...>( (TReturn(TOwner::*)(TArgs...)) fn ); //Defer to main impl. TODO erase constness too
+		}
+
 	protected:
-		ENGINE_RTTI_API MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters, detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn);
+		ENGINE_RTTI_API MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters,
+			                           detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn);
 
 		//All SAnyRefs guaranteed valid when called
 		TypeName owner;
@@ -74,7 +90,8 @@ namespace stix
 		}
 	
 	protected:
-		ENGINE_RTTI_API StaticFunction(const TypeName& returnType, const std::vector<TypeName>& parameters, detail::CallableUtils::Static::fully_erased_binder_t binder, detail::CallableUtils::Static::erased_fp_t fn);
+		ENGINE_RTTI_API StaticFunction(const TypeName& returnType, const std::vector<TypeName>& parameters,
+			                           detail::CallableUtils::Static::fully_erased_binder_t binder, detail::CallableUtils::Static::erased_fp_t fn);
 
 		//All SAnyRefs guaranteed valid when called
 		detail::CallableUtils::Static::fully_erased_binder_t binder;

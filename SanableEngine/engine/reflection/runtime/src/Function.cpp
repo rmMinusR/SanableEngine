@@ -14,7 +14,8 @@ stix::Function::~Function()
 {
 }
 
-stix::MemberFunction::MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters, detail::CallableUtils::Member::fully_erased_binder_t binder, void(detail::CallableUtils::Member::BinderSurrogate::*fn)()) :
+stix::MemberFunction::MemberFunction(const TypeName& owner, const TypeName& returnType, const std::vector<TypeName>& parameters,
+	                                 detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn) :
 	Function(returnType, parameters),
 	owner(owner),
 	binder(binder),
@@ -51,7 +52,8 @@ void stix::MemberFunction::invoke(SAnyRef returnValue, const SAnyRef& thisObj, c
 	binder(fn, returnValue, thisObj, parameters); //This will implicitly reinterpret fn to the right type when we enter the binder function itself
 }
 
-stix::StaticFunction::StaticFunction(const TypeName& returnType, const std::vector<TypeName>& parameters, detail::CallableUtils::Static::fully_erased_binder_t binder, detail::CallableUtils::Static::erased_fp_t fn) :
+stix::StaticFunction::StaticFunction(const TypeName& returnType, const std::vector<TypeName>& parameters,
+	                                 detail::CallableUtils::Static::fully_erased_binder_t binder, detail::CallableUtils::Static::erased_fp_t fn) :
 	Function(returnType, parameters),
 	binder(binder),
 	fn(fn)
