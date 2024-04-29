@@ -12,17 +12,6 @@ TypeInfo::TypeInfo()
 
 TypeInfo::~TypeInfo()
 {
-	if (implicitValues)
-	{
-		free(implicitValues);
-		implicitValues = nullptr;
-	}
-
-	if (byteUsage)
-	{
-		free(byteUsage);
-		byteUsage = nullptr;
-	}
 }
 
 TypeInfo::TypeInfo(const TypeInfo& cpy)
@@ -37,45 +26,25 @@ TypeInfo::TypeInfo(TypeInfo&& mov)
 
 TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 {
-	this->name    = cpy.name;
-	this->size    = cpy.size;
-	this->align   = cpy.align;
-	this->dtor    = cpy.dtor;
-	this->parents = cpy.parents;
-	this->fields  = cpy.fields;
-
-	if (cpy.byteUsage)
-	{
-		this->byteUsage = (ByteUsage*)malloc(this->size);
-		memcpy(this->byteUsage, cpy.byteUsage, this->size);
-	}
-	if (cpy.implicitValues)
-	{
-		this->implicitValues = (char*)malloc(this->size);
-		memcpy(this->implicitValues, cpy.implicitValues, this->size);
-	}
+	this->name         = cpy.name;
+	this->layout       = cpy.layout;
+	this->capabilities = cpy.capabilities;
 
 	return *this;
 }
 
 TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 {
-	this->name    = std::move(mov.name);
-	this->size    = std::move(mov.size);
-	this->align   = std::move(mov.align);
-	this->dtor    = std::move(mov.dtor);
-	this->parents = std::move(mov.parents);
-	this->fields  = std::move(mov.fields);
-
-	std::swap(this->byteUsage     , mov.byteUsage     );
-	std::swap(this->implicitValues, mov.implicitValues);
+	this->name         = std::move(mov.name);
+	this->layout       = std::move(mov.layout);
+	this->capabilities = std::move(mov.capabilities);
 
 	return *this;
 }
 
 bool TypeInfo::isValid() const
 {
-	return size != 0
+	return layout.size != 0
 		&& name.isValid();
 }
 
@@ -96,7 +65,7 @@ bool TypeInfo::tryRefresh()
 	else return false;
 }
 
-const FieldInfo* TypeInfo::getField(const std::string& name, MemberVisibility visibilityFlags, bool includeInherited) const
+const FieldInfo* TypeInfo::Layout::getField(const std::string& name, MemberVisibility visibilityFlags, bool includeInherited) const
 {
 	//Search own fields
 	auto it = std::find_if(fields.begin(), fields.end(), [&](const FieldInfo& fi) { return fi.name == name; });
@@ -109,7 +78,7 @@ const FieldInfo* TypeInfo::getField(const std::string& name, MemberVisibility vi
 		{
 			if ((int)parent.visibility & (int)visibilityFlags)
 			{
-				const FieldInfo* out = parent.typeName.resolve()->getField(name, visibilityFlags, true);
+				const FieldInfo* out = parent.typeName.resolve()->layout.getField(name, visibilityFlags, true);
 				if (out) return out;
 			}
 		}
@@ -119,7 +88,7 @@ const FieldInfo* TypeInfo::getField(const std::string& name, MemberVisibility vi
 	return nullptr;
 }
 
-std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibility visibilityFlags, bool includeInherited, bool makeComplete) const
+std::optional<ParentInfo> TypeInfo::Layout::getParent(const TypeName& name, MemberVisibility visibilityFlags, bool includeInherited, bool makeComplete) const
 {
 	//If referring to self, nothing to do
 	if (name == this->name) return std::nullopt;
@@ -135,7 +104,7 @@ std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibi
 	{
 		for (const ParentInfo& parent : parents)
 		{
-			std::optional<ParentInfo> baseOfVbase = parent.typeName.resolve()->getParent(name, visibilityFlags, includeInherited);
+			std::optional<ParentInfo> baseOfVbase = parent.typeName.resolve()->layout.getParent(name, visibilityFlags, includeInherited);
 			if (baseOfVbase.has_value() && baseOfVbase.value().virtualness == ParentInfo::Virtualness::NonVirtual)
 			{
 				if (makeComplete)
@@ -152,7 +121,7 @@ std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibi
 	return std::nullopt;
 }
 
-void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
+void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
 {
 	//Recurse into parents first
 	//C++ treats parents as fields placed before the first explicit field
@@ -166,7 +135,7 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 				if (parentType)
 				{
 					//Can't walk what isn't loaded
-					parentType->walkFields(
+					parentType->layout.walkFields(
 						visitor,
 						visibilityFlags,
 						true
@@ -190,10 +159,10 @@ void TypeInfo::walkFields(std::function<void(const FieldInfo&)> visitor, MemberV
 	}
 }
 
-void TypeInfo::vptrJam(void* obj) const
+void TypeInfo::Layout::vptrJam(void* obj) const
 {
-	assert(byteUsage);
-	if (implicitValues)
+	assert(!byteUsage.empty());
+	if (!implicitValues.empty())
 	{
 		//Write captured constants from implicitly generated fields
 		for (size_t i = 0; i < size; ++i)
@@ -203,23 +172,23 @@ void TypeInfo::vptrJam(void* obj) const
 	}
 }
 
-void* TypeInfo::upcast(void* obj, const TypeName& parentTypeName) const
+void* TypeInfo::Layout::upcast(void* obj, const TypeName& parentTypeName) const
 {
 	std::optional<ParentInfo> parent = getParent(parentTypeName);
 	if (parent.has_value()) return upcast(obj, parent.value()); //Defer
 	else return nullptr; //Not a parent
 }
 
-void* TypeInfo::upcast(void* obj, const ParentInfo& parentType) const
+void* TypeInfo::Layout::upcast(void* obj, const ParentInfo& parentType) const
 {
 	assert(parentType.owner == this->name);
 	return ((char*)obj)+parentType.offset;
 }
 
-bool TypeInfo::matchesExact(void* obj) const
+bool TypeInfo::Layout::matchesExact(void* obj) const
 {
-	assert(byteUsage);
-	assert(implicitValues);
+	assert(!byteUsage.empty());
+	assert(!implicitValues.empty());
 
 	for (size_t i = 0; i < size; ++i)
 	{
@@ -232,12 +201,12 @@ bool TypeInfo::matchesExact(void* obj) const
 void TypeInfo::doLateBinding()
 {
 	//Deferred from captureCDO: Mark all fields as used
-	assert(byteUsage);
-	walkFields(
+	assert(!layout.byteUsage.empty());
+	layout.walkFields(
 		[&](const FieldInfo& fi) {
-			ptrdiff_t root = fi.offset + (ptrdiff_t)this->upcast(nullptr, fi.owner);
-			assert(byteUsage[root] != ByteUsage::ImplicitConst && "Attempted to overwrite data (usage clobbering)");
-			memset(byteUsage+root, (uint8_t)ByteUsage::ExplicitField, fi.size);
+			ptrdiff_t root = fi.offset + (ptrdiff_t)this->layout.upcast(nullptr, fi.owner);
+			assert(layout.byteUsage[root] != Layout::ByteUsage::ImplicitConst && "Attempted to overwrite data (usage clobbering)");
+			memset(layout.byteUsage.data()+root, (uint8_t)Layout::ByteUsage::ExplicitField, fi.size);
 		},
 		MemberVisibility::All,
 		true
@@ -246,6 +215,6 @@ void TypeInfo::doLateBinding()
 
 void TypeInfo::create_internalFinalize()
 {
-	byteUsage = (ByteUsage*)malloc(size);
-	memset(byteUsage, (uint8_t)ByteUsage::Unknown, size);
+	layout.byteUsage.resize(layout.size);
+	memset(layout.byteUsage.data(), (uint8_t)Layout::ByteUsage::Unknown, layout.size);
 }

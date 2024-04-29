@@ -16,6 +16,21 @@ void TypeBuilder::addField_internal(const TypeName& declaredType, const std::str
 	pendingFields.emplace_back(declaredType, name, size, accessor, visibility);
 }
 
+void TypeBuilder::addMemberFunction(const CallableMember& func, MemberVisibility visibility, bool isVirtual)
+{
+	type.memberFuncs.push_back(func);
+}
+
+void TypeBuilder::addStaticFunction(const CallableStatic& func, MemberVisibility visibility)
+{
+	type.staticFuncs.push_back(func);
+}
+
+void TypeBuilder::addConstructor(const CallableStatic& thunk, MemberVisibility visibility)
+{
+	type.constructors.push_back(thunk);
+}
+
 void TypeBuilder::captureClassImage_v1_internal(std::function<void(void*)> ctor, std::function<void(void*)> dtor)
 {
 	assert(type.byteUsage != nullptr);
