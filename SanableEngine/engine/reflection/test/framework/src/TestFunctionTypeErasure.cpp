@@ -19,14 +19,13 @@ struct MyCallable
 	MyCallable* ptrCanary;
 	inline void passStructPtr(MyCallable* v) { ptrCanary =  v; }
 	inline void passStructRef(MyCallable& v) { ptrCanary = &v; }
+	inline void passStruct   (MyCallable  v) { canary    =  v.canary; }
 	inline MyCallable* passthroughStructPtr(MyCallable* v) { return ptrCanary = v; }
 	inline MyCallable& passthroughStructRef(MyCallable& v) { return *(ptrCanary = &v); }
+	inline MyCallable  passthroughStruct   (MyCallable  v) { canary = v.canary; return v; }
 	inline MyCallable* returnStructPtr() { return  ptrCanary; }
 	inline MyCallable& returnStructRef() { return *ptrCanary; }
-
-
-	inline void passStruct_copyCanary(MyCallable v) { this->canary = v.canary; }
-	inline MyCallable returnStruct() { MyCallable v; v.canary = 123; return v; }
+	inline MyCallable  returnStruct   () { return *ptrCanary; }
 };
 
 TEST_CASE("Function type erasure")
@@ -85,8 +84,6 @@ TEST_CASE("Function type erasure")
 			}
 		}
 
-		//TODO
-		
 		SUBCASE("Pointers and references")
 		{
 			SUBCASE("void(struct*)")
@@ -167,6 +164,49 @@ TEST_CASE("Function type erasure")
 			}
 		}
 
+		SUBCASE("Raw structs")
+		{
+			SUBCASE("void(struct)")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::passStruct, { ParameterInfo(TypeName::create<MyCallable>(), "v") });
+
+				MyCallable objA;
+				MyCallable objB;
+				objB.canary = 873;
+				fn.invoke(SAnyRef(), SAnyRef::make(&objA), { SAnyRef::make(&objB) });
+
+				CHECK(objA.canary == objB.canary);
+			}
+
+			SUBCASE("struct(struct)")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::passthroughStruct, { ParameterInfo(TypeName::create<MyCallable>(), "v") });
+
+				MyCallable objA;
+				MyCallable objB;
+				objB.canary = 873;
+				MyCallable result;
+				fn.invoke(SAnyRef::make(&result), SAnyRef::make(&objA), { SAnyRef::make(&objB) });
+
+				CHECK(objA.canary == objB.canary);
+				CHECK(result.canary == objB.canary);
+			}
+
+			SUBCASE("struct()")
+			{
+				CallableMember fn = CallableMember::make(&MyCallable::returnStruct, {});
+
+				MyCallable objA;
+				MyCallable objB;
+				objB.canary = 873;
+				objA.ptrCanary = &objB;
+				MyCallable result;
+				fn.invoke(SAnyRef::make(&result), SAnyRef::make(&objA), {});
+
+				CHECK(result.canary == objB.canary);
+			}
+		}
+
 		/*
 		SUBCASE("Const")
 		{
@@ -176,13 +216,6 @@ TEST_CASE("Function type erasure")
 			SUBCASE("const struct*()") {}
 			SUBCASE("const struct&()") {}
 			SUBCASE("const struct()") {}
-		}
-
-		SUBCASE("Raw structs")
-		{
-			SUBCASE("void(struct)") {}
-			SUBCASE("struct(struct)") {}
-			SUBCASE("struct()") {}
 		}
 		// */
 	}
