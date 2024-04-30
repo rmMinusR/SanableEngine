@@ -22,7 +22,7 @@ class SourceFile:
 	}
 
 	def __init__(this, filePath: str):
-		this.path = filePath
+		this.path = filePath.replace(os.altsep, os.sep)
 		name, ext = os.path.splitext(this.path)
 		this.isGenerated = name.endswith(".generated")
 		

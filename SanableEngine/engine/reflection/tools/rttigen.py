@@ -111,9 +111,12 @@ with open(args.template_file, "r") as f:
 
 def shortestRelPath(absPath):
     global args
+    def tryMakeRelPath(p):
+        try: return os.path.relpath(absPath, p)
+        except: return p
     return min(
         [min(
-            [os.path.relpath(absPath, os.path.join(target, i)) for i in args.includes],
+            [tryMakeRelPath(os.path.join(target, i)) for i in args.includes],
             key=len
         ) for target in args.targets],
         key=len

@@ -36,7 +36,7 @@ public:
 			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
 			{
 				void* rawObj = *it;
-				TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(obj, i.caster);
+				TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
 				(obj->*func)(funcArgs...);
 			}
 		}
@@ -51,7 +51,7 @@ public:
 			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
 			{
 				void* rawObj = *it;
-				TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(obj, i.caster);
+				TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
 				func(obj, funcArgs...);
 			}
 		}

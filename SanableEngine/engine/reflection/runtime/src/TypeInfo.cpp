@@ -104,15 +104,19 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent_internal(const TypeName& o
 	{
 		for (const ParentInfo& parent : parents)
 		{
-			std::optional<ParentInfo> baseOfVbase = parent.typeName.resolve()->getParent(name, visibilityFlags, includeInherited);
-			if (baseOfVbase.has_value() && baseOfVbase.value().virtualness == ParentInfo::Virtualness::NonVirtual)
+			const TypeInfo* ti = parent.typeName.resolve();
+			if (ti)
 			{
-				if (makeComplete)
+				std::optional<ParentInfo> baseOfVbase = ti->getParent(name, visibilityFlags, includeInherited);
+				if (baseOfVbase.has_value() && baseOfVbase.value().virtualness == ParentInfo::Virtualness::NonVirtual)
 				{
-					baseOfVbase.value().owner = ownType;
-					baseOfVbase.value().offset += parent.offset;
+					if (makeComplete)
+					{
+						baseOfVbase.value().owner = ownType;
+						baseOfVbase.value().offset += parent.offset;
+					}
+					return baseOfVbase.value();
 				}
-				return baseOfVbase.value();
 			}
 		}
 	}
