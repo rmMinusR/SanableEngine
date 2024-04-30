@@ -18,6 +18,7 @@ public:
 		std::vector<void(*)()> allocators; /// Relevant memory-allocating functions, such as malloc or operator new
 		std::vector<void(*)()> sandboxed; /// Functions not allowed to write to memory, such as memset during vtable detection. They will still be able to modify registers/stack pointers.
 		bool isSandboxAllowList = false; /// If true, inverts the behavior of sandboxed.
+		bool executeSandbox = false;
 		bool continueOnError = false;
 		bool executeSubFunctions = true;
 

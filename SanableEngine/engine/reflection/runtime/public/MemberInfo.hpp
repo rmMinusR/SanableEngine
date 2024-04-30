@@ -1,15 +1,18 @@
 #pragma once
 
-#include "dllapi.h"
-
 #include <cstddef>
 
-struct MemberInfo
+#include "dllapi.h"
+#include "TypeName.hpp"
+
+struct MemberInfo //TODO rename: Callables are members, but don't appear in object layout
 {
 	size_t size;
 	ptrdiff_t offset;
+	TypeName owner;
 
 protected:
+	MemberInfo(size_t size, ptrdiff_t offset, const TypeName& owner);
 	ENGINE_RTTI_API void* getAddr(void* objInstance) const;
 };
 

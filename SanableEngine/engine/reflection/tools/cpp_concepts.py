@@ -1,9 +1,11 @@
 ﻿from ast import Param
 from enum import Enum
+import zlib
 import itertools
 import os
 from types import NoneType
 from typing import Generator
+import typing
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
@@ -39,6 +41,9 @@ def _isTemplate(kind: CursorKind):
     ]
 
 def _typeGetAbsName(target: Type) -> str:
+    # Special case: Can't deduce auto, decltype(auto)
+    if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
+    
     out: str
 
     mainDecl: Cursor = target.get_declaration()
@@ -49,15 +54,31 @@ def _typeGetAbsName(target: Type) -> str:
     if pointedToType.kind != TypeKind.INVALID:
         # Pointer case: unwrap and abs-ify pointed-to type
         out = _typeGetAbsName(pointedToType)
-        cvUnwrapped = cvpUnwrapTypeName(target.spelling, unwrapPointers=False)
-        if cvUnwrapped.endswith("&"):
-            out += "&"
-        elif cvUnwrapped.endswith("*"):
-            out += "*"
+        cvUnwrapped = cvpUnwrapTypeName(target.spelling, unwrapPointers=False, unwrapArrays=False)
+        if cvUnwrapped.endswith("&&"): out += "&&"
+        elif cvUnwrapped.endswith("&"): out += "&"
+        elif cvUnwrapped.endswith("*"): out += "*"
         elif cvUnwrapped.endswith("]"):
-            out += cvUnwrapped[cvUnwrapped.rfind("["):]
+            arrayPart = cvUnwrapped[cvUnwrapped.rfind("["):]
+            out = out[:-len(arrayPart)]
+            if   cvUnwrapped[:-len(arrayPart)].endswith("(&&)"): out += "(&&)"
+            elif cvUnwrapped[:-len(arrayPart)].endswith("(&)"): out += "(&)"
+            elif cvUnwrapped[:-len(arrayPart)].endswith("(*)"): out += "(*)"
+            out += arrayPart
         else:
-            assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
+            groupStarts = [i   for i in range(len(cvUnwrapped)) if cvUnwrapped[i]=="(" and cvUnwrapped[i  :].count(")")==cvUnwrapped[i  :].count("(")]
+            groupEnds   = [i+1 for i in range(len(cvUnwrapped)) if cvUnwrapped[i]==")" and cvUnwrapped[i+1:].count(")")==cvUnwrapped[i+1:].count("(")]
+            assert len(groupStarts) == len(groupEnds)
+            parenGroups = [
+                cvUnwrapped[ groupStarts[idx]:groupEnds[idx] ]
+                for idx in range(len(groupStarts))
+            ]
+            if len(parenGroups) >= 2 and ">" not in cvUnwrapped[groupEnds[-2]:groupStarts[-1]]: # It's a function pointer
+                assert out[-len(parenGroups[1]):] == parenGroups[1]
+                out = out[:-len(parenGroups[-1])] + parenGroups[-2] + out[-len(parenGroups[-1]):] # This is so stupid.
+                # TODO unwrap further
+            else:
+                assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
 
     elif not hasMainDecl:
         # Primitive types
@@ -104,7 +125,6 @@ def _typeGetAbsName(target: Type) -> str:
     if target.is_restrict_qualified():
         out = addQualifier(out, "restrict")
 
-    print(f"Abs-ifying type: {target.spelling} -> {out}")
     return out
 
 
@@ -189,11 +209,14 @@ class Symbol:
         this.astKind = cursor.kind
         this.relName = cursor.displayname
         this.absName = _getAbsName(cursor)
+        this.relReferenceableName = cursor.spelling
+        this.absReferenceableName = this.absName[:-len(this.relName)] + this.relReferenceableName
         this.isDefinition = cursor.is_definition()
         this.sourceFile = SourceFile(cursor.location.file.name)
 
         # Detect annotations passed by clang::annotate
         this.annotations = Annotations.getAll(cursor)
+
     
     def __repr__(this):
         return this.absName
@@ -240,9 +263,10 @@ class Member(Symbol):
     
     @property
     def pubCastKey(this):
-        invalidTokens = ["::", "<", ">", "*", " "]
         out = this.absName
-        for i in invalidTokens: out = out.replace(i, "_")
+        for i in range(len(out)):
+            if out.isascii() and not (out[i].isalnum() or out[i] == "_"): # Special characters in ASCII range
+                out = out[:i] + "_" + out[i+1:] # Replace that character with an underscore
         return out
 
     
@@ -312,27 +336,7 @@ class ParameterInfo(Symbol):
     def __init__(this, module: "Module", cursor: Cursor):
         Symbol.__init__(this, module, cursor)
         this.__displayName: str = cursor.displayname
-        
-        # TODO very inefficient, optimize
-
-        # Find index of self
-        allParams: list[Cursor] = [i for i in cursor.semantic_parent.get_children() if i.kind == CursorKind.PARM_DECL]
-        selfParam = [i for i in allParams if i.displayname == this.__displayName][0]
-        selfIndex = allParams.index(selfParam) # Note: We aren't guaranteed that the same cursor is returned
-            
-        # Scan for args in parent name
-        parentName: str = cursor.semantic_parent.displayname
-        parentArgsBegin = len(parentName)-2
-        parenLevel = 1
-        while parenLevel > 0:
-            assert parentArgsBegin > 0
-            parentArgsBegin -= 1
-            if parentName[parentArgsBegin] == "(": parenLevel -= 1
-            if parentName[parentArgsBegin] == ")": parenLevel += 1
-        
-        parentArgs = [i.strip() for i in parentName[parentArgsBegin+1:-1].split(",")]
-        assert selfIndex < len(parentArgs)
-        this.__typeName = parentArgs[selfIndex]
+        this.__typeName = _typeGetAbsName(cursor.type)
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -391,6 +395,9 @@ class BoundFuncInfo(Virtualizable, Callable):
         Virtualizable.__init__(this, module, cursor, owner)
         Callable.__init__(this, module, cursor)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
+        this.returnTypeName = _typeGetAbsName(cursor.result_type)
+        this.isTemplate = (cursor.kind == CursorKind.FUNCTION_TEMPLATE)
+        this.isConstMethod = cursor.is_const_method()
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -400,8 +407,41 @@ class BoundFuncInfo(Virtualizable, Callable):
             CursorKind.FUNCTION_TEMPLATE
         ] and TypeInfo.matches(cursor.semantic_parent) and not cursor.is_static_method()
     
+    def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
+        if this.isTemplate or this.isDeleted: return []
+
+        tailArgs = [ 
+            (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
+            for i in
+            ([this.returnTypeName]+[i.typeName for i in this.parameters]) # Return value and params, in that order
+        ]
+
+        ownerName = this.owner.absName
+        if ownerName.startswith("::"): ownerName = ownerName[2:]
+
+        formatter = {
+            "key": this.pubCastKey,
+            "TClass": this.owner.absName,
+            "returnType": this.returnTypeName,
+            "params": ", ".join([i.typeName for i in this.parameters]),
+            "name": this.relReferenceableName,
+            "this_maybe_const": " const" if this.isConstMethod else ""
+        }
+        return [
+            'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
+		    'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_maybe_const};'.format_map(formatter) + ' };',
+		    'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
+        ]
+    
     def renderMain(this):
-        return f"//BoundFuncInfo: {this.absName}" # TODO capture address
+        if not this.isDeleted:
+            if not this.isTemplate:
+                paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+                return f"builder.addMemberFunction(stix::MemberFunction::make(DO_PUBLIC_CAST({this.pubCastKey})), \"{this.relReferenceableName}\", {this.visibility}, {str(this.isVirtual).lower()});"
+            else:
+                return f"//Cannot capture template function {this.absName}"
+        else:
+            return f"//Cannot capture deleted function {this.absName}"
 
 
 class ConstructorInfo(Member, Callable):
@@ -409,18 +449,26 @@ class ConstructorInfo(Member, Callable):
         Member.__init__(this, module, cursor, owner)
         Callable.__init__(this, module, cursor)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
-        
-        this.__parameters: list[ParameterInfo] = []
-        for i in cursor.get_children():
-            if ParameterInfo.matches(i):
-                this.__parameters.append(ParameterInfo(module, i))
+
+        thunkTemplateArgs = ", ".join([i.typeName for i in this.parameters]) # Can't rely on template arg deduction in case of overloading
+        this.absReferenceableName = f"::thunk_utils<{owner.absName}>::thunk_newInPlace<{thunkTemplateArgs}>"
+        this.relReferenceableName = ""
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.CONSTRUCTOR
     
     def renderMain(this):
-        return None
+        if not this.isDeleted:
+            owner:TypeInfo = this.owner
+            if this.visibility == Member.Visibility.Public or owner.isFriended(lambda f: f"thunk_utils<{owner.absName}>" in f.targetName):
+                paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+                return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
+            else:
+                return f"//Inaccessible constructor {this.absName}"
+        else:
+            return f"//Cannot capture deleted constructor {this.absName}"
+        
 
 
 class DestructorInfo(Virtualizable):
@@ -593,11 +641,14 @@ class TypeInfo(Symbol):
             out.extend(i.renderPreDecls())
         return out
 
+    def isFriended(this, selector:typing.Callable[[FriendInfo],bool]):
+        return any([ (isinstance(i, FriendInfo) and selector(i)) for i in this.__contents ])
+
     def __renderImageCapture_cdo(this):
         # Gather valid constructors
         ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, this.module.defaultImageCaptureStatus) )]
         hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
-        isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "TypeBuilder" in i.targetName) for i in this.__contents ])
+        isGeneratorFnFriended = this.isFriended(lambda f: "TypeBuilder" in f.targetName)
         if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
         ctors.sort(key=lambda i: len(i.parameters))
         
@@ -671,7 +722,10 @@ class Module:
     def __init__(this, defaultImageCaptureStatus="enabled", defaultImageCaptureBackend="disassembly"):
         this.__symbols: dict[str, Symbol] = dict()
         this.__sourceFiles: set[SourceFile] = set()
-        this.version = 2
+        with open(__file__, "r") as thisFile:
+            thisFileContent = "".join(thisFile.readlines())
+            this.version = zlib.adler32(thisFileContent.encode("utf-8"))
+            del thisFileContent
         this.defaultImageCaptureStatus  = defaultImageCaptureStatus
         this.defaultImageCaptureBackend = defaultImageCaptureBackend
     
@@ -815,12 +869,14 @@ ignoredSymbols = [
     CursorKind.DECL_REF_EXPR,
     CursorKind.CALL_EXPR, # Appears to be related to decltype/declval in template parameters?
     CursorKind.DECL_REF_EXPR,
+    
+    # Not sure if I care yet
+    CursorKind.LINKAGE_SPEC,
 
     # TODO reimplement global variable support
     CursorKind.VAR_DECL,
 
     # TODO reimplement function support
-    CursorKind.FUNCTION_DECL,
     CursorKind.CONVERSION_FUNCTION,
     CursorKind.CXX_METHOD,
 

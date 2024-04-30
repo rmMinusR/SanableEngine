@@ -29,7 +29,7 @@ bool platform_isInterrupt(const cs_insn& insn)
 	return insn.id == x86_insn::X86_INS_INT3 || insn.id == x86_insn::X86_INS_INT || insn.id == x86_insn::X86_INS_INTO || insn.id == x86_insn::X86_INS_INT1;
 }
 
-void* unwrapAliasFunction(void(*fn)())
+void* unwrapAliaFunction(void(*fn)())
 {
 	cs_insn* insn = cs_malloc(capstone_get_instance());
 

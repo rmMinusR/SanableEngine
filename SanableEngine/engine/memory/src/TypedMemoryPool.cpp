@@ -3,12 +3,12 @@
 #include "ObjectPatch.hpp"
 
 GenericTypedMemoryPool::GenericTypedMemoryPool(size_t maxNumObjects, const TypeInfo& contentsType) :
-	RawMemoryPool(maxNumObjects, contentsType.size, contentsType.align),
+	RawMemoryPool(maxNumObjects, contentsType.layout.size, contentsType.layout.align),
 	contentsType(contentsType),
 	view(this)
 {
 	debugName = contentsType.name.as_str();
-	releaseHook = contentsType.dtor; //FIXME this will SIGSEGV on destroy if backing type isn't loaded. Switch to conditional call.
+	releaseHook = contentsType.capabilities.rawDtor; //FIXME this will SIGSEGV on destroy if backing type isn't loaded. Switch to conditional call.
 }
 
 GenericTypedMemoryPool::~GenericTypedMemoryPool()
@@ -39,7 +39,7 @@ void GenericTypedMemoryPool::refreshObjects(const TypeInfo& newTypeData, MemoryM
 	{
 		//Resize if we grew
 		//Must be done before writing to members so writes don't happen in other objects' memory
-		if (newTypeData.size > contentsType.size) resizeObjects(newTypeData.size, newTypeData.align, remapper);
+		if (newTypeData.layout.size > contentsType.layout.size) resizeObjects(newTypeData.layout.size, newTypeData.layout.align, remapper);
 
 		//Remap members and write vtable ptrs
 		ObjectPatch patch = ObjectPatch::create(contentsType, newTypeData);
@@ -49,17 +49,17 @@ void GenericTypedMemoryPool::refreshObjects(const TypeInfo& newTypeData, MemoryM
 			if (isAlive(obj))
 			{
 				patch.apply(obj, remapper);
-				contentsType.vptrJam(obj);
+				contentsType.layout.vptrJam(obj);
 			}
 		}
 		
 		//Resize if we shrunk
 		//Must be done after writing to members so we aren't reading other objects' memory
-		if (newTypeData.size < contentsType.size) resizeObjects(newTypeData.size, newTypeData.align, remapper);
+		if (newTypeData.layout.size < contentsType.layout.size) resizeObjects(newTypeData.layout.size, newTypeData.layout.align, remapper);
 	}
 	
 	contentsType = newTypeData;
 
 	//Fix bad dtors
-	releaseHook = newTypeData.dtor;
+	releaseHook = newTypeData.capabilities.rawDtor;
 }

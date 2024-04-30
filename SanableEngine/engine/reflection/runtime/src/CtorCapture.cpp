@@ -31,14 +31,13 @@ DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), const 
 	options.canReadHostMemory = true;
 	options.allocators = allocators;
 	options.continueOnError = true;
-	options.executeSubFunctions = false;
 
 	//Only allow constructor and thunk to run (GCC: full-constructor, which has vtables. We don't care about base constructor.)
 	options.isSandboxAllowList = true;
 	options.sandboxed = { thunk, (void(*)())getLastSubFunction(thunk) };
 
 	//Unwrap aliases
-	for (auto i : allocators) { auto unwrapped = unwrapAliasFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
+	for (auto i : allocators) { auto unwrapped = unwrapAliaFunction(i); if (unwrapped != i) options.allocators.push_back(i); }
 	
 	//Simulate
 	MachineState canonicalState(true);

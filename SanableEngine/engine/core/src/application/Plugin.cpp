@@ -127,7 +127,7 @@ bool Plugin::load(Application const* context)
 		for (const TypeInfo& i : types->getTypes())
 		{
 			GenericTypedMemoryPool* pool = ((Application*)context)->getMemoryManager()->getSpecificPool(i.name);
-			pool->releaseHook = i.dtor;
+			pool->releaseHook = i.capabilities.rawDtor;
 		}
 	}
 

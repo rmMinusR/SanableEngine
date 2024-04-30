@@ -12,11 +12,11 @@ class ParentInfoBuilder
 {
 private:
 	ParentInfo data;
-	size_t ownSize;
+	size_t ownerSize;
 	std::function<void*(void*)> upcastFn;
 
 public:
-	ParentInfoBuilder(const TypeName& parentType, size_t ownSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness);
+	ParentInfoBuilder(const TypeName& ownerType, const TypeName& parentType, size_t ownerSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness);
 
 	ParentInfo buildFromSurrogate(); //Only works on normal inheritance
 	ParentInfo buildFromClassImage(char* image); //Works on normal and virtual inheritance

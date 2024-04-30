@@ -20,4 +20,6 @@ struct ParentInfo : public MemberInfo
 	};
 
 	Virtualness virtualness;
+
+	ParentInfo(size_t size, ptrdiff_t offset, const TypeName& owner, const TypeName& typeName, MemberVisibility visibility, Virtualness virtualness);
 };

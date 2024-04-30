@@ -20,7 +20,7 @@ TypeInfo const* ModuleTypeRegistry::snipeType(void* obj, size_t size, TypeInfo c
 {
 	for (const TypeInfo& i : types)
 	{
-		if (i.size <= size && i.matchesExact(obj)) return &i;
+		if (i.layout.size <= size && i.layout.matchesExact(obj)) return &i;
 	}
 	return nullptr;
 }

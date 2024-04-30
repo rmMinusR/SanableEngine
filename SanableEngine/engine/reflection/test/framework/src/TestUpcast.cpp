@@ -23,26 +23,26 @@ TEST_CASE("TypeInfo::upcast")
 	SUBCASE("Upcast to self")
 	{
 		ImplementerA obj;
-		REQUIRE(ti->upcast(&obj, TypeName::create<ImplementerA>()) == &obj);
+		REQUIRE(ti->layout.upcast(&obj, TypeName::create<ImplementerA>()) == nullptr);
 	}
 
 	SUBCASE("Upcast to immediate parents")
 	{
 		ImplementerA obj;
-		REQUIRE(ti->upcast(&obj, TypeName::create<ConcreteBase>()) == (ConcreteBase*)&obj);
-		REQUIRE(ti->upcast(&obj, TypeName::create<IFoo        >()) == (IFoo        *)&obj);
-		REQUIRE(ti->upcast(&obj, TypeName::create<IBar        >()) == (IBar        *)&obj);
+		REQUIRE(ti->layout.upcast(&obj, TypeName::create<ConcreteBase>()) == (ConcreteBase*)&obj);
+		REQUIRE(ti->layout.upcast(&obj, TypeName::create<IFoo        >()) == (IFoo        *)&obj);
+		REQUIRE(ti->layout.upcast(&obj, TypeName::create<IBar        >()) == (IBar        *)&obj);
 	}
 
 	SUBCASE("Upcast to grandparent")
 	{
 		ImplementerA obj;
-		REQUIRE(ti->upcast(&obj, TypeName::create<GrandparentBase>()) == (GrandparentBase*)&obj);
+		REQUIRE(ti->layout.upcast(&obj, TypeName::create<GrandparentBase>()) == (GrandparentBase*)&obj);
 	}
 
 	SUBCASE("Upcast to non-parent")
 	{
 		ImplementerA obj;
-		REQUIRE(ti->upcast(&obj, TypeName::create<SimpleStruct>()) == nullptr);
+		REQUIRE(ti->layout.upcast(&obj, TypeName::create<SimpleStruct>()) == nullptr);
 	}
 }

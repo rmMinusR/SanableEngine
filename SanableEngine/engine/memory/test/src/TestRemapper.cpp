@@ -106,8 +106,8 @@ TEST_SUITE("MemoryMapper")
 		TypeInfo realType = TypeInfo::createDummy<MoveTester>();
 		TypeInfo dummyType = realType;
 		dummyType.name = TypeName::create<MoveTester>();
-		dummyType.size *= 2;
-		dummyType.align *= 2;
+		dummyType.layout.size *= 2;
+		dummyType.layout.align *= 2;
 
 		//Setup: Subcases
 		TypeInfo* startingType = nullptr;
