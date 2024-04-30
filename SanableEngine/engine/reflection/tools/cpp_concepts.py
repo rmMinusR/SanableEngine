@@ -66,7 +66,19 @@ def _typeGetAbsName(target: Type) -> str:
             elif cvUnwrapped[:-len(arrayPart)].endswith("(*)"): out += "(*)"
             out += arrayPart
         else:
-            assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
+            groupStarts = [i   for i in range(len(cvUnwrapped)) if cvUnwrapped[i]=="(" and cvUnwrapped[i  :].count(")")==cvUnwrapped[i  :].count("(")]
+            groupEnds   = [i+1 for i in range(len(cvUnwrapped)) if cvUnwrapped[i]==")" and cvUnwrapped[i+1:].count(")")==cvUnwrapped[i+1:].count("(")]
+            assert len(groupStarts) == len(groupEnds)
+            parenGroups = [
+                cvUnwrapped[ groupStarts[idx]:groupEnds[idx] ]
+                for idx in range(len(groupStarts))
+            ]
+            if len(parenGroups) >= 2 and ">" not in cvUnwrapped[groupEnds[-2]:groupStarts[-1]]: # It's a function pointer
+                assert out[-len(parenGroups[1]):] == parenGroups[1]
+                out = out[:-len(parenGroups[-1])] + parenGroups[-2] + out[-len(parenGroups[-1]):] # This is so stupid.
+                # TODO unwrap further
+            else:
+                assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
 
     elif not hasMainDecl:
         # Primitive types
