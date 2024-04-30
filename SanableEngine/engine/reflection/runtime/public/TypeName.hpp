@@ -37,17 +37,9 @@ public:
 	template<typename... TPack>
 	static std::vector<TypeName> createPack()
 	{
-		std::vector<TypeName> out;
-		out.reserve(sizeof...(TPack));
-		createPack_internal<0, TPack...>(out);
-		return out;
+		return { create<TPack>()... };
 	}
-private:
-	template<int, typename Head, typename... Tail>
-	static void createPack_internal(std::vector<TypeName>& out) { out.push_back(create<Head>()); createPack_internal<0, Tail...>(out); }
-	template<int> static void createPack_internal(std::vector<TypeName>& out) { } //Tail case
 
-public:
 	ENGINE_RTTI_API std::optional<TypeName> cvUnwrap() const;
 	ENGINE_RTTI_API std::optional<TypeName> dereference() const;
 
