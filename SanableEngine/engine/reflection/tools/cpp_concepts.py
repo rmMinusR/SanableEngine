@@ -40,9 +40,12 @@ def _isTemplate(kind: CursorKind):
         CursorKind.FUNCTION_TEMPLATE
     ]
 
-def _typeGetAbsName(target: Type) -> str:
+def _typeGetAbsName(target: Type, noneOnAnonymous=True) -> str | None:
     # Special case: Can't deduce auto, decltype(auto)
     if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
+    
+    # Special case: Can't reference an anonymous struct by name
+    if noneOnAnonymous and target.spelling.startswith("(unnamed "): return None
     
     out: str
 
@@ -238,6 +241,8 @@ class Symbol:
             return this.annotations[name]
         else:
             return default
+        
+    def finalize(this): pass
 
 
 class Member(Symbol):
@@ -252,10 +257,11 @@ class Member(Symbol):
             return {
                 AccessSpecifier.PUBLIC   : Member.Visibility.Public,
                 AccessSpecifier.PROTECTED: Member.Visibility.Protected,
-                AccessSpecifier.PRIVATE  : Member.Visibility.Private
+                AccessSpecifier.PRIVATE  : Member.Visibility.Private,
+                AccessSpecifier.INVALID  : Member.Visibility.Public # TODO imply that it's public but only because it isn't nested?
             }[clangRepr]
     
-    def __init__(this, module: "Module", cursor: Cursor, owner: Symbol):
+    def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         super().__init__(module, cursor)
         this.owner = owner
         assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
@@ -337,6 +343,7 @@ class ParameterInfo(Symbol):
         Symbol.__init__(this, module, cursor)
         this.__displayName: str = cursor.displayname
         this.__typeName = _typeGetAbsName(cursor.type)
+        assert this.__typeName != None, "Cannot pass anonymous as parameter (without decltype or typedef)"
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -396,6 +403,7 @@ class BoundFuncInfo(Virtualizable, Callable):
         Callable.__init__(this, module, cursor)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         this.returnTypeName = _typeGetAbsName(cursor.result_type)
+        assert this.returnTypeName != None, "Cannot return anonymous (without decltype or typedef)"
         this.isTemplate = (cursor.kind == CursorKind.FUNCTION_TEMPLATE)
         this.isConstMethod = cursor.is_const_method()
 
@@ -409,6 +417,8 @@ class BoundFuncInfo(Virtualizable, Callable):
     
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
         if this.isTemplate or this.isDeleted: return []
+
+        if this.visibility == Member.Visibility.Public: return [] # No need to public_cast, it's already public
 
         tailArgs = [ 
             (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
@@ -488,26 +498,42 @@ class FieldInfo(Member):
     def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         Member.__init__(this, module, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
-        this.__declaredTypeName = _typeGetAbsName(cursor.type)
+        this.__declaredTypeName = _typeGetAbsName(cursor.type, noneOnAnonymous=False)
+        this.__referenceableTypeName = _typeGetAbsName(cursor.type, noneOnAnonymous=True)
+        
+        this.isTypeAnonymous = (this.__referenceableTypeName == None)
+        if this.isTypeAnonymous and this.visibility == Member.Visibility.Public: this.__referenceableTypeName = f"decltype({this.absReferenceableName})"
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.FIELD_DECL
     
+    def finalize(this):
+        if this.__referenceableTypeName != None:
+            ty:"TypeInfo" = this.module.lookup(this.__referenceableTypeName)
+            if ty != None and ty.visibility != Member.Visibility.Public: # FIXME handle friending
+                this.__referenceableTypeName = None # If type is nested and not publically visible, mark that we couldn't reference it
+
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
-        # These can't start with ::, otherwise we risk the lexer thinking it's one big token
-        declaredTypeName = this.__declaredTypeName
-        if declaredTypeName.startswith("::"): declaredTypeName = declaredTypeName[2:]
+        if this.visibility == Member.Visibility.Public: return [] # No need to public_cast, it's already public
+            
+        if this.__referenceableTypeName != None:
+            # These can't start with ::, otherwise we risk the lexer thinking it's one big token
+            referenceableTypeName = this.__referenceableTypeName
+            if referenceableTypeName.startswith("::"): referenceableTypeName = referenceableTypeName[2:]
 
-        ownerName = this.owner.absName
-        if ownerName.startswith("::"): ownerName = ownerName[2:]
+            ownerName = this.owner.absName
+            if ownerName.startswith("::"): ownerName = ownerName[2:]
 
-        return [f'PUBLIC_CAST_GIVE_FIELD_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName});']
+            return [f'PUBLIC_CAST_GIVE_FIELD_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {referenceableTypeName});']
+        else:
+            return [f"#error Couldn't capture type for anonymous private field {this.absName}"]
 
     def renderMain(this):
-        # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
-        # f'builder.addField<decltype({this.owner.absName}::{this.relName})>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
-        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF_LAMBDA({this.pubCastKey}, {this.owner.absName}));'
+        if this.__referenceableTypeName != None: # This won't be able to 
+            return f'builder.addField<{this.__referenceableTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF_LAMBDA({this.pubCastKey}, {this.owner.absName}));'
+        else:
+            return f"#error Couldn't capture type for anonymous private field {this.absName}" # TODO attempt to break into subfields?
 
     def getReferencedTypes(this) -> list[str]:
         c = cvpUnwrapTypeName(this.__declaredTypeName)
@@ -558,6 +584,7 @@ class TypeInfo(Symbol):
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
         this.isAbstract = cursor.is_abstract_record()
+        this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
 
         this.__contents: list[Member] = list()
         
@@ -716,6 +743,9 @@ class TypeInfo(Symbol):
             for t in i.getReferencedTypes():
                 out.add(t)
         return out
+    
+    def finalize(this):
+        for i in this.__contents: i.finalize()
 
 
 class Module:
@@ -809,6 +839,7 @@ class Module:
         undefined = [i for i in this.__symbols.values() if not i.isDefinition]
         if len(undefined) > 0:
             config.logger.error(f"Detected {len(undefined)} declared global symbols missing definitions: {undefined}")
+        for i in this.__symbols.values(): i.finalize()
 
     def renderBody(this) -> str:
         renders = [v.renderMain() for v in this.__symbols.values() if this.owns(v)]
