@@ -55,6 +55,13 @@ public:
 	ENGINECORE_API bool isCodeLoaded() const;
 	ENGINECORE_API bool isHooked() const;
 
+	struct EntryPoints
+	{
+		fp_plugin_report      report      = nullptr;
+		fp_plugin_init        init        = nullptr;
+		fp_plugin_cleanup     cleanup     = nullptr;
+		fp_plugin_reportTypes reportTypes = nullptr;
+	};
 private:
 	friend class PluginManager;
 
@@ -63,13 +70,7 @@ private:
 	bool wasEverLoaded = false;
 	bool wasEverHooked = false;
 
-	struct EntryPoints
-	{
-		fp_plugin_report      report     = nullptr;
-		fp_plugin_init        init        = nullptr;
-		fp_plugin_cleanup     cleanup     = nullptr;
-		fp_plugin_reportTypes reportTypes = nullptr;
-	} entryPoints;
+	EntryPoints entryPoints;
 
 	bool load(Application const* context);
 	bool init();

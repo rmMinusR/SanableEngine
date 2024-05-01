@@ -20,16 +20,17 @@ public:
 		Persp
 	};
 
-private:
-	float size; //Distance in ortho mode, or FOV angle in persp
-	Mode mode;
-
 	struct FramebufferData
 	{
 		GLuint handle = 0;
 		GLuint texColor = 0;
 		GLuint texDepth = 0;
-	} fb;
+	};
+private:
+	float size; //Distance in ortho mode, or FOV angle in persp
+	Mode mode;
+
+	FramebufferData fb;
 
 	static Camera* main;
 

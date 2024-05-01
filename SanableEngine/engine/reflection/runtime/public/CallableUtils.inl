@@ -33,7 +33,6 @@ namespace stix::detail::CallableUtils
 	static void checkArgs(It it, It end)
 	{
 		assert(it != end);
-		printf("%s ?= %s\n", _getRepresentedType(*it).c_str(), TypeName::create<TArgsHead>().c_str());
 		assert(_getRepresentedType(*it) == TypeName::create<TArgsHead>());
 		checkArgs<It, TArgsTail...>(it+1, end);
 	}
