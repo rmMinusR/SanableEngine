@@ -469,9 +469,7 @@ class ConstructorInfo(Member, Callable):
             return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
         else:
             return f"//Inaccessible constructor {this.absName}"
-            
-        
-
+     
 
 class DestructorInfo(Virtualizable):
     def __init__(this, module: "Module", cursor: Cursor, owner):
@@ -701,9 +699,12 @@ class TypeInfo(Symbol):
             return f"#error {this.absName} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
 
     def renderMain(this):
+        # Skip if incomplete (suggesting the implementation doesn't belong to this TU)
+        if not this.isDefinition: return f"//Skipping forward-declared type missing definition {this.absName}"
+        
         # Skip if anonymous
         if this.isAnonymous: return f"//Skipping capture for anonymous type {this.absName}"
-
+        
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
         
