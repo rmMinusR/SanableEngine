@@ -782,13 +782,10 @@ class Module:
             this.__sourceFiles.add(source)
             config.logger.info(f"Parsing {source}")
             for cursor in source.parse().get_children():
-                this.parseGlobalCursor(cursor)
+                # Only capture what's in the current file
+                if cursor.location.file.name.replace(os.altsep, os.sep) == source.path: this.parseGlobalCursor(cursor)
          
     def parseGlobalCursor(this, cursor: Cursor):
-        # Skip anything outside the current TU
-        srcFile = cursor.location.file.name.replace(os.altsep, os.sep)
-        if not any([i.path==srcFile for i in this.__sourceFiles]): return
-
         # Stop early if we already have a definition for this symbol
         existingEntry = this.lookup(cursor)
         if existingEntry != None and existingEntry.isDefinition:
