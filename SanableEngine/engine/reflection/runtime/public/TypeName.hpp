@@ -6,8 +6,11 @@
 #include <vector>
 
 #include "dllapi.h"
+#include "StaticTemplateUtils.inl"
 
 struct TypeInfo;
+
+namespace stix::detail { template<bool _en> struct TypeName_staticEqualsDynamic_impl; }
 
 class TypeName
 {
@@ -57,7 +60,47 @@ public:
 	ENGINE_RTTI_API TypeName& operator=(const TypeName& cpy) = default;
 	ENGINE_RTTI_API TypeName& operator=(TypeName&& mov) = default;
 	ENGINE_RTTI_API ~TypeName() = default;
+
+
+	#pragma region Advanced template utils
+
+	template<typename T, bool ignoreIncomplete>
+	static bool staticEqualsDynamic(const TypeName& ty)
+	{
+		constexpr bool _do = !ignoreIncomplete || stix::detail::is_complete<T>::value;
+		return stix::detail::TypeName_staticEqualsDynamic_impl<_do>::template eval<T>(ty);
+	}
+
+	template<typename It, bool ignoreIncomplete, typename THead, typename... Ts>
+	static bool staticEqualsDynamic_many(It it, const It& end)
+	{
+		return it != end
+			&& staticEqualsDynamic<THead, ignoreIncomplete>(stix::detail::_getRepresentedType(*it))
+			&& staticEqualsDynamic_many<It, ignoreIncomplete, Ts...>(it+1, end);
+	}
+	template<typename It, bool ignoreIncomplete> static bool staticEqualsDynamic_many(It it, const It& end) { return it == end; } //Tail case
+	
+	#pragma endregion
 };
+
+
+namespace stix::detail
+{
+	//TODO move this to inside TypeName, if possible
+	template<> struct TypeName_staticEqualsDynamic_impl<false>
+	{
+		template<typename T>
+		static bool eval(const TypeName& ty) { return true; } // Incomplete type: can't check
+	};
+	template<> struct TypeName_staticEqualsDynamic_impl<true>
+	{
+		template<typename T>
+		static bool eval(const TypeName& ty) { return ty == TypeName::create<T>(); }
+	};
+
+	static inline decltype(auto) _getRepresentedType(const TypeName& t) { return t; }
+}
+
 
 
 template <>

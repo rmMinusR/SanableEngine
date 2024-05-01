@@ -40,7 +40,7 @@ namespace stix
 		static MemberFunction make_internal(TReturn(TOwner::* fn)(TArgs...), bool ownerIsConst)
 		{
 			std::vector<TypeName> parameters = TypeName::createPack<TArgs...>();
-			detail::CallableUtils::checkArgs<std::vector<TypeName>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
+			TypeName::staticEqualsDynamic_many<std::vector<TypeName>::const_iterator, true, TArgs...>(parameters.cbegin(), parameters.cend());
 			detail::CallableUtils::Member::fully_erased_binder_t eraser = &detail::CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
 
 			static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn));
@@ -71,7 +71,7 @@ namespace stix
 		static StaticFunction make(TReturn(*fn)(TArgs...))
 		{
 			std::vector<TypeName> parameters = TypeName::createPack<TArgs...>();
-			detail::CallableUtils::checkArgs<std::vector<TypeName>::const_iterator, TArgs...>(parameters.cbegin(), parameters.cend());
+			TypeName::staticEqualsDynamic_many<std::vector<TypeName>::const_iterator, true, TArgs...>(parameters.cbegin(), parameters.cend());
 			auto eraser = &detail::CallableUtils::Static::TypeEraser<TReturn>::template impl<TArgs...>;
 			return StaticFunction(
 				TypeName::create<TReturn>(),

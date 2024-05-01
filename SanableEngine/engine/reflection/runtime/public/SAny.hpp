@@ -43,4 +43,9 @@ namespace stix
 		SAnyRef& operator=(SAnyRef&& mov) = default;
 	};
 
+
+	namespace detail
+	{
+		static inline decltype(auto) _getRepresentedType(const SAnyRef& v) { return v.getType(); }
+	}
 }

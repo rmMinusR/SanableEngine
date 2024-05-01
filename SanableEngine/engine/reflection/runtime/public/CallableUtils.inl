@@ -7,6 +7,7 @@
 
 #include "TypeName.hpp"
 #include "SAny.hpp"
+#include "StaticTemplateUtils.inl"
 
 
 namespace FuncPtrAliases
@@ -25,20 +26,6 @@ namespace FuncPtrAliases
 //Ugly templated type erasure utils for binding concrete functions to be callable with SAnys
 namespace stix::detail::CallableUtils
 {
-	//Helper for verifying if provided static type list matches dynamic type list
-	inline static TypeName _getRepresentedType(const SAnyRef & t) { return t.getType(); }
-	inline static TypeName _getRepresentedType(const TypeName& t) { return t; }
-
-	template<typename It, typename TArgsHead, typename... TArgsTail>
-	static void checkArgs(It it, It end)
-	{
-		assert(it != end);
-		assert(_getRepresentedType(*it) == TypeName::create<TArgsHead>());
-		checkArgs<It, TArgsTail...>(it+1, end);
-	}
-	template<typename It> static void checkArgs(It it, It end) { assert(it == end); } //Tail case
-	
-
 	namespace Member
 	{
 		struct BinderSurrogate { inline virtual void _virtual() {} };
@@ -75,9 +62,10 @@ namespace stix::detail::CallableUtils
 			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
-			
+				
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				assert(good);
 
 				//Invoke
 				TOwner& _this = thisObj.get<TOwner>();
@@ -110,7 +98,8 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				assert(good);
 
 				//Invoke
 				TOwner& _this = thisObj.get<TOwner>();
@@ -141,7 +130,7 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
 
 				//Invoke
 				returnValue.get<TReturn>() = (*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
@@ -164,7 +153,7 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
 
 				//Invoke
 				(*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
