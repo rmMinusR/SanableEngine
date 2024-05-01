@@ -10,7 +10,11 @@
 
 struct TypeInfo;
 
-namespace stix::detail { template<bool _en> struct TypeName_staticEqualsDynamic_impl; }
+namespace stix::detail
+{
+	template<bool _en> struct TypeName_staticEqualsDynamic_impl;
+	template<bool _useIncompleteLiteral> struct TypeName_tryCreate_impl;
+}
 
 class TypeName
 {
@@ -27,21 +31,36 @@ private:
 	hash_t nameHash;
 	friend struct std::hash<TypeName>;
 
-	ENGINE_RTTI_API TypeName(const std::string& name);
+	enum Flags : uint8_t
+	{
+		Normal     = 0,
+		Incomplete = 1<<0
+	} flags;
+	static const char* incomplete_ref_literal;
+	ENGINE_RTTI_API TypeName(const std::string& name, Flags flags);
 public:
 	ENGINE_RTTI_API TypeName();
+	ENGINE_RTTI_API static TypeName incomplete_ref();
 
 	template<typename TRaw>
 	static TypeName create()
 	{
-		return TypeName(typeid(TRaw).name());
+		return TypeName(typeid(TRaw).name(), Flags::Normal);
 	}
 
 	template<typename... TPack>
-	static std::vector<TypeName> createPack()
+	static std::vector<TypeName> createPack() { return { create<TPack>()... }; }
+
+	template<typename T>
+	static TypeName tryCreate()
 	{
-		return { create<TPack>()... };
+		return stix::detail::TypeName_tryCreate_impl<
+			!stix::detail::is_complete_v<T> && std::is_reference_v<T>
+		>::template exec<T>();
 	}
+
+	template<typename... TPack>
+	static std::vector<TypeName> tryCreatePack() { return { tryCreate<TPack>()... }; }
 
 	ENGINE_RTTI_API std::optional<TypeName> cvUnwrap() const;
 	ENGINE_RTTI_API std::optional<TypeName> dereference() const;
@@ -97,6 +116,19 @@ namespace stix::detail
 		template<typename T>
 		static bool eval(const TypeName& ty) { return ty == TypeName::create<T>(); }
 	};
+
+
+	template<> struct TypeName_tryCreate_impl<false>
+	{
+		template<typename T>
+		static TypeName exec() { return TypeName::create<T>(); }
+	};
+	template<> struct TypeName_tryCreate_impl<true>
+	{
+		template<typename T>
+		static TypeName exec() { return TypeName::incomplete_ref(); }
+	};
+
 
 	static inline decltype(auto) _getRepresentedType(const TypeName& t) { return t; }
 }

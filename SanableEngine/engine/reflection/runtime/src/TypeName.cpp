@@ -70,10 +70,17 @@ TypeName::TypeName() :
 {
 }
 
-TypeName::TypeName(const std::string& _name)
+TypeName::TypeName(const std::string& _name, Flags flags)
 {
     name = _name;
     nameHash = makeHash(name);
+    this->flags = flags;
+}
+
+const char* TypeName::incomplete_ref_literal = "!!incomplete type!!&";
+TypeName TypeName::incomplete_ref()
+{
+    return TypeName(incomplete_ref_literal, Flags::Incomplete);
 }
 
 std::optional<TypeName> TypeName::cvUnwrap() const
@@ -96,7 +103,7 @@ std::optional<TypeName> TypeName::cvUnwrap() const
         unwrappable |= strip(unwrappedName, "volatile", true);
         unwrappable |= strip(unwrappedName, "const", true);
     }
-    return unwrappable ? std::make_optional(TypeName(unwrappedName)) : std::nullopt;
+    return unwrappable ? std::make_optional(TypeName(unwrappedName, flags)) : std::nullopt;
 }
 
 std::optional<TypeName> TypeName::dereference() const
@@ -115,7 +122,7 @@ std::optional<TypeName> TypeName::dereference() const
     
     std::string unwrappedName = name.substr(0, index);
     strip_trailing(unwrappedName, " ");
-    return TypeName(unwrappedName);
+    return TypeName(unwrappedName, flags);
 }
 
 bool TypeName::isValid() const
@@ -130,6 +137,9 @@ TypeInfo const* TypeName::resolve() const
 
 bool TypeName::operator==(const TypeName& other) const
 {
+    //Disable checking either is incomplete. TODO would this be better in its own function?
+    if ((this->flags & Flags::Incomplete) || (this->flags & Flags::Incomplete)) return true;
+
     //Compare the stuff that's easy before doing a full string compare
     return nameHash == other.nameHash
         && name == other.name;

@@ -26,4 +26,34 @@ namespace stix::detail
 
 	template<typename... Ts>
 	constexpr bool is_complete_many_v = check_all_eq<bool, true, is_complete_v<Ts>...>::value;
+
+
+
+	template<bool condition>
+	struct ternary;
+	template<>
+	struct ternary<true>
+	{
+		//template<typename T, T _true, T _false>
+		//constexpr static decltype(auto) value = _true;
+
+		template<typename _true, typename _false>
+		using type = _true;
+	};
+	template<>
+	struct ternary<false>
+	{
+		template<typename T, T _true, T _false>
+		constexpr static decltype(auto) value = _false;
+
+		template<typename _true, typename _false>
+		using type = _false;
+	};
+
+	template<bool condition, typename T, T _true, T _false>
+	constexpr static T ternary_v = condition ? _true : _false;
+	//constexpr static T ternary_v = ternary<condition>::template value<T, _true, _false>;
+
+	template<bool condition, typename _true, typename _false>
+	using ternary_t = typename ternary<condition>::template type<_true, _false>;
 }
