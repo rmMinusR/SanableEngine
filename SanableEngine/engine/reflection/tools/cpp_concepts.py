@@ -447,7 +447,7 @@ class BoundFuncInfo(Virtualizable, Callable):
 
 
 class ConstructorInfo(Member, Callable):
-    def __init__(this, module: "Module", cursor: Cursor, owner):
+    def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         Member.__init__(this, module, cursor, owner)
         Callable.__init__(this, module, cursor)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
@@ -461,15 +461,15 @@ class ConstructorInfo(Member, Callable):
         return cursor.kind == CursorKind.CONSTRUCTOR
     
     def renderMain(this):
-        if not this.isDeleted:
-            owner:TypeInfo = this.owner
-            if this.visibility == Member.Visibility.Public or owner.isFriended(lambda f: f"thunk_utils<{owner.absName}>" in f.targetName):
-                paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-                return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
-            else:
-                return f"//Inaccessible constructor {this.absName}"
+        if this.owner.isAbstract: return f"//Cannot capture constructor because owner is abstract: {this.absName}"
+        if this.isDeleted: return f"//Cannot capture deleted constructor {this.absName}"
+
+        if this.visibility == Member.Visibility.Public or this.owner.isFriended(lambda f: f"thunk_utils<{this.owner.absName}>" in f.targetName):
+            paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+            return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
         else:
-            return f"//Cannot capture deleted constructor {this.absName}"
+            return f"//Inaccessible constructor {this.absName}"
+            
         
 
 
