@@ -71,6 +71,7 @@ function(stix_generate_reflection targetName rootDir)
 										${DEFAULT_IMAGE_CAPTURE_STATUS_ARG}
  										-- $<TARGET_PROPERTY:${targetName},COMPILE_OPTIONS> $<TARGET_PROPERTY:${targetName},COMPILE_FLAGS> ${COMPILE_OPTIONS} ${COMPILE_FLAGS}
 			VERBATIM
+			USES_TERMINAL
  			COMMENT "Generating embedded RTTI for ${targetName}"
  		)
 
