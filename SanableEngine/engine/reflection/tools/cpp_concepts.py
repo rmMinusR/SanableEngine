@@ -45,7 +45,7 @@ def _typeGetAbsName(target: Type, noneOnAnonymous=True) -> str | None:
     if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
     
     # Special case: Can't reference an anonymous struct by name
-    if noneOnAnonymous and target.spelling.startswith("(unnamed "): return None
+    if noneOnAnonymous and any([(i in target.spelling) for i in ["(unnamed struct at ", "(unnamed union at ", "(unnamed class at "] ]): return None
     
     out: str
 
@@ -418,14 +418,6 @@ class BoundFuncInfo(Virtualizable, Callable):
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
         if this.isTemplate or this.isDeleted: return []
 
-        if this.visibility == Member.Visibility.Public: return [] # No need to public_cast, it's already public
-
-        tailArgs = [ 
-            (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
-            for i in
-            ([this.returnTypeName]+[i.typeName for i in this.parameters]) # Return value and params, in that order
-        ]
-
         ownerName = this.owner.absName
         if ownerName.startswith("::"): ownerName = ownerName[2:]
 
@@ -515,8 +507,6 @@ class FieldInfo(Member):
                 this.__referenceableTypeName = None # If type is nested and not publically visible, mark that we couldn't reference it
 
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
-        if this.visibility == Member.Visibility.Public: return [] # No need to public_cast, it's already public
-            
         if this.__referenceableTypeName != None:
             # These can't start with ::, otherwise we risk the lexer thinking it's one big token
             referenceableTypeName = this.__referenceableTypeName
@@ -584,6 +574,7 @@ class TypeInfo(Symbol):
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
         this.isAbstract = cursor.is_abstract_record()
+        this.isAnonymous = cursor.is_anonymous()
         this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
 
         this.__contents: list[Member] = list()
@@ -663,6 +654,9 @@ class TypeInfo(Symbol):
         return out
     
     def renderPreDecls(this) -> list[str]:
+        # Skip if anonymous
+        if this.isAnonymous: return []
+
         out = []
         for i in this.__contents:
             out.extend(i.renderPreDecls())
@@ -707,6 +701,9 @@ class TypeInfo(Symbol):
             return f"#error {this.absName} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
 
     def renderMain(this):
+        # Skip if anonymous
+        if this.isAnonymous: return f"//Skipping capture for anonymous type {this.absName}"
+
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
         
@@ -791,7 +788,7 @@ class Module:
         # Skip anything outside the current TU
         srcFile = cursor.location.file.name.replace(os.altsep, os.sep)
         if not any([i.path==srcFile for i in this.__sourceFiles]): return
-        
+
         # Stop early if we already have a definition for this symbol
         existingEntry = this.lookup(cursor)
         if existingEntry != None and existingEntry.isDefinition:
