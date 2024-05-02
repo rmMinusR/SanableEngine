@@ -41,7 +41,7 @@ namespace stix
 		{
 			std::vector<TypeName> parameters = TypeName::tryCreatePack<TArgs...>();
 			TypeName::staticEqualsDynamic_many<std::vector<TypeName>::const_iterator, true, TArgs...>(parameters.cbegin(), parameters.cend());
-			detail::CallableUtils::Member::fully_erased_binder_t eraser = &detail::CallableUtils::Member::TypeEraser<TReturn>::template impl<TOwner, TArgs...>;
+			detail::CallableUtils::Member::fully_erased_binder_t eraser = &detail::CallableUtils::Member::typeErasedInvoke<TReturn, TOwner, TArgs...>;
 
 			static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn));
 			union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
@@ -72,7 +72,7 @@ namespace stix
 		{
 			std::vector<TypeName> parameters = TypeName::tryCreatePack<TArgs...>();
 			TypeName::staticEqualsDynamic_many<std::vector<TypeName>::const_iterator, true, TArgs...>(parameters.cbegin(), parameters.cend());
-			auto eraser = &detail::CallableUtils::Static::TypeEraser<TReturn>::template impl<TArgs...>;
+			auto eraser = &detail::CallableUtils::Static::typeErasedInvoke<TReturn, TArgs...>;
 			return StaticFunction(
 				TypeName::create<TReturn>(),
 				parameters,
