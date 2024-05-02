@@ -1,5 +1,4 @@
-﻿from ast import Param
-from enum import Enum
+﻿from enum import Enum
 import zlib
 import itertools
 import os
@@ -266,14 +265,12 @@ class Member(Symbol):
         this.owner = owner
         assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
         this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
-    
-    @property
-    def pubCastKey(this):
-        out = this.absName
-        for i in range(len(out)):
-            if out.isascii() and not (out[i].isalnum() or out[i] == "_"): # Special characters in ASCII range
-                out = out[:i] + "_" + out[i+1:] # Replace that character with an underscore
-        return out
+
+        pubCastKey = this.absName
+        for i in range(len(pubCastKey)):
+            if pubCastKey.isascii() and not (pubCastKey[i].isalnum() or pubCastKey[i] == "_"): # Special characters in ASCII range
+                pubCastKey = pubCastKey[:i] + "_" + pubCastKey[i+1:] # Replace that character with an underscore
+        this.pubCastKey = pubCastKey
 
     
 class Virtualizable(Member):
@@ -406,6 +403,9 @@ class BoundFuncInfo(Virtualizable, Callable):
         assert this.returnTypeName != None, "Cannot return anonymous (without decltype or typedef)"
         this.isTemplate = (cursor.kind == CursorKind.FUNCTION_TEMPLATE)
         this.isConstMethod = cursor.is_const_method()
+        
+        mutability = "const" if this.isConstMethod else "mut"
+        this.pubCastKey += f"_{mutability}thisobj"
 
     @staticmethod
     def matches(cursor: Cursor):
