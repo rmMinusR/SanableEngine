@@ -137,8 +137,13 @@ TypeInfo const* TypeName::resolve() const
 
 bool TypeName::operator==(const TypeName& other) const
 {
-    //Disable checking either is incomplete. TODO would this be better in its own function?
+    //If either is empty, special handling
+    if (!isValid() || !other.isValid()) return (this->isValid() == other.isValid());
+
+    //Disable checking if either is incomplete. TODO would this be better in its own function?
     if ((this->flags & Flags::Incomplete) || (this->flags & Flags::Incomplete)) return true;
+
+    if (name.length() != other.name.length()) return false;
 
     //Compare the stuff that's easy before doing a full string compare
     return nameHash == other.nameHash
