@@ -1,5 +1,4 @@
-﻿from ast import Param
-from enum import Enum
+﻿from enum import Enum
 import zlib
 import itertools
 import os
@@ -40,9 +39,12 @@ def _isTemplate(kind: CursorKind):
         CursorKind.FUNCTION_TEMPLATE
     ]
 
-def _typeGetAbsName(target: Type) -> str:
+def _typeGetAbsName(target: Type, noneOnAnonymous=True) -> str | None:
     # Special case: Can't deduce auto, decltype(auto)
     if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
+    
+    # Special case: Can't reference an anonymous struct by name
+    if noneOnAnonymous and any([(i in target.spelling) for i in ["(unnamed struct at ", "(unnamed union at ", "(unnamed class at "] ]): return None
     
     out: str
 
@@ -238,6 +240,8 @@ class Symbol:
             return this.annotations[name]
         else:
             return default
+        
+    def finalize(this): pass
 
 
 class Member(Symbol):
@@ -252,22 +256,21 @@ class Member(Symbol):
             return {
                 AccessSpecifier.PUBLIC   : Member.Visibility.Public,
                 AccessSpecifier.PROTECTED: Member.Visibility.Protected,
-                AccessSpecifier.PRIVATE  : Member.Visibility.Private
+                AccessSpecifier.PRIVATE  : Member.Visibility.Private,
+                AccessSpecifier.INVALID  : Member.Visibility.Public # TODO imply that it's public but only because it isn't nested?
             }[clangRepr]
     
-    def __init__(this, module: "Module", cursor: Cursor, owner: Symbol):
+    def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         super().__init__(module, cursor)
         this.owner = owner
         assert owner != None, f"{this.absName} is a member, but wasn't given an owner'"
         this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
-    
-    @property
-    def pubCastKey(this):
-        out = this.absName
-        for i in range(len(out)):
-            if out.isascii() and not (out[i].isalnum() or out[i] == "_"): # Special characters in ASCII range
-                out = out[:i] + "_" + out[i+1:] # Replace that character with an underscore
-        return out
+
+        pubCastKey = this.absName
+        for i in range(len(pubCastKey)):
+            if pubCastKey.isascii() and not (pubCastKey[i].isalnum() or pubCastKey[i] == "_"): # Special characters in ASCII range
+                pubCastKey = pubCastKey[:i] + "_" + pubCastKey[i+1:] # Replace that character with an underscore
+        this.pubCastKey = pubCastKey
 
     
 class Virtualizable(Member):
@@ -337,6 +340,7 @@ class ParameterInfo(Symbol):
         Symbol.__init__(this, module, cursor)
         this.__displayName: str = cursor.displayname
         this.__typeName = _typeGetAbsName(cursor.type)
+        assert this.__typeName != None, "Cannot pass anonymous as parameter (without decltype or typedef)"
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -396,8 +400,12 @@ class BoundFuncInfo(Virtualizable, Callable):
         Callable.__init__(this, module, cursor)
         assert BoundFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         this.returnTypeName = _typeGetAbsName(cursor.result_type)
+        assert this.returnTypeName != None, "Cannot return anonymous (without decltype or typedef)"
         this.isTemplate = (cursor.kind == CursorKind.FUNCTION_TEMPLATE)
         this.isConstMethod = cursor.is_const_method()
+        
+        mutability = "const" if this.isConstMethod else "mut"
+        this.pubCastKey += f"_{mutability}thisobj"
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -409,12 +417,6 @@ class BoundFuncInfo(Virtualizable, Callable):
     
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
         if this.isTemplate or this.isDeleted: return []
-
-        tailArgs = [ 
-            (i[2::] if i.startswith("::") else i) # These can't start with ::, otherwise we risk the lexer thinking it's one big token
-            for i in
-            ([this.returnTypeName]+[i.typeName for i in this.parameters]) # Return value and params, in that order
-        ]
 
         ownerName = this.owner.absName
         if ownerName.startswith("::"): ownerName = ownerName[2:]
@@ -445,7 +447,7 @@ class BoundFuncInfo(Virtualizable, Callable):
 
 
 class ConstructorInfo(Member, Callable):
-    def __init__(this, module: "Module", cursor: Cursor, owner):
+    def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         Member.__init__(this, module, cursor, owner)
         Callable.__init__(this, module, cursor)
         assert ConstructorInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a constructor"
@@ -459,17 +461,15 @@ class ConstructorInfo(Member, Callable):
         return cursor.kind == CursorKind.CONSTRUCTOR
     
     def renderMain(this):
-        if not this.isDeleted:
-            owner:TypeInfo = this.owner
-            if this.visibility == Member.Visibility.Public or owner.isFriended(lambda f: f"thunk_utils<{owner.absName}>" in f.targetName):
-                paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
-                return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
-            else:
-                return f"//Inaccessible constructor {this.absName}"
-        else:
-            return f"//Cannot capture deleted constructor {this.absName}"
-        
+        if this.owner.isAbstract: return f"//Cannot capture constructor because owner is abstract: {this.absName}"
+        if this.isDeleted: return f"//Cannot capture deleted constructor {this.absName}"
 
+        if this.visibility == Member.Visibility.Public or this.owner.isFriended(lambda f: f"thunk_utils<{this.owner.absName}>" in f.targetName):
+            paramNames = [i.displayName for i in this.parameters] # TODO implement name capture
+            return f"builder.addConstructor(stix::StaticFunction::make(&{this.absReferenceableName}), {this.visibility});"
+        else:
+            return f"//Inaccessible constructor {this.absName}"
+     
 
 class DestructorInfo(Virtualizable):
     def __init__(this, module: "Module", cursor: Cursor, owner):
@@ -488,26 +488,40 @@ class FieldInfo(Member):
     def __init__(this, module: "Module", cursor: Cursor, owner: "TypeInfo"):
         Member.__init__(this, module, cursor, owner)
         assert FieldInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a field"
-        this.__declaredTypeName = _typeGetAbsName(cursor.type)
+        this.__declaredTypeName = _typeGetAbsName(cursor.type, noneOnAnonymous=False)
+        this.__referenceableTypeName = _typeGetAbsName(cursor.type, noneOnAnonymous=True)
+        
+        this.isTypeAnonymous = (this.__referenceableTypeName == None)
+        if this.isTypeAnonymous and this.visibility == Member.Visibility.Public: this.__referenceableTypeName = f"decltype({this.absReferenceableName})"
 
     @staticmethod
     def matches(cursor: Cursor):
         return cursor.kind == CursorKind.FIELD_DECL
     
+    def finalize(this):
+        if this.__referenceableTypeName != None:
+            ty:"TypeInfo" = this.module.lookup(this.__referenceableTypeName)
+            if ty != None and ty.visibility != Member.Visibility.Public: # FIXME handle friending
+                this.__referenceableTypeName = None # If type is nested and not publically visible, mark that we couldn't reference it
+
     def renderPreDecls(this) -> list[str]: # Used for public_cast shenanigans
-        # These can't start with ::, otherwise we risk the lexer thinking it's one big token
-        declaredTypeName = this.__declaredTypeName
-        if declaredTypeName.startswith("::"): declaredTypeName = declaredTypeName[2:]
+        if this.__referenceableTypeName != None:
+            # These can't start with ::, otherwise we risk the lexer thinking it's one big token
+            referenceableTypeName = this.__referenceableTypeName
+            if referenceableTypeName.startswith("::"): referenceableTypeName = referenceableTypeName[2:]
 
-        ownerName = this.owner.absName
-        if ownerName.startswith("::"): ownerName = ownerName[2:]
+            ownerName = this.owner.absName
+            if ownerName.startswith("::"): ownerName = ownerName[2:]
 
-        return [f'PUBLIC_CAST_GIVE_FIELD_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {declaredTypeName});']
+            return [f'PUBLIC_CAST_GIVE_FIELD_ACCESS({this.pubCastKey}, {this.owner.absName}, {this.relName}, {referenceableTypeName});']
+        else:
+            return [f"#error Couldn't capture type for anonymous private field {this.absName}"]
 
     def renderMain(this):
-        # f'builder.addField<{this.__declaredTypeName}>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
-        # f'builder.addField<decltype({this.owner.absName}::{this.relName})>("{this.relName}", offsetof({this.owner.absName}, {this.relName}));'
-        return f'builder.addField<{this.__declaredTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF_LAMBDA({this.pubCastKey}, {this.owner.absName}));'
+        if this.__referenceableTypeName != None: # This won't be able to 
+            return f'builder.addField<{this.__referenceableTypeName}>("{this.relName}", DO_PUBLIC_CAST_OFFSETOF_LAMBDA({this.pubCastKey}, {this.owner.absName}));'
+        else:
+            return f"#error Couldn't capture type for anonymous private field {this.absName}" # TODO attempt to break into subfields?
 
     def getReferencedTypes(this) -> list[str]:
         c = cvpUnwrapTypeName(this.__declaredTypeName)
@@ -558,6 +572,8 @@ class TypeInfo(Symbol):
         assert TypeInfo.matches(cursor), f"{cursor.kind} {cursor.displayname} is not a type"
         
         this.isAbstract = cursor.is_abstract_record()
+        this.isAnonymous = cursor.is_anonymous()
+        this.visibility = Member.Visibility.lookupFromClang(cursor.access_specifier)
 
         this.__contents: list[Member] = list()
         
@@ -636,6 +652,9 @@ class TypeInfo(Symbol):
         return out
     
     def renderPreDecls(this) -> list[str]:
+        # Skip if anonymous
+        if this.isAnonymous: return []
+
         out = []
         for i in this.__contents:
             out.extend(i.renderPreDecls())
@@ -680,6 +699,12 @@ class TypeInfo(Symbol):
             return f"#error {this.absName} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
 
     def renderMain(this):
+        # Skip if incomplete (suggesting the implementation doesn't belong to this TU)
+        if not this.isDefinition: return f"//Skipping forward-declared type missing definition {this.absName}"
+        
+        # Skip if anonymous
+        if this.isAnonymous: return f"//Skipping capture for anonymous type {this.absName}"
+        
         # Render header
         out = f"TypeBuilder builder = TypeBuilder::create<{this.absName}>();\n"
         
@@ -716,6 +741,9 @@ class TypeInfo(Symbol):
             for t in i.getReferencedTypes():
                 out.add(t)
         return out
+    
+    def finalize(this):
+        for i in this.__contents: i.finalize()
 
 
 class Module:
@@ -753,8 +781,10 @@ class Module:
         for source in outdated+new:
             # Do parsing
             this.__sourceFiles.add(source)
+            config.logger.info(f"Parsing {source}")
             for cursor in source.parse().get_children():
-                this.parseGlobalCursor(cursor)
+                # Only capture what's in the current file
+                if cursor.location.file.name.replace(os.altsep, os.sep) == source.path: this.parseGlobalCursor(cursor)
          
     def parseGlobalCursor(this, cursor: Cursor):
         # Stop early if we already have a definition for this symbol
@@ -809,6 +839,7 @@ class Module:
         undefined = [i for i in this.__symbols.values() if not i.isDefinition]
         if len(undefined) > 0:
             config.logger.error(f"Detected {len(undefined)} declared global symbols missing definitions: {undefined}")
+        for i in this.__symbols.values(): i.finalize()
 
     def renderBody(this) -> str:
         renders = [v.renderMain() for v in this.__symbols.values() if this.owns(v)]

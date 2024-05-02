@@ -7,6 +7,7 @@
 
 #include "TypeName.hpp"
 #include "SAny.hpp"
+#include "StaticTemplateUtils.inl"
 
 
 namespace FuncPtrAliases
@@ -25,20 +26,15 @@ namespace FuncPtrAliases
 //Ugly templated type erasure utils for binding concrete functions to be callable with SAnys
 namespace stix::detail::CallableUtils
 {
-	//Helper for verifying if provided static type list matches dynamic type list
-	inline static TypeName _getRepresentedType(const SAnyRef & t) { return t.getType(); }
-	inline static TypeName _getRepresentedType(const TypeName& t) { return t; }
-
-	template<typename It, typename TArgsHead, typename... TArgsTail>
-	static void checkArgs(It it, It end)
+	enum class ReturnTypeGroup
 	{
-		assert(it != end);
-		printf("%s ?= %s\n", _getRepresentedType(*it).c_str(), TypeName::create<TArgsHead>().c_str());
-		assert(_getRepresentedType(*it) == TypeName::create<TArgsHead>());
-		checkArgs<It, TArgsTail...>(it+1, end);
-	}
-	template<typename It> static void checkArgs(It it, It end) { assert(it == end); } //Tail case
-	
+		Assignable,
+		Void,
+		Reference
+	};
+
+	template<typename T>
+	constexpr ReturnTypeGroup ReturnTypeGroup_of = std::is_same_v<T, void> ? ReturnTypeGroup::Void : (std::is_reference_v<T> ? ReturnTypeGroup::Reference : ReturnTypeGroup::Assignable);
 
 	namespace Member
 	{
@@ -50,35 +46,35 @@ namespace stix::detail::CallableUtils
 		using fully_erased_binder_t = void(*)(erased_fp_t fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters);
 
 
-		template<typename TReturn, bool returnsVoid = std::is_same_v<TReturn, void>>
+		template<typename TReturn, ReturnTypeGroup>
 		struct TypeEraser;
 
-		template<typename TReturn>
-		struct TypeEraser<TReturn, false>
+		template<typename TReturn, typename TOwner, typename... TArgs>
+		static void typeErasedInvoke(erased_fp_t erased_fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
 		{
-			template<typename TOwner, typename... TArgs>
-			static void impl(erased_fp_t erased_fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
+			typedef TReturn(TOwner::* fn_t)(TArgs...);
+			static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn_t));
+			union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
 			{
-				typedef TReturn(TOwner::* fn_t)(TArgs...);
-				static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn_t));
-				union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
-				{
-					fn_t _fn;
-					detail::CallableUtils::Member::erased_fp_t _erased;
-				} reinterpreter;
-				reinterpreter._erased = erased_fn;
+				fn_t _fn;
+				detail::CallableUtils::Member::erased_fp_t _erased;
+			} reinterpreter;
+			reinterpreter._erased = erased_fn;
 
-				__impl(reinterpreter._fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
-			}
-			
-		private:
+			TypeEraser<TReturn, ReturnTypeGroup_of<TReturn>>::__impl(reinterpreter._fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+		}
+		
+		template<typename TReturn>
+		struct TypeEraser<TReturn, ReturnTypeGroup::Assignable>
+		{
 			template<typename TOwner, typename... TArgs, size_t... I>
 			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
-			
+				
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				assert(good);
 
 				//Invoke
 				TOwner& _this = thisObj.get<TOwner>();
@@ -86,36 +82,39 @@ namespace stix::detail::CallableUtils
 			}
 		};
 
-		template<typename TReturn>
-		struct TypeEraser<TReturn, true>
+		template<>
+		struct TypeEraser<void, ReturnTypeGroup::Void>
 		{
-			template<typename TOwner, typename... TArgs>
-			static void impl(erased_fp_t erased_fn, const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters)
+			template<typename TOwner, typename... TArgs, size_t... I>
+			static void __impl(void(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
-				typedef TReturn(TOwner::* fn_t)(TArgs...);
-				static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn_t));
-				union //reinterpret_cast doesn't allow us to do this conversion. Too bad!
-				{
-					fn_t _fn;
-					detail::CallableUtils::Member::erased_fp_t _erased;
-				} reinterpreter;
-				reinterpreter._erased = erased_fn;
-
-				__impl(reinterpreter._fn, returnValue, thisObj, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
-			}
+				//No need to check return type or owner type matching; this is handled in SAny::get
 			
-		private:
+				//Check parameters match exactly
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				assert(good);
+
+				//Invoke
+				TOwner& _this = thisObj.get<TOwner>();
+				(_this.*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
+			}
+		};
+
+		template<typename TReturn>
+		struct TypeEraser<TReturn, ReturnTypeGroup::Reference>
+		{
 			template<typename TOwner, typename... TArgs, size_t... I>
 			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				assert(good);
 
 				//Invoke
 				TOwner& _this = thisObj.get<TOwner>();
-				(_this.*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
+				returnValue.get<std::remove_reference_t<TReturn>*>() = &(_this.*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
 			}
 		};
 	}
@@ -123,26 +122,25 @@ namespace stix::detail::CallableUtils
 
 	namespace Static
 	{
-		template<typename TReturn, bool returnsVoid = std::is_same_v<TReturn, void>>
+		template<typename TReturn, ReturnTypeGroup>
 		struct TypeEraser;
 
-		template<typename TReturn>
-		struct TypeEraser<TReturn, false>
+		template<typename TReturn, typename... TArgs>
+		static void typeErasedInvoke(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters)
 		{
-			template<typename... TArgs>
-			static void impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters)
-			{
-				__impl(fn, returnValue, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
-			}
-			
-		private:
+			TypeEraser<TReturn, ReturnTypeGroup_of<TReturn>>::__impl(fn, returnValue, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
+		}
+
+		template<typename TReturn>
+		struct TypeEraser<TReturn, ReturnTypeGroup::Assignable>
+		{
 			template<typename... TArgs, size_t... I>
 			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
 
 				//Invoke
 				returnValue.get<TReturn>() = (*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
@@ -150,25 +148,34 @@ namespace stix::detail::CallableUtils
 		};
 
 		template<typename TReturn>
-		struct TypeEraser<TReturn, true>
+		struct TypeEraser<TReturn, ReturnTypeGroup::Void>
 		{
-			template<typename... TArgs>
-			static void impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters)
-			{
-				__impl(fn, returnValue, parameters, std::make_index_sequence<sizeof...(TArgs)>{});
-			}
-			
-		private:
 			template<typename... TArgs, size_t... I>
 			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				checkArgs<std::vector<SAnyRef>::const_iterator, TArgs...>(parameters.begin(), parameters.end());
+				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
 
 				//Invoke
 				(*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
+			}
+		};
+
+		template<typename TReturn>
+		struct TypeEraser<TReturn, ReturnTypeGroup::Reference>
+		{
+			template<typename... TArgs, size_t... I>
+			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			{
+				//No need to check return type or owner type matching; this is handled in SAny::get
+			
+				//Check parameters match exactly
+				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+
+				//Invoke
+				returnValue.get<std::remove_reference_t<TReturn>*>() = &(*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
 			}
 		};
 

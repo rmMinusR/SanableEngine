@@ -21,6 +21,7 @@ namespace stix
 		friend class ::stix::StaticFunction;
 
 		ENGINE_RTTI_API void* get_internal(const TypeName& asType) const;
+		ENGINE_RTTI_API void* get_unchecked() const;
 		ENGINE_RTTI_API SAnyRef(void* data, const TypeName& type);
 	public:
 		ENGINE_RTTI_API SAnyRef();
@@ -31,7 +32,7 @@ namespace stix
 
 		ENGINE_RTTI_API TypeName getType() const;
 		template<typename T>
-		std::remove_reference_t<T>& get() const { return *(std::remove_reference_t<T>*)get_internal(TypeName::create<T>()); }
+		std::remove_reference_t<T>& get() const { return *(std::remove_reference_t<T>*)get_internal(TypeName::tryCreate<T>()); }
 
 		ENGINE_RTTI_API operator bool() const;
 		ENGINE_RTTI_API bool has_value() const;
@@ -43,4 +44,9 @@ namespace stix
 		SAnyRef& operator=(SAnyRef&& mov) = default;
 	};
 
+
+	namespace detail
+	{
+		static inline decltype(auto) _getRepresentedType(const SAnyRef& v) { return v.getType(); }
+	}
 }
