@@ -11,5 +11,6 @@ FieldInfoBuilder::FieldInfoBuilder(const TypeName& declaredType, const std::stri
 
 FieldInfo FieldInfoBuilder::build(const TypeName& ownerName, const void* ownerImage) const
 {
-	return FieldInfo(size, accessor(ownerImage), ownerName, declaredType, name, visibility);;
+	//No need to check presence of ownerImage here: we will only be using concrete values owned by the given object itself
+	return FieldInfo(size, accessor(ownerImage), ownerName, declaredType, name, visibility);
 }
