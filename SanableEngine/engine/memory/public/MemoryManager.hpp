@@ -9,7 +9,7 @@ class GameObject;
 class Application;
 struct TypeInfo;
 class PluginManager;
-class PoolCallBatcher;
+class _PoolCallBatcherBase;
 
 class MemoryManager
 {
@@ -48,7 +48,7 @@ private:
 	ENGINEMEM_API void ensureFresh();
 	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
 
-	friend class PoolCallBatcher;
+	friend class _PoolCallBatcherBase;
 	ENGINEMEM_API uint64_t getPoolStateHash() const;
 };
 

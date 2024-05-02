@@ -10,8 +10,8 @@ Game::Game() :
     application(nullptr),
     inputSystem(nullptr),
     isAlive(false),
-    updateList   (TypeName::create<IUpdatable   >()),
-    _3dRenderList(TypeName::create<I3DRenderable>())
+    updateList(),
+    _3dRenderList()
 {
 }
 
@@ -122,7 +122,7 @@ InputSystem* Game::getInput()
     return inputSystem;
 }
 
-const PoolCallBatcher* Game::get3DRenderables() const
+const PoolCallBatcher<I3DRenderable>* Game::get3DRenderables() const
 {
     return &_3dRenderList;
 }

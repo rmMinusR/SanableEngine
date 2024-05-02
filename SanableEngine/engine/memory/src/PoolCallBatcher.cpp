@@ -2,23 +2,27 @@
 
 #include "MemoryManager.hpp"
 
-PoolCallBatcher::PoolCallBatcher(const TypeName& baseType) :
+_PoolCallBatcherBase::_PoolCallBatcherBase(const TypeName& baseType) :
 	baseTypeName(baseType)
 {
 }
 
-void PoolCallBatcher::clear()
+_PoolCallBatcherBase::~_PoolCallBatcherBase()
+{
+}
+
+void _PoolCallBatcherBase::clear()
 {
 	cachedStateHash = 0;
 	cachedPoolList.clear();
 }
 
-size_t PoolCallBatcher::count() const
+size_t _PoolCallBatcherBase::count() const
 {
 	return cachedPoolList.size();
 }
 
-void PoolCallBatcher::ensureFresh(MemoryManager* src, bool force)
+void _PoolCallBatcherBase::ensureFresh(MemoryManager* src, bool force)
 {
 	uint64_t newHash = src->getPoolStateHash();
 	if (force || cachedStateHash != newHash)
