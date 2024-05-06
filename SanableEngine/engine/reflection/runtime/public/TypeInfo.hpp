@@ -135,6 +135,11 @@ public:
 		std::vector<ConstructorRecord> constructors;
 		std::optional<DestructorRecord> richDtor; //Detects implicit dtors using standard C++. If nullopt, destructor is deleted.
 
+		ENGINE_RTTI_API const stix::MemberFunction* getMemberFunction(const std::string& name, MemberVisibility visibility = MemberVisibility::Public) const;
+		ENGINE_RTTI_API const stix::MemberFunction* getMemberFunction(const std::string& name, const std::vector<TypeName>& paramTypes, MemberVisibility visibility = MemberVisibility::Public) const;
+		ENGINE_RTTI_API const stix::StaticFunction* getStaticFunction(const std::string& name, MemberVisibility visibility = MemberVisibility::Public) const;
+		ENGINE_RTTI_API const stix::StaticFunction* getStaticFunction(const std::string& name, const std::vector<TypeName>& paramTypes, MemberVisibility visibility = MemberVisibility::Public) const;
+
 	} capabilities;
 
 public:

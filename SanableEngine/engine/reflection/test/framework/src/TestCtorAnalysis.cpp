@@ -12,7 +12,7 @@
 template<typename T>
 void testCtorCaptureV2();
 
-TEST_CASE("Ctor capture: Simple case")
+TEST_CASE("Class image capture")
 {
 	//Prepare clean state
 	{
@@ -22,29 +22,30 @@ TEST_CASE("Ctor capture: Simple case")
 		GlobalTypeRegistry::loadModule("test runner", m);
 	}
 
-	//Simple case
-	SUBCASE("Derived1") { testCtorCaptureV2<Derived1>(); }
-	SUBCASE("Derived2") { testCtorCaptureV2<Derived2>(); }
-	SUBCASE("GrandchildOfBase") { testCtorCaptureV2<GrandchildOfBase>(); }
-}
+	SUBCASE("Simple case")
+	{
+		SUBCASE("Derived1") { testCtorCaptureV2<Derived1>(); }
+		SUBCASE("Derived2") { testCtorCaptureV2<Derived2>(); }
+		SUBCASE("GrandchildOfBase") { testCtorCaptureV2<GrandchildOfBase>(); }
+	}
 
-TEST_CASE("Ctor capture: Multiple case")
-{
-	//Complex case: Multiple inheritance
-	SUBCASE("ConcreteBase") { testCtorCaptureV2<ConcreteBase>(); }
-	SUBCASE("ImplementerA") { testCtorCaptureV2<ImplementerA>(); }
-	SUBCASE("ImplementerB") { testCtorCaptureV2<ImplementerB>(); }
-}
+	SUBCASE("Multiple inheritance case")
+	{
+		//Complex case: Multiple inheritance
+		SUBCASE("ConcreteBase") { testCtorCaptureV2<ConcreteBase>(); }
+		SUBCASE("ImplementerA") { testCtorCaptureV2<ImplementerA>(); }
+		SUBCASE("ImplementerB") { testCtorCaptureV2<ImplementerB>(); }
+	}
 
-TEST_CASE("Ctor capture: Virtual case")
-{
-	//Complex-er case: Multiple virtual inheritance
-	SUBCASE("VirtualSharedBase") { testCtorCaptureV2<VirtualSharedBase>(); }
-	SUBCASE("VirtualInheritedA") { testCtorCaptureV2<VirtualInheritedA>(); }
-	SUBCASE("VirtualInheritedB") { testCtorCaptureV2<VirtualInheritedB>(); }
-	SUBCASE("VirtualDiamond"   ) { testCtorCaptureV2<VirtualDiamond   >(); }
+	SUBCASE("Virtual inheritance case")
+	{
+		//Complex-er case: Multiple virtual inheritance
+		SUBCASE("VirtualSharedBase") { testCtorCaptureV2<VirtualSharedBase>(); }
+		SUBCASE("VirtualInheritedA") { testCtorCaptureV2<VirtualInheritedA>(); }
+		SUBCASE("VirtualInheritedB") { testCtorCaptureV2<VirtualInheritedB>(); }
+		SUBCASE("VirtualDiamond"   ) { testCtorCaptureV2<VirtualDiamond   >(); }
+	}
 }
-
 
 template<typename T>
 void testCtorCaptureV2()
