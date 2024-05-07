@@ -109,8 +109,7 @@ bool Plugin::load(Application const* context)
 	}
 	
 	//Report plugin data
-	assert(!reportedData);
-	reportedData = new PluginReportedData();
+	if (!reportedData) reportedData = new PluginReportedData();
 	bool success = entryPoints.report(this, reportedData, context);
 	if (!success) return false;
 
