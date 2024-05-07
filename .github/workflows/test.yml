@@ -24,6 +24,8 @@ jobs:
 
     - uses: lukka/get-cmake@v3.29.2
     
+    - uses: ilammy/msvc-dev-cmd@v1
+    
     - uses: actions/setup-python@v4
       with:
         python-version: '3.10'
