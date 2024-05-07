@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../dllapi.h"
-
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -20,7 +18,7 @@ typedef void* LibHandle;
 #include <vector>
 #include <string>
 
-#include "dllapi.h"
+#include "../dllapi.h"
 #include "PluginCore.hpp"
 
 class ModuleTypeRegistry;
