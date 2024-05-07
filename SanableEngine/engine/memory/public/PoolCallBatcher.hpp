@@ -40,11 +40,14 @@ public:
 	{
 		for (const CachedPool& i : cachedPoolList)
 		{
-			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
+			if (i.pool->isLoaded())
 			{
-				void* rawObj = *it;
-				TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
-				(obj->*func)(funcArgs...);
+				for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
+				{
+					void* rawObj = *it;
+					TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
+					(obj->*func)(funcArgs...);
+				}
 			}
 		}
 	}
@@ -54,11 +57,14 @@ public:
 	{
 		for (const CachedPool& i : cachedPoolList)
 		{
-			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
+			if (i.pool->isLoaded())
 			{
-				void* rawObj = *it;
-				TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
-				func(obj, funcArgs...);
+				for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
+				{
+					void* rawObj = *it;
+					TObj* obj = (TObj*) i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
+					func(obj, funcArgs...);
+				}
 			}
 		}
 	}
