@@ -41,6 +41,7 @@ void stix::MemberFunction::invoke(SAnyRef returnValue, const SAnyRef& thisObj, c
 		void* tempReturnVal = STACK_ALLOC(returnValSize);
 		memset(tempReturnVal, 0, returnValSize);
 		returnValue = SAnyRef(tempReturnVal, returnType);
+		STACK_FREE(tempReturnVal);
 	}
 	else if (returnsVoid) assert(!returnValue);
 
@@ -70,6 +71,7 @@ void stix::StaticFunction::invoke(SAnyRef returnValue, const std::vector<SAnyRef
 		void* tempReturnVal = STACK_ALLOC(returnValSize);
 		memset(tempReturnVal, 0, returnValSize);
 		returnValue = SAnyRef(tempReturnVal, returnType);
+		STACK_FREE(tempReturnVal);
 	}
 	else if (returnsVoid) assert(!returnValue);
 

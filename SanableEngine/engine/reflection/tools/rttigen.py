@@ -130,6 +130,8 @@ generated = template.replace("GENERATED_RTTI", targetModule.renderBody()) \
 
 config.logger.info(f"Writing to {args.output}")
 
+outputDir = args.output[:-len(os.path.basename(args.output))]
+os.makedirs(outputDir, exist_ok=True)
 with open(args.output, "wt") as f:
     f.write(generated)
 

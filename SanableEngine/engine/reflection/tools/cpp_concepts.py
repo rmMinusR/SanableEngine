@@ -868,6 +868,8 @@ class Module:
         return out
             
     def save(this, cachePath: str):
+        cacheDir = cachePath[:-len(os.path.basename(cachePath))]
+        os.makedirs(cacheDir, exist_ok=True)
         with open(cachePath, "wb") as file:
             file.write(pickle.dumps(this))
 

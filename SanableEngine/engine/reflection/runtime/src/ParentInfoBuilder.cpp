@@ -35,5 +35,6 @@ ParentInfo ParentInfoBuilder::buildFromSurrogate()
 	assert( surrogate <= parentAddr && parentAddr < surrogate+ownerSize ); //FIXME some implementations could theoretically allocate virtual bases on the heap. Figure it out... later.
 	data.offset = size_t(((char*)parentAddr) - ((char*)surrogate));
 
+	STACK_FREE(surrogate);
 	return data;
 }
