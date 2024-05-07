@@ -6,6 +6,7 @@ on:
     - main
     - dev
     - memory-testing
+    - github-ci
   workflow_dispatch:
 
 permissions:
@@ -25,7 +26,7 @@ jobs:
       with:
         submodules: recursive
     
-    - uses: lukka/get-cmake@v3.26.1
+    - uses: lukka/get-cmake@v3.29.2
     
     # Fix SDL2_image support
     - uses: ilammy/msvc-dev-cmd@v1

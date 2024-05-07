@@ -18,7 +18,7 @@ jobs:
       with:
         submodules: recursive
     
-    - uses: lukka/get-cmake@v3.26.1
+    - uses: lukka/get-cmake@v3.29.2
     
     - name: Generate GLEW sources
       working-directory: SanableEngine/libs/glew/auto

@@ -18,7 +18,7 @@ jobs:
       with:
         submodules: recursive
     
-    - uses: lukka/get-cmake@v3.26.1
+    - uses: lukka/get-cmake@v3.29.2
     
     - name: Setup Emscripten
       uses: mymindstorm/setup-emsdk@v11
