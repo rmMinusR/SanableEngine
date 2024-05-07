@@ -104,6 +104,8 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     mainWindow = mainWindowBuilder.build();
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
+    std::cout << "Discovered " << pluginManager.plugins.size() << " plugins" << std::endl;
+    for (Plugin const* p : pluginManager.plugins) std::cout << " - " << std::filesystem::relative( p->getPath(), system->GetBaseDir() ).string() << std::endl;
     pluginManager.loadAll();
     pluginManager.hookAll();
 
@@ -149,6 +151,7 @@ void Application::frameStep(void* arg)
 
     engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
 
+    engine->game->refreshCallBatchers(false);
     engine->processEvents();
     engine->game->refreshCallBatchers(false);
     engine->game->tick();

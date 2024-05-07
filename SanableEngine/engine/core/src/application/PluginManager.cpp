@@ -28,7 +28,6 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 	{
 		discover(dllPath);
 	}
-	std::cout << "Done discovering plugins\n";
 }
 
 Plugin* PluginManager::discover(const std::filesystem::path& dllPath)
@@ -37,8 +36,6 @@ Plugin* PluginManager::discover(const std::filesystem::path& dllPath)
 	assert(std::find_if(plugins.begin(), plugins.end(), [&](Plugin* i) { return i->getPath() == dllPath; }) == plugins.end());
 	
 	Plugin* p = new Plugin(dllPath);
-	std::cout << "Loading plugin: " << dllPath.filename() << '\n';
-	p->load(engine);
 	plugins.push_back(p);
 	return p;
 }
@@ -94,7 +91,7 @@ void PluginManager::unhook(Plugin* plugin)
 	commandBuffer.emplace_back(BufferedCommand::Command::Unhook, plugin, false);
 }
 
-void PluginManager::executeCommandBuffer()
+size_t PluginManager::executeCommandBuffer()
 {
 	for (const BufferedCommand& cmd : commandBuffer)
 	{
@@ -107,7 +104,9 @@ void PluginManager::executeCommandBuffer()
 		case BufferedCommand::Command::Unhook: cmd.plugin->cleanup(cmd.cleanup_isShutdown); break;
 		}
 	}
+	size_t numCommands = commandBuffer.size();
 	commandBuffer.clear();
+	return numCommands;
 }
 
 void PluginManager::reloadAll()

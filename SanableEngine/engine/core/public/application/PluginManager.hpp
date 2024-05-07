@@ -40,7 +40,7 @@ private:
 
 	void forgetAll();
 
-	void executeCommandBuffer();
+	size_t executeCommandBuffer();
 
 	void reloadAll(); //TODO refactor into Application
 

@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-bool SemanticVM::debug = true;
+bool SemanticVM::debug = false;
 
 void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
 {
