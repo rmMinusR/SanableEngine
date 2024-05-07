@@ -12,10 +12,6 @@ on:
 permissions:
   contents: read
 
-env:
-  CC: clang
-  CXX: clang++
-
 jobs:
   
   test-windows-msvc:
@@ -25,11 +21,8 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    
+
     - uses: lukka/get-cmake@v3.29.2
-    
-    # Fix SDL2_image support
-    - uses: ilammy/msvc-dev-cmd@v1
     
     - uses: actions/setup-python@v4
       with:
@@ -50,7 +43,7 @@ jobs:
     - run: mkdir SanableEngine\builds\Win64-MSVC
     
     - name: Generate build files
-      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MSVC/intermediate -G Ninja -DMSVC=YES
+      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MSVC/intermediate -G Ninja
     
     - name: Build everything
       run: cmake --build SanableEngine/builds/Win64-MSVC/intermediate
@@ -64,19 +57,19 @@ jobs:
         path: test-results
         name: Test-Report-Windows-MSVC
   
-  
-  test-windows-mingw:
+  test-windows-clang:
     runs-on: windows-latest
+    
+    env:
+      CC: clang
+      CXX: clang++
     
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
     
-    - uses: lukka/get-cmake@v3.26.1
-    
-    # Fix SDL2_image support
-    - uses: egor-tensin/setup-mingw@v1
+    - uses: lukka/get-cmake@v3.29.2
     
     - uses: actions/setup-python@v4
       with:
@@ -85,7 +78,7 @@ jobs:
     - name: Install LLVM and Clang
       uses: KyleMayes/install-llvm-action@v1.8.3
       with:
-        version: "15"
+        version: "16"
     
     - name: Install Libclang
       run: python -m pip install libclang
@@ -94,30 +87,30 @@ jobs:
       working-directory: SanableEngine/libs/glew/auto
       run: make
     
-    - run: mkdir SanableEngine\builds\Win64-MinGW
+    - run: mkdir SanableEngine\builds\Win64-clang
     
     - name: Generate build files
-      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MinGW/intermediate -G Ninja -DMINGW=YES
+      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-clang/intermediate -G Ninja
     
     - name: Build everything
-      run: cmake --build SanableEngine/builds/Win64-MinGW/intermediate
+      run: cmake --build SanableEngine/builds/Win64-clang/intermediate
     
     - name: Test everything
-      run: ctest --test-dir SanableEngine/builds/Win64-MinGW/intermediate --output-junit test-results/Win64-MinGW.xml
+      run: ctest --test-dir SanableEngine/builds/Win64-clang/intermediate --output-junit test-results/Win64-clang.xml
     
     - name: Upload reports
       uses: actions/upload-artifact@v3.1.0
       with:
         path: test-results
-        name: Test-Report-Windows-MinGW
-  
+        name: Test-Report-Windows-clang
   
   collate:
     runs-on: windows-latest
     
     needs: [
       test-windows-msvc,
-      test-windows-mingw
+      # test-windows-mingw
+      test-windows-clang
     ]
     
     steps:
