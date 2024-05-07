@@ -39,7 +39,7 @@ public:
 	//These all require that no shader is active to properly render
 	ENGINEGRAPHICS_API void drawRect(Vector3f center, float w, float h, const SDL_Color& color);
 	ENGINEGRAPHICS_API void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos); //Assumes you have no shader active
-	ENGINEGRAPHICS_API void drawText(const Font& font, const Material& mat, const std::wstring& text); //Assumes you've already activated the material and set model matrix value
+	ENGINEGRAPHICS_API void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color); //Assumes you've already activated the material and set model matrix value
 	ENGINEGRAPHICS_API void drawTexture(const Texture& tex, int x, int y); //Obsolete
 	ENGINEGRAPHICS_API void drawTexture(const Texture* tex, Vector3f pos, float w, float h, Sprite* sprite = nullptr); //If sprite is null, defaults to full UV of 0-1
 

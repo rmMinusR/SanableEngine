@@ -28,7 +28,11 @@ namespace stix
 		ENGINE_RTTI_API ~SAnyRef();
 
 		template<typename T>
-		static SAnyRef make(T* obj) { return SAnyRef(obj, TypeName::create<T>()); } //TODO attempt to snipe RTTI and checK, just to be sure? Casting should handle most of it though.
+		static SAnyRef make(T* obj)
+		{
+			static_assert(!std::is_reference_v<T>);
+			return SAnyRef(obj, TypeName::create<T>()); //TODO attempt to snipe RTTI and checK, just to be sure? Casting should handle most of it though.
+		}
 
 		ENGINE_RTTI_API TypeName getType() const;
 		template<typename T>

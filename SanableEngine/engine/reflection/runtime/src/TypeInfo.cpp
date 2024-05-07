@@ -224,6 +224,68 @@ bool TypeInfo::Layout::matchesExact(void* obj) const
 	return true;
 }
 
+const stix::MemberFunction* TypeInfo::Capabilities::getMemberFunction(const std::string& name, MemberVisibility visibility) const
+{
+	for (const MemberFuncRecord& m : memberFuncs)
+	{
+		if ((m.visibility & visibility) != MemberVisibility::None)
+		{
+			if (m.name == name) return &m.fn;
+		}
+	}
+	return nullptr;
+}
+
+const stix::MemberFunction* TypeInfo::Capabilities::getMemberFunction(const std::string& name, const std::vector<TypeName>& paramTypes, MemberVisibility visibility) const
+{
+	for (const MemberFuncRecord& m : memberFuncs)
+	{
+		if ((m.visibility & visibility) != MemberVisibility::None)
+		{
+			if (m.name == name)
+			{
+				if (paramTypes.size() != m.fn.parameters.size()) continue;
+				for (int i = 0; i < paramTypes.size(); ++i) if (paramTypes[i] != m.fn.parameters[i]) goto noMatch;
+				return &m.fn;
+			}
+		}
+		//Fast exit for looped checks and whatnot, clearer than break keyword
+	noMatch:
+	}
+	return nullptr;
+}
+
+const stix::StaticFunction* TypeInfo::Capabilities::getStaticFunction(const std::string& name, MemberVisibility visibility) const
+{
+	for (const StaticFuncRecord& m : staticFuncs)
+	{
+		if ((m.visibility & visibility) != MemberVisibility::None)
+		{
+			if (m.name == name) return &m.fn;
+		}
+	}
+	return nullptr;
+}
+
+const stix::StaticFunction* TypeInfo::Capabilities::getStaticFunction(const std::string& name, const std::vector<TypeName>& paramTypes, MemberVisibility visibility) const
+{
+	for (const StaticFuncRecord& m : staticFuncs)
+	{
+		if ((m.visibility & visibility) != MemberVisibility::None)
+		{
+			if (m.name == name)
+			{
+				if (paramTypes.size() != m.fn.parameters.size()) continue;
+				for (int i = 0; i < paramTypes.size(); ++i) if (paramTypes[i] != m.fn.parameters[i]) goto noMatch;
+				return &m.fn;
+			}
+		}
+		//Fast exit for looped checks and whatnot, clearer than break keyword
+	noMatch:
+	}
+	return nullptr;
+}
+
 void TypeInfo::doLateBinding()
 {
 	//Deferred from captureCDO: Mark all fields as used

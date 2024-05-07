@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <SDL_pixels.h>
 
 #include "Widget.hpp"
 
@@ -11,8 +12,10 @@ class LabelWidget : public Widget
 	Material* material;
 	Font* font;
 	std::wstring text;
+	SDL_Color color;
 public:
 	ENGINEGUI_API LabelWidget(HUD* hud, Material* material, Font* font);
+	ENGINEGUI_API LabelWidget(HUD* hud, Material* material, Font* font, const SDL_Color& color);
 	ENGINEGUI_API virtual ~LabelWidget();
 
 	UIAnchor align;
