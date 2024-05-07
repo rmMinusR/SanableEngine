@@ -11,19 +11,36 @@ class Application;
 
 class PluginManager
 {
+public:
+	struct BufferedCommand
+	{
+		enum class Command
+		{
+			Load,
+			Unload,
+			Hook,
+			Unhook
+		} command;
+		Plugin* plugin;
+		bool cleanup_isShutdown;
+		inline BufferedCommand(Command command, Plugin* plugin, bool cleanup_isShutdown = false) : command(command), plugin(plugin), cleanup_isShutdown(cleanup_isShutdown) {}
+	};
 private:
 	Application* const engine;
 	std::vector<Plugin*> plugins;
+	std::vector<BufferedCommand> commandBuffer;
 	
 	void discoverAll(const std::filesystem::path& pluginsFolder);
 
+	//These execute immediately. USE WITH CAUTION.
 	void loadAll();
 	void unloadAll();
-
 	void hookAll();
 	void unhookAll(bool shutdown);
 
 	void forgetAll();
+
+	void executeCommandBuffer();
 
 	void reloadAll(); //TODO refactor into Application
 
@@ -38,9 +55,9 @@ public:
 	
 	ENGINECORE_API Plugin* discover(const std::filesystem::path& dllPath);
 
+	//These go to the command buffer
 	ENGINECORE_API void load(Plugin* plugin);
 	ENGINECORE_API void unload(Plugin* plugin);
-
 	ENGINECORE_API void hook(Plugin* plugin);
 	ENGINECORE_API void unhook(Plugin* plugin);
 };

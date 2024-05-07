@@ -43,38 +43,14 @@ Plugin* PluginManager::discover(const std::filesystem::path& dllPath)
 	return p;
 }
 
-void PluginManager::load(Plugin* plugin)
-{
-	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
-	plugin->load(engine);
-}
-
-void PluginManager::unload(Plugin* plugin)
-{
-	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
-	plugin->unload(engine);
-}
-
-void PluginManager::loadAll()
-{
-	for (Plugin* p : plugins) p->load(engine);
-}
-
 void PluginManager::unloadAll()
 {
 	for (Plugin* p : plugins) p->unload(engine);
 }
 
-void PluginManager::hook(Plugin* plugin)
+void PluginManager::loadAll()
 {
-	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
-	plugin->init();
-}
-
-void PluginManager::unhook(Plugin* plugin)
-{
-	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
-	plugin->cleanup(false);
+	for (Plugin* p : plugins) p->load(engine);
 }
 
 void PluginManager::hookAll()
@@ -92,6 +68,46 @@ void PluginManager::forgetAll()
 {
 	for (Plugin* p : plugins) delete p;
 	plugins.clear();
+}
+
+void PluginManager::unload(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	commandBuffer.emplace_back(BufferedCommand::Command::Unload, plugin);
+}
+
+void PluginManager::load(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	commandBuffer.emplace_back(BufferedCommand::Command::Load, plugin);
+}
+
+void PluginManager::hook(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	commandBuffer.emplace_back(BufferedCommand::Command::Hook, plugin);
+}
+
+void PluginManager::unhook(Plugin* plugin)
+{
+	assert(std::find(plugins.begin(), plugins.end(), plugin) != plugins.end());
+	commandBuffer.emplace_back(BufferedCommand::Command::Unhook, plugin, false);
+}
+
+void PluginManager::executeCommandBuffer()
+{
+	for (const BufferedCommand& cmd : commandBuffer)
+	{
+		assert(std::find(plugins.begin(), plugins.end(), cmd.plugin) != plugins.end());
+		switch (cmd.command)
+		{
+		case BufferedCommand::Command::Load  : cmd.plugin->load  (engine); break;
+		case BufferedCommand::Command::Unload: cmd.plugin->unload(engine); break;
+		case BufferedCommand::Command::Hook  : cmd.plugin->init(); break;
+		case BufferedCommand::Command::Unhook: cmd.plugin->cleanup(cmd.cleanup_isShutdown); break;
+		}
+	}
+	commandBuffer.clear();
 }
 
 void PluginManager::reloadAll()

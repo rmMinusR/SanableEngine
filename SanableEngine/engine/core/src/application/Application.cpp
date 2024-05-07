@@ -154,6 +154,8 @@ void Application::frameStep(void* arg)
     engine->game->tick();
     engine->game->refreshCallBatchers(false);
     for (Window* w : engine->windows) w->draw();
+
+    engine->pluginManager.executeCommandBuffer();
 }
 
 Game* Application::getGame() const
