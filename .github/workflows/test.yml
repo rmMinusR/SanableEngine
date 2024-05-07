@@ -17,6 +17,10 @@ jobs:
   test-windows-msvc:
     runs-on: windows-latest
     
+    env:
+      CC: cl
+      CXX: cl
+    
     steps:
     - uses: actions/checkout@v3
       with:
