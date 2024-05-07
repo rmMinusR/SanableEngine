@@ -41,11 +41,12 @@ public:
 	template<typename TObj>
 	inline void destroyPool() { destroyPool(TypeName::create<TObj>()); }
 
+	ENGINEMEM_API void ensureFresh(); //USE WITH CAUTION.
+
 private:
 	friend class Application;
 	friend class PluginManager;
 
-	ENGINEMEM_API void ensureFresh();
 	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
 
 	friend class _PoolCallBatcherBase;

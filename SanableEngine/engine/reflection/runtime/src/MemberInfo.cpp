@@ -39,3 +39,8 @@ ParentInfo::ParentInfo(size_t size, ptrdiff_t offset, const TypeName& owner, con
 	virtualness(virtualness)
 {
 }
+
+ParentInfo ParentInfo::identity(const TypeName& ty, size_t sz)
+{
+	return ParentInfo(sz, 0, ty, ty, MemberVisibility::Public, Virtualness::NonVirtual);
+}

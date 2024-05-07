@@ -36,8 +36,15 @@ void _PoolCallBatcherBase::ensureFresh(MemoryManager* src, bool force)
 				const TypeInfo* t = pool->getContentsType();
 				if (t)
 				{
-					std::optional<ParentInfo> p = t->getParent(baseTypeName);
-					if (p.has_value()) cachedPoolList.push_back(CachedPool{ pool, p.value() });
+					if (t->name == baseTypeName)
+					{
+						cachedPoolList.push_back(CachedPool{ pool, ParentInfo::identity(t->name, t->layout.size) });
+					}
+					else
+					{
+						std::optional<ParentInfo> p = t->getParent(baseTypeName);
+						if (p.has_value()) cachedPoolList.push_back(CachedPool{ pool, p.value() });
+					}
 				}
 			}
 		);
