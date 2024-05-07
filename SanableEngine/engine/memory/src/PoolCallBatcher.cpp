@@ -2,8 +2,9 @@
 
 #include "MemoryManager.hpp"
 
-_PoolCallBatcherBase::_PoolCallBatcherBase(const TypeName& baseType) :
-	baseTypeName(baseType)
+_PoolCallBatcherBase::_PoolCallBatcherBase(const TypeName& baseType, bool skipUnloaded) :
+	baseTypeName(baseType),
+	skipUnloaded(skipUnloaded)
 {
 }
 
@@ -48,5 +49,21 @@ void _PoolCallBatcherBase::ensureFresh(MemoryManager* src, bool force)
 				}
 			}
 		);
+	}
+}
+
+void _PoolCallBatcherBase::foreachObject(const std::function<void(void*)>& visitor) const
+{
+	for (const CachedPool& i : cachedPoolList)
+	{
+		if (!skipUnloaded || i.pool->isLoaded())
+		{
+			for (auto it = i.pool->cbegin(); it != i.pool->cend(); ++it)
+			{
+				void* rawObj = *it;
+				void* casted = i.pool->getContentsType()->layout.upcast(rawObj, i.caster);
+				visitor(casted);
+			}
+		}
 	}
 }
