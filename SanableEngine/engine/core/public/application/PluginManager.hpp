@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Plugin.hpp"
+#include "ThunkUtils.hpp"
 
 class ModuleTypeRegistry;
 class Application;
@@ -48,6 +49,7 @@ private:
 	~PluginManager();
 
 	friend class Application;
+	friend struct thunk_utils<PluginManager>;
 
 public:
 	ENGINECORE_API void enumeratePlugins(const std::function<void(Plugin*)>& visitor);

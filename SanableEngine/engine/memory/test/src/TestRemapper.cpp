@@ -76,7 +76,7 @@ TEST_SUITE("MemoryMapper")
 
 		//Setup
 		RawMemoryPool pool(startCount, sizeof(uint8_t), alignof(uint8_t));
-		uint8_t* objs[nToCreate];
+		uint8_t** objs = new uint8_t*[nToCreate];
 		for (int i = 0; i < nToCreate; ++i)
 		{
 			objs[i] = (uint8_t*)pool.allocate();
@@ -87,7 +87,7 @@ TEST_SUITE("MemoryMapper")
 		//Act
 		MemoryMapper remapper;
 		pool.setMaxNumObjects(endCount, &remapper);
-		uint8_t* remappedObjs[nToCreate];
+		uint8_t** remappedObjs = new uint8_t*[nToCreate];
 		for (int i = 0; i < nToCreate; ++i)
 		{
 			remappedObjs[i] = remapper.transformAddress(objs[i]);
@@ -98,6 +98,10 @@ TEST_SUITE("MemoryMapper")
 		{
 			CHECK(*(remappedObjs[i]) == i); //Address was remapped correctly
 		}
+
+		//Cleanup
+		delete[] objs;
+		delete[] remappedObjs;
 	}
 
 	TEST_CASE("TypedMemoryPool object resize (MoveTester)")

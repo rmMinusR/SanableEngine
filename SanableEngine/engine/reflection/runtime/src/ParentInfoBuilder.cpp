@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "alloc_detail.h"
+
 ParentInfoBuilder::ParentInfoBuilder(const TypeName& ownerType, const TypeName& parentType, size_t ownerSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness) :
 	data(parentSize, -1, ownerType, parentType, visibility, virtualness),
 	ownerSize(ownerSize),
@@ -11,7 +13,7 @@ ParentInfoBuilder::ParentInfoBuilder(const TypeName& ownerType, const TypeName& 
 
 ParentInfo ParentInfoBuilder::buildFromClassImage(char* image)
 {
-	if (!image && data.virtualness == ParentInfo::Virtualness::NonVirtual) image = reinterpret_cast<char*>(0xDEADBEEF);
+	if (!image && data.virtualness == ParentInfo::Virtualness::NonVirtual) image = reinterpret_cast<char*>(0xDEADBEEFull);
 	assert(image != nullptr && "Casting requires class image, but none was provided!");
 
 	//Detect offset
@@ -25,7 +27,7 @@ ParentInfo ParentInfoBuilder::buildFromClassImage(char* image)
 ParentInfo ParentInfoBuilder::buildFromSurrogate()
 {
 	//If CDOs list is empty, use surrogate instead
-	char* surrogate[ownerSize];
+	char* surrogate = (char*) STACK_ALLOC(ownerSize);
 	memset(surrogate, 0, ownerSize);
 	
 	//Detect offset

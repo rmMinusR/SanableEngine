@@ -245,12 +245,11 @@ const stix::MemberFunction* TypeInfo::Capabilities::getMemberFunction(const std:
 			if (m.name == name)
 			{
 				if (paramTypes.size() != m.fn.parameters.size()) continue;
-				for (int i = 0; i < paramTypes.size(); ++i) if (paramTypes[i] != m.fn.parameters[i]) goto noMatch;
-				return &m.fn;
+				bool hasMatch = true;
+				for (int i = 0; i < paramTypes.size(); ++i) if (paramTypes[i] != m.fn.parameters[i]) { hasMatch = false; break; }
+				if (hasMatch) return &m.fn;
 			}
 		}
-		//Fast exit for looped checks and whatnot, clearer than break keyword
-	noMatch:
 	}
 	return nullptr;
 }
@@ -276,12 +275,11 @@ const stix::StaticFunction* TypeInfo::Capabilities::getStaticFunction(const std:
 			if (m.name == name)
 			{
 				if (paramTypes.size() != m.fn.parameters.size()) continue;
-				for (int i = 0; i < paramTypes.size(); ++i) if (paramTypes[i] != m.fn.parameters[i]) goto noMatch;
-				return &m.fn;
+				bool hasMatch = true;
+				for (int i = 0; i < paramTypes.size(); ++i) if (paramTypes[i] != m.fn.parameters[i]) { hasMatch = false; break; }
+				if (hasMatch) return &m.fn;
 			}
 		}
-		//Fast exit for looped checks and whatnot, clearer than break keyword
-	noMatch:
 	}
 	return nullptr;
 }

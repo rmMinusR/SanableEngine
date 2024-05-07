@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "alloc_detail.h"
 #include "TypeInfo.hpp"
 
 stix::Function::Function(const TypeName& returnType, const std::vector<TypeName>& parameters) :
@@ -27,12 +28,6 @@ stix::MemberFunction::MemberFunction(const TypeName& owner, bool ownerIsConst, c
 stix::MemberFunction::~MemberFunction()
 {
 }
-
-#if WIN32
-#define STACK_ALLOC _malloca
-#else
-#define STACK_ALLOC alloca
-#endif
 
 void stix::MemberFunction::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const
 {
