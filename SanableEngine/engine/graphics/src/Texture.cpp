@@ -3,7 +3,6 @@
 #include <cassert>
 
 #include <SDL_render.h>
-#include <SDL_image.h>
 
 #include "stb_image.h"
 

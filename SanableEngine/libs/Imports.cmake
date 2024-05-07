@@ -12,48 +12,9 @@ else()
 endif()
 find_package(SDL2 REQUIRED)
 
-# Configure SDL2_image
-if (MSVC)
-    message(" > Configuring SDL2_image for MSVC")
-    set(SDL2_image_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/SDL2_image-VC")
-    set(SDL2_image_DIR "${SDL2_image_BASE_DIR}/cmake")
-    find_package(SDL2_image REQUIRED)
-elseif(MINGW)
-    message(" > Configuring SDL2_image for MinGW")
-    set(SDL2_image_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/SDL2_image-MinGW")
-    set(SDL2_image_DIR "${SDL2_image_BASE_DIR}/cmake")
-    find_package(SDL2_image REQUIRED)
-elseif(EMSCRIPTEN)
-    message(" > Configuring SDL2_image for Emscripten")
-    add_compile_options("-sUSE_SDL_IMAGE=2 --use-preload-plugins")
-    add_link_options("-sUSE_SDL_IMAGE=2 --use-preload-plugins")
-else()
-    message(ERROR "-> Could not configure SDL2_image: Unknown platform")
-endif()
-
 # Configure stb_image
 message(" > Configuring stb_image")
 add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/stb_image")
-
-# Configure SDL2_ttf
-if(FALSE) # Disabled: Using Freetype instead
-    if (MSVC)
-        message(" > Configuring SDL2_ttf for MSVC")
-        set(SDL2_ttf_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/SDL2_ttf-VC")
-        set(SDL2_ttf_DIR "${SDL2_ttf_BASE_DIR}/cmake")
-    elseif(MINGW)
-        message(" > Configuring SDL2_ttf for MinGW")
-        set(SDL2_ttf_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}/SDL2_ttf-MinGW")
-        set(SDL2_ttf_DIR "${SDL2_ttf_BASE_DIR}/cmake")
-    elseif(EMSCRIPTEN)
-        message(" > Configuring SDL2_ttf for Emscripten")
-        add_compile_options("-sUSE_SDL_TTF=2 --use-preload-plugins")
-        add_link_options("-sUSE_SDL_TTF=2 --use-preload-plugins")
-    else()
-        message(ERROR "-> Could not configure SDL2_ttf: Unknown platform")
-    endif()
-    find_package(SDL2_ttf REQUIRED)
-endif()
 
 # Configure Freetype
 if(EMSCRIPTEN)
