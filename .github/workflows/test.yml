@@ -64,7 +64,7 @@ jobs:
         name: Test-Report-Windows-MSVC
   
   
-  test-windows-mingw:
+  test-windows-msys:
     runs-on: windows-latest
     
     env:
@@ -78,40 +78,38 @@ jobs:
     
     - uses: msys2/setup-msys2@v2
     
-    - shell: msys2 {0}
-      run: pacman -S --noconfirm python cmake
+    - name: Install Git, Python, Pip, CMake, Make, Clang
+      shell: msys2 {0}
+      run: pacman -S --noconfirm git python python-pip cmake make clang
         
-    - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v1.8.3
-      with:
-        version: "16"
-    
     - name: Install Libclang
+      shell: msys2 {0}
       run: python -m pip install libclang
     
     - name: Generate GLEW sources
       working-directory: SanableEngine/libs/glew/auto
+      shell: msys2 {0}
       run: make
     
-    - run: mkdir SanableEngine\builds\Win64-MinGW
+    - run: mkdir SanableEngine\builds\Win64-MSYS
     
     - name: Generate build files
       shell: msys2 {0}
-      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MinGW/intermediate -G Ninja
+      run: cmake -S SanableEngine -B SanableEngine/builds/Win64-MSYS/intermediate -G "Unix Makefiles"
     
     - name: Build everything
       shell: msys2 {0}
-      run: cmake --build SanableEngine/builds/Win64-MinGW/intermediate
+      run: cmake --build SanableEngine/builds/Win64-MSYS/intermediate
     
     - name: Test everything
       shell: msys2 {0}
-      run: ctest --test-dir SanableEngine/builds/Win64-MinGW/intermediate --output-junit test-results/Win64-MinGW.xml
+      run: ctest --test-dir SanableEngine/builds/Win64-MSYS/intermediate --output-junit test-results/Win64-MSYS.xml
     
     - name: Upload reports
       uses: actions/upload-artifact@v3.1.0
       with:
         path: test-results
-        name: Test-Report-Windows-MinGW
+        name: Test-Report-Windows-MSYS
   
   test-windows-clang:
     runs-on: windows-latest
@@ -165,7 +163,7 @@ jobs:
     
     needs: [
       test-windows-msvc,
-      # test-windows-mingw
+      test-windows-msys,
       test-windows-clang
     ]
     
