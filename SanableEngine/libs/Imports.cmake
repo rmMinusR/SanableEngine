@@ -66,8 +66,8 @@ if(WIN32)
     target_include_directories(glew PUBLIC "${GLEW_DIR}/include/")
 elseif(EMSCRIPTEN)
     message(" > Configuring GLEW for Emscripten")
-    add_compile_options("-sUSE_GLEW=2 --use-preload-plugins")
-    add_link_options("-sUSE_GLEW=2 --use-preload-plugins")
+    #add_compile_options("-sUSE_GLEW=2 --use-preload-plugins")
+    #add_link_options("-sUSE_GLEW=2 --use-preload-plugins")
 else()
     message(ERROR "-> Could not configure GLEW: Unknown platform")
 endif()
@@ -84,7 +84,6 @@ include("${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake")
 # Configure Capstone disassembly engine
 set(SANABLE_DISASSEMBLER "Capstone")
 if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
-    message(" > Configuring Capstone disassembler for ${CMAKE_SYSTEM_PROCESSOR}")
     #set(CAPSTONE_BUILD_DIET ON) # Don't disable, we need this in X86 mode
 
     # Disable all architectures
@@ -95,11 +94,14 @@ if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
     endforeach()
 
     # Detect our architecture
-    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+    if (EMSCRIPTEN)
+        set (TARGET_ARCH_GROUP WASM)
+    elseif(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
         set (TARGET_ARCH_GROUP X86)
     else()
         set (TARGET_ARCH_GROUP ${CMAKE_SYSTEM_PROCESSOR})
     endif()
+    message(" > Configuring Capstone disassembler for ${TARGET_ARCH_GROUP}")
 
     # Enable our architecture and set flags
     if (${TARGET_ARCH_GROUP} IN_LIST SUPPORTED_ARCHITECTURES)

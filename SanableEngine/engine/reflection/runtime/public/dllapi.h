@@ -15,10 +15,8 @@
 
 #if engine_rtti_EXPORTS
 #define ENGINE_RTTI_API API_EXPORT API_KEEPALIVE
-#define ENGINE_RTTI_INTERNAL(def) def
 #else
 #define ENGINE_RTTI_API API_IMPORT API_KEEPALIVE
-#define ENGINE_RTTI_INTERNAL(def)
 #endif
 
 //#define ENGINE_RTTI_API

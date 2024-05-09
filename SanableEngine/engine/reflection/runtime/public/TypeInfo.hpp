@@ -192,7 +192,7 @@ public:
 	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
 	/// </summary>
-	ENGINE_RTTI_INTERNAL( void doLateBinding(); )
+	void doLateBinding();
 
 private:
 	/// <summary>
