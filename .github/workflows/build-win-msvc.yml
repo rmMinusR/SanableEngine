@@ -1,0 +1,83 @@
+name: Build (Windows)
+
+env:
+  compiler:
+  # Uncomment these selectively on concrete build targets
+  #- displayname: Clang
+  #  setup: bitcoder/dummy-action@v9
+  #  CC: clang
+  #  CXX: clang++
+  - displayname: MSVC
+    setup: ilammy/msvc-dev-cmd@v1
+    CC: cl
+    CXX: cl
+  #- displayname: MSYS GCC
+  #  setup: msys2/setup-msys2@v2
+  #  CC: gcc
+  #  CXX: g++
+
+
+on: workflow_dispatch
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      CC: ${{ env.compiler.CC }}
+      CXX: ${{ env.compiler.CXX }}
+    
+    steps:
+      ########## Setup general dependencies ##########
+    
+    - uses: actions/checkout@v3
+      with: { submodules: recursive }
+    
+    - name: Install CMake
+      uses: lukka/get-cmake@v3.29.2
+    
+    - name: Install compiler ${{ env.compiler.displayname }} # Change this selectively on targets
+      uses: ilammy/msvc-dev-cmd@v1
+    
+      ########## Setup dependencies for STIX ##########
+    
+    - name: Install python
+      uses: actions/setup-python@v4
+      with: { python-version: '3.10' }
+      
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@v1.8.3
+      with: { version: "16" }
+      
+    - name: Install Libclang
+      run: python -m pip install libclang
+    
+      ########## Build ##########
+    
+    - name: Generate GLEW sources
+      working-directory: SanableEngine/libs/glew/auto
+      run: make
+
+    - run: mkdir SanableEngine\builds\Win64\
+    
+    - name: Generate build files
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake -S ../../ -B intermediate -G Ninja
+    
+    - name: Build
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake --build intermediate
+    
+      ########## Finalize ##########
+    
+    - name: Package
+      working-directory: SanableEngine/builds/Win64/
+      run: cmake --install intermediate --prefix install
+
+    - name: Upload build
+      uses: actions/upload-artifact@v3.1.0
+      with:
+        path: SanableEngine/builds/Win64/install
+        name: Build-Windows-${{ env.compiler.displayname }}

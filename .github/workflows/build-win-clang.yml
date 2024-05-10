@@ -1,5 +1,22 @@
 name: Build (Windows)
 
+env:
+  compiler:
+  # Uncomment these selectively on concrete build targets
+  - displayname: Clang
+    setup: bitcoder/dummy-action@v9
+    CC: clang
+    CXX: clang++
+  #- displayname: MSVC
+  #  setup: ilammy/msvc-dev-cmd@v1
+  #  CC: cl
+  #  CXX: cl
+  #- displayname: MSYS GCC
+  #  setup: msys2/setup-msys2@v2
+  #  CC: gcc
+  #  CXX: g++
+
+
 on: workflow_dispatch
 
 permissions:
@@ -7,26 +24,10 @@ permissions:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        compiler:
-        - displayname: Clang
-          setup: bitcoder/dummy-action@v9
-          CC: clang
-          CXX: clang++
-        - displayname: MSVC
-          setup: ilammy/msvc-dev-cmd@v1
-          CC: cl
-          CXX: cl
-        #- displayname: MSYS GCC
-        #  setup: msys2/setup-msys2@v2
-        #  CC: gcc
-        #  CXX: g++
-    
     runs-on: windows-latest
     env:
-      CC: ${{ matrix.compiler.CC }}
-      CXX: ${{ matrix.compiler.CXX }}
+      CC: ${{ env.compiler.CC }}
+      CXX: ${{ env.compiler.CXX }}
     
     steps:
       ########## Setup general dependencies ##########
@@ -37,8 +38,8 @@ jobs:
     - name: Install CMake
       uses: lukka/get-cmake@v3.29.2
     
-    - name: Install compiler ${{ matrix.compiler.displayname }}
-      uses: ${{ matrix.compiler.setup }}
+    #- name: Install compiler ${{ env.compiler.displayname }} # Change this selectively on targets
+    #  uses: ${{ env.compiler.setup }}
     
       ########## Setup dependencies for STIX ##########
     
@@ -79,4 +80,4 @@ jobs:
       uses: actions/upload-artifact@v3.1.0
       with:
         path: SanableEngine/builds/Win64/install
-        name: Build-Windows-${{ matrix.compiler.displayname }}
+        name: Build-Windows-${{ env.compiler.displayname }}
