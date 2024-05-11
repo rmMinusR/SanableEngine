@@ -85,29 +85,33 @@ sourceFiles = [f for f in projectFiles if f.type != None and not f.hasError]
 for sourceFile in sourceFiles:
     sourceFile.additionalIncludes += args.includes
 
+template = source_discovery.SourceFile(args.template_file)
+    
 # Attempt to load from cache, if present
 targetModule = cpp_concepts.Module(
     defaultImageCaptureStatus=args.default_image_capture_status,
     defaultImageCaptureBackend=args.default_image_capture_backend
 )
+isTemplateDirty:bool = True
 if args.cache != None:
-    cached = cpp_concepts.Module.load(args.cache)
+    cacheRaw = cpp_concepts.Module.load(args.cache)
+    cached = cacheRaw[0]
     if targetModule.configMatches(cached):
+        prevTemplateHash = cacheRaw[1]
+        isTemplateDirty = (prevTemplateHash == template.contentsHash)
         targetModule = cached
     else:
-        config.logger.info("Cannot reuse cache")
+        config.logger.info("Configuration has changed, discarding cache")
 
 config.logger.user("Parsing...")
-targetModule.parseTU(sourceFiles)
+filesChanged = targetModule.parseTU(sourceFiles)
 
 config.logger.info("Finalizing...")
 targetModule.finalize()
-if args.cache != None: targetModule.save(args.cache)
+if args.cache != None:
+    targetModule.save(args.cache, template.contentsHash)
 
 config.logger.user(f"Rendering to {args.output}")
-
-with open(args.template_file, "r") as f:
-    template = "".join(f.readlines())
 
 def shortestRelPath(absPath):
     global args
@@ -122,15 +126,25 @@ def shortestRelPath(absPath):
         key=len
     )
 
-generated = template.replace("GENERATED_RTTI", targetModule.renderBody()) \
+generated = template.contents \
+                    .replace("GENERATED_RTTI", targetModule.renderBody()) \
                     .replace("PUBLIC_CAST_DECLS", targetModule.renderPreDecls()) \
-                    .replace("INCLUDE_DEPENDENCIES", "\n".join(set([ \
+                    .replace("INCLUDE_DEPENDENCIES", "\n".join([ \
                          f'#include "{shortestRelPath(i)}"' for i in targetModule.renderIncludes() \
-                    ])))
+                    ]))
 
-config.logger.info(f"Writing to {args.output}")
+# Skip write if there's nothing to write
+shouldWrite = True
+if os.path.exists(args.output):
+    with open(args.output, "r") as f:
+        prevGenerated = "".join(f.readlines())
+        shouldWrite = (prevGenerated != generated)
 
-with open(args.output, "wt") as f:
-    f.write(generated)
+
+if shouldWrite:
+    with open(args.output, "wt") as f:
+        f.write(generated)
+else:
+    config.logger.info("Skipping write: nothing to do")
 
 config.logger.info("Done!")

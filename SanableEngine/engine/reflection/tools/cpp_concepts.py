@@ -757,7 +757,8 @@ class Module:
         this.defaultImageCaptureStatus  = defaultImageCaptureStatus
         this.defaultImageCaptureBackend = defaultImageCaptureBackend
     
-    def configMatches(this, other):
+    def configMatches(this, other: "Module"):
+        if isinstance(other, NoneType): return False
         if this.version != other.version: return False
         return this.defaultImageCaptureStatus  == other.defaultImageCaptureStatus \
            and this.defaultImageCaptureBackend == other.defaultImageCaptureBackend
@@ -770,7 +771,7 @@ class Module:
         new = [i for i in sources if i not in this.__sourceFiles]
         removed = [i for i in this.__sourceFiles if i not in sources]
 
-        config.logger.log(100, f"{len(upToDate)} up-to-date | {len(outdated)} outdated | {len(new)} new | {len(removed)} deleted")
+        config.logger.log(config.LOG_USER_LEVEL, f"{len(upToDate)} up-to-date | {len(outdated)} outdated | {len(new)} new | {len(removed)} deleted")
         
         for source in outdated+removed:
             # Do removal
@@ -785,6 +786,8 @@ class Module:
             for cursor in source.parse().get_children():
                 # Only capture what's in the current file
                 if cursor.location.file.name.replace(os.altsep, os.sep) == source.path: this.parseGlobalCursor(cursor)
+        
+        return len(outdated) + len(removed) + len(new)
          
     def parseGlobalCursor(this, cursor: Cursor):
         # Stop early if we already have a definition for this symbol
@@ -842,18 +845,22 @@ class Module:
         for i in this.__symbols.values(): i.finalize()
 
     def renderBody(this) -> str:
-        renders = [v.renderMain() for v in this.__symbols.values() if this.owns(v)]
+        keys = list(this.__symbols.keys())
+        keys.sort()
+        renders = [this.__symbols[k].renderMain() for k in keys if this.owns(this.__symbols[k])]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
 
     def renderPreDecls(this) -> str:
         out = []
-        for i in this.__symbols.values():
-            if this.owns(i):
-                out.extend(i.renderPreDecls())
+        keys = list(this.__symbols.keys())
+        keys.sort()
+        for k in keys:
+            if this.owns(this.__symbols[k]):
+                out.extend(this.__symbols[k].renderPreDecls())
         return "\n".join(out)
 
-    def renderIncludes(this) -> set[str]:
+    def renderIncludes(this) -> list[str]:
         out = set()
         for i in this.types:
             if this.owns(i):
@@ -865,21 +872,23 @@ class Module:
                         config.logger.debug(f" - {typeName} @ {match.sourceFile.path}")
                     else:
                         config.logger.debug(f" - {typeName} @ (Failed to locate definition)")
+        out = list(out)
+        out.sort()
         return out
             
-    def save(this, cachePath: str):
+    def save(this, cachePath: str, *userData):
         with open(cachePath, "wb") as file:
-            file.write(pickle.dumps(this))
+            file.write(pickle.dumps( [this]+list(userData) ))
 
-    def load(cachePath: str) -> "Module":
-        if not os.path.exists(cachePath): return Module()
+    def load(cachePath: str):
+        if not os.path.exists(cachePath): return [None]
         
         with open(cachePath, "rb") as file: cacheFileRepr = file.read()
         
         try: out = pickle.loads(cacheFileRepr)
         except EOFError: pass # Only happens when we have a blank file. Mundane, safe to ignore.
         
-        config.logger.info(f"Loaded {len(out.__symbols)} symbols from cache")
+        config.logger.info(f"Loaded {len(out[0].__symbols)} symbols from cache")
 
         return out
 

@@ -66,7 +66,7 @@ class SourceFile:
 			return f.read()
 
 	@property
-	def contentsHash(this):
+	def contentsHash(this) -> int:
 		if this.__contentsHash == None: 
 			this.__contentsHash = zlib.adler32(this.contents.encode("utf-8"))
 		return this.__contentsHash
