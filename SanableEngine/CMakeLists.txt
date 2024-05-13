@@ -15,4 +15,5 @@ include("PluginControlUI/CMakeLists.txt")
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
 
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/LICENSE.txt" DESTINATION "./licenses" RENAME "Sanable.txt")
 package_assets() # Must be done last so Emscripten knows how to build VFS
