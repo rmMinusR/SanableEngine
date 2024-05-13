@@ -71,13 +71,13 @@ void MemoryManager::ensureFresh()
 		{
 			//Existing pools need to be patched
 			TypeInfo const* newTypeInfo = it->resolve();
-			if (newTypeInfo) p->refreshObjects(*newTypeInfo, &remapper);
+			if (newTypeInfo && newTypeInfo->isLoaded()) p->refreshObjects(*newTypeInfo, &remapper);
 		}
 		else if (!p->getContentsType())
 		{
 			//New pools need to be given valid full TypeInfo, rather than dummy
 			TypeInfo const* newTypeInfo = p->getContentsTypeName().resolve();
-			if (newTypeInfo) p->refreshObjects(*newTypeInfo, &remapper);
+			if (newTypeInfo && newTypeInfo->isLoaded()) p->refreshObjects(*newTypeInfo, &remapper);
 		}
 	}
 

@@ -158,7 +158,7 @@ void Application::frameStep(void* arg)
     engine->game->refreshCallBatchers(false);
     for (Window* w : engine->windows) w->draw();
 
-    engine->pluginManager.executeCommandBuffer();
+    if (engine->pluginManager.executeCommandBuffer() != 0) engine->memoryManager.value().ensureFresh();
 }
 
 Game* Application::getGame() const
