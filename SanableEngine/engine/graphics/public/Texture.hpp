@@ -9,7 +9,41 @@
 #include "math/Vector2.inl"
 
 class Renderer;
+class GTexture;
 
+//CPU-sided texture
+class CTexture
+{
+	friend class GTexture;
+
+	int width;
+	int height;
+	int nChannels;
+	void* data;
+
+	CTexture(int width, int height, int nChannels, void* data);
+public:
+	[[nodiscard]] ENGINEGRAPHICS_API static CTexture fromFile(const std::filesystem::path&);
+	ENGINEGRAPHICS_API CTexture(int width, int height, int nChannels);
+	ENGINEGRAPHICS_API ~CTexture();
+
+	ENGINEGRAPHICS_API CTexture(CTexture&& mov);
+	ENGINEGRAPHICS_API CTexture& operator=(CTexture&& mov);
+	ENGINEGRAPHICS_API CTexture(const CTexture& cpy);
+	ENGINEGRAPHICS_API CTexture& operator=(const CTexture& cpy);
+
+	ENGINEGRAPHICS_API int getWidth() const;
+	ENGINEGRAPHICS_API int getHeight() const;
+	ENGINEGRAPHICS_API Vector2<int> getSize() const;
+	ENGINEGRAPHICS_API int getNChannels() const;
+
+	ENGINEGRAPHICS_API operator bool() const;
+
+	ENGINEGRAPHICS_API void* pixel(int x, int y);
+	ENGINEGRAPHICS_API const void* pixel(int x, int y) const;
+};
+
+//GPU-sided texture
 class GTexture
 {
 	friend class Renderer;
@@ -23,6 +57,7 @@ class GTexture
 public:
 	ENGINEGRAPHICS_API static GTexture* fromFile(const std::filesystem::path&, Renderer* ctx);
 	ENGINEGRAPHICS_API GTexture(Renderer* ctx, int width, int height, int nChannels, void* data);
+	ENGINEGRAPHICS_API GTexture(Renderer* ctx, const CTexture& tex);
 	ENGINEGRAPHICS_API ~GTexture();
 
 	ENGINEGRAPHICS_API GTexture(GTexture&& mov);
