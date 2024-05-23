@@ -2,12 +2,12 @@
 
 #include <GL/glew.h>
 #include "Renderer.hpp"
-#include "Texture.hpp"
+#include "gui/UISprite.hpp"
 
-ImageWidget::ImageWidget(HUD* hud, Material* material, GTexture* texture) :
+ImageWidget::ImageWidget(HUD* hud, Material* material, const UISprite* sprite) :
 	Widget(hud),
 	material(material),
-	texture(texture)
+	sprite(sprite)
 {
 }
 
@@ -27,6 +27,6 @@ void ImageWidget::renderImmediate(Renderer* renderer)
 	
 	renderer->errorCheck();
 	//No need to send position: already applied via model matrix
-	renderer->drawTexture(texture, Vector3f(0, 0, depth), r.size.x, r.size.y);
+	sprite->renderImmediate(renderer, Vector3f(0, 0, depth), r.size.x, r.size.y);
 	renderer->errorCheck();
 }

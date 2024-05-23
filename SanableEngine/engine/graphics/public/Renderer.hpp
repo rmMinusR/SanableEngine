@@ -20,6 +20,7 @@ class Material;
 class ShaderProgram;
 class MeshRenderer;
 class Sprite;
+class UISprite;
 
 struct SDL_Color;
 
@@ -46,7 +47,7 @@ public:
 	ENGINEGRAPHICS_API void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color); //Assumes you've already activated the material and set model matrix value
 	ENGINEGRAPHICS_API void drawTexture(const GTexture* tex, Vector3f pos, float w, float h);
 	ENGINEGRAPHICS_API void drawSprite(const Sprite* spr, Vector3f pos, float w, float h);
-
+	
 	ENGINEGRAPHICS_API void loadTransform(const glm::mat4&); //Makes no assumptions about which matrix is active or its state, just overwrites
 
 	[[nodiscard]] ENGINEGRAPHICS_API GTexture* loadTexture(const std::filesystem::path& path);

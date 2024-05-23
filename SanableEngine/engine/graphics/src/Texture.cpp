@@ -17,6 +17,10 @@ Texture::Texture(int width, int height, int nChannels) :
 {
 }
 
+Texture::~Texture()
+{
+}
+
 int Texture::getWidth() const
 {
 	return width;
