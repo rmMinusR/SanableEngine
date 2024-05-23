@@ -144,6 +144,28 @@ CMesh CMesh::createQuad0WH(float w, float h)
 	return mesh;
 }
 
+CMesh CMesh::createUnitQuad(Rect<float> uvs)
+{
+	CMesh mesh;
+
+#define EMIT_VERTEX(x, y) mesh.vertices.push_back(CMesh::Vertex { glm::vec3(x, y, 0), glm::vec3(0, 0, 1), uvs.topLeft+uvs.size*Vector2f(x,y) })
+
+	//Tri 0: Verts 0-2
+	EMIT_VERTEX(0, 0);
+	EMIT_VERTEX(1, 0);
+	EMIT_VERTEX(0, 1);
+
+	//Tri 1: Verts 1-3
+	EMIT_VERTEX(1, 1);
+#undef EMIT_VERTEX
+	
+	mesh.triangles = {
+		0, 1, 2,
+		2, 1, 3
+	};
+	return mesh;
+}
+
 GMesh::GMesh() :
 	VAO(0),
 	VBO(0),
@@ -165,8 +187,8 @@ GMesh::GMesh(const CMesh& src, bool dynamic) :
 	glGenBuffers(1, &EBO);
 
 	glBindVertexArray(VAO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, src.vertices.size() * sizeof(CMesh::Vertex), &src.vertices[0], usage);
 	
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
@@ -193,8 +215,32 @@ GMesh::~GMesh()
 	if (EBO) glDeleteBuffers(1, &EBO);
 }
 
+void GMesh::updateFrom(const CMesh& src)
+{
+	updateFrom(src, true, true);
+}
+
+void GMesh::updateFrom(const CMesh& src, bool vertices, bool triangles)
+{
+	assert(*this);
+
+	if (vertices)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, VBO);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, src.vertices.size() * sizeof(CMesh::Vertex), &src.vertices[0]);
+	}
+
+	if (triangles)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, src.triangles.size() * sizeof(decltype(src.triangles)::value_type), &src.triangles[0]);
+	}
+}
+
 void GMesh::renderImmediate() const
 {
+	assert(*this);
+
 	glColor4f(1, 1, 1, 1);
 
 	//Draw mesh
@@ -223,4 +269,9 @@ GMesh& GMesh::operator=(GMesh&& mov)
 	mov.nTriangles = 0;
 
 	return *this;
+}
+
+GMesh::operator bool() const
+{
+	return VAO && VBO && EBO;
 }

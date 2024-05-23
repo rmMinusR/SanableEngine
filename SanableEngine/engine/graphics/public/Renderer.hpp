@@ -29,6 +29,7 @@ private:
 	Window* owner;
 	SDL_GLContext context;
 
+	GMesh unitQuad;
 	GMesh dynQuad;
 	GTexture fallbackTexture;
 

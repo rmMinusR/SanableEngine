@@ -27,7 +27,8 @@ Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	owner(owner),
 	context(context)
 {
-	dynQuad = GMesh(CMesh::createQuad0WH(1, 1), true);
+	unitQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), false);
+	dynQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), true);
 
 	{
 		CTexture tmp(1, 1, 4);
@@ -100,7 +101,7 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 		glScalef(glyph->texture->width, glyph->texture->height, 1); //Apply glyph's requested size
 		mat.writeInstanceUniforms_generic(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
 
-		dynQuad.renderImmediate();
+		unitQuad.renderImmediate();
 		
 		glPopMatrix();
 		
@@ -116,14 +117,25 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 void Renderer::drawTextureInternal(const GTexture* tex, Vector3f pos, Vector2<float> size, Rect<float> uvs)
 {
 	assert(tex);
+	//dynQuad.updateFrom(CMesh::createUnitQuad(uvs));
+
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
+
+	glPushMatrix();
+	glTranslatef(pos.x, pos.y, pos.z);
+	glScalef(size.x, size.y, 1);
+	
 	glBegin(GL_QUADS);
-	glTexCoord2i(uvs.      topLeft.x, uvs.      topLeft.y); glVertex3f(pos.x       , pos.y       , pos.z);
-	glTexCoord2i(uvs.bottomRight().x, uvs.      topLeft.y); glVertex3f(pos.x+size.x, pos.y       , pos.z);
-	glTexCoord2i(uvs.bottomRight().x, uvs.bottomRight().y); glVertex3f(pos.x+size.x, pos.y+size.y, pos.z);
-	glTexCoord2i(uvs.      topLeft.x, uvs.bottomRight().y); glVertex3f(pos.x       , pos.y+size.y, pos.z);
+	glTexCoord2f(uvs.      topLeft.x, uvs.      topLeft.y); glVertex3f(0, 0, 0);
+	glTexCoord2f(uvs.bottomRight().x, uvs.      topLeft.y); glVertex3f(1, 0, 0);
+	glTexCoord2f(uvs.bottomRight().x, uvs.bottomRight().y); glVertex3f(1, 1, 0);
+	glTexCoord2f(uvs.      topLeft.x, uvs.bottomRight().y); glVertex3f(0, 1, 0);
 	glEnd();
+	//dynQuad.renderImmediate();
+
+	glPopMatrix();
+
 	glDisable(GL_TEXTURE_2D);
 }
 
