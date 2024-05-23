@@ -11,14 +11,31 @@
 class Renderer;
 class GTexture;
 
-//CPU-sided texture
-class CTexture
-{
-	friend class GTexture;
 
+class Texture
+{
+protected:
 	int width;
 	int height;
 	int nChannels;
+	Texture(int width, int height, int nChannels);
+public:
+	ENGINEGRAPHICS_API virtual ~Texture();
+
+	ENGINEGRAPHICS_API int getWidth() const;
+	ENGINEGRAPHICS_API int getHeight() const;
+	ENGINEGRAPHICS_API Vector2<int> getSize() const;
+	ENGINEGRAPHICS_API int getNChannels() const;
+
+	ENGINEGRAPHICS_API virtual operator bool() const = 0;
+};
+
+
+//CPU-sided texture
+class CTexture : public Texture
+{
+	friend class GTexture;
+
 	void* data;
 
 	CTexture(int width, int height, int nChannels, void* data);
@@ -32,27 +49,19 @@ public:
 	ENGINEGRAPHICS_API CTexture(const CTexture& cpy);
 	ENGINEGRAPHICS_API CTexture& operator=(const CTexture& cpy);
 
-	ENGINEGRAPHICS_API int getWidth() const;
-	ENGINEGRAPHICS_API int getHeight() const;
-	ENGINEGRAPHICS_API Vector2<int> getSize() const;
-	ENGINEGRAPHICS_API int getNChannels() const;
-
-	ENGINEGRAPHICS_API operator bool() const;
+	ENGINEGRAPHICS_API virtual operator bool() const override;
 
 	ENGINEGRAPHICS_API void* pixel(int x, int y);
 	ENGINEGRAPHICS_API const void* pixel(int x, int y) const;
 };
 
+
 //GPU-sided texture
-class GTexture
+class GTexture : public Texture
 {
 	friend class Renderer;
 
 	GLuint id;
-
-	int width;
-	int height;
-	int nChannels;
 
 public:
 	ENGINEGRAPHICS_API static GTexture* fromFile(const std::filesystem::path&, Renderer* ctx);
@@ -66,10 +75,5 @@ public:
 	GTexture(const GTexture& cpy) = delete;
 	GTexture& operator=(const GTexture& cpy) = delete;
 
-	ENGINEGRAPHICS_API int getWidth() const;
-	ENGINEGRAPHICS_API int getHeight() const;
-	ENGINEGRAPHICS_API Vector2<int> getSize() const;
-	ENGINEGRAPHICS_API int getNChannels() const;
-
-	ENGINEGRAPHICS_API operator bool() const;
+	ENGINEGRAPHICS_API virtual operator bool() const override;
 };

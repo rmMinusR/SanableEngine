@@ -10,10 +10,35 @@
 #include "Renderer.hpp"
 #include "application/Window.hpp"
 
-CTexture::CTexture(int width, int height, int nChannels, void* data) :
+Texture::Texture(int width, int height, int nChannels) :
 	width(width),
 	height(height),
-	nChannels(nChannels),
+	nChannels(nChannels)
+{
+}
+
+int Texture::getWidth() const
+{
+	return width;
+}
+
+int Texture::getHeight() const
+{
+	return height;
+}
+
+Vector2<int> Texture::getSize() const
+{
+	return Vector2<int>(width, height);
+}
+
+int Texture::getNChannels() const
+{
+	return nChannels;
+}
+
+CTexture::CTexture(int width, int height, int nChannels, void* data) :
+	Texture(width, height, nChannels),
 	data(data)
 {
 	assert(data);
@@ -36,7 +61,8 @@ CTexture::~CTexture()
 	if (data) free(data); //Same as stbi_image_free
 }
 
-CTexture::CTexture(CTexture&& mov)
+CTexture::CTexture(CTexture&& mov) :
+	Texture(0, 0, 0)
 {
 	*this = std::move(mov);
 }
@@ -54,7 +80,8 @@ CTexture& CTexture::operator=(CTexture&& mov)
 	return *this;
 }
 
-CTexture::CTexture(const CTexture& cpy)
+CTexture::CTexture(const CTexture& cpy) :
+	Texture(0, 0, 0)
 {
 	*this = cpy;
 }
@@ -70,26 +97,6 @@ CTexture& CTexture::operator=(const CTexture& cpy)
 	memcpy(data, cpy.data, width*height*nChannels);
 	
 	return *this;
-}
-
-int CTexture::getWidth() const
-{
-	return width;
-}
-
-int CTexture::getHeight() const
-{
-	return height;
-}
-
-Vector2<int> CTexture::getSize() const
-{
-	return Vector2<int>(width, height);
-}
-
-int CTexture::getNChannels() const
-{
-	return nChannels;
 }
 
 CTexture::operator bool() const
@@ -113,18 +120,14 @@ GTexture* GTexture::fromFile(const std::filesystem::path& path, Renderer* ctx)
 }
 
 GTexture::GTexture() :
-	id(0),
-	width(0),
-	height(0),
-	nChannels(0)
+	Texture(width, height, nChannels),
+	id(0)
 {
 }
 
 GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data) :
-	id(0),
-	width(width),
-	height(height),
-	nChannels(nChannels)
+	Texture(width, height, nChannels),
+	id(0)
 {
 	Window::setActiveDrawTarget(ctx->getOwner());
 
@@ -165,7 +168,8 @@ GTexture::~GTexture()
 	glDeleteTextures(1, &id);
 }
 
-GTexture::GTexture(GTexture&& mov)
+GTexture::GTexture(GTexture&& mov) :
+	Texture(0, 0, 0)
 {
 	*this = std::move(mov); //Defer
 }
@@ -182,26 +186,6 @@ GTexture& GTexture::operator=(GTexture&& mov)
 	this->nChannels = mov.nChannels;
 
 	return *this;
-}
-
-int GTexture::getWidth() const
-{
-	return width;
-}
-
-int GTexture::getHeight() const
-{
-	return height;
-}
-
-Vector2<int> GTexture::getSize() const
-{
-	return Vector2<int>(width, height);
-}
-
-int GTexture::getNChannels() const
-{
-	return nChannels;
 }
 
 GTexture::operator bool() const
