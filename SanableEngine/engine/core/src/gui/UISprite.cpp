@@ -4,7 +4,7 @@ UISprite::~UISprite()
 {
 }
 
-UISprite3x3::UISprite3x3(Texture* tex) :
+UISprite3x3::UISprite3x3(GTexture* tex) :
 	tex(tex)
 {
 	uvs[0] = Vector2f(0, 0);
@@ -33,7 +33,7 @@ Sprite UISprite3x3::get(Vector2<int> index) const
 	return out;
 }
 
-UISpriteSparse::UISpriteSparse(Texture* tex)
+UISpriteSparse::UISpriteSparse(GTexture* tex)
 {
 }
 

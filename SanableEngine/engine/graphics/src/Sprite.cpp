@@ -2,7 +2,7 @@
 
 #include "Texture.hpp"
 
-Sprite::Sprite(Texture* tex) :
+Sprite::Sprite(const GTexture* tex) :
 	tex(tex)
 {
 }

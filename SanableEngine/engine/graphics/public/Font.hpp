@@ -30,12 +30,12 @@ public:
 
 
 class Renderer;
-class Texture;
+class GTexture;
 class Font;
 
 class RenderedGlyph
 {
-	Texture* texture;
+	GTexture* texture;
 	int bearingX;
 	int bearingY;
 	int advance;

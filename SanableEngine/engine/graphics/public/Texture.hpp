@@ -10,7 +10,7 @@
 
 class Renderer;
 
-class Texture
+class GTexture
 {
 	friend class Renderer;
 
@@ -21,14 +21,14 @@ class Texture
 	int nChannels;
 
 public:
-	ENGINEGRAPHICS_API static Texture* fromFile(const std::filesystem::path&, Renderer* ctx);
-	ENGINEGRAPHICS_API Texture(Renderer* ctx, int width, int height, int nChannels, void* data);
-	ENGINEGRAPHICS_API ~Texture();
+	ENGINEGRAPHICS_API static GTexture* fromFile(const std::filesystem::path&, Renderer* ctx);
+	ENGINEGRAPHICS_API GTexture(Renderer* ctx, int width, int height, int nChannels, void* data);
+	ENGINEGRAPHICS_API ~GTexture();
 
-	ENGINEGRAPHICS_API Texture(Texture&& mov);
-	ENGINEGRAPHICS_API Texture& operator=(Texture&& mov);
-	Texture(const Texture& cpy) = delete;
-	Texture& operator=(const Texture& cpy) = delete;
+	ENGINEGRAPHICS_API GTexture(GTexture&& mov);
+	ENGINEGRAPHICS_API GTexture& operator=(GTexture&& mov);
+	GTexture(const GTexture& cpy) = delete;
+	GTexture& operator=(const GTexture& cpy) = delete;
 
 	ENGINEGRAPHICS_API int getWidth() const;
 	ENGINEGRAPHICS_API int getHeight() const;

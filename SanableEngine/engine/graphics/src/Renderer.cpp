@@ -107,13 +107,13 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawTexture(const Texture& tex, int x, int y)
+void Renderer::drawTexture(const GTexture& tex, int x, int y)
 {
 	ShaderProgram::clear();
 	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
 }
 
-void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h, Sprite* sprite)
+void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h, Sprite* sprite)
 {
 	Vector2f uvLo = sprite ? sprite->uvs.topLeft       : Vector2f(0, 0);
 	Vector2f uvHi = sprite ? sprite->uvs.bottomRight() : Vector2f(1, 1);
@@ -134,20 +134,20 @@ void Renderer::loadTransform(const glm::mat4& mat)
 	glLoadMatrixf(glm::value_ptr(mat));
 }
 
-Texture* Renderer::loadTexture(const std::filesystem::path& path)
+GTexture* Renderer::loadTexture(const std::filesystem::path& path)
 {
-	return Texture::fromFile(path, this);
+	return GTexture::fromFile(path, this);
 }
 
-Texture* Renderer::newTexture(int width, int height, int nChannels, void* data)
+GTexture* Renderer::newTexture(int width, int height, int nChannels, void* data)
 {
-	return new Texture(this, width, height, nChannels, data);
+	return new GTexture(this, width, height, nChannels, data);
 }
 
-Texture* Renderer::renderFontGlyph(const Font& font)
+GTexture* Renderer::renderFontGlyph(const Font& font)
 {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
-	Texture* out = new Texture(
+	GTexture* out = new GTexture(
 		this,
 		font.font->glyph->bitmap.width,
 		font.font->glyph->bitmap.rows,

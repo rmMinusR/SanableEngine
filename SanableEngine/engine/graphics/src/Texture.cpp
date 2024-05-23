@@ -10,7 +10,7 @@
 #include "Renderer.hpp"
 #include "application/Window.hpp"
 
-Texture* Texture::fromFile(const std::filesystem::path& path, Renderer* ctx)
+GTexture* GTexture::fromFile(const std::filesystem::path& path, Renderer* ctx)
 {
 	//Load onto CPU
 	int width, height, nChannels;
@@ -19,7 +19,7 @@ Texture* Texture::fromFile(const std::filesystem::path& path, Renderer* ctx)
 	//cpu = IMG_Load(path.u8string().c_str());
 	//assert(cpu);
 	
-	Texture* out = new Texture(ctx, width, height, nChannels, data);
+	GTexture* out = new GTexture(ctx, width, height, nChannels, data);
 
 	//Cleanup
 	stbi_image_free(data);
@@ -27,7 +27,7 @@ Texture* Texture::fromFile(const std::filesystem::path& path, Renderer* ctx)
 	return out;
 }
 
-Texture::Texture(Renderer* ctx, int width, int height, int nChannels, void* data) :
+GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data) :
 	id(0),
 	width(width),
 	height(height),
@@ -62,17 +62,17 @@ Texture::Texture(Renderer* ctx, int width, int height, int nChannels, void* data
 	ctx->errorCheck();
 }
 
-Texture::~Texture()
+GTexture::~GTexture()
 {
 	glDeleteTextures(1, &id);
 }
 
-Texture::Texture(Texture&& mov)
+GTexture::GTexture(GTexture&& mov)
 {
 	*this = std::move(mov); //Defer
 }
 
-Texture& Texture::operator=(Texture&& mov)
+GTexture& GTexture::operator=(GTexture&& mov)
 {
 	if (this->id) glDeleteTextures(1, &id);
 
@@ -86,27 +86,27 @@ Texture& Texture::operator=(Texture&& mov)
 	return *this;
 }
 
-int Texture::getWidth() const
+int GTexture::getWidth() const
 {
 	return width;
 }
 
-int Texture::getHeight() const
+int GTexture::getHeight() const
 {
 	return height;
 }
 
-Vector2<int> Texture::getSize() const
+Vector2<int> GTexture::getSize() const
 {
 	return Vector2<int>(width, height);
 }
 
-int Texture::getNChannels() const
+int GTexture::getNChannels() const
 {
 	return nChannels;
 }
 
-Texture::operator bool() const
+GTexture::operator bool() const
 {
 	return id != 0;
 }
