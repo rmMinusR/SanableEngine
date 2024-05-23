@@ -28,6 +28,12 @@ Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	context(context)
 {
 	dynQuad = GMesh(CMesh::createQuad0WH(1, 1), true);
+
+	{
+		CTexture tmp(1, 1, 4);
+		memset(tmp.pixel(0, 0), 255, 4);
+		fallbackTexture = GTexture(this, tmp);
+	}
 }
 
 void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
@@ -107,26 +113,29 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawTexture(const GTexture& tex, int x, int y)
+void Renderer::drawTextureInternal(const GTexture* tex, Vector3f pos, Vector2<float> size, Rect<float> uvs)
 {
-	ShaderProgram::clear();
-	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
-}
-
-void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h, Sprite* sprite)
-{
-	Vector2f uvLo = sprite ? sprite->uvs.topLeft       : Vector2f(0, 0);
-	Vector2f uvHi = sprite ? sprite->uvs.bottomRight() : Vector2f(1, 1);
-
-	if (tex) glBindTexture(GL_TEXTURE_2D, tex->id);
+	assert(tex);
+	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
-	glTexCoord2i(uvLo.x, uvLo.y); glVertex3f(pos.x  , pos.y  , pos.z);
-	glTexCoord2i(uvHi.x, uvLo.y); glVertex3f(pos.x+w, pos.y  , pos.z);
-	glTexCoord2i(uvHi.x, uvHi.y); glVertex3f(pos.x+w, pos.y+h, pos.z);
-	glTexCoord2i(uvLo.x, uvHi.y); glVertex3f(pos.x  , pos.y+h, pos.z);
+	glTexCoord2i(uvs.      topLeft.x, uvs.      topLeft.y); glVertex3f(pos.x       , pos.y       , pos.z);
+	glTexCoord2i(uvs.bottomRight().x, uvs.      topLeft.y); glVertex3f(pos.x+size.x, pos.y       , pos.z);
+	glTexCoord2i(uvs.bottomRight().x, uvs.bottomRight().y); glVertex3f(pos.x+size.x, pos.y+size.y, pos.z);
+	glTexCoord2i(uvs.      topLeft.x, uvs.bottomRight().y); glVertex3f(pos.x       , pos.y+size.y, pos.z);
 	glEnd();
 	glDisable(GL_TEXTURE_2D);
+}
+
+void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h)
+{
+	if (!tex) tex = &fallbackTexture;
+	drawTextureInternal(tex, pos, {w,h}, Rect<float>::fromMinMax({0,0}, {1,1}) );
+}
+
+void Renderer::drawSprite(const Sprite* spr, Vector3f pos, float w, float h)
+{
+	drawTextureInternal(spr->tex, pos, {w,h}, spr->uvs);
 }
 
 void Renderer::loadTransform(const glm::mat4& mat)

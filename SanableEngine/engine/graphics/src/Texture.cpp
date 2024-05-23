@@ -112,6 +112,14 @@ GTexture* GTexture::fromFile(const std::filesystem::path& path, Renderer* ctx)
 	return new GTexture(ctx, CTexture::fromFile(path));
 }
 
+GTexture::GTexture() :
+	id(0),
+	width(0),
+	height(0),
+	nChannels(0)
+{
+}
+
 GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data) :
 	id(0),
 	width(width),

@@ -56,6 +56,7 @@ class GTexture
 
 public:
 	ENGINEGRAPHICS_API static GTexture* fromFile(const std::filesystem::path&, Renderer* ctx);
+	ENGINEGRAPHICS_API GTexture();
 	ENGINEGRAPHICS_API GTexture(Renderer* ctx, int width, int height, int nChannels, void* data);
 	ENGINEGRAPHICS_API GTexture(Renderer* ctx, const CTexture& tex);
 	ENGINEGRAPHICS_API ~GTexture();
