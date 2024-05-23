@@ -53,45 +53,34 @@ void PluginView::tryInit()
 		status->transform.setParent(&statusLine->transform);
 		statusLine->setFlexWeight(&status->transform, 4);
 
-		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackgroundSprite);
+
+		ButtonWidget::SpriteSet buttonSprites = { Resources::buttonNormalSprite, Resources::buttonPressedSprite, Resources::buttonDisabledSprite };
+
+		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonNormalSprite);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
-		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded);
+		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded, buttonSprites);
 		btnToggleLoaded->transform.setParent(&statusLine->transform);
 		statusLine->setFlexWeight(&btnToggleLoaded->transform, 3);
-		btnToggleLoaded->setCallback([&]() {
-			if (!this->plugin->isHooked())
-			{
-				if (this->plugin->isCodeLoaded())
-				{
-					this->mgr->unload(this->plugin);
-				}
-				else
-				{
-					this->mgr->load(this->plugin);
-				}
+		btnToggleLoaded->setCallback(
+			[&]() {
+				if (this->plugin->isCodeLoaded()) this->mgr->unload(this->plugin);
+				else                              this->mgr->load(this->plugin);
 			}
-		});
+		);
 
-		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackgroundSprite);
+		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonNormalSprite);
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
-		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked);
+		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked, buttonSprites);
 		btnToggleHooked->transform.setParent(&statusLine->transform);
 		statusLine->setFlexWeight(&btnToggleHooked->transform, 3);
-		btnToggleHooked->setCallback([&]() {
-			if (this->plugin->isCodeLoaded())
-			{
-				if (this->plugin->isHooked())
-				{
-					this->mgr->unhook(this->plugin);
-				}
-				else
-				{
-					this->mgr->hook(this->plugin);
-				}
+		btnToggleHooked->setCallback(
+			[&]() {
+				if (this->plugin->isHooked()) this->mgr->unhook(this->plugin);
+				else                          this->mgr->hook(this->plugin);
 			}
-		});
+		);
 	}
 }
 
@@ -116,6 +105,7 @@ PluginView::~PluginView()
 
 void PluginView::setViewed(Plugin* plugin, PluginManager* mgr)
 {
+	if (this->plugin != plugin) lastKnownStatus = (Plugin::Status)-1;
 	this->plugin = plugin;
 	this->mgr = mgr;
 	tryInit();
@@ -130,15 +120,20 @@ void PluginView::tick()
 
 	name->setText(plugin->reportedData ? plugin->reportedData->name : L"<unloaded>");
 
-	switch (plugin->status)
+	if (lastKnownStatus != plugin->status)
 	{
-		case Plugin::Status::NotLoaded   : status->setText(L"Not loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
-		case Plugin::Status::DllLoaded   : status->setText(L"DLL loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
-		case Plugin::Status::Registered  : status->setText(L"Registered"); lblToggleLoaded->setText(L"Unload"      ); lblToggleHooked->setText(L"Hook"      ); break;
-		case Plugin::Status::Hooked      : status->setText(L"Hooked"    ); lblToggleLoaded->setText(L"Can't unload"); lblToggleHooked->setText(L"Unhook"    ); break;
+		lastKnownStatus = plugin->status;
+		switch (plugin->status)
+		{
+			case Plugin::Status::NotLoaded : status->setText(L"Not loaded"); btnToggleLoaded->setState(UIState::Normal  ); lblToggleLoaded->setText(L"Load"        ); btnToggleHooked->setState(UIState::Disabled); lblToggleHooked->setText(L"Can't hook"); break;
+			case Plugin::Status::DllLoaded : status->setText(L"DLL loaded"); btnToggleLoaded->setState(UIState::Normal  ); lblToggleLoaded->setText(L"Load"        ); btnToggleHooked->setState(UIState::Disabled); lblToggleHooked->setText(L"Can't hook"); break;
+			case Plugin::Status::Registered: status->setText(L"Registered"); btnToggleLoaded->setState(UIState::Normal  ); lblToggleLoaded->setText(L"Unload"      ); btnToggleHooked->setState(UIState::Normal  ); lblToggleHooked->setText(L"Hook"      ); break;
+			case Plugin::Status::Hooked    : status->setText(L"Hooked"    ); btnToggleLoaded->setState(UIState::Disabled); lblToggleLoaded->setText(L"Can't unload"); btnToggleHooked->setState(UIState::Normal  ); lblToggleHooked->setText(L"Unhook"    ); break;
 
-		default: assert(false); break;
+			default: assert(false); break;
+		}
 	}
+	
 }
 
 const Material* PluginView::getMaterial() const

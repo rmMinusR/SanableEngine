@@ -2,8 +2,8 @@
 
 #include <ReflectionSpec.hpp>
 #include "gui/Widget.hpp"
+#include "application/Plugin.hpp"
 
-struct Plugin;
 class PluginManager;
 class LabelWidget;
 class ButtonWidget;
@@ -13,6 +13,7 @@ class PluginView : public Widget
 {
 	PluginManager* mgr;
 	Plugin* plugin;
+	Plugin::Status lastKnownStatus;
 
 	LabelWidget* path;
 	LabelWidget* name;

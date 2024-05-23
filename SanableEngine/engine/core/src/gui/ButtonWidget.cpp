@@ -4,8 +4,9 @@
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
 
-ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, Widget* label) :
-	Widget(hud)
+ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, Widget* label, SpriteSet sprites) :
+	Widget(hud),
+	sprites(sprites)
 {
 	this->background = background;
 	this->label = label;
@@ -45,6 +46,36 @@ void ButtonWidget::setCallback(const std::function<void()>& callback)
 
 bool ButtonWidget::onMouseDown(Vector2f pos)
 {
-	if (callback) callback();
+	if (state != UIState::Disabled)
+	{
+		setState(UIState::Pressed);
+	}
 	return true;
+}
+
+bool ButtonWidget::onMouseUp(Vector2f pos)
+{
+	if (state != UIState::Disabled)
+	{
+		setState(UIState::Normal);
+		if (callback) callback();
+	}
+	return true;
+}
+
+void ButtonWidget::setState(UIState newState)
+{
+	state = newState;
+
+	switch (state)
+	{
+	#define _X(val) case UIState::val: background->setSprite(sprites.val); break;
+	FOREACH_UISTATE()
+	#undef _X
+	}
+}
+
+UIState ButtonWidget::getState() const
+{
+	return state;
 }

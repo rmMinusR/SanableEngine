@@ -15,6 +15,11 @@ ImageWidget::~ImageWidget()
 {
 }
 
+void ImageWidget::setSprite(const UISprite* newSprite)
+{
+	sprite = newSprite;
+}
+
 const Material* ImageWidget::getMaterial() const
 {
 	return material;
