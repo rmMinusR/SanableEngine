@@ -7,8 +7,8 @@
 WindowGUIInputProcessor::WindowGUIInputProcessor(HUD* hud, float minDragDistance) :
 	hud(hud),
 	currentlyHovered(nullptr),
-	dragStartWidget(nullptr),
-	dragStartPos(),
+	mouseDownWidget(nullptr),
+	mouseDownPos(),
 	minDragDistance(minDragDistance),
 	beingDragged(false)
 {
@@ -40,8 +40,23 @@ void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
 	//Send mouse down/up signals
 	switch (ev.type)
 	{
-		case SDL_EventType::SDL_MOUSEBUTTONDOWN: if (currentlyHovered) currentlyHovered->onMouseDown(mousePos); break;
-		case SDL_EventType::SDL_MOUSEBUTTONUP  : if (currentlyHovered) currentlyHovered->onMouseUp  (mousePos); break;
+		case SDL_EventType::SDL_MOUSEBUTTONDOWN:
+		{
+			mouseDownPos = mousePos;
+			mouseDownWidget = currentlyHovered;
+			if (currentlyHovered) currentlyHovered->onMouseDown(mousePos);
+			break;
+		}
+
+		case SDL_EventType::SDL_MOUSEBUTTONUP:
+		{
+			if (currentlyHovered)
+			{
+				currentlyHovered->onMouseUp(mousePos);
+				if (!beingDragged && mouseDownWidget == currentlyHovered) currentlyHovered->onClicked(mousePos);
+			}
+			break;
+		}
 	}
 
 	//Send mouse drag signals
@@ -51,8 +66,6 @@ void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
 		{
 			//Drag event proper doesn't start until mouse moves enough
 			beingDragged = false;
-			dragStartPos = mousePos;
-			dragStartWidget = currentlyHovered;
 			break;
 		}
 
@@ -62,18 +75,18 @@ void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
 			if (!beingDragged)
 			{
 				Uint32 buttons = SDL_GetMouseState(nullptr, nullptr);
-				if (buttons != 0 && (mousePos-dragStartPos).mgn() > minDragDistance)
+				if (buttons != 0 && (mousePos-mouseDownPos).mgn() > minDragDistance)
 				{
 					beingDragged = true;
-					if (dragStartWidget) dragStartWidget->onDragStarted(dragStartPos, mousePos);
+					if (mouseDownWidget) mouseDownWidget->onDragStarted(mouseDownPos, mousePos);
 				}
 			}
 
 			//Send while-dragged event
 			if (beingDragged)
 			{
-				if (dragStartWidget ) currentlyHovered->whileDragged(dragStartPos, dragStartWidget, mousePos);
-				if (currentlyHovered) currentlyHovered->whileDragged(dragStartPos, dragStartWidget, mousePos);
+				if (mouseDownWidget ) currentlyHovered->whileDragged(mouseDownPos, mouseDownWidget, mousePos);
+				if (currentlyHovered) currentlyHovered->whileDragged(mouseDownPos, mouseDownWidget, mousePos);
 			}
 			break;
 		}
@@ -82,8 +95,8 @@ void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
 		{
 			if (beingDragged)
 			{
-				if (dragStartWidget ) dragStartWidget ->onDragFinished(dragStartPos, dragStartWidget, mousePos, currentlyHovered);
-				if (currentlyHovered) currentlyHovered->onDragFinished(dragStartPos, dragStartWidget, mousePos, currentlyHovered);
+				if (mouseDownWidget ) mouseDownWidget ->onDragFinished(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
+				if (currentlyHovered) currentlyHovered->onDragFinished(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
 				beingDragged = false;
 			}
 			break;

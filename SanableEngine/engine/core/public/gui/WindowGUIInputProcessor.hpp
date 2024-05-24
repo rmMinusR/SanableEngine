@@ -14,8 +14,8 @@ class WindowGUIInputProcessor : public WindowInputProcessor
 	HUD* hud;
 	Widget* currentlyHovered;
 
-	Widget* dragStartWidget;
-	Vector2f dragStartPos;
+	Vector2f mouseDownPos;
+	Widget* mouseDownWidget;
 	float minDragDistance;
 	bool beingDragged;
 

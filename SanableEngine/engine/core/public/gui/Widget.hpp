@@ -29,6 +29,7 @@ public:
 	ENGINEGUI_API virtual void onMouseUp(Vector2f pos);
 	ENGINEGUI_API virtual void onMouseExit(Vector2f pos);
 	ENGINEGUI_API virtual void onMouseEnter(Vector2f pos);
+	ENGINEGUI_API virtual void onClicked(Vector2f pos);
 
 	ENGINEGUI_API virtual void onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos);
 	ENGINEGUI_API virtual void whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos); //Executes both on start widget and currently hovered widget

@@ -51,6 +51,10 @@ public:
 	ENGINEGUI_API void setCallback(const std::function<void()>& callback);
 	ENGINEGUI_API virtual void onMouseDown(Vector2f pos) override;
 	ENGINEGUI_API virtual void onMouseUp(Vector2f pos) override;
+	ENGINEGUI_API virtual void onMouseExit(Vector2f pos) override;
+	ENGINEGUI_API virtual void onMouseEnter(Vector2f pos) override;
+	ENGINEGUI_API virtual void onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget) override;
+	ENGINEGUI_API virtual void onClicked(Vector2f pos) override;
 
 	ENGINEGUI_API void setState(UIState newState);
 	ENGINEGUI_API UIState getState() const;

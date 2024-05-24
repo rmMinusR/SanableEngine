@@ -43,6 +43,10 @@ void Widget::onMouseEnter(Vector2f pos)
 {
 }
 
+void Widget::onClicked(Vector2f pos)
+{
+}
+
 void Widget::onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos)
 {
 }

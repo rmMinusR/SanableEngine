@@ -57,8 +57,36 @@ void ButtonWidget::onMouseUp(Vector2f pos)
 	if (state != UIState::Disabled)
 	{
 		setState(UIState::Normal);
+	}
+}
+
+void ButtonWidget::onMouseExit(Vector2f pos)
+{
+	if (state != UIState::Disabled)
+	{
+		setState(UIState::Normal);
+	}
+}
+
+void ButtonWidget::onMouseEnter(Vector2f pos)
+{
+	if (state != UIState::Disabled)
+	{
+		setState(UIState::Normal); //TODO set to Pressed instead if a mouse button is down
+	}
+}
+
+void ButtonWidget::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
+{
+	if (dragStartWidget == this && dragEndWidget == this)
+	{
 		if (callback) callback();
 	}
+}
+
+void ButtonWidget::onClicked(Vector2f pos)
+{
+	if (state != UIState::Disabled && callback) callback();
 }
 
 void ButtonWidget::setState(UIState newState)
