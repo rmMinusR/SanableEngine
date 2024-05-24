@@ -44,23 +44,21 @@ void ButtonWidget::setCallback(const std::function<void()>& callback)
 	this->callback = callback;
 }
 
-bool ButtonWidget::onMouseDown(Vector2f pos)
+void ButtonWidget::onMouseDown(Vector2f pos)
 {
 	if (state != UIState::Disabled)
 	{
 		setState(UIState::Pressed);
 	}
-	return true;
 }
 
-bool ButtonWidget::onMouseUp(Vector2f pos)
+void ButtonWidget::onMouseUp(Vector2f pos)
 {
 	if (state != UIState::Disabled)
 	{
 		setState(UIState::Normal);
 		if (callback) callback();
 	}
-	return true;
 }
 
 void ButtonWidget::setState(UIState newState)

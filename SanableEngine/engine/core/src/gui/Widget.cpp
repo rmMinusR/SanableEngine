@@ -43,6 +43,18 @@ void Widget::onMouseEnter(Vector2f pos)
 {
 }
 
+void Widget::onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos)
+{
+}
+
+void Widget::whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos)
+{
+}
+
+void Widget::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
+{
+}
+
 const ShaderProgram* Widget::getShader() const
 {
     const Material* material = getMaterial();

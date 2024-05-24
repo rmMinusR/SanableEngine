@@ -43,7 +43,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
             WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline();
             WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, renderer);
             ctlGuiRoot = &renderer->hud;
-            builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot));
+            builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot, 5));
             ctlWindow = builder.build();
         }
 
