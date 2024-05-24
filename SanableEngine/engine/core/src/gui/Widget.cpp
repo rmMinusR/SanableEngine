@@ -5,6 +5,11 @@
 #include "Material.hpp"
 #include "Renderer.hpp"
 
+bool Widget::raycastExact(Vector2f pos) const
+{
+    return transform.getRect().contains(pos);
+}
+
 Widget::Widget(HUD* hud) :
     hud(hud)
 {
@@ -22,14 +27,20 @@ void Widget::tick()
 {
 }
 
-bool Widget::onMouseDown(Vector2f pos)
+void Widget::onMouseDown(Vector2f pos)
 {
-    return false;
 }
 
-bool Widget::onMouseUp(Vector2f pos)
+void Widget::onMouseUp(Vector2f pos)
 {
-    return false;
+}
+
+void Widget::onMouseExit(Vector2f pos)
+{
+}
+
+void Widget::onMouseEnter(Vector2f pos)
+{
 }
 
 const ShaderProgram* Widget::getShader() const

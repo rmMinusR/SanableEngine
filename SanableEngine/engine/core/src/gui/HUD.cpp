@@ -110,12 +110,19 @@ void HUD::render(Rect<float> viewport, Renderer* renderer)
 	glPopMatrix();
 }
 
-void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor) const
+void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const
 {
 	std::vector<Widget*> hits;
 	widgets.staticCall([&](Widget* w) { if (w->transform.getRect().contains(pos)) hits.push_back(w); }); //FIXME inefficient as heck, especially without cached transforms
 	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform.getRenderDepth() > b->transform.getRenderDepth(); });
-	for (Widget* w : hits) visitor(w);
+	for (Widget* w : hits) if (!exact || w->raycastExact(pos)) visitor(w);
+}
+
+Widget* HUD::raycastClosest(Vector2f pos) const
+{
+	Widget* out = nullptr;
+	raycast(pos, [&](Widget* w) { if (!out) out = w; });
+	return out;
 }
 
 WidgetTransform const* HUD::getRootTransform() const

@@ -13,6 +13,7 @@ class STIX_ENABLE_IMAGE_CAPTURE Widget
 protected:
 	HUD* hud;
 	friend class HUD;
+	ENGINEGUI_API virtual bool raycastExact(Vector2f pos) const;
 
 public:
 	WidgetTransform transform;
@@ -23,10 +24,15 @@ public:
 	ENGINEGUI_API virtual void refreshLayout(); //TODO refactor to separate interface? Will likely do when implementing caching for WidgetTransforms
 	ENGINEGUI_API virtual void tick();
 
-	//These should return true if they consume the click event
-	//TODO refactor to separate interface?
-	ENGINEGUI_API virtual bool onMouseDown(Vector2f pos);
-	ENGINEGUI_API virtual bool onMouseUp(Vector2f pos);
+	//Executes only on closest widget clicked/moused over
+	ENGINEGUI_API virtual void onMouseDown(Vector2f pos);
+	ENGINEGUI_API virtual void onMouseUp(Vector2f pos);
+	ENGINEGUI_API virtual void onMouseExit(Vector2f pos);
+	ENGINEGUI_API virtual void onMouseEnter(Vector2f pos);
+
+	ENGINEGUI_API virtual void onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos);
+	ENGINEGUI_API virtual void whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos);
+	ENGINEGUI_API virtual void onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget);
 
 	ENGINEGUI_API const ShaderProgram* getShader() const;
 	virtual const Material* getMaterial() const = 0;
