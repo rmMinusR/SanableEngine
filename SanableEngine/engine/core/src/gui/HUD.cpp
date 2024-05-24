@@ -113,15 +113,41 @@ void HUD::render(Rect<float> viewport, Renderer* renderer)
 void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const
 {
 	std::vector<Widget*> hits;
-	widgets.staticCall([&](Widget* w) { if (w->transform.getRect().contains(pos)) hits.push_back(w); }); //FIXME inefficient as heck, especially without cached transforms
+
+	using _aliased_fp = bool (Widget::*)(Vector2f) const;
+	const _aliased_fp fp_raycastExact = &Widget::raycastExact;
+	widgets.staticCall(
+		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
+		{
+			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform.getRect().contains(pos);
+			if (didHit) hits.push_back(w);
+		}
+	);
+	
 	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform.getRenderDepth() > b->transform.getRenderDepth(); });
 	for (Widget* w : hits) if (!exact || w->raycastExact(pos)) visitor(w);
 }
 
-Widget* HUD::raycastClosest(Vector2f pos) const
+Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
 {
 	Widget* out = nullptr;
-	raycast(pos, [&](Widget* w) { if (!out) out = w; });
+	WidgetTransform::depth_t outDepth;
+	
+	using _aliased_fp = bool (Widget::*)(Vector2f) const;
+	const _aliased_fp fp_raycastExact = &Widget::raycastExact;
+	widgets.staticCall(
+		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
+		{
+			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform.getRect().contains(pos);
+			if (didHit)
+			{
+				WidgetTransform::depth_t _depth = w->transform.getRenderDepth();
+				if (!out) { out = w; outDepth = _depth; }
+				else if (_depth > outDepth) { out = w; outDepth = _depth; }
+			}
+		}
+	);
+	
 	return out;
 }
 
