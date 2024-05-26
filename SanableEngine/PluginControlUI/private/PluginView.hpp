@@ -20,12 +20,17 @@ class PluginView : public Widget
 	LabelWidget* status;
 	
 	ButtonWidget* btnToggleLoaded;
-	ButtonWidget* btnToggleHooked;
 	ImageWidget* imgToggleLoadedBg;
-	ImageWidget* imgToggleHookedBg;
 	LabelWidget* lblToggleLoaded;
+
+	ButtonWidget* btnToggleHooked;
+	ImageWidget* imgToggleHookedBg;
 	LabelWidget* lblToggleHooked;
-	//TODO manual control buttons
+	
+	ButtonWidget* btnInspectTypes;
+	ImageWidget* imgInspectTypesBg;
+	LabelWidget* lblInspectTypes;
+
 	//TODO RTTI status + details button
 
 	void tryInit();

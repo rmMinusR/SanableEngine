@@ -15,7 +15,11 @@ class UISprite3x3;
 	_X(GTexture*   , buttonPressedTexture) \
 	_X(UISprite3x3*, buttonPressedSprite) \
 	_X(GTexture*   , buttonDisabledTexture) \
-	_X(UISprite3x3*, buttonDisabledSprite)
+	_X(UISprite3x3*, buttonDisabledSprite) \
+	_X(GTexture*   , rttiFieldTexture) \
+	_X(UISprite3x3*, rttiFieldSprite) \
+	_X(GTexture*   , rttiParentTexture) \
+	_X(UISprite3x3*, rttiParentSprite)
 
 
 namespace Resources

@@ -1,5 +1,8 @@
 #include "PluginView.hpp"
 
+#include <locale>
+#include <codecvt>
+
 #include "gui/HUD.hpp"
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
@@ -10,6 +13,12 @@
 #include "Resources.hpp"
 #include "application/Plugin.hpp"
 #include "application/PluginManager.hpp"
+#include "TypeLayoutView.hpp"
+#include "application/Application.hpp"
+#include "application/Window.hpp"
+#include "gui/WindowGUIInputProcessor.hpp"
+#include "gui/WindowGUIRenderPipeline.hpp"
+#include "TypeLayoutView.hpp"
 
 void PluginView::tryInit()
 {
@@ -81,6 +90,38 @@ void PluginView::tryInit()
 				else                          this->mgr->hook(this->plugin);
 			}
 		);
+
+		imgInspectTypesBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonNormalSprite);
+		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
+		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
+		lblInspectTypes->setText(L"Inspect RTTI");
+		btnInspectTypes = hud->addWidget<ButtonWidget>(imgInspectTypesBg, lblInspectTypes, buttonSprites);
+		btnInspectTypes->transform.setParent(&statusLine->transform);
+		statusLine->setFlexWeight(&btnInspectTypes->transform, 2);
+		btnInspectTypes->setCallback(
+			[&]() {
+				std::wstring wname = this->plugin->reportedData->name;
+				std::string name; name.resize(wname.length(), '\0');
+				std::wcstombs(name.data(), wname.data(), wname.length());
+
+				WindowBuilder wb = hud->getApplication()->buildWindow(name, 288, 288);
+				WindowGUIRenderPipeline* renderPipeline = new WindowGUIRenderPipeline(hud->getApplication());
+				wb.setRenderPipeline(renderPipeline);
+				Window* window = wb.build();
+				window->setRenderPipeline(renderPipeline);
+				window->setInputProcessor(new WindowGUIInputProcessor(&renderPipeline->hud, 5));
+				
+				//FIXME use shared rendering context instead
+				GTexture* rttiFieldTexture = window->getRenderer()->loadTexture("resources/ui/textures/field.png");
+				UISprite3x3* rttiFieldSprite = new UISprite3x3(rttiFieldTexture);
+				rttiFieldSprite->setPixel({ 1,1 }, { 7,6 });
+				rttiFieldSprite->setPixel({ 2,2 }, { 8,8 });
+				
+				//TODO add dropdown selector for types
+				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(&this->plugin->getRTTI()->getTypes()[0], rttiFieldSprite, rttiFieldSprite);
+				v->transform.fillParent();
+			}
+		);
 	}
 }
 
@@ -125,13 +166,17 @@ void PluginView::tick()
 		lastKnownStatus = plugin->status;
 		switch (plugin->status)
 		{
-			case Plugin::Status::NotLoaded : status->setText(L"Not loaded"); btnToggleLoaded->setState(UIState::Normal  ); lblToggleLoaded->setText(L"Load"        ); btnToggleHooked->setState(UIState::Disabled); lblToggleHooked->setText(L"Can't hook"); break;
-			case Plugin::Status::DllLoaded : status->setText(L"DLL loaded"); btnToggleLoaded->setState(UIState::Normal  ); lblToggleLoaded->setText(L"Load"        ); btnToggleHooked->setState(UIState::Disabled); lblToggleHooked->setText(L"Can't hook"); break;
-			case Plugin::Status::Registered: status->setText(L"Registered"); btnToggleLoaded->setState(UIState::Normal  ); lblToggleLoaded->setText(L"Unload"      ); btnToggleHooked->setState(UIState::Normal  ); lblToggleHooked->setText(L"Hook"      ); break;
-			case Plugin::Status::Hooked    : status->setText(L"Hooked"    ); btnToggleLoaded->setState(UIState::Disabled); lblToggleLoaded->setText(L"Can't unload"); btnToggleHooked->setState(UIState::Normal  ); lblToggleHooked->setText(L"Unhook"    ); break;
+			case Plugin::Status::NotLoaded : status->setText(L"Not loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
+			case Plugin::Status::DllLoaded : status->setText(L"DLL loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
+			case Plugin::Status::Registered: status->setText(L"Registered"); lblToggleLoaded->setText(L"Unload"      ); lblToggleHooked->setText(L"Hook"      ); break;
+			case Plugin::Status::Hooked    : status->setText(L"Hooked"    ); lblToggleLoaded->setText(L"Can't unload"); lblToggleHooked->setText(L"Unhook"    ); break;
 
 			default: assert(false); break;
 		}
+
+		btnToggleLoaded->setState(plugin->status != Plugin::Status::Hooked ? UIState::Normal : UIState::Disabled);
+		btnToggleHooked->setState(plugin->status >= Plugin::Status::Registered ? UIState::Normal : UIState::Disabled);
+		btnInspectTypes->setState(plugin->status != Plugin::Status::NotLoaded ? UIState::Normal : UIState::Disabled);
 	}
 	
 }

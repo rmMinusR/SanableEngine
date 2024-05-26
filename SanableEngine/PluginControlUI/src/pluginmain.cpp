@@ -40,8 +40,9 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     if (firstRun)
     {
         {
-            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline();
-            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, renderer);
+            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600);
+            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline(game->getApplication());
+            builder.setRenderPipeline(renderer);
             ctlGuiRoot = &renderer->hud;
             builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot, 5));
             ctlWindow = builder.build();
@@ -56,6 +57,14 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         Resources::buttonPressedSprite = new UISprite3x3(Resources::buttonPressedTexture);
         Resources::buttonDisabledTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/disabled.png");
         Resources::buttonDisabledSprite = new UISprite3x3(Resources::buttonDisabledTexture);
+
+        Resources::rttiFieldTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/field.png");
+        Resources::rttiFieldSprite = new UISprite3x3(Resources::rttiFieldTexture);
+        Resources::rttiFieldSprite->setPixel({1,1}, {7,6});
+        Resources::rttiFieldSprite->setPixel({2,2}, {8,8});
+
+        Resources::rttiParentTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/parent.png");
+        Resources::rttiParentSprite = new UISprite3x3(Resources::rttiParentTexture);
 
         //Ready resources: text
         ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
