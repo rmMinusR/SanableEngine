@@ -56,5 +56,5 @@ public:
     ENGINECORE_API PluginManager* getPluginManager();
     ENGINECORE_API Window* getMainWindow();
 
-    ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height, WindowRenderPipeline* renderPipeline); //Takes ownership of render pipeline
+    ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height);
 };

@@ -3,12 +3,12 @@
 #include "application/Window.hpp"
 #include "application/Application.hpp"
 
-WindowBuilder::WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, WindowRenderPipeline* renderPipeline) :
+WindowBuilder::WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings) :
 	glSettings(glSettings),
 	engine(engine),
 	name(name),
 	size(width, height, 0),
-	renderPipeline(renderPipeline),
+	renderPipeline(nullptr),
 	inputProcessor(nullptr)
 {
 }
@@ -33,6 +33,13 @@ void WindowBuilder::setInputProcessor(WindowInputProcessor* inputProcessor)
 	if (this->inputProcessor) delete this->inputProcessor;
 
 	this->inputProcessor = inputProcessor;
+}
+
+void WindowBuilder::setRenderPipeline(WindowRenderPipeline* renderPipeline)
+{
+	if (this->renderPipeline) delete this->renderPipeline;
+
+	this->renderPipeline = renderPipeline;
 }
 
 Window* WindowBuilder::build()

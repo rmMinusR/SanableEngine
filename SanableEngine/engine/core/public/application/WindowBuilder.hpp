@@ -26,12 +26,13 @@ class WindowBuilder
 	std::optional<Vector3<int>> position;
 	WindowInputProcessor* inputProcessor; //Owned by self, nulled on build
 	
-	WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings, WindowRenderPipeline* renderPipeline);
+	WindowBuilder(Application* engine, const std::string& name, int width, int height, const GLSettings& glSettings);
 	friend class Application;
 public:
 	ENGINEGRAPHICS_API ~WindowBuilder();
 
 	ENGINEGRAPHICS_API void setInputProcessor(WindowInputProcessor* inputProcessor);
+	ENGINEGRAPHICS_API void setRenderPipeline(WindowRenderPipeline* renderPipeline);
 	
 	[[nodiscard]] ENGINEGRAPHICS_API Window* build();
 };

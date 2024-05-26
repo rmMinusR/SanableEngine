@@ -6,6 +6,8 @@
 #include "Widget.hpp"
 #include "MemoryManager.hpp"
 
+class Application;
+
 class HUD
 {
 private:
@@ -13,6 +15,8 @@ private:
 	MemoryManager memory; //TODO reload safety
 	WidgetTransform root;
 	
+	Application* application;
+
 	//Concurrency buffers
 	std::vector<Widget*> addQueue;
 	std::vector<Widget*> removeQueue;
@@ -21,7 +25,7 @@ private:
 	ENGINEGUI_API void addWidget_internal(Widget* widget);
 	ENGINEGUI_API void removeWidget_internal(Widget* widget);
 public:
-	ENGINEGUI_API HUD();
+	ENGINEGUI_API HUD(Application* application);
 	ENGINEGUI_API ~HUD();
 
 	ENGINEGUI_API MemoryManager* getMemory();
@@ -53,4 +57,5 @@ public:
 		memory.destroy(w);
 	}
 
+	ENGINEGUI_API Application* getApplication() const;
 };

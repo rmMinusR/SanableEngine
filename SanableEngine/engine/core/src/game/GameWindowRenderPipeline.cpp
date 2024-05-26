@@ -9,7 +9,8 @@
 #include "ShaderProgram.hpp"
 
 GameWindowRenderPipeline::GameWindowRenderPipeline(Game* game) :
-	game(game)
+	game(game),
+	hud(game->getApplication())
 {
 }
 

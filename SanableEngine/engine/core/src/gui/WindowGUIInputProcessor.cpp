@@ -85,8 +85,8 @@ void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
 			//Send while-dragged event
 			if (beingDragged)
 			{
-				if (mouseDownWidget ) currentlyHovered->whileDragged(mouseDownPos, mouseDownWidget, mousePos);
-				if (currentlyHovered) currentlyHovered->whileDragged(mouseDownPos, mouseDownWidget, mousePos);
+				if (mouseDownWidget ) mouseDownWidget ->whileDragged(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
+				if (currentlyHovered) currentlyHovered->whileDragged(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
 			}
 			break;
 		}

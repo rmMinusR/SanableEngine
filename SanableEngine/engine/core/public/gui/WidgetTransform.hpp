@@ -12,6 +12,7 @@
 
 typedef Anchor2D<float> UIAnchor;
 
+class Widget;
 
 //2D affine transform but preserves distances and angles
 struct STIX_ENABLE_IMAGE_CAPTURE WidgetTransform
@@ -95,4 +96,6 @@ public:
 	ENGINEGUI_API depth_t getRelativeRenderDepth() const;
 
 	ENGINEGUI_API operator glm::mat4() const; //GL interop
+
+	ENGINEGUI_API Widget* getWidget() const;
 };

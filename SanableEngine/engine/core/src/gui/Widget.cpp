@@ -51,7 +51,7 @@ void Widget::onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos)
 {
 }
 
-void Widget::whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos)
+void Widget::whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos, Widget* currentlyHoveredWidget)
 {
 }
 

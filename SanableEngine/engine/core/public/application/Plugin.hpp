@@ -54,6 +54,7 @@ public:
 
 	ENGINECORE_API bool isCodeLoaded() const;
 	ENGINECORE_API bool isHooked() const;
+	ENGINECORE_API const ModuleTypeRegistry* getRTTI() const;
 
 	struct EntryPoints
 	{

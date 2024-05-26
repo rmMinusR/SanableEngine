@@ -26,6 +26,11 @@ void UISprite3x3::set(Vector2<int> index, Vector2f uv)
 	uvs[index.y].y = uv.y;
 }
 
+void UISprite3x3::setPixel(Vector2<int> index, Vector2f uv)
+{
+	set(index, uv/Vector2f(tex->getWidth(), tex->getHeight()));
+}
+
 Sprite UISprite3x3::get(Vector2<int> index) const
 {
 	Sprite out(tex);

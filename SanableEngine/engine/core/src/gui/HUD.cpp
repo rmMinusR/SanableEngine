@@ -26,7 +26,8 @@ void HUD::removeWidget_internal(Widget* widget)
 	removeQueue.push_back(widget);
 }
 
-HUD::HUD()
+HUD::HUD(Application* application) :
+	application(application)
 {
 	root.setMinCornerRatio({ 0, 0 });
 	root.setMaxCornerRatio({ 0, 0 });
@@ -159,4 +160,9 @@ WidgetTransform const* HUD::getRootTransform() const
 WidgetTransform* HUD::getRootTransform()
 {
 	return &root;
+}
+
+Application* HUD::getApplication() const
+{
+	return application;
 }

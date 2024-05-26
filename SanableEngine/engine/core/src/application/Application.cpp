@@ -191,7 +191,7 @@ Window* Application::getMainWindow()
     return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
 }
 
-WindowBuilder Application::buildWindow(const std::string& name, int width, int height, WindowRenderPipeline* renderPipeline)
+WindowBuilder Application::buildWindow(const std::string& name, int width, int height)
 {
-    return WindowBuilder(this, name, width, height, glSettings, renderPipeline);
+    return WindowBuilder(this, name, width, height, glSettings);
 }

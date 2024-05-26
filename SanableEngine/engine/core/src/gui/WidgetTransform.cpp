@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include "gui/Widget.hpp"
 
 WidgetTransform::WidgetTransform()
 {
@@ -225,4 +226,9 @@ WidgetTransform::operator glm::mat4() const
 		);
 		//TODO rotation component goes here
 		//* glm::scale(glm::identity<glm::mat4>(), glm::vec3(getScale())); //TODO scale component goes here
+}
+
+Widget* WidgetTransform::getWidget() const
+{
+	return (Widget*)const_cast<char*>( reinterpret_cast<const char*>(this)-offsetof(Widget, transform) ); //FIXME awful hack, but will be useful later when widget transforms occupy separate memory
 }

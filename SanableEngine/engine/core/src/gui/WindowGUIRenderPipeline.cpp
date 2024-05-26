@@ -3,7 +3,8 @@
 #include <GL/glew.h>
 #include "application/Window.hpp"
 
-WindowGUIRenderPipeline::WindowGUIRenderPipeline()
+WindowGUIRenderPipeline::WindowGUIRenderPipeline(Application* application) :
+	hud(application)
 {
 }
 

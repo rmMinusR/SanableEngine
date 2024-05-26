@@ -26,6 +26,7 @@ public:
 	ENGINEGUI_API virtual ~UISprite3x3();
 
 	ENGINEGUI_API void set(Vector2<int> index, Vector2f uv);
+	ENGINEGUI_API void setPixel(Vector2<int> index, Vector2f uv);
 	ENGINEGUI_API virtual Sprite get(Vector2<int> index) const override;
 	ENGINEGUI_API virtual void renderImmediate(Renderer* renderer, Vector3f pos, float w, float h) const override;
 };

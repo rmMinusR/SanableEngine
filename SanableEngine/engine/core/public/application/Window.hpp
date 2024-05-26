@@ -53,6 +53,8 @@ public:
 
 	inline WindowRenderPipeline* getRenderPipeline() { return renderPipeline; }
 	inline WindowInputProcessor* getInputProcessor() { return inputProcessor; }
+	ENGINEGRAPHICS_API void setRenderPipeline(WindowRenderPipeline* v); //Note: Does NOT destroy old render pipeline, if it exists
+	ENGINEGRAPHICS_API void setInputProcessor(WindowInputProcessor* v); //Note: Does NOT destroy old input processor, if it exists
 
 	ENGINEGRAPHICS_API static void setActiveDrawTarget(const Window* w);
 };

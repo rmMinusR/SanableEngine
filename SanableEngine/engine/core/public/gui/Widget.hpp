@@ -32,7 +32,7 @@ public:
 	ENGINEGUI_API virtual void onClicked(Vector2f pos);
 
 	ENGINEGUI_API virtual void onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos);
-	ENGINEGUI_API virtual void whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos); //Executes both on start widget and currently hovered widget
+	ENGINEGUI_API virtual void whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos, Widget* currentlyHoveredWidget); //Executes both on start widget and currently hovered widget
 	ENGINEGUI_API virtual void onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget); //Executes both on start widget and end widget
 
 	ENGINEGUI_API const ShaderProgram* getShader() const;
