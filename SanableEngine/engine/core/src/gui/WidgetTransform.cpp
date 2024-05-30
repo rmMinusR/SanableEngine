@@ -18,7 +18,8 @@ void WidgetTransform::refresh() const
 	if (positioningStrategy) positioningStrategy->evaluate(&localRect, this);
 
 	//Calculate globals from locals
-	rect.topLeft = localRect.topLeft + parent->rect.topLeft;
+	rect.topLeft = localRect.topLeft;
+	if (parent) rect.topLeft += parent->rect.topLeft;
 	rect.size = localRect.size;
 
 	dirty = false;
@@ -35,15 +36,16 @@ void WidgetTransform::markDirty() const
 	for (const WidgetTransform* w : children) w->markDirty();
 }
 
-WidgetTransform::WidgetTransform(Widget* widget)
+WidgetTransform::WidgetTransform(Widget* widget, HUD* hud)
 {
+	this->hud = hud;
 	this->widget = widget;
 	parent = nullptr;
 
 	dirty = true;
 	refreshing = false;
 
-	positioningStrategy = widget ? widget->getHUD()->getMemory()->create<AnchoredPositioning>() : nullptr;
+	positioningStrategy = hud->getMemory()->create<AnchoredPositioning>();
 }
 
 WidgetTransform::~WidgetTransform()
@@ -70,7 +72,10 @@ PositioningStrategy* WidgetTransform::getPositioningStrategy() const
 
 void WidgetTransform::setPositioningStrategy_internal(PositioningStrategy* _new)
 {
-	if (_new != positioningStrategy) markDirty();
+	assert(!_new || _new != positioningStrategy);
+	
+	markDirty();
+	if (positioningStrategy) hud->getMemory()->destroy(positioningStrategy);
 	positioningStrategy = _new;
 }
 

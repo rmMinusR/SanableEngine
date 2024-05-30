@@ -2,11 +2,12 @@
 
 #include "gui/LayoutUtil.hpp"
 
-AutoLayoutPositioning::AutoLayoutPositioning() :
+AutoLayoutPositioning::AutoLayoutPositioning(LinearLayoutGroupWidget* layout) :
 	minSize(0, 0),
 	preferredSize(0, 0),
 	maxSize(FLT_MAX, FLT_MAX),
-	flexWeight(1, 1)
+	flexWeight(1, 1),
+	layout(layout)
 {
 }
 
@@ -16,12 +17,24 @@ AutoLayoutPositioning::~AutoLayoutPositioning()
 
 void AutoLayoutPositioning::evaluate(Rect<float>* localRect_out, const WidgetTransform* transform)
 {
-	assert(layout == transform->getWidget());
+	assert(layout == transform->getParent()->getWidget());
 
-	layout->refreshLayout();
+	if (isDirty()) layout->refreshLayout();
 	
 	//Sanity check
 	for (int i = 0; i < transform->getChildrenCount(); ++i) assert(!transform->getChild(i)->isDirty());
+}
+
+bool AutoLayoutPositioning::isDirty() const
+{
+	if (layout->getTransform()->isDirty()) return true;
+
+	for (int i = 0; i < layout->getTransform()->getChildrenCount(); ++i)
+	{
+		if (layout->getTransform()->getChild(i)->isDirty()) return true;
+	}
+
+	return false;
 }
 
 LinearLayoutGroupWidget::LinearLayoutGroupWidget(HUD* hud) :
@@ -53,4 +66,5 @@ void LinearLayoutGroupWidget::setRect(WidgetTransform* w, Rect<float> rect)
 
 	w->localRect = rect;
 	if (w->parent) w->localRect.topLeft -= w->parent->getRect().topLeft;
+	w->dirty = false;
 }

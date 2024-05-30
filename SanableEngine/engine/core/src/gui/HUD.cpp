@@ -28,7 +28,8 @@ void HUD::removeWidget_internal(Widget* widget)
 
 HUD::HUD()
 {
-	root = memory.create<WidgetTransform>(nullptr);
+	root = memory.create<WidgetTransform>(nullptr, this);
+	root->setPositioningStrategy_internal(nullptr);
 }
 
 HUD::~HUD()

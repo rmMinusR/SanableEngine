@@ -42,19 +42,19 @@ void PluginView::tryInit()
 
 		name = hud->addWidget<LabelWidget>(Resources::textMat, Resources::headerFont);
 		name->getTransform()->setParent(inner->getTransform());
-		name->getTransform()->setPositioningStrategy<AutoLayoutPositioning>();
+		name->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(inner);
 
 		path = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		path->getTransform()->setParent(inner->getTransform());
-		path->getTransform()->setPositioningStrategy<AutoLayoutPositioning>();
+		path->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(inner);
 
 		HorizontalGroupWidget* statusLine = hud->addWidget<HorizontalGroupWidget>();
 		statusLine->getTransform()->setParent(inner->getTransform());
-		statusLine->getTransform()->setPositioningStrategy<AutoLayoutPositioning>();
+		statusLine->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(inner);
 
 		status = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
 		status->getTransform()->setParent(statusLine->getTransform());
-		status->getTransform()->setPositioningStrategy<AutoLayoutPositioning>()->flexWeight.x = 4;
+		status->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight.x = 4;
 
 
 		ButtonWidget::SpriteSet buttonSprites = { Resources::buttonNormalSprite, Resources::buttonPressedSprite, Resources::buttonDisabledSprite };
@@ -64,7 +64,7 @@ void PluginView::tryInit()
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded, buttonSprites);
 		btnToggleLoaded->getTransform()->setParent(statusLine->getTransform());
-		btnToggleLoaded->getTransform()->setPositioningStrategy<AutoLayoutPositioning>()->flexWeight.x = 3;
+		btnToggleLoaded->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight.x = 3;
 		btnToggleLoaded->setCallback(
 			[&]() {
 				if (this->plugin->isCodeLoaded()) this->mgr->unload(this->plugin);
@@ -77,7 +77,7 @@ void PluginView::tryInit()
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked, buttonSprites);
 		btnToggleHooked->getTransform()->setParent(statusLine->getTransform());
-		btnToggleHooked->getTransform()->setPositioningStrategy<AutoLayoutPositioning>()->flexWeight.x = 3;
+		btnToggleHooked->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight.x = 3;
 		btnToggleHooked->setCallback(
 			[&]() {
 				if (this->plugin->isHooked()) this->mgr->unhook(this->plugin);

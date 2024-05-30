@@ -14,7 +14,7 @@ bool Widget::raycastExact(Vector2f pos) const
 Widget::Widget(HUD* hud) :
     hud(hud)
 {
-    transform = hud->getMemory()->create<WidgetTransform>(this);
+    transform = hud->getMemory()->create<WidgetTransform>(this, hud);
 }
 
 Widget::~Widget()

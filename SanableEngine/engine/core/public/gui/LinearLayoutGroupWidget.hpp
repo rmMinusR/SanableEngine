@@ -13,6 +13,7 @@ protected:
 	virtual void refreshLayout() = 0; //Must set rect for all children
 	friend class AutoLayoutPositioning;
 
+	ENGINEGUI_API static void setRect(WidgetTransform* w, Rect<float> rect); //Horrible fix
 public:
 	ENGINEGUI_API LinearLayoutGroupWidget(HUD* hud);
 	ENGINEGUI_API virtual ~LinearLayoutGroupWidget();
@@ -22,16 +23,16 @@ public:
 
 	ENGINEGUI_API virtual const Material* getMaterial() const override;
 	ENGINEGUI_API virtual void renderImmediate(Renderer* renderer) override;
-
-	ENGINEGUI_API static void setRect(WidgetTransform* w, Rect<float> rect);
 };
 
 class AutoLayoutPositioning : public PositioningStrategy
 {
 public:
-	ENGINEGUI_API AutoLayoutPositioning();
+	ENGINEGUI_API AutoLayoutPositioning(LinearLayoutGroupWidget* layout);
 	ENGINEGUI_API virtual ~AutoLayoutPositioning();
 	ENGINEGUI_API virtual void evaluate(Rect<float>* localRect_out, const WidgetTransform* transform) override;
+
+	ENGINEGUI_API bool isDirty() const;
 
 	Vector2f minSize; //Satisfied first
 	Vector2f preferredSize; //Satisfied second, in a 1:1 ratio

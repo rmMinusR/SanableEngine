@@ -3,6 +3,7 @@
 #include <optional>
 #include <vector>
 #include <functional>
+#include <utility>
 #include <ReflectionSpec.hpp>
 #include <glm/mat4x4.hpp>
 #include "math/Vector2.inl"
@@ -45,8 +46,11 @@ class LinearLayoutGroupWidget;
 //2D orthonormal affine transform
 struct STIX_ENABLE_IMAGE_CAPTURE WidgetTransform
 {
+private:
+	ENGINEGUI_API void setPositioningStrategy_internal(PositioningStrategy*);
+
 public:
-	ENGINEGUI_API WidgetTransform(Widget* widget);
+	ENGINEGUI_API WidgetTransform(Widget* widget, HUD* hud);
 	ENGINEGUI_API ~WidgetTransform();
 	//Trivially copyable and movable
 
@@ -58,7 +62,7 @@ public:
 	T* setPositioningStrategy(TCtorArgs... ctorArgs)
 	{
 		static_assert(std::is_base_of_v<PositioningStrategy, T>);
-		T* pos = widget->getHUD()->getMemory()->create<T>( std::forward(ctorArgs)... );
+		T* pos = hud->getMemory()->create<T>( std::forward<TCtorArgs...>(ctorArgs)... );
 		setPositioningStrategy_internal(pos);
 		return pos;
 	}
@@ -83,9 +87,7 @@ public:
 	ENGINEGUI_API operator glm::mat4() const; //GL interop
 
 private:
-	ENGINEGUI_API void setPositioningStrategy_internal(PositioningStrategy*);
-
-
+	HUD* hud;
 	Widget* widget;
 
 	WidgetTransform* parent;
