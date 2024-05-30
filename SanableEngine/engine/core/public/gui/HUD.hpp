@@ -5,12 +5,13 @@
 #include "CallBatcher.inl"
 #include "Widget.hpp"
 #include "MemoryManager.hpp"
+#include "PoolCallBatcher.hpp"
 
 class HUD
 {
 private:
-	CallBatcher<WidgetTransform> transforms;
-	CallBatcher<Widget> widgets;
+	TypedMemoryPool<WidgetTransform>* transforms;
+	PoolCallBatcher<Widget> widgets;
 	MemoryManager memory; //TODO reload safety
 	WidgetTransform* root;
 	

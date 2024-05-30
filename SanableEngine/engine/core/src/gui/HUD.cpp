@@ -8,10 +8,11 @@
 
 void HUD::applyConcurrencyBuffers()
 {
-	for (Widget* w : addQueue) widgets.add(w);
+	//for (Widget* w : addQueue) widgets.add(w);
 	addQueue.clear();
 
-	for (Widget* w : removeQueue) widgets.remove(w);
+	//for (Widget* w : removeQueue) widgets.remove(w);
+	for (Widget* w : removeQueue) memory.destroy(w);
 	removeQueue.clear();
 }
 
@@ -30,11 +31,12 @@ HUD::HUD()
 {
 	root = memory.create<WidgetTransform>(nullptr, this);
 	root->setPositioningStrategy_internal(nullptr);
+
+	transforms = memory.getSpecificPool<WidgetTransform>(true);
 }
 
 HUD::~HUD()
 {
-	
 	memory.destroy(root);
 }
 
@@ -48,7 +50,7 @@ void HUD::refreshLayout(Rect<float> viewport)
 	root->rect = root->localRect = viewport;
 
 	applyConcurrencyBuffers();
-	transforms.memberCall(&WidgetTransform::refresh);
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it) static_cast<WidgetTransform*>(*it)->refresh();
 	applyConcurrencyBuffers();
 
 	//TODO transform caching goes here
@@ -57,6 +59,8 @@ void HUD::refreshLayout(Rect<float> viewport)
 void HUD::tick()
 {
 	applyConcurrencyBuffers();
+	memory.ensureFresh();
+	widgets.ensureFresh(&memory);
 	widgets.memberCall(&Widget::tick);
 	applyConcurrencyBuffers();
 }
@@ -64,6 +68,8 @@ void HUD::tick()
 void HUD::render(Renderer* renderer)
 {
 	applyConcurrencyBuffers();
+	memory.ensureFresh();
+	widgets.ensureFresh(&memory);
 	
 	//Collect objects to buffer
 	std::unordered_map<

@@ -17,21 +17,21 @@ AutoLayoutPositioning::~AutoLayoutPositioning()
 
 void AutoLayoutPositioning::evaluate(Rect<float>* localRect_out, const WidgetTransform* transform)
 {
-	assert(layout == transform->getParent()->getWidget());
+	assert(layout->getTransform() == transform->getParent());
 
-	if (isDirty()) layout->refreshLayout();
+	if (isDirty(layout->getTransform())) layout->refreshLayout();
 	
 	//Sanity check
-	for (int i = 0; i < transform->getChildrenCount(); ++i) assert(!transform->getChild(i)->isDirty());
+	for (int i = 0; i < layout->getTransform()->getChildrenCount(); ++i) assert(!layout->getTransform()->getChild(i)->isDirty());
 }
 
-bool AutoLayoutPositioning::isDirty() const
+bool AutoLayoutPositioning::isDirty(const WidgetTransform* t)
 {
-	if (layout->getTransform()->isDirty()) return true;
+	if (t->isDirty()) return true;
 
-	for (int i = 0; i < layout->getTransform()->getChildrenCount(); ++i)
+	for (int i = 0; i < t->getChildrenCount(); ++i)
 	{
-		if (layout->getTransform()->getChild(i)->isDirty()) return true;
+		if (t->getChild(i)->isDirty()) return true;
 	}
 
 	return false;

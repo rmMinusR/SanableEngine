@@ -27,12 +27,12 @@ public:
 
 class AutoLayoutPositioning : public PositioningStrategy
 {
+	ENGINEGUI_API static bool isDirty(const WidgetTransform* t);
 public:
 	ENGINEGUI_API AutoLayoutPositioning(LinearLayoutGroupWidget* layout);
 	ENGINEGUI_API virtual ~AutoLayoutPositioning();
 	ENGINEGUI_API virtual void evaluate(Rect<float>* localRect_out, const WidgetTransform* transform) override;
 
-	ENGINEGUI_API bool isDirty() const;
 
 	Vector2f minSize; //Satisfied first
 	Vector2f preferredSize; //Satisfied second, in a 1:1 ratio
