@@ -53,7 +53,15 @@ public:
 	ENGINEGUI_API Rect<float> getRect() const;
 	ENGINEGUI_API Rect<float> getLocalRect() const;
 	ENGINEGUI_API PositioningStrategy* getPositioningStrategy() const;
-	ENGINEGUI_API void setPositioningStrategy(PositioningStrategy*);
+
+	template<typename T, typename... TCtorArgs>
+	T* setPositioningStrategy(TCtorArgs... ctorArgs)
+	{
+		static_assert(std::is_base_of_v<PositioningStrategy, T>);
+		T* pos = widget->getHUD()->getMemory()->create<T>( std::forward(ctorArgs)... );
+		setPositioningStrategy_internal(pos);
+		return pos;
+	}
 
 	ENGINEGUI_API WidgetTransform* getParent() const;
 	ENGINEGUI_API void setParent(WidgetTransform* parent);
@@ -75,6 +83,9 @@ public:
 	ENGINEGUI_API operator glm::mat4() const; //GL interop
 
 private:
+	ENGINEGUI_API void setPositioningStrategy_internal(PositioningStrategy*);
+
+
 	Widget* widget;
 
 	WidgetTransform* parent;

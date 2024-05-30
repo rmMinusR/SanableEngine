@@ -66,7 +66,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
 
         //Init UI elements
         ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), nullptr);
-        ui->transform.fillParent();
+        ui->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
         
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin

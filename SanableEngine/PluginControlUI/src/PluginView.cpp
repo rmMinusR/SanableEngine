@@ -37,21 +37,24 @@ void PluginView::tryInit()
 		assert(!lblToggleHooked);
 
 		VerticalGroupWidget* inner = hud->addWidget<VerticalGroupWidget>();
-		inner->transform.setParent(&transform);
-		inner->transform.fillParent();
+		inner->getTransform()->setParent(this->getTransform());
+		inner->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 
 		name = hud->addWidget<LabelWidget>(Resources::textMat, Resources::headerFont);
-		name->transform.setParent(&inner->transform);
+		name->getTransform()->setParent(inner->getTransform());
+		name->getTransform()->setPositioningStrategy<AutoLayoutPositioning>();
 
 		path = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
-		path->transform.setParent(&inner->transform);
+		path->getTransform()->setParent(inner->getTransform());
+		path->getTransform()->setPositioningStrategy<AutoLayoutPositioning>();
 
 		HorizontalGroupWidget* statusLine = hud->addWidget<HorizontalGroupWidget>();
-		statusLine->transform.setParent(&inner->transform);
+		statusLine->getTransform()->setParent(inner->getTransform());
+		statusLine->getTransform()->setPositioningStrategy<AutoLayoutPositioning>();
 
 		status = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont);
-		status->transform.setParent(&statusLine->transform);
-		statusLine->setFlexWeight(&status->transform, 4);
+		status->getTransform()->setParent(statusLine->getTransform());
+		status->getTransform()->setPositioningStrategy<AutoLayoutPositioning>()->flexWeight.x = 4;
 
 
 		ButtonWidget::SpriteSet buttonSprites = { Resources::buttonNormalSprite, Resources::buttonPressedSprite, Resources::buttonDisabledSprite };
@@ -60,8 +63,8 @@ void PluginView::tryInit()
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded, buttonSprites);
-		btnToggleLoaded->transform.setParent(&statusLine->transform);
-		statusLine->setFlexWeight(&btnToggleLoaded->transform, 3);
+		btnToggleLoaded->getTransform()->setParent(statusLine->getTransform());
+		btnToggleLoaded->getTransform()->setPositioningStrategy<AutoLayoutPositioning>()->flexWeight.x = 3;
 		btnToggleLoaded->setCallback(
 			[&]() {
 				if (this->plugin->isCodeLoaded()) this->mgr->unload(this->plugin);
@@ -73,8 +76,8 @@ void PluginView::tryInit()
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked, buttonSprites);
-		btnToggleHooked->transform.setParent(&statusLine->transform);
-		statusLine->setFlexWeight(&btnToggleHooked->transform, 3);
+		btnToggleHooked->getTransform()->setParent(statusLine->getTransform());
+		btnToggleHooked->getTransform()->setPositioningStrategy<AutoLayoutPositioning>()->flexWeight.x = 3;
 		btnToggleHooked->setCallback(
 			[&]() {
 				if (this->plugin->isHooked()) this->mgr->unhook(this->plugin);

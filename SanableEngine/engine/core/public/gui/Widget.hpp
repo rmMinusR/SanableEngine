@@ -26,6 +26,7 @@ public:
 
 	ENGINEGUI_API WidgetTransform* getTransform();
 	ENGINEGUI_API const WidgetTransform* getTransform() const;
+	ENGINEGUI_API HUD* getHUD() const;
 
 	//Executes only on closest widget clicked/moused over
 	ENGINEGUI_API virtual void onMouseDown(Vector2f pos);

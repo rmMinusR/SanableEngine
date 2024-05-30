@@ -36,6 +36,11 @@ const WidgetTransform* Widget::getTransform() const
     return transform;
 }
 
+HUD* Widget::getHUD() const
+{
+    return hud;
+}
+
 void Widget::onMouseDown(Vector2f pos)
 {
 }

@@ -3,6 +3,9 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+#include "gui/Widget.hpp"
+#include "gui/HUD.hpp"
+
 void WidgetTransform::refresh() const
 {
 	assert(!refreshing && "Cannot call functions dependent on updated layout while refreshing that layout");
@@ -36,13 +39,16 @@ WidgetTransform::WidgetTransform(Widget* widget)
 {
 	this->widget = widget;
 	parent = nullptr;
-	positioningStrategy = new AnchoredPositioning(); //FIXME use HUD's MemoryManager
+
 	dirty = true;
 	refreshing = false;
+
+	positioningStrategy = widget ? widget->getHUD()->getMemory()->create<AnchoredPositioning>() : nullptr;
 }
 
 WidgetTransform::~WidgetTransform()
 {
+	if (positioningStrategy) widget->getHUD()->getMemory()->destroy(positioningStrategy);
 }
 
 Rect<float> WidgetTransform::getRect() const
@@ -62,7 +68,7 @@ PositioningStrategy* WidgetTransform::getPositioningStrategy() const
 	return positioningStrategy;
 }
 
-void WidgetTransform::setPositioningStrategy(PositioningStrategy* _new)
+void WidgetTransform::setPositioningStrategy_internal(PositioningStrategy* _new)
 {
 	if (_new != positioningStrategy) markDirty();
 	positioningStrategy = _new;
