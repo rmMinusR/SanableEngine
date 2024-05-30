@@ -9,9 +9,10 @@
 class HUD
 {
 private:
+	CallBatcher<WidgetTransform> transforms;
 	CallBatcher<Widget> widgets;
 	MemoryManager memory; //TODO reload safety
-	WidgetTransform root;
+	WidgetTransform* root;
 	
 	//Concurrency buffers
 	std::vector<Widget*> addQueue;
@@ -28,7 +29,7 @@ public:
 	
 	ENGINEGUI_API void refreshLayout(Rect<float> viewport);
 	ENGINEGUI_API void tick();
-	ENGINEGUI_API void render(Rect<float> viewport, Renderer* renderer);
+	ENGINEGUI_API void render(Renderer* renderer);
 
 	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact = true) const;
 	ENGINEGUI_API Widget* raycastClosest(Vector2f pos, bool exact = true) const;

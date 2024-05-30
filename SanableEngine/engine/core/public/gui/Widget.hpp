@@ -10,19 +10,22 @@ class ShaderProgram;
 
 class STIX_ENABLE_IMAGE_CAPTURE Widget
 {
+private:
+	WidgetTransform* transform;
+
 protected:
 	HUD* hud;
 	friend class HUD;
 	ENGINEGUI_API virtual bool raycastExact(Vector2f pos) const;
 
 public:
-	WidgetTransform transform;
-
 	ENGINEGUI_API Widget(HUD* hud);
 	ENGINEGUI_API virtual ~Widget();
 
-	ENGINEGUI_API virtual void refreshLayout(); //TODO refactor to separate interface? Will likely do when implementing caching for WidgetTransforms
 	ENGINEGUI_API virtual void tick();
+
+	ENGINEGUI_API WidgetTransform* getTransform();
+	ENGINEGUI_API const WidgetTransform* getTransform() const;
 
 	//Executes only on closest widget clicked/moused over
 	ENGINEGUI_API virtual void onMouseDown(Vector2f pos);

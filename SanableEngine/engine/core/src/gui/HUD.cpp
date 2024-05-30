@@ -18,7 +18,7 @@ void HUD::applyConcurrencyBuffers()
 void HUD::addWidget_internal(Widget* widget)
 {
 	addQueue.push_back(widget);
-	if (!widget->transform.getParent()) widget->transform.setParent(getRootTransform());
+	if (!widget->transform->getParent()) widget->transform->setParent(getRootTransform());
 }
 
 void HUD::removeWidget_internal(Widget* widget)
@@ -28,12 +28,13 @@ void HUD::removeWidget_internal(Widget* widget)
 
 HUD::HUD()
 {
-	root.setMinCornerRatio({ 0, 0 });
-	root.setMaxCornerRatio({ 0, 0 });
+	root = memory.create<WidgetTransform>(nullptr);
 }
 
 HUD::~HUD()
 {
+	
+	memory.destroy(root);
 }
 
 MemoryManager* HUD::getMemory()
@@ -43,10 +44,10 @@ MemoryManager* HUD::getMemory()
 
 void HUD::refreshLayout(Rect<float> viewport)
 {
-	root.setRectByOffsets(viewport);
+	root->rect = root->localRect = viewport;
 
 	applyConcurrencyBuffers();
-	widgets.memberCall(&Widget::refreshLayout);
+	transforms.memberCall(&WidgetTransform::refresh);
 	applyConcurrencyBuffers();
 
 	//TODO transform caching goes here
@@ -59,10 +60,8 @@ void HUD::tick()
 	applyConcurrencyBuffers();
 }
 
-void HUD::render(Rect<float> viewport, Renderer* renderer)
+void HUD::render(Renderer* renderer)
 {
-	root.setRectByOffsets(viewport);
-
 	applyConcurrencyBuffers();
 	
 	//Collect objects to buffer
@@ -119,12 +118,12 @@ void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, boo
 	widgets.staticCall(
 		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
 		{
-			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform.getRect().contains(pos);
+			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform->getRect().contains(pos);
 			if (didHit) hits.push_back(w);
 		}
 	);
 	
-	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform.getRenderDepth() > b->transform.getRenderDepth(); });
+	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform->getRenderDepth() > b->transform->getRenderDepth(); });
 	for (Widget* w : hits) if (!exact || w->raycastExact(pos)) visitor(w);
 }
 
@@ -138,10 +137,10 @@ Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
 	widgets.staticCall(
 		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
 		{
-			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform.getRect().contains(pos);
+			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform->getRect().contains(pos);
 			if (didHit)
 			{
-				WidgetTransform::depth_t _depth = w->transform.getRenderDepth();
+				WidgetTransform::depth_t _depth = w->transform->getRenderDepth();
 				if (!out) { out = w; outDepth = _depth; }
 				else if (_depth > outDepth) { out = w; outDepth = _depth; }
 			}
@@ -153,10 +152,10 @@ Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
 
 WidgetTransform const* HUD::getRootTransform() const
 {
-	return &root;
+	return root;
 }
 
 WidgetTransform* HUD::getRootTransform()
 {
-	return &root;
+	return root;
 }

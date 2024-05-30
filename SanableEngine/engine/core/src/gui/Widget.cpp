@@ -4,27 +4,36 @@
 
 #include "Material.hpp"
 #include "Renderer.hpp"
+#include "gui/HUD.hpp"
 
 bool Widget::raycastExact(Vector2f pos) const
 {
-    return transform.getRect().contains(pos);
+    return transform->getRect().contains(pos);
 }
 
 Widget::Widget(HUD* hud) :
     hud(hud)
 {
+    transform = hud->getMemory()->create<WidgetTransform>(this);
 }
 
 Widget::~Widget()
 {
-}
-
-void Widget::refreshLayout()
-{
+    hud->getMemory()->destroy(transform);
 }
 
 void Widget::tick()
 {
+}
+
+WidgetTransform* Widget::getTransform()
+{
+    return transform;
+}
+
+const WidgetTransform* Widget::getTransform() const
+{
+    return transform;
 }
 
 void Widget::onMouseDown(Vector2f pos)
@@ -67,5 +76,5 @@ const ShaderProgram* Widget::getShader() const
 
 void Widget::loadModelTransform(Renderer* renderer) const
 {
-    renderer->loadTransform(transform);
+    renderer->loadTransform(*transform);
 }

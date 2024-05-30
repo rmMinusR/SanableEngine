@@ -10,89 +10,118 @@
 #include "dllapi.h"
 #include "math/Rect.inl"
 
-typedef Anchor2D<float> UIAnchor;
+/*
+ 
+ o------------------o                 o-----------------o
+ | Parent transform | --------------- | Child transform |
+ o------------------o        |        o-----------------o
+   < >                       |
+    |             o----------------------o
+    |             |     WidgetSocket     |
+    |             | -------------------- |
+    |    Updates  | positioningStrategy  | <>----.
+    |        .--> | rect                 |       |
+    |        |    o----------------------o       |
+    |        |                                   |
+    |        |                     o---------------------------o
+    |        o-------------------- | << PositioningStrategy >> |
+    |                              o---------------------------o
+    | 0..1                                       ^
+ o-------------o                                 |
+ | LayoutGroup |  <---|            .-------------o-----------------.
+ o-------------o      |            |             |                 |
+                      |    o------------o   o----------o
+                      |--- | AutoLayout |   | Anchored |  (user strategies...)
+                           o------------o   o----------o
 
+*/
 
-//2D affine transform but preserves distances and angles
+struct WidgetTransform;
+class PositioningStrategy;
+class HUD;
+class Widget;
+
+//2D orthonormal affine transform
 struct STIX_ENABLE_IMAGE_CAPTURE WidgetTransform
 {
 public:
-	typedef int depth_t;
-
-	/*
-	struct CornerAnchorForm;
-	struct AnchorPivotForm;
-
-	struct CornerAnchorForm
-	{
-		UIAnchor minCorner;
-		UIAnchor maxCorner;
-
-		ENGINEGUI_API void toAnchorPivotForm(const Vector2f parentSize, AnchorPivotForm* out);
-	};
-
-	struct AnchorPivotForm
-	{
-		UIAnchor anchor;
-		Vector2f pivot; //Range 0-1
-		Vector2f flatSize; //Pixels
-		Vector2f inheritedSize; //Range 0-1
-
-		ENGINEGUI_API void toCornerForm(const Vector2f parentSize, CornerAnchorForm* out);
-	};
-	*/
-
-private:
-	UIAnchor minCorner;
-	UIAnchor maxCorner;
-	//UIAnchor pivot;
-	//float localScale = 1;
-	depth_t relativeRenderDepth = 0;
-	WidgetTransform* parent;
-	std::vector<WidgetTransform*> children;
-
-	//TODO cache
-public:
-	ENGINEGUI_API WidgetTransform();
+	ENGINEGUI_API WidgetTransform(Widget* widget);
 	ENGINEGUI_API ~WidgetTransform();
 	//Trivially copyable and movable
 
-	//Utility shorthand presets
-	ENGINEGUI_API void fillParent(float padding = 0);
-	ENGINEGUI_API void fillParentX(float padding = 0);
-	ENGINEGUI_API void fillParentY(float padding = 0);
-	ENGINEGUI_API void snapToCorner(Vector2f corner, std::optional<Vector2f> newSize = std::nullopt); //Align own corner to specified corner in parent. If no new size is given, current size will be maintained.
-	ENGINEGUI_API void setSizeByOffsets(Vector2f size, std::optional<Vector2f> pivot = std::nullopt); //Resize. If no pivot is given, the average of corner anchors will be used.
-	ENGINEGUI_API void setCenterByOffsets(Vector2f pos, std::optional<Vector2f> pivot = std::nullopt); //Reposition. If no pivot is given, the average of corner anchors will be used.
-
-	//Fine control
-	ENGINEGUI_API void setMinCornerRatio(const Vector2f& val, bool keepPosition = false);
-	ENGINEGUI_API void setMaxCornerRatio(const Vector2f& val, bool keepPosition = false);
-	ENGINEGUI_API void setMinCornerOffset(const Vector2f& val, bool keepPosition = false);
-	ENGINEGUI_API void setMaxCornerOffset(const Vector2f& val, bool keepPosition = false);
-
 	ENGINEGUI_API Rect<float> getRect() const;
-	ENGINEGUI_API void setRectByOffsets(Rect<float> rect);
-
 	ENGINEGUI_API Rect<float> getLocalRect() const;
-	ENGINEGUI_API void setLocalRectByOffsets(const Rect<float>& rect);
-
-	//ENGINEGUI_API float getScale() const;
-	//ENGINEGUI_API void setScale(float val);
-	//ENGINEGUI_API float getLocalScale() const;
-	//ENGINEGUI_API void setLocalScale(float val);
+	ENGINEGUI_API PositioningStrategy* getPositioningStrategy() const;
+	ENGINEGUI_API void setPositioningStrategy(PositioningStrategy*);
 
 	ENGINEGUI_API WidgetTransform* getParent() const;
 	ENGINEGUI_API void setParent(WidgetTransform* parent);
+	ENGINEGUI_API size_t getChildIndex() const;
 	ENGINEGUI_API size_t getChildrenCount() const;
 	ENGINEGUI_API WidgetTransform* getChild(size_t which) const;
 	ENGINEGUI_API void visitChildren(const std::function<void(WidgetTransform*)>& visitor, bool recurse = false);
 
+	typedef int depth_t;
 	ENGINEGUI_API void setRenderDepth(depth_t depth);
 	ENGINEGUI_API depth_t getRenderDepth() const;
 
 	ENGINEGUI_API void setRelativeRenderDepth(depth_t depth);
 	ENGINEGUI_API depth_t getRelativeRenderDepth() const;
 
+	ENGINEGUI_API Widget* getWidget() const;
+	ENGINEGUI_API bool isDirty() const;
+
 	ENGINEGUI_API operator glm::mat4() const; //GL interop
+
+private:
+	Widget* widget;
+
+	WidgetTransform* parent;
+	std::vector<WidgetTransform*> children;
+	size_t childIndex;
+	depth_t relativeRenderDepth = 0;
+
+	//Cached values
+	mutable bool refreshing; //Acts as a canary in case PositioningStrategy does something stupid like call a dependent function mid-evaluate
+	mutable bool dirty;
+	mutable Rect<float> localRect; //Output of positioning strategy
+	mutable Rect<float> rect; //Derived from localRect
+	friend class HUD; //Needs to write rect/localrect on root
+
+	PositioningStrategy* positioningStrategy;
+
+	void refresh() const;
+	void markDirty() const;
+};
+
+
+typedef Anchor2D<float> UIAnchor;
+class PositioningStrategy
+{
+public:
+	ENGINEGUI_API PositioningStrategy();
+	ENGINEGUI_API virtual ~PositioningStrategy();
+	virtual void evaluate(Rect<float>* localRect_out, const WidgetTransform* transform) = 0;
+};
+
+class AnchoredPositioning : public PositioningStrategy
+{
+public:
+	ENGINEGUI_API AnchoredPositioning();
+	ENGINEGUI_API virtual ~AnchoredPositioning();
+	ENGINEGUI_API virtual void evaluate(Rect<float>* localRect_out, const WidgetTransform* transform) override;
+
+	UIAnchor minCorner;
+	UIAnchor maxCorner;
+
+	//Utility shorthand presets
+	ENGINEGUI_API void fillParent(float padding = 0);
+	ENGINEGUI_API void fillParentX(float padding = 0);
+	ENGINEGUI_API void fillParentY(float padding = 0);
+	ENGINEGUI_API void snapToCorner(Vector2f corner, Vector2f newSize); //Align own corner to specified corner in parent. If no new size is given, current size will be maintained.
+	ENGINEGUI_API void setSizeByOffsets(Vector2f size, std::optional<Vector2f> pivot = std::nullopt); //Resize. If no pivot is given, the average of corner anchors will be used.
+	ENGINEGUI_API void setCenterByOffsets(Vector2f pos, std::optional<Vector2f> pivot = std::nullopt); //Reposition. If no pivot is given, the average of corner anchors will be used.
+
+	ENGINEGUI_API void setRectByOffsets(Rect<float> rect, WidgetTransform* parent);
+	ENGINEGUI_API void setLocalRectByOffsets(const Rect<float>& rect, WidgetTransform* parent);
 };
