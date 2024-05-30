@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <string>
+#include <optional>
 
 #include "ModuleTypeRegistry.hpp"
 
@@ -14,9 +15,26 @@ class GlobalTypeRegistry
 public:
 	typedef std::wstring module_key_t;
 
+	class Snapshot
+	{
+	public:
+		ENGINE_RTTI_API Snapshot();
+		ENGINE_RTTI_API ~Snapshot();
+
+		ENGINE_RTTI_API Snapshot(const Snapshot& cpy);
+		ENGINE_RTTI_API Snapshot(Snapshot&& mov);
+		ENGINE_RTTI_API Snapshot& operator=(const Snapshot& cpy);
+		ENGINE_RTTI_API Snapshot& operator=(Snapshot&& mov);
+	private:
+		std::unordered_map<TypeName, size_t> hashes;
+		friend class GlobalTypeRegistry;
+	};
+
 private:
 	static std::unordered_map<module_key_t, ModuleTypeRegistry> modules;
-	static std::unordered_set<TypeName> dirtyTypes;
+
+	ENGINE_RTTI_API static void _makeSnapshot_internal();
+	static std::optional<Snapshot> _cachedSnapshotValue;
 	
 public:
 	/// <summary>
@@ -52,7 +70,9 @@ public:
 	/// <summary>
 	/// Get the names of any types that have been altered via updateModule since last call.
 	/// </summary>
-	[[nodiscard]] ENGINE_RTTI_API static std::unordered_set<TypeName> getDirtyTypes();
+	[[nodiscard]] ENGINE_RTTI_API static std::unordered_set<TypeName> getDirtyTypes(const Snapshot& prev);
+
+	ENGINE_RTTI_API static Snapshot makeSnapshot();
 
 	/// <summary>
 	/// Completely wipe internal state. Useful for shutdown cleanup and unit testing.

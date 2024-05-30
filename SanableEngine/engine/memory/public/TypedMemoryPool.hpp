@@ -2,6 +2,7 @@
 
 #include "RawMemoryPool.hpp"
 #include "TypeInfo.hpp"
+#include "GlobalTypeRegistry.hpp"
 
 class MemoryManager;
 class GenericTypedMemoryPool;

@@ -43,9 +43,7 @@ void MemoryManager::destroyPool(const TypeName& type)
 
 MemoryManager::MemoryManager()
 {
-	poolStateHash = rand();
-	poolStateHash <<= 32;
-	poolStateHash |= rand();
+	poolStateHash = 0;
 }
 
 MemoryManager::~MemoryManager()
@@ -59,7 +57,8 @@ MemoryManager::~MemoryManager()
 
 void MemoryManager::ensureFresh()
 {
-	std::unordered_set<TypeName> typesToPatch = GlobalTypeRegistry::getDirtyTypes();
+	std::unordered_set<TypeName> typesToPatch = GlobalTypeRegistry::getDirtyTypes(lastKnownRtti);
+	lastKnownRtti = GlobalTypeRegistry::makeSnapshot(); //FIXME slow and potentially unnecessary
 	
 	MemoryMapper remapper;
 
@@ -73,7 +72,7 @@ void MemoryManager::ensureFresh()
 			TypeInfo const* newTypeInfo = it->resolve();
 			if (newTypeInfo && newTypeInfo->isLoaded()) p->refreshObjects(*newTypeInfo, &remapper);
 		}
-		else if (!p->getContentsType())
+		else if (!p->getContentsType() || p->getContentsType()->isDummy())
 		{
 			//New pools need to be given valid full TypeInfo, rather than dummy
 			TypeInfo const* newTypeInfo = p->getContentsTypeName().resolve();

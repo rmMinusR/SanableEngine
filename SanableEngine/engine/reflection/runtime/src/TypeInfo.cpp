@@ -96,7 +96,7 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent_internal(const TypeName& o
 	//Check immediate parents first
 	for (const ParentInfo& parent : parents)
 	{
-		if (parent.typeName == name) return parent;
+		if (parent.typeName == name) return std::make_optional<ParentInfo>(parent);
 	}
 
 	//Recurse if allowed
@@ -305,4 +305,9 @@ void TypeInfo::create_internalFinalize()
 {
 	layout.byteUsage.resize(layout.size);
 	memset(layout.byteUsage.data(), (uint8_t)Layout::ByteUsage::Unknown, layout.size);
+}
+
+bool TypeInfo::isDummy() const
+{
+	return hash == 0;
 }
