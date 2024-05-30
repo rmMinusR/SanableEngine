@@ -40,6 +40,7 @@ struct WidgetTransform;
 class PositioningStrategy;
 class HUD;
 class Widget;
+class LinearLayoutGroupWidget;
 
 //2D orthonormal affine transform
 struct STIX_ENABLE_IMAGE_CAPTURE WidgetTransform
@@ -86,7 +87,9 @@ private:
 	mutable bool dirty;
 	mutable Rect<float> localRect; //Output of positioning strategy
 	mutable Rect<float> rect; //Derived from localRect
+
 	friend class HUD; //Needs to write rect/localrect on root
+	friend class LinearLayoutGroupWidget; //FIXME awful workaround
 
 	PositioningStrategy* positioningStrategy;
 

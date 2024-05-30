@@ -13,16 +13,16 @@ ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, Widget* label, Spr
 
 	if (background)
 	{
-		background->transform.setParent(&this->transform);
-		background->transform.setRenderDepth(-1);
-		background->transform.fillParent();
+		background->getTransform()->setParent(this->getTransform());
+		background->getTransform()->setRelativeRenderDepth(-1);
+		static_cast<AnchoredPositioning*>(background->getTransform()->getPositioningStrategy())->fillParent();
 	}
 
 	if (label)
 	{
-		label->transform.setParent(&this->transform);
-		label->transform.setRenderDepth(0);
-		label->transform.fillParent();
+		label->getTransform()->setParent(this->getTransform());
+		label->getTransform()->setRelativeRenderDepth(0);
+		static_cast<AnchoredPositioning*>(label->getTransform()->getPositioningStrategy())->fillParent();
 	}
 }
 

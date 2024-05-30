@@ -22,8 +22,8 @@ namespace LayoutUtil
 	namespace Stretch
 	{
 		//Writes to WidgetTransforms
-		ENGINEGUI_API void vertical  (UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets, Padding padding);
-		ENGINEGUI_API void horizontal(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets, Padding padding);
+		//ENGINEGUI_API void vertical  (UIRect container, const std::vector<WidgetTransform*>& widgets, const std::vector<float>& weights, Padding padding);
+		//ENGINEGUI_API void horizontal(UIRect container, const std::vector<WidgetTransform*>& widgets, const std::vector<float>& weights, Padding padding);
 
 		ENGINEGUI_API std::vector<UIRect> vertical  (UIRect container, const std::vector<float>& weights);
 		ENGINEGUI_API std::vector<UIRect> horizontal(UIRect container, const std::vector<float>& weights);

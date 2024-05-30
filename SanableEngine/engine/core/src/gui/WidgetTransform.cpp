@@ -189,6 +189,18 @@ AnchoredPositioning::AnchoredPositioning()
 	minCorner.offset += Vector2f(50, 50);
 }
 
+AnchoredPositioning::~AnchoredPositioning()
+{
+}
+
+void AnchoredPositioning::evaluate(Rect<float>* localRect_out, const WidgetTransform* transform)
+{
+	if (!transform->getParent()) return;
+
+	Rect<float> parentRect = transform->getParent()->getRect();
+	*localRect_out = Rect<float>::fromMinMax(minCorner.calcAnchor(parentRect.size), maxCorner.calcAnchor(parentRect.size));
+}
+
 void AnchoredPositioning::fillParent(float padding)
 {
 	fillParentX(padding);

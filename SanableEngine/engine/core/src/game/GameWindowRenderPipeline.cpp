@@ -79,5 +79,5 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 
 	hud.refreshLayout(viewport);
 	hud.tick(); //FIXME logic shouldn't be in render, move elsewhere
-	hud.render(viewport, renderInterface);
+	hud.render(renderInterface);
 }

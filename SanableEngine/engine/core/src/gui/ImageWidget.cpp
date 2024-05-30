@@ -27,8 +27,8 @@ const Material* ImageWidget::getMaterial() const
 
 void ImageWidget::renderImmediate(Renderer* renderer)
 {
-	Rect<float> r = transform.getRect();
-	auto depth = transform.getRenderDepth();
+	Rect<float> r = getTransform()->getRect();
+	auto depth = getTransform()->getRenderDepth();
 	
 	renderer->errorCheck();
 	//No need to send position: already applied via model matrix
