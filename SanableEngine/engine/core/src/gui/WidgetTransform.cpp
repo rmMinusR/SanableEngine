@@ -22,6 +22,9 @@ void WidgetTransform::refresh() const
 	if (parent) rect.topLeft += parent->rect.topLeft;
 	rect.size = localRect.size;
 
+	//Sanity check
+	if (parent) assert(parent->rect.contains(rect.topLeft) && parent->rect.contains(rect.bottomRight()));
+
 	dirty = false;
 	refreshing = false;
 }
@@ -45,7 +48,8 @@ WidgetTransform::WidgetTransform(Widget* widget, HUD* hud)
 	dirty = true;
 	refreshing = false;
 
-	positioningStrategy = hud->getMemory()->create<AnchoredPositioning>();
+	positioningStrategy = nullptr;
+	setPositioningStrategy<AnchoredPositioning>();
 }
 
 WidgetTransform::~WidgetTransform()
