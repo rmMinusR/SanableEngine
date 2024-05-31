@@ -35,7 +35,7 @@ void LayoutUtil::linear(float val_min, float val_max, size_t count, const Linear
 	float maxFlexSpaceAvailable   = std::max(0.0f, totalSpace-totalPreferredSize); //Flat pixel size
 
 	//Write values
-	float cursor = 0;
+	float cursor = val_min;
 	for (size_t i = 0; i < count; ++i)
 	{
 		float elementSize = elementViews[i].minSize 

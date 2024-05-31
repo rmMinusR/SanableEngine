@@ -113,7 +113,7 @@ void HUD::render(Renderer* renderer)
 		}
 	}
 
-	//*
+	/*
 	// Debug: draw transform bounding boxes
 	ShaderProgram::clear();
 	glLoadIdentity();
