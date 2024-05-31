@@ -73,6 +73,9 @@ void GlobalTypeRegistry::unloadModule(module_key_t key)
 
 std::unordered_set<TypeName> GlobalTypeRegistry::getDirtyTypes(const Snapshot& prev)
 {
+	//End fast if nothing changed
+	if (makeSnapshot().overallHash == prev.overallHash) return std::unordered_set<TypeName>(0);
+
 	std::unordered_set<TypeName> out;
 	for (const auto& i : prev.hashes) if (!GlobalTypeRegistry::lookupType(i.first)) out.emplace(i.first); //Has been unloaded since snapshot
 	for (const auto& m : modules)
@@ -88,18 +91,22 @@ std::unordered_set<TypeName> GlobalTypeRegistry::getDirtyTypes(const Snapshot& p
 
 void GlobalTypeRegistry::_makeSnapshot_internal()
 {
-	GlobalTypeRegistry::_cachedSnapshotValue = std::nullopt;
-	GlobalTypeRegistry::_cachedSnapshotValue.emplace();
+	_cachedSnapshotValue = std::nullopt;
+	_cachedSnapshotValue.emplace();
+	_cachedSnapshotValue.value().overallHash = 5381;
 	for (const auto& m : modules)
 	{
 		for (const TypeInfo& t : m.second.types)
 		{
-			GlobalTypeRegistry::_cachedSnapshotValue.value().hashes.emplace(t.name, std::hash<TypeInfo>{}(t));
+			size_t tHash = std::hash<TypeInfo>{}(t);
+			_cachedSnapshotValue.value().hashes.emplace(t.name, tHash);
+			_cachedSnapshotValue.value().overallHash *= 33;
+			_cachedSnapshotValue.value().overallHash += tHash;
 		}
 	}
 }
 
-GlobalTypeRegistry::Snapshot GlobalTypeRegistry::makeSnapshot()
+const GlobalTypeRegistry::Snapshot& GlobalTypeRegistry::makeSnapshot()
 {
 	if (!GlobalTypeRegistry::_cachedSnapshotValue.has_value()) _makeSnapshot_internal();
 	return GlobalTypeRegistry::_cachedSnapshotValue.value();

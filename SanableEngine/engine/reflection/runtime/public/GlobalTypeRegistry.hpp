@@ -27,7 +27,9 @@ public:
 		ENGINE_RTTI_API Snapshot& operator=(Snapshot&& mov);
 	private:
 		std::unordered_map<TypeName, size_t> hashes;
+		size_t overallHash;
 		friend class GlobalTypeRegistry;
+		friend struct std::hash<GlobalTypeRegistry::Snapshot>;
 	};
 
 private:
@@ -72,10 +74,16 @@ public:
 	/// </summary>
 	[[nodiscard]] ENGINE_RTTI_API static std::unordered_set<TypeName> getDirtyTypes(const Snapshot& prev);
 
-	ENGINE_RTTI_API static Snapshot makeSnapshot();
+	ENGINE_RTTI_API static const Snapshot& makeSnapshot();
 
 	/// <summary>
 	/// Completely wipe internal state. Useful for shutdown cleanup and unit testing.
 	/// </summary>
 	ENGINE_RTTI_API static void clear();
+};
+
+
+template<> struct std::hash<GlobalTypeRegistry::Snapshot>
+{
+	size_t operator()(const GlobalTypeRegistry::Snapshot& v) { return v.overallHash; }
 };

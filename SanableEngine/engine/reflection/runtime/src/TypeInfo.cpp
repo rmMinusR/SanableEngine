@@ -5,9 +5,9 @@
 
 #include "GlobalTypeRegistry.hpp"
 
-TypeInfo::TypeInfo()
+TypeInfo::TypeInfo() :
+	hash(0)
 {
-
 }
 
 TypeInfo::~TypeInfo()
@@ -29,6 +29,7 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 	this->name         = cpy.name;
 	this->layout       = cpy.layout;
 	this->capabilities = cpy.capabilities;
+	this->hash         = cpy.hash;
 
 	return *this;
 }
@@ -38,6 +39,7 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 	this->name         = std::move(mov.name);
 	this->layout       = std::move(mov.layout);
 	this->capabilities = std::move(mov.capabilities);
+	this->hash         = mov.hash;
 
 	return *this;
 }

@@ -57,11 +57,23 @@ MemoryManager::~MemoryManager()
 
 void MemoryManager::ensureFresh()
 {
+	MemoryMapper remapper;
+
+	//Fix new pools that haven't received their complete TypeInfo yet
+	for (GenericTypedMemoryPool* p : pools)
+	{
+		if (!p->getContentsType() || p->getContentsType()->isDummy())
+		{
+			//New pools need to be given valid full TypeInfo, rather than dummy
+			TypeInfo const* newTypeInfo = p->getContentsTypeName().resolve();
+			if (newTypeInfo && newTypeInfo->isLoaded()) p->refreshObjects(*newTypeInfo, &remapper);
+		}
+	}
+
+	//Handle changes to existing pools
 	std::unordered_set<TypeName> typesToPatch = GlobalTypeRegistry::getDirtyTypes(lastKnownRtti);
 	lastKnownRtti = GlobalTypeRegistry::makeSnapshot(); //FIXME slow and potentially unnecessary
 	
-	MemoryMapper remapper;
-
 	//Update the type data for contents of each pool
 	for (GenericTypedMemoryPool* p : pools)
 	{
@@ -70,12 +82,6 @@ void MemoryManager::ensureFresh()
 		{
 			//Existing pools need to be patched
 			TypeInfo const* newTypeInfo = it->resolve();
-			if (newTypeInfo && newTypeInfo->isLoaded()) p->refreshObjects(*newTypeInfo, &remapper);
-		}
-		else if (!p->getContentsType() || p->getContentsType()->isDummy())
-		{
-			//New pools need to be given valid full TypeInfo, rather than dummy
-			TypeInfo const* newTypeInfo = p->getContentsTypeName().resolve();
 			if (newTypeInfo && newTypeInfo->isLoaded()) p->refreshObjects(*newTypeInfo, &remapper);
 		}
 	}
