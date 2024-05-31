@@ -113,6 +113,35 @@ void HUD::render(Renderer* renderer)
 		}
 	}
 
+	//*
+	// Debug: draw transform bounding boxes
+	ShaderProgram::clear();
+	glLoadIdentity();
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it)
+	{
+		WidgetTransform* t = static_cast<WidgetTransform*>(*it);
+		Rect<float> r = t->getRect();
+
+		float hue = float( (size_t(t)>>8&0xff) | ((size_t(t)>>0&0xff) << 8) ) / 0xffff;
+		glColor4f(
+			1-1.5f*std::min(abs(hue), abs(hue-1)),
+			1-1.5f*abs(hue-0.33f),
+			1-1.5f*abs(hue-0.66f),
+			255
+		);
+
+		glLineWidth(3);
+		glBegin(GL_LINE_STRIP);
+		glVertex3f(r.topLeft      .x, r.topLeft      .y, 0);
+		glVertex3f(r.topLeft      .x, r.bottomRight().y, 0);
+		glVertex3f(r.bottomRight().x, r.bottomRight().y, 0);
+		glVertex3f(r.bottomRight().x, r.topLeft      .y, 0);
+		glVertex3f(r.topLeft      .x, r.topLeft      .y, 0);
+		glEnd();
+	}
+	glColor4f(1, 1, 1, 1);
+	// */
+
 	glPopMatrix();
 }
 
