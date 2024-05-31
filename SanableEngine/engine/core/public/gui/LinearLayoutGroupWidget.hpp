@@ -13,7 +13,7 @@ protected:
 	virtual void refreshLayout() = 0; //Must set rect for all children
 	friend class AutoLayoutPositioning;
 
-	ENGINEGUI_API static void setRect(WidgetTransform* w, Rect<float> rect); //Horrible fix
+	ENGINEGUI_API static void setRectDirect(WidgetTransform* w, Rect<float> rect); //Horrible fix
 public:
 	ENGINEGUI_API LinearLayoutGroupWidget(HUD* hud);
 	ENGINEGUI_API virtual ~LinearLayoutGroupWidget();
@@ -34,10 +34,10 @@ public:
 	ENGINEGUI_API virtual void evaluate(Rect<float>* localRect_out, const WidgetTransform* transform) override;
 
 
-	Vector2f minSize; //Satisfied first
-	Vector2f preferredSize; //Satisfied second, in a 1:1 ratio
-	Vector2f maxSize; //Satisfied last, in accordance with flexWeight
-	Vector2f flexWeight;
+	float minSize; //Satisfied first
+	float preferredSize; //Satisfied second, in a 1:1 ratio
+	float maxSize; //Satisfied last, in accordance with flexWeight
+	float flexWeight;
 
 	LinearLayoutGroupWidget* layout;
 };

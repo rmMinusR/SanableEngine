@@ -3,10 +3,10 @@
 #include "gui/LayoutUtil.hpp"
 
 AutoLayoutPositioning::AutoLayoutPositioning(LinearLayoutGroupWidget* layout) :
-	minSize(0, 0),
-	preferredSize(0, 0),
-	maxSize(FLT_MAX, FLT_MAX),
-	flexWeight(1, 1),
+	minSize(0),
+	preferredSize(0),
+	maxSize(FLT_MAX),
+	flexWeight(1),
 	layout(layout)
 {
 }
@@ -60,7 +60,7 @@ void LinearLayoutGroupWidget::renderImmediate(Renderer* renderer)
 {
 }
 
-void LinearLayoutGroupWidget::setRect(WidgetTransform* w, Rect<float> rect)
+void LinearLayoutGroupWidget::setRectDirect(WidgetTransform* w, Rect<float> rect)
 {
 	w->rect = rect;
 

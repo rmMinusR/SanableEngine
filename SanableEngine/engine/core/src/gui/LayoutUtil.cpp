@@ -2,88 +2,49 @@
 
 #include "gui/WidgetTransform.hpp"
 
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::vertical(UIRect container, const std::vector<float>& weights)
+float invlerp(float t, float min, float max)
 {
-	float weightSum = 0;
-	for (float w : weights) weightSum += w;
+	return (t-min)/(max-min);
+}
 
-	Vector2f cursor = container.topLeft;
+float clamp(float t, float min, float max)
+{
+	if (t < min) return min;
+	else if (t > max) return max;
+	else return t;
+}
 
-	std::vector<UIRect> out;
-	out.reserve(weights.size());
-	for (float w : weights)
+void LayoutUtil::linear(float val_min, float val_max, size_t count, const LinearElementView* elementViews, float* locs_out, float* sizes_out)
+{
+	float totalSpace = val_max-val_min;
+
+	//Calc space requirements
+	float totalMinSize = 0;
+	float totalPreferredSize = 0;
+	float totalMaxSize = 0;
+	float totalFlexWeight = 0;
+	for (size_t i = 0; i < count; ++i)
 	{
-		float elementHeight = container.size.y * (w/weightSum);
-		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(container.size.x, elementHeight)) ); //Output rect
-		cursor.y += elementHeight; //Advance cursor
+		totalMinSize       += elementViews[i].minSize;
+		totalPreferredSize += elementViews[i].preferredSize;
+		totalMaxSize       += elementViews[i].maxSize;
+		totalFlexWeight    += elementViews[i].flexWeight;
 	}
 
-	return out;
-}
+	float preferredAvailableRatio = clamp(invlerp(totalSpace, totalMinSize, totalPreferredSize), 0, 1);
+	float maxFlexSpaceAvailable   = std::max(0.0f, totalSpace-totalPreferredSize); //Flat pixel size
 
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<float>& weights)
-{
-	float weightSum = 0;
-	for (float w : weights) weightSum += w;
-
-	Vector2f cursor = container.topLeft;
-
-	std::vector<UIRect> out;
-	out.reserve(weights.size());
-	for (float w : weights)
+	//Write values
+	float cursor = 0;
+	for (size_t i = 0; i < count; ++i)
 	{
-		float elementWidth = container.size.x * (w/weightSum);
-		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(elementWidth, container.size.y)) ); //Output rect
-		cursor.x += elementWidth; //Advance cursor
+		float elementSize = elementViews[i].minSize 
+			         + (elementViews[i].preferredSize-elementViews[i].minSize) * preferredAvailableRatio
+			         + maxFlexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
+
+		if (locs_out) locs_out[i] = cursor;
+		if (sizes_out) sizes_out[i] = elementSize;
+
+		cursor += elementSize;
 	}
-
-	return out;
-}
-
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::vertical(UIRect container, const std::vector<float>& weights, Padding padding)
-{
-	//Calc inner rect
-	UIRect containerWithOuterPadding = UIRect::fromMinMax(
-		container.topLeft       + Vector2f(padding.left , padding.top   ),
-		container.bottomRight()	- Vector2f(padding.right, padding.bottom)
-	);
-
-	//Defer
-	std::vector<LayoutUtil::UIRect> out = vertical(
-		UIRect::fromMinMax(
-			containerWithOuterPadding.topLeft,
-			containerWithOuterPadding.bottomRight() - Vector2f(0, (weights.size()-1)*padding.betweenElements)
-		),
-		weights
-	);
-
-	//Adjust for padding between elements
-	for (int i = 0; i < out.size(); ++i) out[i].topLeft.y += i*padding.betweenElements;
-
-	//Done
-	return out;
-}
-
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<float>& weights, Padding padding)
-{
-	//Calc inner rect
-	UIRect containerWithOuterPadding = UIRect::fromMinMax(
-		container.topLeft       + Vector2f(padding.left , padding.top   ),
-		container.bottomRight()	- Vector2f(padding.right, padding.bottom)
-	);
-
-	//Defer
-	std::vector<LayoutUtil::UIRect> out = horizontal(
-		UIRect::fromMinMax(
-			containerWithOuterPadding.topLeft,
-			containerWithOuterPadding.bottomRight() - Vector2f((weights.size()-1)*padding.betweenElements, 0)
-		),
-		weights
-	);
-
-	//Adjust for padding between elements
-	for (int i = 0; i < out.size(); ++i) out[i].topLeft.x += i*padding.betweenElements;
-
-	//Done
-	return out;
 }

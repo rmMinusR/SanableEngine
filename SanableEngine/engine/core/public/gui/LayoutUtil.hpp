@@ -19,16 +19,12 @@ namespace LayoutUtil
 		float betweenElements = 0;
 	};
 	
-	namespace Stretch
+	struct LinearElementView
 	{
-		//Writes to WidgetTransforms
-		//ENGINEGUI_API void vertical  (UIRect container, const std::vector<WidgetTransform*>& widgets, const std::vector<float>& weights, Padding padding);
-		//ENGINEGUI_API void horizontal(UIRect container, const std::vector<WidgetTransform*>& widgets, const std::vector<float>& weights, Padding padding);
-
-		ENGINEGUI_API std::vector<UIRect> vertical  (UIRect container, const std::vector<float>& weights);
-		ENGINEGUI_API std::vector<UIRect> horizontal(UIRect container, const std::vector<float>& weights);
-
-		ENGINEGUI_API std::vector<UIRect> vertical  (UIRect container, const std::vector<float>& weights, Padding padding);
-		ENGINEGUI_API std::vector<UIRect> horizontal(UIRect container, const std::vector<float>& weights, Padding padding);
-	}
+		float minSize; //Satisfied first
+		float preferredSize; //Satisfied second, in a 1:1 ratio
+		float maxSize; //Satisfied last, in accordance with flexWeight
+		float flexWeight;
+	};
+	ENGINEGUI_API void linear(float val_min, float val_max, size_t count, const LinearElementView* elementViews, float* locs_out, float* sizes_out);
 }
