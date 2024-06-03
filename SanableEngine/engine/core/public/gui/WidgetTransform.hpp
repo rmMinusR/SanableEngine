@@ -96,10 +96,11 @@ private:
 	depth_t relativeRenderDepth = 0;
 
 	//Cached values
-	mutable bool refreshing; //Acts as a canary in case PositioningStrategy does something stupid like call a dependent function mid-evaluate
-	mutable bool dirty;
+	mutable depth_t renderDepth;
 	mutable Rect<float> localRect; //Output of positioning strategy
 	mutable Rect<float> rect; //Derived from localRect
+	mutable bool refreshing; //Acts as a canary in case PositioningStrategy does something stupid like call a dependent function mid-evaluate
+	mutable bool dirty;
 
 	friend class HUD; //Needs to write rect/localrect on root
 	friend class LinearLayoutGroupWidget; //FIXME awful workaround

@@ -11,17 +11,19 @@ ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, Widget* label, Spr
 	this->background = background;
 	this->label = label;
 
+	getTransform()->setRelativeRenderDepth(1);
+
 	if (background)
 	{
 		background->getTransform()->setParent(this->getTransform());
-		background->getTransform()->setRelativeRenderDepth(-1);
+		background->getTransform()->setRelativeRenderDepth(-2);
 		static_cast<AnchoredPositioning*>(background->getTransform()->getPositioningStrategy())->fillParent();
 	}
 
 	if (label)
 	{
 		label->getTransform()->setParent(this->getTransform());
-		label->getTransform()->setRelativeRenderDepth(0);
+		label->getTransform()->setRelativeRenderDepth(-1);
 		static_cast<AnchoredPositioning*>(label->getTransform()->getPositioningStrategy())->fillParent();
 	}
 }

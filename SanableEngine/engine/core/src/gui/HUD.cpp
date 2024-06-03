@@ -50,7 +50,7 @@ void HUD::refreshLayout(Rect<float> viewport)
 	root->rect = root->localRect = viewport;
 
 	applyConcurrencyBuffers();
-	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it) static_cast<WidgetTransform*>(*it)->refresh();
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it) it->refresh();
 	applyConcurrencyBuffers();
 }
 
@@ -145,20 +145,21 @@ void HUD::render(Renderer* renderer)
 
 void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const
 {
-	std::vector<Widget*> hits;
+	std::vector<WidgetTransform*> hits;
 
-	using _aliased_fp = bool (Widget::*)(Vector2f) const;
-	const _aliased_fp fp_raycastExact = &Widget::raycastExact;
-	widgets.staticCall(
-		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
+	auto it = transforms->cbegin();
+	//++it; //HOTFIX: Skip viewport transform
+	for (; it != transforms->cend(); ++it)
+	{
+		Widget* w = it->getWidget();
+		if (w && ( exact ? w->raycastExact(pos) : it->getRect().contains(pos) ))
 		{
-			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform->getRect().contains(pos);
-			if (didHit) hits.push_back(w);
+			hits.push_back(&*it);
 		}
-	);
+	}
 	
-	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform->getRenderDepth() > b->transform->getRenderDepth(); });
-	for (Widget* w : hits) if (!exact || w->raycastExact(pos)) visitor(w);
+	std::sort(hits.begin(), hits.end(), [](WidgetTransform* a, WidgetTransform* b) { return a->getRenderDepth() > b->getRenderDepth(); });
+	for (WidgetTransform* t : hits) visitor(t->getWidget());
 }
 
 Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
@@ -166,21 +167,18 @@ Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
 	Widget* out = nullptr;
 	WidgetTransform::depth_t outDepth;
 	
-	using _aliased_fp = bool (Widget::*)(Vector2f) const;
-	const _aliased_fp fp_raycastExact = &Widget::raycastExact;
-	widgets.staticCall(
-		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
+	auto it = transforms->cbegin();
+	//++it; //HOTFIX: Skip viewport transform
+	for (; it != transforms->cend(); ++it)
+	{
+		Widget* w = it->getWidget();
+		if (w && ( exact ? w->raycastExact(pos) : it->getRect().contains(pos) ))
 		{
-			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform->getRect().contains(pos);
-			if (didHit)
-			{
-				WidgetTransform::depth_t _depth = w->transform->getRenderDepth();
-				if (!out) { out = w; outDepth = _depth; }
-				else if (_depth > outDepth) { out = w; outDepth = _depth; }
-			}
+			WidgetTransform::depth_t _depth = it->getRenderDepth();
+			if (!out || _depth > outDepth) { out = w; outDepth = _depth; }
 		}
-	);
-	
+	}
+
 	return out;
 }
 

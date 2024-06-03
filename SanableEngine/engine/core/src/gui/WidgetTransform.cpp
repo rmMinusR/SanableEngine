@@ -22,6 +22,9 @@ void WidgetTransform::refresh() const
 	if (parent) rect.topLeft += parent->rect.topLeft;
 	rect.size = localRect.size;
 
+	renderDepth = relativeRenderDepth;
+	if (parent) renderDepth += parent->getRenderDepth();
+
 	//Sanity check
 	if (parent) assert(parent->rect.contains(rect.topLeft) && parent->rect.contains(rect.bottomRight()));
 
@@ -54,6 +57,7 @@ WidgetTransform::WidgetTransform(Widget* widget, HUD* hud)
 
 WidgetTransform::~WidgetTransform()
 {
+	//FIXME what to do with children?
 	if (positioningStrategy) widget->getHUD()->getMemory()->destroy(positioningStrategy);
 }
 
@@ -148,18 +152,19 @@ void WidgetTransform::visitChildren(const std::function<void(WidgetTransform*)>&
 void WidgetTransform::setRenderDepth(depth_t depth)
 {
 	relativeRenderDepth = depth;
-	if (parent) relativeRenderDepth -= parent->getRelativeRenderDepth();
+	if (parent) relativeRenderDepth -= parent->getRenderDepth(); //Implicitly refreshes parent
 }
 
 WidgetTransform::depth_t WidgetTransform::getRenderDepth() const
 {
-	if (parent) return relativeRenderDepth + parent->getRenderDepth();
-	return relativeRenderDepth;
+	if (dirty) refresh();
+	return renderDepth;
 }
 
 void WidgetTransform::setRelativeRenderDepth(depth_t depth)
 {
 	relativeRenderDepth = depth;
+	dirty = true;
 }
 
 WidgetTransform::depth_t WidgetTransform::getRelativeRenderDepth() const
