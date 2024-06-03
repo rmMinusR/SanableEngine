@@ -52,8 +52,6 @@ void HUD::refreshLayout(Rect<float> viewport)
 	applyConcurrencyBuffers();
 	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it) static_cast<WidgetTransform*>(*it)->refresh();
 	applyConcurrencyBuffers();
-
-	//TODO transform caching goes here
 }
 
 void HUD::tick()
