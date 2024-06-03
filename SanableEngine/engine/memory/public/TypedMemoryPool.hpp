@@ -48,7 +48,7 @@ public:
 		inline TObj& operator*() const { return *reinterpret_cast<TObj*>(*inner); }
 		inline TObj* operator->() const { return reinterpret_cast<TObj*>(*inner); }
 
-		inline const_iterator operator++() { inner++; return *this; }
+		inline const_iterator operator++() { ++inner; return *this; }
 
 		inline bool operator!=(const const_iterator& other) const { return inner != other.inner; }
 		inline bool operator==(const const_iterator& other) const { return inner == other.inner; }

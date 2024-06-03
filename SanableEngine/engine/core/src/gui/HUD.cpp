@@ -48,8 +48,6 @@ void HUD::refreshLayout(Rect<float> viewport)
 	applyConcurrencyBuffers();
 	widgets.memberCall(&Widget::refreshLayout);
 	applyConcurrencyBuffers();
-
-	//TODO transform caching goes here
 }
 
 void HUD::tick()
