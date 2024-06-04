@@ -177,6 +177,11 @@ Widget* WidgetTransform::getWidget() const
 	return widget;
 }
 
+HUD* WidgetTransform::getHUD() const
+{
+	return hud;
+}
+
 bool WidgetTransform::isDirty() const
 {
 	return dirty;
@@ -191,6 +196,50 @@ WidgetTransform::operator glm::mat4() const
 		);
 		//TODO rotation component goes here
 		//* glm::scale(glm::identity<glm::mat4>(), glm::vec3(getScale())); //TODO scale component goes here
+}
+
+WidgetSocket::WidgetSocket(HUD* hud, Widget* owner)
+{
+	transform = hud->getMemory()->create<WidgetTransform>(owner, hud);
+	transform->setParent(owner->getTransform());
+}
+
+WidgetSocket::~WidgetSocket()
+{
+	transform->getHUD()->getMemory()->destroy(transform);
+}
+
+void WidgetSocket::put(Widget* w)
+{
+	//Remove old content, if present
+	clear();
+
+	//Set up new content
+	w->getTransform()->setParent(transform);
+	w->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+}
+
+void WidgetSocket::clear()
+{
+	Widget* old = get();
+	if (old) transform->getHUD()->getMemory()->destroy(old);
+}
+
+Widget* WidgetSocket::get() const
+{
+	return transform->getChildrenCount()!=0
+		? transform->getChild(0)->getWidget()
+		: nullptr;
+}
+
+void WidgetSocket::setRelativeRenderDepth(WidgetTransform::depth_t depth)
+{
+	transform->setRelativeRenderDepth(depth);
+}
+
+WidgetTransform::depth_t WidgetSocket::getRelativeRenderDepth() const
+{
+	return transform->getRelativeRenderDepth();
 }
 
 PositioningStrategy::PositioningStrategy()

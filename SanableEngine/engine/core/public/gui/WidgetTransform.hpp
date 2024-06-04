@@ -80,6 +80,7 @@ public:
 	ENGINEGUI_API depth_t getRelativeRenderDepth() const;
 
 	ENGINEGUI_API Widget* getWidget() const;
+	ENGINEGUI_API HUD* getHUD() const;
 	ENGINEGUI_API bool isDirty() const;
 
 	ENGINEGUI_API operator glm::mat4() const; //GL interop
@@ -108,6 +109,27 @@ private:
 	void refresh() const;
 	void markDirty() const;
 };
+
+
+//A thin wrapper over a sub-transform that limits it to only one element with preset positioning.
+//Similar to dependency injection, but for positioning instead of logic.
+class WidgetSocket
+{
+private:
+	WidgetTransform* transform; //Owns this
+	
+public:
+	ENGINEGUI_API WidgetSocket(HUD* hud, Widget* owner);
+	ENGINEGUI_API ~WidgetSocket();
+
+	ENGINEGUI_API void put(Widget* w);
+	ENGINEGUI_API void clear();
+	ENGINEGUI_API Widget* get() const;
+
+	ENGINEGUI_API void setRelativeRenderDepth(WidgetTransform::depth_t depth);
+	ENGINEGUI_API WidgetTransform::depth_t getRelativeRenderDepth() const;
+};
+
 
 
 typedef Anchor2D<float> UIAnchor;
