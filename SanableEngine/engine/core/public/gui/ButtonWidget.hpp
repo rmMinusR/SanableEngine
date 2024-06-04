@@ -33,7 +33,7 @@ public:
 		#undef _X
 	};
 
-private:
+protected:
 	ImageWidget* background;
 	Widget* label;
 	SpriteSet sprites;

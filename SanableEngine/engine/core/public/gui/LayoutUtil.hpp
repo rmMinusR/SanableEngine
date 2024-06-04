@@ -27,4 +27,5 @@ namespace LayoutUtil
 		float flexWeight;
 	};
 	ENGINEGUI_API void linear(float val_min, float val_max, size_t count, const LinearElementView* elementViews, float* locs_out, float* sizes_out);
+	ENGINEGUI_API void linearCalcSpace(size_t count, const LinearElementView* elementViews, float* minSize_out, float* preferredSize_out, float* maxSize_out, float* flexWeight_out);
 }
