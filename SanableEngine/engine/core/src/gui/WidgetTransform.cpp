@@ -39,7 +39,13 @@ void WidgetTransform::markDirty() const
 	if (dirty) return;
 
 	dirty = true;
-	for (const WidgetTransform* w : children) w->markDirty();
+	for (const WidgetTransform* w : children)
+	{
+		if (!w->isDirty()) //If a transform is dirty, we are guaranteed all its children are also dirty. If a transform is up-to-date, we are guaranteed all its parents are up-to-date.
+		{
+			w->markDirty();
+		}
+	}
 }
 
 WidgetTransform::WidgetTransform(Widget* widget, HUD* hud)
@@ -58,7 +64,7 @@ WidgetTransform::WidgetTransform(Widget* widget, HUD* hud)
 WidgetTransform::~WidgetTransform()
 {
 	//FIXME what to do with children?
-	if (positioningStrategy) widget->getHUD()->getMemory()->destroy(positioningStrategy);
+	if (positioningStrategy) hud->getMemory()->destroy(positioningStrategy);
 }
 
 Rect<float> WidgetTransform::getRect() const

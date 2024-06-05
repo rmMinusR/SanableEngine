@@ -50,7 +50,8 @@ private:
 public:
 	ENGINEGUI_API WidgetTransform(Widget* widget, HUD* hud);
 	ENGINEGUI_API ~WidgetTransform();
-	//Trivially copyable and movable
+	//FIXME needs proper copy ctor to deal with children tracking. Default-generated move ctor is ok but cross-module would be best.
+	//Alternatively, could rework children tracking so children only reference their parents, and we query memory when asking for the list of children.
 
 	ENGINEGUI_API Rect<float> getRect() const;
 	ENGINEGUI_API Rect<float> getLocalRect() const;
@@ -108,6 +109,12 @@ private:
 
 	void refresh() const;
 	void markDirty() const;
+
+
+	WidgetTransform(const WidgetTransform& cpy) = delete;
+	WidgetTransform& operator=(const WidgetTransform& cpy) = delete;
+	WidgetTransform(WidgetTransform&& mov) = delete;
+	WidgetTransform& operator=(WidgetTransform&& mov) = delete;
 };
 
 

@@ -62,9 +62,17 @@ void LinearLayoutGroupWidget::renderImmediate(Renderer* renderer)
 
 void LinearLayoutGroupWidget::setRectDirect(WidgetTransform* w, Rect<float> rect)
 {
-	w->rect = rect;
+	Rect<float> localRect = rect;
+	if (w->parent) localRect.topLeft -= w->parent->getRect().topLeft;
 
-	w->localRect = rect;
-	if (w->parent) w->localRect.topLeft -= w->parent->getRect().topLeft;
+	//If we moved, we need to refresh children
+	if (w->rect != rect)
+	{
+		for (size_t i = 0; i < w->getChildrenCount(); ++i) w->getChild(i)->markDirty();
+	}
+
+	w->rect = rect;
+	w->localRect = localRect;
+
 	w->dirty = false;
 }
