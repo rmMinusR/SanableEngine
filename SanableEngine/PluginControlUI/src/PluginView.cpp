@@ -19,6 +19,9 @@
 #include "gui/WindowGUIInputProcessor.hpp"
 #include "gui/WindowGUIRenderPipeline.hpp"
 #include "TypeLayoutView.hpp"
+#include "ShaderProgram.hpp"
+#include "Material.hpp"
+#include "Font.hpp"
 
 void PluginView::tryInit()
 {
@@ -122,9 +125,14 @@ void PluginView::tryInit()
 				UISprite3x3* rttiFieldSprite = new UISprite3x3(rttiFieldTexture);
 				rttiFieldSprite->setPixel({ 1,1 }, { 7,6 });
 				rttiFieldSprite->setPixel({ 2,2 }, { 8,8 });
+
+				ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
+				if (!textShader->load()) assert(false);
+				Material* textMat = new Material(textShader);
+				Font* fieldFont = new Font("resources/ui/fonts/arial.ttf", 12);
 				
 				//TODO add dropdown selector for types
-				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(&this->plugin->getRTTI()->getTypes()[0], rttiFieldSprite, rttiFieldSprite);
+				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(&this->plugin->getRTTI()->getTypes()[0], rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
 				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);

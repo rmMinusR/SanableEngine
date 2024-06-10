@@ -2,6 +2,7 @@
 
 #include "gui/HUD.hpp"
 #include "gui/ImageWidget.hpp"
+#include "gui/LabelWidget.hpp"
 
 #include "Resources.hpp"
 
@@ -30,16 +31,33 @@ void TypeInfoView::refresh()
 				AnchoredPositioning* p = w->getTransform()->setPositioningStrategy<AnchoredPositioning>();
 				p->snapToCorner( Vector2f(0,0), Vector2f(byteSize.x*(lineEnd-cursor), byteSize.y) );
 				p->setCenterByOffsets(byteSize*Vector2f(cursor%bytesPerColumn, cursor/bytesPerColumn), Vector2f(0, 0));
-				//p->setRectByOffsets(
+				//p->setLocalRectByOffsets(
 				//	Rect<float> {
 				//		byteSize*Vector2f(cursor%bytesPerColumn, cursor/bytesPerColumn),
 				//		Vector2f(byteSize.x*(lineEnd-cursor), byteSize.y)
 				//	},
-				//	w->getTransform()
+				//	getTransform()
 				//);
 
 				cursor = lineEnd;
 				if (cursor >= end) break;
+			}
+			
+			//Add label
+			LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, textFont);
+			lbl->setText(f.name);
+			if (nLines == 1)
+			{
+				lbl->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-1) );
+				lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+			}
+			else if (nLines == 2)
+			{
+				assert(false && "TODO");
+			}
+			else
+			{
+				assert(false && "TODO");
 			}
 		},
 		MemberVisibility::All,
@@ -47,11 +65,13 @@ void TypeInfoView::refresh()
 	);
 }
 
-TypeInfoView::TypeInfoView(HUD* hud, const TypeInfo* target, const UISprite* fieldSprite, const UISprite* parentSprite) :
+TypeInfoView::TypeInfoView(HUD* hud, const TypeInfo* target, const UISprite* fieldSprite, const UISprite* parentSprite, const Material* textMat, const Font* textFont) :
 	Widget(hud),
 	target(target),
 	fieldSprite(fieldSprite),
-	parentSprite(parentSprite)
+	parentSprite(parentSprite),
+	textMat(textMat),
+	textFont(textFont)
 {
 	refresh();
 }

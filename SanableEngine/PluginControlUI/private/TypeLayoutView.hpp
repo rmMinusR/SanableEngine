@@ -5,6 +5,8 @@
 struct TypeInfo;
 struct FieldInfo;
 class UISprite;
+class Material;
+class Font;
 
 class TypeInfoView : public Widget
 {
@@ -13,12 +15,14 @@ class TypeInfoView : public Widget
 
 	const UISprite* fieldSprite;
 	const UISprite* parentSprite;
+	const Material* textMat;
+	const Font* textFont;
 
 	constexpr static size_t bytesPerColumn = 8;
 
 	void refresh();
 public:
-	TypeInfoView(HUD* hud, const TypeInfo* target, const UISprite* fieldSprite, const UISprite* parentSprite);
+	TypeInfoView(HUD* hud, const TypeInfo* target, const UISprite* fieldSprite, const UISprite* parentSprite, const Material* textMat, const Font* textFont);
 	~TypeInfoView();
 	
 	virtual const Material* getMaterial() const override;

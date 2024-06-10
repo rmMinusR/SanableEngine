@@ -5,12 +5,12 @@
 #include "Renderer.hpp"
 #include "Font.hpp"
 
-LabelWidget::LabelWidget(HUD* hud, Material* material, Font* font) :
+LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font) :
 	LabelWidget(hud, material, font, SDL_Color{ 255, 255, 255, 255 })
 {
 }
 
-LabelWidget::LabelWidget(HUD* hud, Material* material, Font* font, const SDL_Color& color) :
+LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font, const SDL_Color& color) :
 	Widget(hud),
 	material(material),
 	font(font),
@@ -26,6 +26,12 @@ LabelWidget::~LabelWidget()
 void LabelWidget::setText(const std::wstring& newText)
 {
 	this->text = newText;
+}
+
+void LabelWidget::setText(const std::string& newText)
+{
+	this->text.resize(newText.length(), 0);
+	std::mbstowcs(text.data(), newText.data(), newText.length());
 }
 
 void LabelWidget::loadModelTransform(Renderer* renderer) const
