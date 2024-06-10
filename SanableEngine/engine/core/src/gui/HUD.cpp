@@ -8,17 +8,18 @@
 
 void HUD::applyConcurrencyBuffers()
 {
-	for (Widget* w : addQueue) widgets.add(w);
+	//for (Widget* w : addQueue) widgets.add(w);
 	addQueue.clear();
 
-	for (Widget* w : removeQueue) widgets.remove(w);
+	//for (Widget* w : removeQueue) widgets.remove(w);
+	for (Widget* w : removeQueue) memory.destroy(w);
 	removeQueue.clear();
 }
 
 void HUD::addWidget_internal(Widget* widget)
 {
 	addQueue.push_back(widget);
-	if (!widget->transform.getParent()) widget->transform.setParent(getRootTransform());
+	if (!widget->transform->getParent()) widget->transform->setParent(getRootTransform());
 }
 
 void HUD::removeWidget_internal(Widget* widget)
@@ -29,12 +30,15 @@ void HUD::removeWidget_internal(Widget* widget)
 HUD::HUD(Application* application) :
 	application(application)
 {
-	root.setMinCornerRatio({ 0, 0 });
-	root.setMaxCornerRatio({ 0, 0 });
+	root = memory.create<WidgetTransform>(nullptr, this);
+	root->setPositioningStrategy_internal(nullptr);
+
+	transforms = memory.getSpecificPool<WidgetTransform>(true);
 }
 
 HUD::~HUD()
 {
+	memory.destroy(root);
 }
 
 MemoryManager* HUD::getMemory()
@@ -44,27 +48,27 @@ MemoryManager* HUD::getMemory()
 
 void HUD::refreshLayout(Rect<float> viewport)
 {
-	root.setRectByOffsets(viewport);
+	root->rect = root->localRect = viewport;
 
 	applyConcurrencyBuffers();
-	widgets.memberCall(&Widget::refreshLayout);
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it) it->refresh();
 	applyConcurrencyBuffers();
-
-	//TODO transform caching goes here
 }
 
 void HUD::tick()
 {
 	applyConcurrencyBuffers();
+	memory.ensureFresh();
+	widgets.ensureFresh(&memory);
 	widgets.memberCall(&Widget::tick);
 	applyConcurrencyBuffers();
 }
 
-void HUD::render(Rect<float> viewport, Renderer* renderer)
+void HUD::render(Renderer* renderer)
 {
-	root.setRectByOffsets(viewport);
-
 	applyConcurrencyBuffers();
+	memory.ensureFresh();
+	widgets.ensureFresh(&memory);
 	
 	//Collect objects to buffer
 	std::unordered_map<
@@ -108,25 +112,55 @@ void HUD::render(Rect<float> viewport, Renderer* renderer)
 		}
 	}
 
+	/*
+	// Debug: draw transform bounding boxes
+	ShaderProgram::clear();
+	glLoadIdentity();
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it)
+	{
+		WidgetTransform* t = static_cast<WidgetTransform*>(*it);
+		Rect<float> r = t->getRect();
+
+		float hue = float( (size_t(t)>>8&0xff) | ((size_t(t)>>0&0xff) << 8) ) / 0xffff;
+		glColor4f(
+			1-1.5f*std::min(abs(hue), abs(hue-1)),
+			1-1.5f*abs(hue-0.33f),
+			1-1.5f*abs(hue-0.66f),
+			255
+		);
+
+		glLineWidth(3);
+		glBegin(GL_LINE_STRIP);
+		glVertex3f(r.topLeft      .x, r.topLeft      .y, 0);
+		glVertex3f(r.topLeft      .x, r.bottomRight().y, 0);
+		glVertex3f(r.bottomRight().x, r.bottomRight().y, 0);
+		glVertex3f(r.bottomRight().x, r.topLeft      .y, 0);
+		glVertex3f(r.topLeft      .x, r.topLeft      .y, 0);
+		glEnd();
+	}
+	glColor4f(1, 1, 1, 1);
+	// */
+
 	glPopMatrix();
 }
 
 void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const
 {
-	std::vector<Widget*> hits;
+	std::vector<WidgetTransform*> hits;
 
-	using _aliased_fp = bool (Widget::*)(Vector2f) const;
-	const _aliased_fp fp_raycastExact = &Widget::raycastExact;
-	widgets.staticCall(
-		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
+	auto it = transforms->cbegin();
+	//++it; //HOTFIX: Skip viewport transform
+	for (; it != transforms->cend(); ++it)
+	{
+		Widget* w = it->getWidget();
+		if (w && ( exact ? w->raycastExact(pos) : it->getRect().contains(pos) ))
 		{
-			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform.getRect().contains(pos);
-			if (didHit) hits.push_back(w);
+			hits.push_back(&*it);
 		}
-	);
+	}
 	
-	std::sort(hits.begin(), hits.end(), [](Widget* a, Widget* b) { return a->transform.getRenderDepth() > b->transform.getRenderDepth(); });
-	for (Widget* w : hits) if (!exact || w->raycastExact(pos)) visitor(w);
+	std::sort(hits.begin(), hits.end(), [](WidgetTransform* a, WidgetTransform* b) { return a->getRenderDepth() > b->getRenderDepth(); });
+	for (WidgetTransform* t : hits) visitor(t->getWidget());
 }
 
 Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
@@ -134,32 +168,29 @@ Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
 	Widget* out = nullptr;
 	WidgetTransform::depth_t outDepth;
 	
-	using _aliased_fp = bool (Widget::*)(Vector2f) const;
-	const _aliased_fp fp_raycastExact = &Widget::raycastExact;
-	widgets.staticCall(
-		[&](Widget* w) //FIXME inefficient as heck, especially without cached transforms
+	auto it = transforms->cbegin();
+	//++it; //HOTFIX: Skip viewport transform
+	for (; it != transforms->cend(); ++it)
+	{
+		Widget* w = it->getWidget();
+		if (w && ( exact ? w->raycastExact(pos) : it->getRect().contains(pos) ))
 		{
-			bool didHit = exact ? (w->*fp_raycastExact)(pos) : w->transform.getRect().contains(pos);
-			if (didHit)
-			{
-				WidgetTransform::depth_t _depth = w->transform.getRenderDepth();
-				if (!out) { out = w; outDepth = _depth; }
-				else if (_depth > outDepth) { out = w; outDepth = _depth; }
-			}
+			WidgetTransform::depth_t _depth = it->getRenderDepth();
+			if (!out || _depth > outDepth) { out = w; outDepth = _depth; }
 		}
-	);
-	
+	}
+
 	return out;
 }
 
 WidgetTransform const* HUD::getRootTransform() const
 {
-	return &root;
+	return root;
 }
 
 WidgetTransform* HUD::getRootTransform()
 {
-	return &root;
+	return root;
 }
 
 Application* HUD::getApplication() const

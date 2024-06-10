@@ -30,5 +30,5 @@ void WindowGUIRenderPipeline::render(Rect<float> viewport)
 	//Tick and render GUI
 	hud.refreshLayout(viewport);
 	hud.tick();
-	hud.render(viewport, window->getRenderer());
+	hud.render(window->getRenderer());
 }

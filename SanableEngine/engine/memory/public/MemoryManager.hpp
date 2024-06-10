@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <vector>
 #include <functional>
+#include "GlobalTypeRegistry.hpp"
 #include "TypedMemoryPool.hpp"
 
 class GameObject;
@@ -19,6 +20,7 @@ private:
 	ENGINEMEM_API void registerPool(GenericTypedMemoryPool* pool);
 
 	uint64_t poolStateHash;
+	GlobalTypeRegistry::Snapshot lastKnownRtti;
 
 public:
 	ENGINEMEM_API MemoryManager();

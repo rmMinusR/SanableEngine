@@ -45,6 +45,12 @@ public:
 		foreachObject([&](void* obj) { (static_cast<TObj*>(obj)->*func)(funcArgs...); });
 	}
 
+	template<typename TReturn, typename... TArgs>
+	void memberCall(TReturn(TObj::* func)(TArgs...) const, TArgs... funcArgs) const
+	{
+		foreachObject([&](void* obj) { (static_cast<TObj*>(obj)->*func)(funcArgs...); });
+	}
+
 	template<typename TFunc, typename... TArgs>
 	void staticCall(TFunc func, TArgs... funcArgs) const
 	{

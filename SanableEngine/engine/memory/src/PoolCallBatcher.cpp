@@ -25,7 +25,7 @@ size_t _PoolCallBatcherBase::count() const
 
 void _PoolCallBatcherBase::ensureFresh(MemoryManager* src, bool force)
 {
-	uint64_t newHash = src->getPoolStateHash();
+	uint64_t newHash = src->getPoolStateHash() ^ std::hash<GlobalTypeRegistry::Snapshot>{}(GlobalTypeRegistry::makeSnapshot());
 	if (force || cachedStateHash != newHash)
 	{
 		cachedStateHash = newHash;

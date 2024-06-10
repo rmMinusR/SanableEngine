@@ -4,26 +4,29 @@
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
 
-ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, Widget* label, SpriteSet sprites) :
+ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites) :
 	Widget(hud),
-	sprites(sprites)
+	contentSocket(hud, this),
+	bgSprites(bgSprites)
 {
 	this->background = background;
-	this->label = label;
 
+	getTransform()->setRelativeRenderDepth(1);
+	
 	if (background)
 	{
-		background->transform.setParent(&this->transform);
-		background->transform.setRenderDepth(-1);
-		background->transform.fillParent();
+		background->getTransform()->setParent(this->getTransform());
+		background->getTransform()->setRelativeRenderDepth(-2);
+		static_cast<AnchoredPositioning*>(background->getTransform()->getPositioningStrategy())->fillParent();
 	}
 
-	if (label)
-	{
-		label->transform.setParent(&this->transform);
-		label->transform.setRenderDepth(0);
-		label->transform.fillParent();
-	}
+	contentSocket.setRelativeRenderDepth(-1);
+}
+
+ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites, Widget* content) :
+	ButtonWidget(hud, background, bgSprites)
+{
+	contentSocket.put(content);
 }
 
 ButtonWidget::~ButtonWidget()
@@ -95,7 +98,7 @@ void ButtonWidget::setState(UIState newState)
 
 	switch (state)
 	{
-	#define _X(val) case UIState::val: background->setSprite(sprites.val); break;
+	#define _X(val) case UIState::val: background->setSprite(bgSprites.val); break;
 	FOREACH_UISTATE()
 	#undef _X
 	}
@@ -104,4 +107,14 @@ void ButtonWidget::setState(UIState newState)
 UIState ButtonWidget::getState() const
 {
 	return state;
+}
+
+WidgetSocket* ButtonWidget::getContentSocket()
+{
+	return &contentSocket;
+}
+
+const WidgetSocket* ButtonWidget::getContentSocket() const
+{
+	return &contentSocket;
 }

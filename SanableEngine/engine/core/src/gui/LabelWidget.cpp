@@ -33,8 +33,8 @@ void LabelWidget::loadModelTransform(Renderer* renderer) const
 	Vector2f size = font->getRenderedSize(renderer, text);
 	renderer->loadTransform(
 		glm::translate<float, glm::packed_highp>(
-			(glm::mat4)transform,
-			Vector3f(align.calcAnchor(transform.getLocalRect().size) + align.calcPivot(size), 0)
+			(glm::mat4)*getTransform(),
+			Vector3f(align.calcAnchor(getTransform()->getLocalRect().size) + align.calcPivot(size), 0)
 		)
 	);
 }
@@ -49,7 +49,7 @@ void LabelWidget::renderImmediate(Renderer* renderer)
 	if (material) renderer->drawText(*font, *material, text, color);
 	else
 	{
-		auto depth = transform.getRenderDepth();
+		auto depth = getTransform()->getRenderDepth();
 		renderer->drawTextNonShadered(*font, text, Vector3f(0, 0, depth));
 	}
 }

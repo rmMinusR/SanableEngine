@@ -33,16 +33,18 @@ public:
 		#undef _X
 	};
 
-private:
+protected:
 	ImageWidget* background;
-	Widget* label;
-	SpriteSet sprites;
+	SpriteSet bgSprites;
 	UIState state;
 	
 	std::function<void()> callback;
 
+	WidgetSocket contentSocket;
+
 public:
-	ENGINEGUI_API ButtonWidget(HUD* hud, ImageWidget* background, Widget* label, SpriteSet sprites);
+	ENGINEGUI_API ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites);
+	ENGINEGUI_API ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites, Widget* content);
 	ENGINEGUI_API virtual ~ButtonWidget();
 	
 	ENGINEGUI_API virtual const Material* getMaterial() const override;
@@ -58,4 +60,7 @@ public:
 
 	ENGINEGUI_API void setState(UIState newState);
 	ENGINEGUI_API UIState getState() const;
+
+	ENGINEGUI_API WidgetSocket* getContentSocket();
+	ENGINEGUI_API const WidgetSocket* getContentSocket() const;
 };

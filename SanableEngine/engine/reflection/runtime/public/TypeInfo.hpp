@@ -20,6 +20,10 @@ class TypeBuilder;
 /// </summary>
 struct TypeInfo
 {
+private:
+	size_t hash;
+	friend class TypeBuilder;
+	friend struct std::hash<TypeInfo>;
 public:
 	TypeName name;
 
@@ -165,6 +169,8 @@ public:
 	/// <returns></returns>
 	ENGINE_RTTI_API bool isValid() const;
 
+	ENGINE_RTTI_API bool isDummy() const;
+
 	/// <summary>
 	/// Check if this type is currently loaded.
 	/// If so, instances can be used without causing errors.
@@ -213,6 +219,13 @@ public:
 		out.layout.align = alignof(TObj);
 		out.capabilities.rawDtor = thunk_utils<TObj>::dtor;
 		out.create_internalFinalize();
+		out.hash = 0;
 		return out;
 	}
+
+};
+
+template<> struct std::hash<TypeInfo>
+{
+	inline size_t operator()(const TypeInfo& t) { return t.hash; }
 };
