@@ -8,9 +8,9 @@
 void TypeInfoView::refresh()
 {
 	//Remove existing
-	for (int i = transform.getChildrenCount()-1; i >= 0; --i)
+	for (int i = getTransform()->getChildrenCount() - 1; i >= 0; --i)
 	{
-		hud->removeWidget(transform.getChild(i)->getWidget());
+		hud->removeWidget(getTransform()->getChild(i)->getWidget());
 	}
 	
 	//Repopulate
@@ -26,9 +26,17 @@ void TypeInfoView::refresh()
 				nLines++;
 
 				ImageWidget* w = hud->addWidget<ImageWidget>(nullptr, fieldSprite);
-				w->transform.setParent(&this->transform);
-				w->transform.snapToCorner( Vector2f(0,0), Vector2f(byteSize.x*(lineEnd-cursor), byteSize.y) );
-				w->transform.setCenterByOffsets(byteSize*Vector2f(cursor%bytesPerColumn, cursor/bytesPerColumn), Vector2f(0, 0));
+				w->getTransform()->setParent(getTransform());
+				AnchoredPositioning* p = w->getTransform()->setPositioningStrategy<AnchoredPositioning>();
+				p->snapToCorner( Vector2f(0,0), Vector2f(byteSize.x*(lineEnd-cursor), byteSize.y) );
+				p->setCenterByOffsets(byteSize*Vector2f(cursor%bytesPerColumn, cursor/bytesPerColumn), Vector2f(0, 0));
+				//p->setRectByOffsets(
+				//	Rect<float> {
+				//		byteSize*Vector2f(cursor%bytesPerColumn, cursor/bytesPerColumn),
+				//		Vector2f(byteSize.x*(lineEnd-cursor), byteSize.y)
+				//	},
+				//	w->getTransform()
+				//);
 
 				cursor = lineEnd;
 				if (cursor >= end) break;

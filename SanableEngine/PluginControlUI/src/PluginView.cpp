@@ -100,9 +100,10 @@ void PluginView::tryInit()
 		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
 		lblInspectTypes->setText(L"Inspect RTTI");
-		btnInspectTypes = hud->addWidget<ButtonWidget>(imgInspectTypesBg, lblInspectTypes, buttonSprites);
-		btnInspectTypes->transform.setParent(&statusLine->transform);
-		statusLine->setFlexWeight(&btnInspectTypes->transform, 2);
+		btnInspectTypes = hud->addWidget<ButtonWidget>(imgInspectTypesBg, buttonSprites);
+		btnInspectTypes->getContentSocket()->put(lblInspectTypes);
+		btnInspectTypes->getTransform()->setParent(statusLine->getTransform());
+		btnInspectTypes->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight = 2;
 		btnInspectTypes->setCallback(
 			[&]() {
 				std::wstring wname = this->plugin->reportedData->name;
@@ -124,7 +125,7 @@ void PluginView::tryInit()
 				
 				//TODO add dropdown selector for types
 				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(&this->plugin->getRTTI()->getTypes()[0], rttiFieldSprite, rttiFieldSprite);
-				v->transform.fillParent();
+				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);
 	}
