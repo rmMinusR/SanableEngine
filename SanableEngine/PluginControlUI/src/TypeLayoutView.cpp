@@ -1,5 +1,7 @@
 #include "TypeLayoutView.hpp"
 
+#include <sstream>
+
 #include "gui/HUD.hpp"
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
@@ -45,7 +47,11 @@ void TypeInfoView::refresh()
 			
 			//Add label
 			LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, textFont);
-			lbl->setText(f.name);
+
+			std::stringstream ss;
+			ss << f.name << " (" << f.type.as_str() << ")";
+			lbl->setText(ss.str());
+
 			if (nLines == 1)
 			{
 				lbl->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-1) );
