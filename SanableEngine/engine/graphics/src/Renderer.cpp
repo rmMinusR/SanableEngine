@@ -119,6 +119,8 @@ void Renderer::drawTextureInternal(const GTexture* tex, const Material* mat, Vec
 {
 	assert(tex);
 	
+	errorCheck();
+
 	glBindTexture(GL_TEXTURE_2D, tex->id);
 	glEnable(GL_TEXTURE_2D);
 
@@ -129,6 +131,8 @@ void Renderer::drawTextureInternal(const GTexture* tex, const Material* mat, Vec
 
 	if (mat)
 	{
+		mat->getShader()->activate();
+
 		const ShaderUniform* uTintColor = mat->getUserUniform("tintColor");
 		if (uTintColor) uTintColor->write(glm::vec4(tintColor.r, tintColor.g, tintColor.b, tintColor.a)/255.0f);
 
@@ -156,6 +160,8 @@ void Renderer::drawTextureInternal(const GTexture* tex, const Material* mat, Vec
 	glPopMatrix();
 
 	glDisable(GL_TEXTURE_2D);
+
+	errorCheck();
 }
 
 void Renderer::drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h)

@@ -4,7 +4,7 @@
 #include "Renderer.hpp"
 #include "gui/UISprite.hpp"
 
-ImageWidget::ImageWidget(HUD* hud, Material* material, const UISprite* sprite) :
+ImageWidget::ImageWidget(HUD* hud, const Material* material, const UISprite* sprite) :
 	Widget(hud),
 	material(material),
 	sprite(sprite)

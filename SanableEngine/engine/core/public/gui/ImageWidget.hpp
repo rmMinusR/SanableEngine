@@ -8,11 +8,11 @@ class UISprite;
 
 class ImageWidget : public Widget
 {
-	Material* material;
+	const Material* material;
 	const UISprite* sprite;
 	SDL_Color tintColor;
 public:
-	ENGINEGUI_API ImageWidget(HUD* hud, Material* material, const UISprite* sprite);
+	ENGINEGUI_API ImageWidget(HUD* hud, const Material* material, const UISprite* sprite);
 	ENGINEGUI_API virtual ~ImageWidget();
 
 	ENGINEGUI_API void setSprite(const UISprite* newSprite);
