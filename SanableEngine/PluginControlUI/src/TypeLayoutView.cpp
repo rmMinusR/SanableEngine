@@ -20,6 +20,12 @@ void TypeInfoView::refresh()
 	target->layout.walkFields(
 		[&](const FieldInfo& f)
 		{
+			size_t fieldHash = std::hash<std::string>{}(f.name) ^ std::hash<TypeName>{}(f.type) ^ std::hash<TypeName>{}(f.owner);
+			float hue = (fieldHash & 0xffffULL)/float(0xffffULL);
+			float r = 1-1.5f*std::min(abs(hue), abs(hue-1));
+			float g = 1-1.5f*abs(hue-0.33f);
+			float b = 1-1.5f*abs(hue-0.66f);
+
 			size_t cursor = f.offset;
 			size_t end = f.offset+f.size;
 			size_t nLines = 0;
@@ -47,24 +53,16 @@ void TypeInfoView::refresh()
 			
 			//Add label
 			LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, textFont);
-
-			std::stringstream ss;
-			ss << f.name << " (" << f.type.as_str() << ")";
-			lbl->setText(ss.str());
-
-			if (nLines == 1)
 			{
-				lbl->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-1) );
-				lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+				std::stringstream ss;
+				ss << f.name << " (" << f.type.as_str() << ")";
+				lbl->setText(ss.str());
 			}
-			else if (nLines == 2)
-			{
-				assert(false && "TODO");
-			}
-			else
-			{
-				assert(false && "TODO");
-			}
+			
+			//Simple fill to first line
+			lbl->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-nLines) );
+			lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+			lbl->getTransform()->setRelativeRenderDepth(-1);
 		},
 		MemberVisibility::All,
 		true
