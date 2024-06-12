@@ -34,7 +34,7 @@ private:
 	GMesh dynQuad;
 	GTexture fallbackTexture;
 
-	void drawTextureInternal(const GTexture* tex, Vector3f pos, Vector2<float> size, Rect<float> uvs);
+	void drawTextureInternal(const GTexture* tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor);
 public:
 	ENGINEGRAPHICS_API Renderer();
 	ENGINEGRAPHICS_API Renderer(Window* owner, SDL_GLContext context);
@@ -45,8 +45,9 @@ public:
 	ENGINEGRAPHICS_API void drawRect(Vector3f center, float w, float h, const SDL_Color& color);
 	ENGINEGRAPHICS_API void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos); //Assumes you have no shader active
 	ENGINEGRAPHICS_API void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color); //Assumes you've already activated the material and set model matrix value
-	ENGINEGRAPHICS_API void drawTexture(const GTexture* tex, Vector3f pos, float w, float h);
-	ENGINEGRAPHICS_API void drawSprite(const Sprite* spr, Vector3f pos, float w, float h);
+	ENGINEGRAPHICS_API void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h);
+	ENGINEGRAPHICS_API void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h);
+	ENGINEGRAPHICS_API void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor);
 	
 	ENGINEGRAPHICS_API void loadTransform(const glm::mat4&); //Makes no assumptions about which matrix is active or its state, just overwrites
 

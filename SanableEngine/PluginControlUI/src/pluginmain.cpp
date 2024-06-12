@@ -50,6 +50,9 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
+        ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
+        if (!imageShader->load()) assert(false);
+        Resources::imageMat = new Material(imageShader);
         Resources::buttonNormalTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal.png");
         Resources::buttonNormalSprite = new UISprite3x3(Resources::buttonNormalTexture);
         Resources::buttonPressedTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal_pressed.png");
