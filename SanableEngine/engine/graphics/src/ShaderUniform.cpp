@@ -68,10 +68,22 @@ void ShaderUniform::write(float val) const
 	glUniform1f(location, val);
 }
 
+void ShaderUniform::write(glm::vec2 val) const
+{
+	assert(dataType == GL_FLOAT_VEC2); //Check data type
+	glUniform2f(location, val.x, val.y);
+}
+
 void ShaderUniform::write(glm::vec3 val) const
 {
 	assert(dataType == GL_FLOAT_VEC3); //Check data type
 	glUniform3f(location, val.x, val.y, val.z);
+}
+
+void ShaderUniform::write(glm::vec4 val) const
+{
+	assert(dataType == GL_FLOAT_VEC4); //Check data type
+	glUniform4f(location, val[0], val[1], val[2], val[3]);
 }
 
 void ShaderUniform::write(glm::mat4 val) const

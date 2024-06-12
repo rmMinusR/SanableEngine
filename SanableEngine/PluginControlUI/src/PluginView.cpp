@@ -71,7 +71,7 @@ void PluginView::tryInit()
 
 		ButtonWidget::SpriteSet buttonSprites = { Resources::buttonNormalSprite, Resources::buttonPressedSprite, Resources::buttonDisabledSprite };
 
-		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonNormalSprite);
+		imgToggleLoadedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, buttonSprites);
@@ -85,7 +85,7 @@ void PluginView::tryInit()
 			}
 		);
 
-		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonNormalSprite);
+		imgToggleHookedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, buttonSprites);

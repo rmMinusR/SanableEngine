@@ -19,3 +19,5 @@ stix_generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})
 
 export_resource(engine-core resources/ui/shaders/font/frag.glsl)
 export_resource(engine-core resources/ui/shaders/font/vert.glsl)
+export_resource(engine-core resources/ui/shaders/image/frag.glsl)
+export_resource(engine-core resources/ui/shaders/image/vert.glsl)

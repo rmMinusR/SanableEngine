@@ -72,7 +72,9 @@ public:
 	ENGINEGRAPHICS_API ShaderProgram* getOwner() const;
 
 	ENGINEGRAPHICS_API void write(float val) const;
+	ENGINEGRAPHICS_API void write(glm::vec2 val) const;
 	ENGINEGRAPHICS_API void write(glm::vec3 val) const;
+	ENGINEGRAPHICS_API void write(glm::vec4 val) const;
 	ENGINEGRAPHICS_API void write(glm::mat4 val) const;
 
 	ENGINEGRAPHICS_API ValueBinding getBinding() const;
