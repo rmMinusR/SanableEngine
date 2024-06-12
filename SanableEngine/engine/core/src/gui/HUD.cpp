@@ -31,6 +31,7 @@ HUD::HUD()
 {
 	root = memory.create<WidgetTransform>(nullptr, this);
 	root->setPositioningStrategy_internal(nullptr);
+	root->setRelativeRenderDepth(-500); //This should give us a depth range of 500 in either direction on most setups. FIXME magic number
 
 	transforms = memory.getSpecificPool<WidgetTransform>(true);
 }
