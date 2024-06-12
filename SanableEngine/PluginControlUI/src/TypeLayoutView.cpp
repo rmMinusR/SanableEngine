@@ -64,6 +64,7 @@ void TypeInfoView::refresh()
 				ss << f.name << " (" << f.type.as_str() << ")";
 				lbl->setText(ss.str());
 			}
+			lbl->align = Vector2f(0.5f, 0.5f);
 			
 			//Simple fill to first line
 			lbl->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-nLines) );
@@ -116,6 +117,7 @@ void TypeInfoView::refresh()
 			{
 				lbl->setText("[padding]");
 			}
+			lbl->align = Vector2f(0.5f, 0.5f);
 			
 			//Simple fill to first line
 			lbl->getTransform()->setParent( getTransform() );

@@ -14,11 +14,9 @@ target_link_libraries("PluginControlUI" "engine-core")
 target_include_directories("PluginControlUI" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
 # Declare exported resources
-file(GLOB_RECURSE FOUND_RESOURCES
-	LIST_DIRECTORIES false
-	RELATIVE "${CMAKE_CURRENT_LIST_DIR}"
-	"${CMAKE_CURRENT_LIST_DIR}/resources/**"
-)
-foreach(RES ${FOUND_RESOURCES})
-	export_resource(PluginControlUI "${RES}")
-endforeach()
+export_resource(PluginControlUI resources/ui/textures/button/normal.png)
+export_resource(PluginControlUI resources/ui/textures/button/normal_pressed.png)
+export_resource(PluginControlUI resources/ui/textures/button/disabled.png)
+export_resource(PluginControlUI resources/ui/textures/button/disabled_pressed.png)
+export_resource(PluginControlUI resources/ui/textures/field.png)
+export_resource(PluginControlUI resources/ui/textures/parent.png)
