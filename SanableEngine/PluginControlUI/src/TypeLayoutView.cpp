@@ -56,7 +56,7 @@ void TypeInfoView::refresh()
 				cursor = lineEnd;
 				if (cursor >= end) break;
 			}
-			
+
 			//Add label
 			LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, textFont);
 			{
@@ -72,6 +72,58 @@ void TypeInfoView::refresh()
 		},
 		MemberVisibility::All,
 		true
+	);
+
+	bool isLittleEndian;
+	{
+		int n = 1;
+		isLittleEndian = (*(char*)&n == 1);
+	}
+
+	//Repopulate: implicit values (vptrs)
+	target->layout.walkImplicits(
+		[&](const TypeInfo::Layout::ImplicitInfo& imp)
+		{
+			//Add label
+			LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, textFont);
+			if (imp.data)
+			{
+				std::stringstream tmp;
+				
+				const char* hexLut = "0123456789abcdef";
+				if (isLittleEndian)
+				{
+					for (int i = imp.size-1; i >= 0; --i)
+					{
+						//Each byte of binary expands to 2 of hex
+						tmp << hexLut[imp.data[i]>>4 & 0xf];
+						tmp << hexLut[imp.data[i] & 0xf];
+					}
+				}
+				else
+				{
+					for (int i = 0; i < imp.size; ++i)
+					{
+						//Each byte of binary expands to 2 of hex
+						tmp << hexLut[imp.data[i]>>4 & 0xf];
+						tmp << hexLut[imp.data[i] & 0xf];
+					}
+				}
+
+				lbl->setText(tmp.str());
+			}
+			else
+			{
+				lbl->setText("[padding]");
+			}
+			
+			//Simple fill to first line
+			lbl->getTransform()->setParent( getTransform() );
+			lbl->getTransform()->setRelativeRenderDepth(1);
+			AnchoredPositioning* pos = lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>();
+			pos->snapToCorner( Vector2f(0,0), Vector2f(byteSize.x*imp.size, byteSize.y) );
+			pos->setCenterByOffsets(byteSize*Vector2f(imp.offset%bytesPerColumn, imp.offset/bytesPerColumn), Vector2f(0, 0));
+		}
 	);
 }
 

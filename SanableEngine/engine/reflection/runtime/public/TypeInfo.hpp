@@ -78,6 +78,19 @@ public:
 										MemberVisibility visibilityFlags = MemberVisibility::Public,
 										bool includeInherited = true) const;
 
+
+		struct ImplicitInfo //TEMP communications helper
+		{
+			ptrdiff_t offset;
+			size_t size;
+			const uint8_t* data; //nullptr if padding
+		};
+
+		/// <summary>
+		/// Visit every implicit constant in this type.
+		/// </summary>
+		ENGINE_RTTI_API void walkImplicits(std::function<void(const ImplicitInfo&)> visitor) const;
+
 		/// <summary>
 		/// Update vtable pointers on the given object instance.
 		/// </summary>
