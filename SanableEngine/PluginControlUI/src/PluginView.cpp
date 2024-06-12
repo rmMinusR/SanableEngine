@@ -113,7 +113,9 @@ void PluginView::tryInit()
 				std::string name; name.resize(wname.length(), '\0');
 				std::wcstombs(name.data(), wname.data(), wname.length());
 
-				WindowBuilder wb = hud->getApplication()->buildWindow(name, 288, 288);
+				const TypeInfo* initialInspectedType = &this->plugin->getRTTI()->getTypes()[0];
+
+				WindowBuilder wb = hud->getApplication()->buildWindow(name, 36*8, 36*(int)std::ceil(initialInspectedType->layout.size/8.0f)); //TODO remove magic numbers
 				WindowGUIRenderPipeline* renderPipeline = new WindowGUIRenderPipeline(hud->getApplication());
 				wb.setRenderPipeline(renderPipeline);
 				Window* window = wb.build();
@@ -132,7 +134,7 @@ void PluginView::tryInit()
 				Font* fieldFont = new Font("resources/ui/fonts/arial.ttf", 12);
 				
 				//TODO add dropdown selector for types
-				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(&this->plugin->getRTTI()->getTypes()[0], rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
+				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(initialInspectedType, rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
 				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);
