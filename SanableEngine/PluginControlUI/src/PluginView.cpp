@@ -99,7 +99,7 @@ void PluginView::tryInit()
 			}
 		);
 
-		imgInspectTypesBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonNormalSprite);
+		imgInspectTypesBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
 		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
 		lblInspectTypes->setText(L"Inspect RTTI");
@@ -128,13 +128,17 @@ void PluginView::tryInit()
 				rttiFieldSprite->setPixel({ 1,1 }, { 7,6 });
 				rttiFieldSprite->setPixel({ 2,2 }, { 8,8 });
 
+				ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
+				if (!imageShader->load()) assert(false);
+				Material* imageMat = new Material(imageShader);
+
 				ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
 				if (!textShader->load()) assert(false);
 				Material* textMat = new Material(textShader);
 				Font* fieldFont = new Font("resources/ui/fonts/arial.ttf", 12);
 				
 				//TODO add dropdown selector for types
-				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(initialInspectedType, rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
+				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(initialInspectedType, imageMat, rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
 				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);

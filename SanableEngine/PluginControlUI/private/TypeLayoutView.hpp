@@ -13,6 +13,7 @@ class TypeInfoView : public Widget
 	const TypeInfo* target;
 	Vector2f byteSize = Vector2f(36, 36);
 
+	const Material* imageMat;
 	const UISprite* fieldSprite;
 	const UISprite* parentSprite;
 	const Material* textMat;
@@ -22,7 +23,7 @@ class TypeInfoView : public Widget
 
 	void refresh();
 public:
-	TypeInfoView(HUD* hud, const TypeInfo* target, const UISprite* fieldSprite, const UISprite* parentSprite, const Material* textMat, const Font* textFont);
+	TypeInfoView(HUD* hud, const TypeInfo* target, const Material* imageMat, const UISprite* fieldSprite, const UISprite* parentSprite, const Material* textMat, const Font* textFont);
 	~TypeInfoView();
 	
 	virtual const Material* getMaterial() const override;
