@@ -72,45 +72,67 @@ void HUD::render(Renderer* renderer)
 	
 	//Collect objects to buffer
 	std::unordered_map<
-		const ShaderProgram*, //Group by shader
-		std::unordered_map<
-			const Material*, //Then by material
-			std::vector<Widget*>
-		>
-	> renderables; //Note: No need for a CallBatcher here, we're guaranteed widgets will be grouped by type since our data source is a CallBatcher
+		Material::Group, //Group by material class
+		std::vector<Widget*> //Then order by depth
+	> renderables; //Note: no point in grouping by material
 	widgets.staticCall([&](Widget* w)
 	{
-		renderables[w->getShader()][w->getMaterial()].push_back(w);
+		const Material* m = w->getMaterial();
+		Material::Group group = m ? m->getGroup() : Material::Group::Opaque;
+		renderables[group].push_back(w);
 	});
+	{
+		//Opaque objects should draw front-to-back so we can discard occluded fragments faster
+		auto it = renderables.find(Material::Group::Opaque);
+		if (it != renderables.end())
+		{
+			std::sort(it->second.begin(), it->second.end(),
+				[](const Widget* a, const Widget* b)
+				{
+					return std::greater<WidgetTransform::depth_t>{}(a->getTransform()->getRenderDepth(), b->getTransform()->getRenderDepth());
+				}
+			);
+		}
+
+		//Transparent/blended objects should draw back-to-front so we have correct color accuracy
+		it = renderables.find(Material::Group::Transparent);
+		if (it != renderables.end())
+		{
+			std::sort(it->second.begin(), it->second.end(),
+				[](const Widget* a, const Widget* b)
+				{
+					return std::less<WidgetTransform::depth_t>{}(a->getTransform()->getRenderDepth(), b->getTransform()->getRenderDepth());
+				}
+			);
+		}
+	}
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
 	//Process buffer
-	for (const auto& shaderGroup : renderables)
+	auto processMaterialClass = [&](Material::Group _class)
 	{
-		//Activate shader
-		if (shaderGroup.first) shaderGroup.first->activate();
-		else ShaderProgram::clear();
-
-		for (const auto& materialGroup : shaderGroup.second)
+		for (Widget* w : renderables[_class])
 		{
+			const ShaderProgram* shader = w->getShader();
+			const Material* mat = w->getMaterial();
+
+			//Activate shader
+			if (shader) shader->activate();
+			else ShaderProgram::clear();
+
 			//Activate material
-			if (materialGroup.first) materialGroup.first->writeSharedUniforms(renderer);
-			assert(materialGroup.first == nullptr || materialGroup.first->getShader() == shaderGroup.first);
+			if (mat) mat->writeSharedUniforms(renderer);
 
-			for (Widget* w : materialGroup.second)
-			{
-				w->loadModelTransform(renderer);
+			w->loadModelTransform(renderer);
+			if (mat) mat->writeInstanceUniforms(renderer, w);
 
-				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderer, w);
-
-				assert(w->getMaterial() == materialGroup.first);
-				assert(w->getMaterial() == nullptr || w->getMaterial()->getShader() == shaderGroup.first);
-				w->renderImmediate(renderer);
-			}
+			w->renderImmediate(renderer);
 		}
-	}
+	};
+	processMaterialClass(Material::Group::Opaque);
+	processMaterialClass(Material::Group::Transparent);
 
 	/*
 	// Debug: draw transform bounding boxes
