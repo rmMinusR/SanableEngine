@@ -131,10 +131,12 @@ void PluginView::tryInit()
 				ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
 				if (!imageShader->load()) assert(false);
 				Material* imageMat = new Material(imageShader);
+				imageMat->setGroup(Material::Group::Transparent);
 
 				ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
 				if (!textShader->load()) assert(false);
 				Material* textMat = new Material(textShader);
+				textMat->setGroup(Material::Group::Transparent);
 				Font* fieldFont = new Font("resources/ui/fonts/arial.ttf", 12);
 				
 				//TODO add dropdown selector for types
