@@ -54,6 +54,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
         if (!imageShader->load()) assert(false);
         Resources::imageMat = new Material(imageShader);
+        Resources::imageMat->setGroup(Material::Group::Transparent);
         Resources::buttonNormalTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal.png");
         Resources::buttonNormalSprite = new UISprite3x3(Resources::buttonNormalTexture);
         Resources::buttonPressedTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal_pressed.png");
@@ -73,6 +74,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
         if (!textShader->load()) assert(false);
         Resources::textMat = new Material(textShader);
+        Resources::textMat->setGroup(Material::Group::Transparent);
         Resources::headerFont = new Font("resources/ui/fonts/arial.ttf", 48);
         Resources::labelFont = new Font("resources/ui/fonts/arial.ttf", 24);
 

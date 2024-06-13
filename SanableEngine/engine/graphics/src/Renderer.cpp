@@ -79,6 +79,8 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	mat.getShader()->activate();
+	mat.writeSharedUniforms(this);
 	const ShaderUniform* uTextColor = mat.getUserUniform("textColor");
 	if (uTextColor) uTextColor->write(glm::vec3(color.r, color.g, color.b)/255.0f);
 
