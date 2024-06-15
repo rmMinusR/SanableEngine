@@ -2,6 +2,7 @@
 
 #include <locale>
 #include <codecvt>
+#include <sstream>
 
 #include "gui/HUD.hpp"
 #include "gui/LabelWidget.hpp"
@@ -102,7 +103,7 @@ void PluginView::tryInit()
 		imgInspectTypesBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
 		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
-		lblInspectTypes->setText(L"Inspect RTTI");
+		lblInspectTypes->setText(L"View types");
 		btnInspectTypes = hud->addWidget<ButtonWidget>(imgInspectTypesBg, buttonSprites);
 		btnInspectTypes->getContentSocket()->put(lblInspectTypes);
 		btnInspectTypes->getTransform()->setParent(statusLine->getTransform());
@@ -115,7 +116,10 @@ void PluginView::tryInit()
 
 				const TypeInfo* initialInspectedType = &this->plugin->getRTTI()->getTypes()[0];
 
-				WindowBuilder wb = hud->getApplication()->buildWindow(name, 36*8, 36*(int)std::ceil(initialInspectedType->layout.size/8.0f)); //TODO remove magic numbers
+				std::stringstream ss;
+				ss << name << ": " << initialInspectedType->name.as_str();
+
+				WindowBuilder wb = hud->getApplication()->buildWindow(ss.str(), 36 * 8, 36 * (int)std::ceil(initialInspectedType->layout.size / 8.0f)); //TODO remove magic numbers
 				WindowGUIRenderPipeline* renderPipeline = new WindowGUIRenderPipeline(hud->getApplication());
 				wb.setRenderPipeline(renderPipeline);
 				Window* window = wb.build();

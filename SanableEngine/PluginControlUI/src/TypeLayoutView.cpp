@@ -7,6 +7,7 @@
 #include "gui/HUD.hpp"
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
+#include "gui/VerticalGroupWidget.hpp"
 
 #include "Resources.hpp"
 
@@ -57,19 +58,29 @@ void TypeInfoView::refresh()
 				if (cursor >= end) break;
 			}
 
-			//Add label
-			LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, textFont);
+			//Add label container
+			VerticalGroupWidget* lblContainer = hud->addWidget<VerticalGroupWidget>();
+			lblContainer->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-nLines) );
+			lblContainer->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+			lblContainer->getTransform()->setRelativeRenderDepth(1);
+
+			//Add name label
+			LabelWidget* nameLbl = hud->addWidget<LabelWidget>(textMat, textFont);
 			{
 				std::stringstream ss;
-				ss << f.name << " (" << f.type.as_str() << ")";
-				lbl->setText(ss.str());
+				ss << f.owner.as_str() << "::" << f.name;
+				nameLbl->setText(ss.str());
 			}
-			lbl->align = Vector2f(0.5f, 0.5f);
-			
-			//Simple fill to first line
-			lbl->getTransform()->setParent( getTransform()->getChild(getTransform()->getChildrenCount()-nLines) );
-			lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
-			lbl->getTransform()->setRelativeRenderDepth(1);
+			nameLbl->align = Vector2f(0.5f, 0.5f);
+			nameLbl->getTransform()->setParent(lblContainer->getTransform());
+			nameLbl->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(lblContainer);
+
+			//Add type label
+			LabelWidget* typeLbl = hud->addWidget<LabelWidget>(textMat, textFont);
+			typeLbl->setText(f.type.as_str());
+			typeLbl->align = Vector2f(0.5f, 0.5f);
+			typeLbl->getTransform()->setParent(lblContainer->getTransform());
+			typeLbl->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(lblContainer);
 		},
 		MemberVisibility::All,
 		true
