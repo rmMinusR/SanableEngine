@@ -3,6 +3,7 @@ import os
 from config import logger
 from clang.cindex import *
 import zlib
+import glob
 
 index = Index.create()
 additionalCompilerOptions = []
@@ -33,7 +34,11 @@ class SourceFile:
 		this.hasError = ext not in SourceFile.fileTypes.keys()
 		this.tu: TranslationUnit = None
 		this.additionalIncludes: list[str] = []
-		this.__contentsHash = None
+		
+		assert os.path.exists(this.path)
+		with open(this.path, "r") as f:
+			this.contents = f.read()
+		this.contentsHash = zlib.adler32(this.contents.encode("utf-8"))
 
 	def __repr__(this):
 		return this.path
@@ -45,10 +50,10 @@ class SourceFile:
 		return hash(this.path)
 
 	def __getstate__(this):
-		return (this.path, this.isGenerated, this.type, this.hasError, this.__contentsHash)
+		return (this.path, this.isGenerated, this.type, this.hasError, this.contentsHash)
 
 	def __setstate__(this, d):
-		(this.path, this.isGenerated, this.type, this.hasError, this.__contentsHash) = d
+		(this.path, this.isGenerated, this.type, this.hasError, this.contentsHash) = d
 		this.tu = None
 		this.additionalIncludes = []
 
@@ -58,18 +63,6 @@ class SourceFile:
 	@cached_property
 	def name(this):
 		return os.path.split(this.path)[-1]
-
-	@cached_property
-	def contents(this):
-		assert os.path.exists(this.path)
-		with open(this.path, "r") as f:
-			return f.read()
-
-	@property
-	def contentsHash(this) -> int:
-		if this.__contentsHash == None: 
-			this.__contentsHash = zlib.adler32(this.contents.encode("utf-8"))
-		return this.__contentsHash
 
 	def parse(this) -> Cursor:
 		assert not this.hasError
@@ -88,22 +81,23 @@ class SourceFile:
 		return this.tu.cursor
 	
 def discoverAll(targetPaths: list[str]) -> list[SourceFile, None, None]:
-	def discover(targetPath: str):
-		if os.path.isdir(targetPath):
-			# Recurse
-			out = []
-			for subpath in os.listdir(targetPath):
-				out.extend(discover(os.path.join(targetPath, subpath)))
-				# Propagate isGenerated if in a .generated directory
-				if targetPath.endswith(".generated"):
-					for i in out:
-						i.isGenerated = True
-			return out
-		else:
-			# Path refers to file
-			return [SourceFile(targetPath)]
+	targetFiles = []
+	for p in targetPaths: targetFiles += glob.glob(p+"/**", recursive=True)
+	return [SourceFile(i) for i in sorted(set(targetFiles)) if not os.path.isdir(i)]
 
-	out = list()
-	for i in targetPaths:
-		out.extend(discover(i))
-	return out
+class ProjectDiff:
+	def __init__(this, oldFiles: list[SourceFile], newFiles: list[SourceFile]):
+		isUpToDate = lambda file: next(filter(lambda i: i.path == file.path, oldFiles), None).contentsHash == next(filter(lambda i: i.path == file.path, newFiles), None).contentsHash
+		existedPreviously = lambda file: any((i.path == file.path for i in oldFiles))
+		existsCurrently = lambda file: any((i.path == file.path for i in newFiles))
+		
+		this.upToDate = [i for i in newFiles if existedPreviously(i) and isUpToDate(i)]
+		this.outdated = [i for i in newFiles if existedPreviously(i) and not isUpToDate(i)]
+		this.new     = [i for i in newFiles if not existedPreviously(i)]
+		this.removed = [i for i in oldFiles if not existsCurrently(i)]
+		
+		pass
+
+	def __str__(this):
+		return f"{len(this.upToDate)} up-to-date | {len(this.outdated)} outdated | {len(this.new)} new | {len(this.removed)} deleted"
+	

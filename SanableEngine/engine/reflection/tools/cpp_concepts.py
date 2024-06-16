@@ -13,7 +13,7 @@ import abc
 import pickle
 
 import config
-from source_discovery import SourceFile
+from source_discovery import SourceFile, ProjectDiff
 
 
 def _getAbsName(target: Cursor) -> str:
@@ -764,22 +764,16 @@ class Module:
            and this.defaultImageCaptureBackend == other.defaultImageCaptureBackend
 
     def parseTU(this, sources: list[SourceFile]):
-        isUpToDate = lambda file: next(filter(lambda i: i == file, this.__sourceFiles), None).contentsHash == file.contentsHash
+        diff = ProjectDiff(this.__sourceFiles, sources)
+        config.logger.log(config.LOG_USER_LEVEL, str(diff))
         
-        upToDate = [i for i in sources if i in this.__sourceFiles and isUpToDate(i)]
-        outdated = [i for i in sources if i in this.__sourceFiles and not isUpToDate(i)]
-        new = [i for i in sources if i not in this.__sourceFiles]
-        removed = [i for i in this.__sourceFiles if i not in sources]
-
-        config.logger.log(config.LOG_USER_LEVEL, f"{len(upToDate)} up-to-date | {len(outdated)} outdated | {len(new)} new | {len(removed)} deleted")
-        
-        for source in outdated+removed:
+        for source in diff.outdated+diff.removed:
             # Do removal
             symbolsToRemove = [i for i in this.__symbols.values() if i.sourceFile == source]
             for i in symbolsToRemove:
                 del this.__symbols[i.absName]
 
-        for source in outdated+new:
+        for source in diff.outdated+diff.new:
             # Do parsing
             this.__sourceFiles.add(source)
             config.logger.info(f"Parsing {source}")
@@ -787,7 +781,7 @@ class Module:
                 # Only capture what's in the current file
                 if cursor.location.file.name.replace(os.altsep, os.sep) == source.path: this.parseGlobalCursor(cursor)
         
-        return len(outdated) + len(removed) + len(new)
+        return len(diff.outdated) + len(diff.removed) + len(diff.new)
          
     def parseGlobalCursor(this, cursor: Cursor):
         # Stop early if we already have a definition for this symbol
@@ -885,10 +879,11 @@ class Module:
         
         with open(cachePath, "rb") as file: cacheFileRepr = file.read()
         
-        try: out = pickle.loads(cacheFileRepr)
+        try:
+            out = pickle.loads(cacheFileRepr)
+            config.logger.info(f"Loaded {len(out[0].__symbols)} symbols from cache")
         except EOFError: pass # Only happens when we have a blank file. Mundane, safe to ignore.
         
-        config.logger.info(f"Loaded {len(out[0].__symbols)} symbols from cache")
 
         return out
 
