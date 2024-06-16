@@ -9,7 +9,8 @@ WindowBuilder::WindowBuilder(Application* engine, const std::string& name, int w
 	name(name),
 	size(width, height, 0),
 	renderPipeline(renderPipeline),
-	inputProcessor(nullptr)
+	inputProcessor(nullptr),
+	contextSharedWith(nullptr)
 {
 }
 
@@ -35,8 +36,21 @@ void WindowBuilder::setInputProcessor(WindowInputProcessor* inputProcessor)
 	this->inputProcessor = inputProcessor;
 }
 
+void WindowBuilder::shareContextWith(Window* window)
+{
+	contextSharedWith = window;
+}
+
 Window* WindowBuilder::build()
 {
+	//Setup context sharing
+	//TODO move to platform abstraction layer
+	if (contextSharedWith)
+	{
+		Window::setActiveDrawTarget(contextSharedWith);
+		SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+	} else SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 0);
+
 	Window* window = new Window(name, size.x, size.y, glSettings, engine, renderPipeline, inputProcessor);
 	if (position.has_value()) window->move(position.value().x, position.value().y);
 	engine->windows.push_back(window);

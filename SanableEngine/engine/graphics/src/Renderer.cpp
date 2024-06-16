@@ -180,6 +180,13 @@ GTexture* Renderer::renderFontGlyph(const Font& font)
 
 void Renderer::errorCheck()
 {
+	const char* sdlerr = SDL_GetError();
+	if (sdlerr && *sdlerr != '\0')
+	{
+		printf("SDL error: %s\n", sdlerr);
+		assert(false);
+	}
+
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)
 	{
