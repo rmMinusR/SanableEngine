@@ -882,10 +882,11 @@ class Module:
         try:
             out = pickle.loads(cacheFileRepr)
             config.logger.info(f"Loaded {len(out[0].__symbols)} symbols from cache")
-        except EOFError: pass # Only happens when we have a blank file. Mundane, safe to ignore.
+            return out
+        except EOFError:
+            # We have a blank file
+            return [None]
         
-
-        return out
 
         
 ignoredSymbols = [

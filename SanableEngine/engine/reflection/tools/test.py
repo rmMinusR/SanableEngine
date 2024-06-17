@@ -8,9 +8,16 @@ class TestCacheInvalidation(unittest.TestCase):
     @classmethod
     def setUpClass(this):
         this.selfpath = os.path.dirname(os.path.realpath(__file__))
-        os.chdir(os.path.join( this.selfpath, "test_data", "empty"   )) ; this.data_empty   = source_discovery.discoverAll([ "." ])
+
+        emptyDir = os.path.join( this.selfpath, "test_data", "empty")
+        if not os.path.exists(emptyDir): os.mkdir(emptyDir)
+            
+        os.chdir(emptyDir                                             ) ; this.data_empty   = source_discovery.discoverAll([ "." ])
         os.chdir(os.path.join( this.selfpath, "test_data", "simple1" )) ; this.data_simple1 = source_discovery.discoverAll([ "." ])
         os.chdir(os.path.join( this.selfpath, "test_data", "simple2" )) ; this.data_simple2 = source_discovery.discoverAll([ "." ])
+        os.chdir(os.path.join( this.selfpath, "test_data", "includes1" )) ; this.data_includes1 = source_discovery.discoverAll([ "." ])
+        os.chdir(os.path.join( this.selfpath, "test_data", "includes2" )) ; this.data_includes2 = source_discovery.discoverAll([ "." ])
+        os.chdir(os.path.join( this.selfpath, "test_data", "includes3" )) ; this.data_includes3 = source_discovery.discoverAll([ "." ])
         os.chdir(this.selfpath)
         assert this.data_simple1[0].contents != this.data_simple2[0].contents
 
@@ -41,6 +48,27 @@ class TestCacheInvalidation(unittest.TestCase):
         this.assertEqual(len(diff.removed ), 0, "No edits: False positive")
         this.assertEqual(len(diff.outdated), 0, "No edits: False positive")
         this.assertEqual(len(diff.upToDate), 1, "No edits: False negative")
+
+    def test_upstream_edited(this):
+        diff = source_discovery.ProjectDiff(this.data_includes1, this.data_includes2)
+        this.assertEqual(len(diff.new     ), 0, "Upstream edits: False positive")
+        this.assertEqual(len(diff.removed ), 0, "Upstream edits: False positive")
+        this.assertEqual(len(diff.outdated), 2, "Upstream edits: False negative")
+        this.assertEqual(len(diff.upToDate), 0, "Upstream edits: False positive")
+        
+    def test_upstream_added(this):
+        diff = source_discovery.ProjectDiff(this.data_includes1, this.data_includes3)
+        this.assertEqual(len(diff.new     ), 0, "Upstream edits: False positive")
+        this.assertEqual(len(diff.removed ), 0, "Upstream edits: False positive")
+        this.assertEqual(len(diff.outdated), 1, "Upstream edits: False negative")
+        this.assertEqual(len(diff.upToDate), 1, "Upstream edits: False positive")
+    
+    def test_upstream_added(this):
+        diff = source_discovery.ProjectDiff(this.data_includes3, this.data_includes1)
+        this.assertEqual(len(diff.new     ), 0, "Upstream edits: False positive")
+        this.assertEqual(len(diff.removed ), 0, "Upstream edits: False positive")
+        this.assertEqual(len(diff.outdated), 1, "Upstream edits: False negative")
+        this.assertEqual(len(diff.upToDate), 1, "Upstream edits: False positive")
 
 
 if __name__ == '__main__':
