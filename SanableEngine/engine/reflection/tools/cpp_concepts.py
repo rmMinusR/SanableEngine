@@ -13,7 +13,7 @@ import abc
 import pickle
 
 import config
-from source_discovery import SourceFile, ProjectDiff
+from source_discovery import *
 
 
 def _getAbsName(target: Cursor) -> str:
@@ -214,7 +214,7 @@ class Symbol:
         this.relReferenceableName = cursor.spelling
         this.absReferenceableName = this.absName[:-len(this.relName)] + this.relReferenceableName
         this.isDefinition = cursor.is_definition()
-        this.sourceFile = SourceFile(cursor.location.file.name)
+        this.sourceFile = SourceFile(cursor.location.file.name, None) # FIXME replace with actual source file later, or pass via a temp field on Module
 
         # Detect annotations passed by clang::annotate
         this.annotations = Annotations.getAll(cursor)
@@ -748,30 +748,25 @@ class TypeInfo(Symbol):
 
 class Module:
     def __init__(this, defaultImageCaptureStatus="enabled", defaultImageCaptureBackend="disassembly"):
-        this.__symbols: dict[str, Symbol] = dict()
+        this.symbols: dict[str, Symbol] = dict()
         this.__sourceFiles: set[SourceFile] = set()
-        with open(__file__, "r") as thisFile:
-            thisFileContent = "".join(thisFile.readlines())
-            this.version = zlib.adler32(thisFileContent.encode("utf-8"))
-            del thisFileContent
         this.defaultImageCaptureStatus  = defaultImageCaptureStatus
         this.defaultImageCaptureBackend = defaultImageCaptureBackend
     
     def configMatches(this, other: "Module"):
-        if isinstance(other, NoneType): return False
-        if this.version != other.version: return False
+        if not isinstance(other, Module): return False
         return this.defaultImageCaptureStatus  == other.defaultImageCaptureStatus \
            and this.defaultImageCaptureBackend == other.defaultImageCaptureBackend
 
-    def parseTU(this, sources: list[SourceFile]):
-        diff = ProjectDiff(this.__sourceFiles, sources)
+    def parseTU(this, prev_project: Project|None, live_project: Project):
+        diff = ProjectDiff(prev_project, live_project)
         config.logger.log(config.LOG_USER_LEVEL, str(diff))
         
         for source in diff.outdated+diff.removed:
             # Do removal
-            symbolsToRemove = [i for i in this.__symbols.values() if i.sourceFile == source]
+            symbolsToRemove = [i for i in this.symbols.values() if i.sourceFile == source]
             for i in symbolsToRemove:
-                del this.__symbols[i.absName]
+                del this.symbols[i.absName]
 
         for source in diff.outdated+diff.new:
             # Do parsing
@@ -816,42 +811,42 @@ class Module:
 
         # Do actual registration
         config.logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
-        this.__symbols[obj.absName] = obj
+        this.symbols[obj.absName] = obj
 
     def lookup(this, key: str | Cursor):
         if isinstance(key, Cursor):
             key = _getAbsName(key)
-        return this.__symbols.get(key)
+        return this.symbols.get(key)
 
     def owns(this, obj: Symbol):
         return obj.sourceFile in this.__sourceFiles
 
     @property
     def types(this) -> Generator[TypeInfo, None, None]:
-        for i in this.__symbols.values():
+        for i in this.symbols.values():
             if isinstance(i, TypeInfo):
                 yield i
                 
     def finalize(this):
-        undefined = [i for i in this.__symbols.values() if not i.isDefinition]
+        undefined = [i for i in this.symbols.values() if not i.isDefinition]
         if len(undefined) > 0:
             config.logger.error(f"Detected {len(undefined)} declared global symbols missing definitions: {undefined}")
-        for i in this.__symbols.values(): i.finalize()
+        for i in this.symbols.values(): i.finalize()
 
     def renderBody(this) -> str:
-        keys = list(this.__symbols.keys())
+        keys = list(this.symbols.keys())
         keys.sort()
-        renders = [this.__symbols[k].renderMain() for k in keys if this.owns(this.__symbols[k])]
+        renders = [this.symbols[k].renderMain() for k in keys if this.owns(this.symbols[k])]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
 
     def renderPreDecls(this) -> str:
         out = []
-        keys = list(this.__symbols.keys())
+        keys = list(this.symbols.keys())
         keys.sort()
         for k in keys:
-            if this.owns(this.__symbols[k]):
-                out.extend(this.__symbols[k].renderPreDecls())
+            if this.owns(this.symbols[k]):
+                out.extend(this.symbols[k].renderPreDecls())
         return "\n".join(out)
 
     def renderIncludes(this) -> list[str]:
@@ -869,23 +864,6 @@ class Module:
         out = list(out)
         out.sort()
         return out
-            
-    def save(this, cachePath: str, *userData):
-        with open(cachePath, "wb") as file:
-            file.write(pickle.dumps( [this]+list(userData) ))
-
-    def load(cachePath: str):
-        if not os.path.exists(cachePath): return [None]
-        
-        with open(cachePath, "rb") as file: cacheFileRepr = file.read()
-        
-        try:
-            out = pickle.loads(cacheFileRepr)
-            config.logger.info(f"Loaded {len(out[0].__symbols)} symbols from cache")
-            return out
-        except EOFError:
-            # We have a blank file
-            return [None]
         
 
         

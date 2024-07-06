@@ -2,6 +2,7 @@
 
 import argparse
 import os.path
+import pickle
 
 parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
@@ -81,34 +82,49 @@ source_discovery.additionalCompilerOptions = compilerArgs
 
 config.logger.info("Discovering files")
 project = source_discovery.Project(args.targets, args.includes)
-project.discover()
-sourceFiles = [f for f in project.files if f.type != None and not f.hasError]
-
-template = source_discovery.SourceFile(args.template_file)
+template = source_discovery.SourceFile(args.template_file, project)
     
 # Attempt to load from cache, if present
+# CACHE FORMAT: version hash, previous module, previous project, previous template
 targetModule = cpp_concepts.Module(
     defaultImageCaptureStatus=args.default_image_capture_status,
     defaultImageCaptureBackend=args.default_image_capture_backend
 )
 isTemplateDirty:bool = True
-if args.cache != None:
-    cacheRaw = cpp_concepts.Module.load(args.cache)
-    cached = cacheRaw[0]
-    if targetModule.configMatches(cached):
-        prevTemplateHash = cacheRaw[1]
-        isTemplateDirty = (prevTemplateHash == template.contentsHash)
-        targetModule = cached
-    else:
-        config.logger.info("Configuration has changed, discarding cache")
+prevProject = None
+if args.cache != None and os.path.exists(args.cache):
+    # Load
+    with open(args.cache, "rb") as file: cacheFileRepr = file.read()
+    try: cacheRaw = pickle.loads(cacheFileRepr)
+    except EOFError: cacheRaw = None # We have a blank file
+
+    # Check
+    if cacheRaw != None:
+        try:
+            cacheVersion = cacheRaw[0]
+            if cacheVersion != config.version_hash:
+                config.logger.info("Detected changes to RTTI generator script. Discarding cache.")
+            else:
+                (_, prevModule, prevProject, prevTemplateHash) = cacheRaw
+                if not targetModule.configMatches(prevModule):
+                    config.logger.info("Project configuration has changed. Discarding cache.")
+                else:
+                    isTemplateDirty = (prevTemplateHash == template.contentsHash)
+                    targetModule = prevModule
+                    config.logger.info(f"Loaded {len(targetModule.symbols)} symbols from cache")
+        except Exception as e:
+            config.logger.error(f"Encountered the following error while loading cache. Cache will be discarded and regenerated.")
+            config.logger.error(f"{e}")
 
 config.logger.user("Parsing...")
-filesChanged = targetModule.parseTU(sourceFiles)
+filesChanged = targetModule.parseTU(prevProject, project)
 
+# Finalize and save back to cache
 config.logger.info("Finalizing...")
 targetModule.finalize()
 if args.cache != None:
-    targetModule.save(args.cache, template.contentsHash)
+    data = (config.version_hash, targetModule, project, template.contentsHash)
+    with open(args.cache, "wb") as file: file.write(pickle.dumps( data ))
 
 config.logger.user(f"Rendering to {args.output}")
 

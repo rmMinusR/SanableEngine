@@ -1,4 +1,7 @@
+from functools import reduce
 import logging
+import zlib
+import os.path
 
 # Add custom log level
 
@@ -20,3 +23,14 @@ global logger
 logger = logging.Logger("STIX")
 logger.setLevel("INFO")
 logger.addHandler(consoleHandler)
+
+
+# Version mismatch detection hash
+def stable_hash(file):
+    with open(file, "r") as thisFile:
+        thisFileContent = "".join(thisFile.readlines())
+        _hash = zlib.adler32(thisFileContent.encode("utf-8"))
+        del thisFileContent
+    return _hash
+tooling_files = ["config.py", "cpp_concepts.py", "rttigen.py", "source_discovery.py"]
+version_hash = reduce(lambda a,b: (a*33+b)&0xffffffff, [stable_hash( os.path.join(os.path.dirname(__file__), f) ) for f in tooling_files], 5381)
