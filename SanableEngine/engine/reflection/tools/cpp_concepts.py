@@ -3,18 +3,21 @@ import zlib
 import itertools
 import os
 from types import NoneType
-from typing import Generator
+from typing import Generator, Iterator
 import typing
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
 import copy
 import abc
-import pickle
+import timings
 
 import config
 from source_discovery import *
 
+
+def _getChildren(cursor: Cursor) -> Iterator[Cursor]:
+    return timings.timeScoped(lambda: cursor.get_children(), timings.TASK_ID_WALK_AST_EXTERNAL)
 
 def _getAbsName(target: Cursor) -> str:
     if type(target) == type(None) or target.kind == CursorKind.TRANSLATION_UNIT:
@@ -177,7 +180,7 @@ class Annotations:
     def getOwn(cursor: Cursor) -> dict[str, str|None]:
         """Detect annotations passed by clang::annotate, on given cursor only"""
         annotations: dict[str, object] = dict()
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             if i.kind == CursorKind.ANNOTATE_ATTR:
                 text: str = i.displayname
                 if text.startswith("stix::"):
@@ -281,7 +284,7 @@ class Virtualizable(Member):
         
         # Cache simple checks: search for keywords
         this.__isExplicitVirtual = cursor.is_virtual_method() or cursor.is_pure_virtual_method()
-        this.__isExplicitOverride = any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in cursor.get_children()])
+        this.__isExplicitOverride = any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in _getChildren(cursor)])
     
     def getParent(this):
         # Try cached version first
@@ -328,7 +331,7 @@ class Virtualizable(Member):
 class Callable:
     def __init__(this, module: "Module", cursor: Cursor):
         this.parameters: list[ParameterInfo] = []
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             if ParameterInfo.matches(i):
                 this.parameters.append(ParameterInfo(module, i))
 
@@ -361,7 +364,7 @@ class GlobalFuncInfo(Symbol):
         assert GlobalFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
         this.__parameters = []
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             if ParameterInfo.matches(i):
                 this.__parameters.append(ParameterInfo(module, i))
 
@@ -559,7 +562,7 @@ class ParentInfo(Member):
 class FriendInfo(Member):
     def __init__(this, module: "Module", cursor: Cursor, owner):
         Member.__init__(this, module, cursor, owner)
-        this.targetName = _getAbsName([i for i in cursor.get_children()][0]) # Select friend name
+        this.targetName = _getAbsName([i for i in _getChildren(cursor)][0]) # Select friend name
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -578,7 +581,7 @@ class TypeInfo(Symbol):
         this.__contents: list[Member] = list()
         
         # Recurse into children
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             matchedType = next((t for t in allowedMemberSymbols if t.matches(i)), None)
             if matchedType != None:
                 this.register(matchedType(module, i, this))
@@ -762,6 +765,8 @@ class Module:
         diff = ProjectDiff(prev_project, live_project)
         config.logger.log(config.LOG_USER_LEVEL, str(diff))
         
+        timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
+
         for source in diff.outdated+diff.removed:
             # Do removal
             symbolsToRemove = [i for i in this.symbols.values() if i.sourceFile == source]
@@ -772,7 +777,7 @@ class Module:
             # Do parsing
             this.__sourceFiles.add(source)
             config.logger.info(f"Parsing {source}")
-            for cursor in source.parse().get_children():
+            for cursor in _getChildren(source.parse()):
                 # Only capture what's in the current file
                 if cursor.location.file.name.replace(os.altsep, os.sep) == source.path: this.parseGlobalCursor(cursor)
         
@@ -786,7 +791,7 @@ class Module:
 
         # Special case for namespaces: Just walk children
         if cursor.kind == CursorKind.NAMESPACE:
-            for i in cursor.get_children():
+            for i in _getChildren(cursor):
                 this.parseGlobalCursor(i)
             return
 

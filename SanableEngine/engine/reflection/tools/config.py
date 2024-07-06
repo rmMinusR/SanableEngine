@@ -32,5 +32,5 @@ def stable_hash(file):
         _hash = zlib.adler32(thisFileContent.encode("utf-8"))
         del thisFileContent
     return _hash
-tooling_files = ["config.py", "cpp_concepts.py", "rttigen.py", "source_discovery.py"]
+tooling_files = ["config.py", "cpp_concepts.py", "rttigen.py", "source_discovery.py", "timings.py"]
 version_hash = reduce(lambda a,b: (a*33+b)&0xffffffff, [stable_hash( os.path.join(os.path.dirname(__file__), f) ) for f in tooling_files], 5381)

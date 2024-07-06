@@ -2,7 +2,9 @@
 
 import argparse
 import os.path
-import pickle
+import timings
+
+timings.switchTask(timings.TASK_ID_INIT)
 
 parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
@@ -78,12 +80,13 @@ cpp_concepts.defaultImageBackend = args.default_image_capture_backend
 ########################## Main business logic ##########################
 
 import source_discovery
-source_discovery.additionalCompilerOptions = compilerArgs
+timings.switchTask(timings.TASK_ID_DISCOVER)
 
 config.logger.info("Discovering files")
 project = source_discovery.Project(args.targets, args.includes)
+project.additionalCompilerOptions = compilerArgs
 template = source_discovery.SourceFile(args.template_file, project)
-    
+
 # Attempt to load from cache, if present
 # CACHE FORMAT: version hash, previous module, previous project, previous template
 targetModule = cpp_concepts.Module(
@@ -92,6 +95,7 @@ targetModule = cpp_concepts.Module(
 )
 isTemplateDirty:bool = True
 prevProject = None
+import pickle
 if args.cache != None and os.path.exists(args.cache):
     # Load
     with open(args.cache, "rb") as file: cacheFileRepr = file.read()
@@ -120,6 +124,7 @@ config.logger.user("Parsing...")
 filesChanged = targetModule.parseTU(prevProject, project)
 
 # Finalize and save back to cache
+timings.switchTask(timings.TASK_ID_FINALIZE)
 config.logger.info("Finalizing...")
 targetModule.finalize()
 if args.cache != None:
@@ -163,3 +168,7 @@ else:
     config.logger.info("Skipping write: nothing to do")
 
 config.logger.info("Done!")
+
+config.logger.info("Timings:")
+for k in timings.timings.keys():
+    config.logger.info(f" - {k}: {timings.timings[k]}")
