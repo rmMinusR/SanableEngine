@@ -80,10 +80,9 @@ import source_discovery
 source_discovery.additionalCompilerOptions = compilerArgs
 
 config.logger.info("Discovering files")
-projectFiles = source_discovery.discoverAll(args.targets)
-sourceFiles = [f for f in projectFiles if f.type != None and not f.hasError]
-for sourceFile in sourceFiles:
-    sourceFile.additionalIncludes += args.includes
+project = source_discovery.Project(args.targets, args.includes)
+project.discover()
+sourceFiles = [f for f in project.files if f.type != None and not f.hasError]
 
 template = source_discovery.SourceFile(args.template_file)
     
