@@ -23,6 +23,7 @@ class SourceFile:
 	def __init__(this, filePath: str, project: "Project"):
 		this.path = filePath.replace(os.altsep, os.sep)
 		this.abspath = os.path.abspath(this.path)
+		assert os.path.exists(this.path)
 		name, ext = os.path.splitext(this.path)
 		this.isGenerated = name.endswith(".generated")
 		this.project = project
@@ -34,14 +35,14 @@ class SourceFile:
 		this.hasError = ext not in SourceFile.fileTypes.keys()
 		this.tu: TranslationUnit = None
 		
-		assert os.path.exists(this.path)
-		with open(this.path, "r") as f:
-			this.contents = f.read()
-		this.contentsHash = zlib.adler32(this.contents.encode("utf-8"))
+		if this.type != None: # Skip loading for non-C++ files
+			with open(this.path, "r") as f:
+				this.contents = f.read() # FIXME files sometimes get loaded many times! Cache them in Project.
+			this.contentsHash = zlib.adler32(this.contents.encode("utf-8"))
 		
-		this.includes_literal = [i.strip()[len("#include <"):-1] for i in this.contents.split("\n") if i.strip().startswith("#include ")]
-		if this.project != None:
-			this.includes_literal = [(_real if _real != None else _lit) for _real,_lit in [(project.resolveInclude(i, this.path),i) for i in this.includes_literal] ]
+			this.includes_literal = [i.strip()[len("#include <"):-1] for i in this.contents.split("\n") if i.strip().startswith("#include ")]
+			if this.project != None:
+				this.includes_literal = [(_real if _real != None else _lit) for _real,_lit in [(project.resolveInclude(i, this.path),i) for i in this.includes_literal] ]
 		
 	@cached_property
 	def includes(this):
