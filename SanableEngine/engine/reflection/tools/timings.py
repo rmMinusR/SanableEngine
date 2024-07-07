@@ -31,6 +31,7 @@ def timeScoped(_callable, subtask):
 
 TASK_ID_INIT = "Initial setup and load"
 TASK_ID_DISCOVER = "Source project indexing"
+TASK_ID_EXT_FILE_IO = "File I/O"
 TASK_ID_CLANG_PARSE = "Clang lexing and parsing"
 TASK_ID_WALK_AST_INTERNAL = "AST walking (python-side)"
 TASK_ID_WALK_AST_EXTERNAL = "AST walking (Clang-side)"

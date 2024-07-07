@@ -5,6 +5,7 @@ from config import logger
 from clang.cindex import *
 import zlib
 import glob
+import timings
 
 class SourceFile:
 	fileTypes = {
@@ -36,9 +37,11 @@ class SourceFile:
 		this.tu: TranslationUnit = None
 		
 		if this.type != None: # Skip loading for non-C++ files
+			prevTask = timings.switchTask(timings.TASK_ID_EXT_FILE_IO)
 			with open(this.path, "r") as f:
 				this.contents = f.read() # FIXME files sometimes get loaded many times! Cache them in Project.
 			this.contentsHash = zlib.adler32(this.contents.encode("utf-8"))
+			timings.switchTask(prevTask)
 		
 			this.includes_literal = [i.strip()[len("#include <"):-1] for i in this.contents.split("\n") if i.strip().startswith("#include ")]
 			if this.project != None:
@@ -86,9 +89,12 @@ class SourceFile:
 			cli_args = ["-std=c++17", "--language="+this.type, "-D__STIX_REFELCTION_GENERATING"]
 			cli_args.extend(['-I'+i for i in this.project.includeDirs]) # FIXME not space safe!
 			cli_args.extend(this.project.additionalCompilerOptions)
+			prevTask = timings.switchTask(timings.TASK_ID_WALK_AST_EXTERNAL)
 			try:
 				this.tu = this.project.clang_index.parse(this.path, args=cli_args, options=TranslationUnit.PARSE_SKIP_FUNCTION_BODIES)
+				timings.switchTask(prevTask)
 			except Exception:
+				timings.switchTask(prevTask)
 				logger.critical(f"Error parsing translation unit for target {this.path}", exc_info=True)
 				raise
 
