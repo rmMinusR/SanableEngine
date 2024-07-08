@@ -1,6 +1,7 @@
 #include "MemoryHeap.hpp"
 
 #include "GlobalTypeRegistry.hpp"
+#include "MemoryRoot.hpp"
 
 void MemoryHeap::registerPool(GenericTypedMemoryPool* pool)
 {
@@ -44,10 +45,16 @@ void MemoryHeap::destroyPool(const TypeName& type)
 MemoryHeap::MemoryHeap()
 {
 	poolStateHash = 0;
+
+	//Mark alive
+	MemoryRoot::get()->registerHeap(this);
 }
 
 MemoryHeap::~MemoryHeap()
 {
+	//Mark dead/dying
+	MemoryRoot::get()->removeHeap(this);
+
 	for (GenericTypedMemoryPool* i : pools)
 	{
 		delete i;

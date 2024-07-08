@@ -2,7 +2,10 @@
 #include <emscripten.h>
 
 #include <SDL.h>
+
+#include "MemoryRoot.hpp"
 #include "application/Application.hpp"
+#include "game/Game.hpp"
 #include "game/GameWindowRenderPipeline.hpp"
 #include "game/GameWindowInputProcessor.hpp"
 #include "System_Emscripten.hpp"
@@ -33,6 +36,7 @@ int main(int argc, char* argv[])
     //Shutdown
     engine.shutdown();
     SDL_Quit();
+    MemoryRoot::cleanup();
 
     return 0;
 }
