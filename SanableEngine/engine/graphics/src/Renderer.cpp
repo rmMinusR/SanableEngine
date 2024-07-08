@@ -27,7 +27,14 @@ Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	owner(owner),
 	context(context)
 {
-	dynQuad = GMesh(CMesh::createQuad0WH(1, 1), true);
+	unitQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), false);
+	dynQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), true);
+
+	{
+		CTexture tmp(1, 1, 4);
+		memset(tmp.pixel(0, 0), 255, 4);
+		fallbackTexture = GTexture(this, tmp);
+	}
 }
 
 void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
@@ -94,7 +101,7 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 		glScalef(glyph->texture->width, glyph->texture->height, 1); //Apply glyph's requested size
 		mat.writeInstanceUniforms_generic(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
 
-		dynQuad.renderImmediate();
+		unitQuad.renderImmediate();
 		
 		glPopMatrix();
 		
@@ -107,26 +114,40 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawTexture(const Texture& tex, int x, int y)
+void Renderer::drawTextureInternal(const GTexture* tex, Vector3f pos, Vector2<float> size, Rect<float> uvs)
 {
-	ShaderProgram::clear();
-	drawTexture(&tex, Vector3f(x, y, 0), tex.width, tex.height);
+	assert(tex);
+	//dynQuad.updateFrom(CMesh::createUnitQuad(uvs));
+
+	glBindTexture(GL_TEXTURE_2D, tex->id);
+	glEnable(GL_TEXTURE_2D);
+
+	glPushMatrix();
+	glTranslatef(pos.x, pos.y, pos.z);
+	glScalef(size.x, size.y, 1);
+	
+	glBegin(GL_QUADS);
+	glTexCoord2f(uvs.      topLeft.x, uvs.      topLeft.y); glVertex3f(0, 0, 0);
+	glTexCoord2f(uvs.bottomRight().x, uvs.      topLeft.y); glVertex3f(1, 0, 0);
+	glTexCoord2f(uvs.bottomRight().x, uvs.bottomRight().y); glVertex3f(1, 1, 0);
+	glTexCoord2f(uvs.      topLeft.x, uvs.bottomRight().y); glVertex3f(0, 1, 0);
+	glEnd();
+	//dynQuad.renderImmediate();
+
+	glPopMatrix();
+
+	glDisable(GL_TEXTURE_2D);
 }
 
-void Renderer::drawTexture(const Texture* tex, Vector3f pos, float w, float h, Sprite* sprite)
+void Renderer::drawTexture(const GTexture* tex, Vector3f pos, float w, float h)
 {
-	Vector2f uvLo = sprite ? sprite->uvs.topLeft       : Vector2f(0, 0);
-	Vector2f uvHi = sprite ? sprite->uvs.bottomRight() : Vector2f(1, 1);
+	if (!tex) tex = &fallbackTexture;
+	drawTextureInternal(tex, pos, {w,h}, Rect<float>::fromMinMax({0,0}, {1,1}) );
+}
 
-	if (tex) glBindTexture(GL_TEXTURE_2D, tex->id);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glTexCoord2i(uvLo.x, uvLo.y); glVertex3f(pos.x  , pos.y  , pos.z);
-	glTexCoord2i(uvHi.x, uvLo.y); glVertex3f(pos.x+w, pos.y  , pos.z);
-	glTexCoord2i(uvHi.x, uvHi.y); glVertex3f(pos.x+w, pos.y+h, pos.z);
-	glTexCoord2i(uvLo.x, uvHi.y); glVertex3f(pos.x  , pos.y+h, pos.z);
-	glEnd();
-	glDisable(GL_TEXTURE_2D);
+void Renderer::drawSprite(const Sprite* spr, Vector3f pos, float w, float h)
+{
+	drawTextureInternal(spr->tex, pos, {w,h}, spr->uvs);
 }
 
 void Renderer::loadTransform(const glm::mat4& mat)
@@ -134,20 +155,20 @@ void Renderer::loadTransform(const glm::mat4& mat)
 	glLoadMatrixf(glm::value_ptr(mat));
 }
 
-Texture* Renderer::loadTexture(const std::filesystem::path& path)
+GTexture* Renderer::loadTexture(const std::filesystem::path& path)
 {
-	return Texture::fromFile(path, this);
+	return GTexture::fromFile(path, this);
 }
 
-Texture* Renderer::newTexture(int width, int height, int nChannels, void* data)
+GTexture* Renderer::newTexture(int width, int height, int nChannels, void* data)
 {
-	return new Texture(this, width, height, nChannels, data);
+	return new GTexture(this, width, height, nChannels, data);
 }
 
-Texture* Renderer::renderFontGlyph(const Font& font)
+GTexture* Renderer::renderFontGlyph(const Font& font)
 {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
-	Texture* out = new Texture(
+	GTexture* out = new GTexture(
 		this,
 		font.font->glyph->bitmap.width,
 		font.font->glyph->bitmap.rows,

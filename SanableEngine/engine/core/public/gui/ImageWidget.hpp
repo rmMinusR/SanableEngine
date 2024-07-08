@@ -2,14 +2,14 @@
 
 #include "Widget.hpp"
 
-class Texture;
+class UISprite;
 
 class ImageWidget : public Widget
 {
 	Material* material;
-	Texture* texture;
+	const UISprite* sprite;
 public:
-	ENGINEGUI_API ImageWidget(HUD* hud, Material* material, Texture* texture);
+	ENGINEGUI_API ImageWidget(HUD* hud, Material* material, const UISprite* sprite);
 	ENGINEGUI_API virtual ~ImageWidget();
 
 	ENGINEGUI_API virtual const Material* getMaterial() const override;

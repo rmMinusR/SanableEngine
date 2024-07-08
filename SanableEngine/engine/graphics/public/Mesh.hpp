@@ -6,6 +6,7 @@
 #include <GL/glew.h>
 
 #include "dllapi.h"
+#include "math/Rect.inl"
 
 
 class CMesh;
@@ -44,6 +45,7 @@ public:
 	//Primitives
 	//ENGINEGRAPHICS_API static CMesh createCube(float size);
 	ENGINEGRAPHICS_API static CMesh createQuad0WH(float w, float h); //AA rect with one corner at (0,0) and the other at (w,h), normal Z+
+	ENGINEGRAPHICS_API static CMesh createUnitQuad(Rect<float> uvs); //AA rect with one corner at (0,0) and the other at (1,1), normal Z+, with given UVs
 
 	ENGINEGRAPHICS_API CMesh(CMesh&& mov);
 	ENGINEGRAPHICS_API CMesh& operator=(CMesh&& mov);
@@ -65,10 +67,15 @@ public:
 	ENGINEGRAPHICS_API GMesh(const CMesh& src, bool dynamic = false);
 	ENGINEGRAPHICS_API virtual ~GMesh();
 
+	ENGINEGRAPHICS_API void updateFrom(const CMesh& src);
+	ENGINEGRAPHICS_API void updateFrom(const CMesh& src, bool vertices, bool triangles);
+
 	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
 
 	ENGINEGRAPHICS_API GMesh(GMesh&& mov);
 	ENGINEGRAPHICS_API GMesh& operator=(GMesh&& mov);
 	GMesh(const GMesh& cpy) = delete;
 	GMesh& operator=(const GMesh& cpy) = delete;
+
+	ENGINEGRAPHICS_API operator bool() const;
 };

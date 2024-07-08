@@ -5,9 +5,9 @@
 
 #include "GlobalTypeRegistry.hpp"
 
-TypeInfo::TypeInfo()
+TypeInfo::TypeInfo() :
+	hash(0)
 {
-
 }
 
 TypeInfo::~TypeInfo()
@@ -29,6 +29,7 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 	this->name         = cpy.name;
 	this->layout       = cpy.layout;
 	this->capabilities = cpy.capabilities;
+	this->hash         = cpy.hash;
 
 	return *this;
 }
@@ -38,6 +39,7 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 	this->name         = std::move(mov.name);
 	this->layout       = std::move(mov.layout);
 	this->capabilities = std::move(mov.capabilities);
+	this->hash         = mov.hash;
 
 	return *this;
 }
@@ -96,7 +98,7 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent_internal(const TypeName& o
 	//Check immediate parents first
 	for (const ParentInfo& parent : parents)
 	{
-		if (parent.typeName == name) return parent;
+		if (parent.typeName == name) return std::make_optional<ParentInfo>(parent);
 	}
 
 	//Recurse if allowed
@@ -305,4 +307,9 @@ void TypeInfo::create_internalFinalize()
 {
 	layout.byteUsage.resize(layout.size);
 	memset(layout.byteUsage.data(), (uint8_t)Layout::ByteUsage::Unknown, layout.size);
+}
+
+bool TypeInfo::isDummy() const
+{
+	return hash == 0;
 }

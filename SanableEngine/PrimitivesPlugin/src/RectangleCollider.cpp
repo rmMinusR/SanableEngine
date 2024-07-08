@@ -49,7 +49,7 @@ bool RectangleCollider::CheckCollision(RectangleCollider const* other) const
 
 bool RectangleCollider::CheckCollisionAny() const
 {
-	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getApplication()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
+	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getApplication()->getLevelHeap()->getSpecificPool<RectangleCollider>(false);
 	for (auto it = ((RawMemoryPool*)pool)->cbegin(); it != ((RawMemoryPool*)pool)->cend(); ++it)
 	{
 		if (*it != this && CheckCollision((RectangleCollider*)*it)) return true;
@@ -60,10 +60,10 @@ bool RectangleCollider::CheckCollisionAny() const
 int RectangleCollider::GetCollisions(RectangleCollider** outArr) const
 {
 	int nHits = 0;
-	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getApplication()->getMemoryManager()->getSpecificPool<RectangleCollider>(false);
+	TypedMemoryPool<RectangleCollider>* pool = getEngine()->getApplication()->getLevelHeap()->getSpecificPool<RectangleCollider>(false);
 	for (auto it = pool->cbegin(); it != pool->cend(); ++it)
 	{
-		RectangleCollider* c = (RectangleCollider*)*it;
+		RectangleCollider* c = &*it;
 
 		if (c != this && CheckCollision(c))
 		{

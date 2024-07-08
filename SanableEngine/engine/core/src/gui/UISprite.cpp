@@ -1,15 +1,18 @@
 #include "gui/UISprite.hpp"
 
+#include "Texture.hpp"
+#include "Renderer.hpp"
+
 UISprite::~UISprite()
 {
 }
 
-UISprite3x3::UISprite3x3(Texture* tex) :
+UISprite3x3::UISprite3x3(GTexture* tex) :
 	tex(tex)
 {
 	uvs[0] = Vector2f(0, 0);
-	uvs[1] = Vector2f(0.3f, 0.3f);
-	uvs[2] = Vector2f(0.6f, 0.6f);
+	uvs[1] = Vector2f(1/3.0f, 1/3.0f);
+	uvs[2] = Vector2f(2/3.0f, 2/3.0f);
 	uvs[3] = Vector2f(1, 1);
 }
 
@@ -27,13 +30,44 @@ Sprite UISprite3x3::get(Vector2<int> index) const
 {
 	Sprite out(tex);
 	out.setUVRect(Rect<float>::fromMinMax(
-		uvs[index.x+0],
-		uvs[index.x+1]
+		{ uvs[index.x+0].x, uvs[index.y+0].y },
+		{ uvs[index.x+1].x, uvs[index.y+1].y }
 	));
 	return out;
 }
 
-UISpriteSparse::UISpriteSparse(Texture* tex)
+void UISprite3x3::renderImmediate(Renderer* renderer, Vector3f pos, float w, float h) const
+{
+	//Calc corners
+	Vector2f locs[4];
+	locs[0] = pos.xy();
+	locs[3] = locs[0] + Vector2f(w,h);
+
+	//Calc inners using corner sizes
+	Vector2f texSize(tex->getWidth(), tex->getHeight());
+	locs[1] = locs[0] + (uvs[1]-uvs[0])*texSize;
+	locs[2] = locs[3] - (uvs[3]-uvs[2])*texSize;
+
+	//Fix elements smaller than minimum size
+	if (locs[1].x > locs[2].x) locs[1].x = locs[2].x = (locs[1].x+locs[2].x)/2;
+	if (locs[1].y > locs[2].y) locs[1].y = locs[2].y = (locs[1].y+locs[2].y)/2;
+
+	for (int ix = 0; ix < 3; ++ix)
+	{
+		for (int iy = 0; iy < 3; ++iy)
+		{
+			Sprite s = get(Vector2<int>(ix, iy));
+			renderer->drawSprite(
+				&s,
+				Vector3f(locs[ix].x, locs[iy].y, pos.z),
+				locs[ix+1].x-locs[ix].x,
+				locs[iy+1].y-locs[iy].y
+			);
+		}
+	}
+}
+
+UISpriteSparse::UISpriteSparse(GTexture* tex)
 {
 }
 
@@ -54,4 +88,9 @@ Sprite UISpriteSparse::get(Vector2<int> index) const
 	Sprite out(tex);
 	out.setUVRect(uvs[index.x + index.y*3]);
 	return out;
+}
+
+void UISpriteSparse::renderImmediate(Renderer* renderer, Vector3f pos, float w, float h) const
+{
+	assert(false && "TODO implement");
 }

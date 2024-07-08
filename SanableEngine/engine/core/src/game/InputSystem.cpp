@@ -14,14 +14,12 @@ InputSystem::~InputSystem()
 void InputSystem::onGainFocus()
 {
 	focused++;
-	printf("Gained focus (now %i)", focused);
 	assert(focused <= 2);
 }
 
 void InputSystem::onLoseFocus()
 {
 	focused--;
-	printf("Lost focus (now %i)", focused);
 	assert(focused >= 0);
 }
 

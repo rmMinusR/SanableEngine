@@ -2,8 +2,9 @@
 
 #include "RawMemoryPool.hpp"
 #include "TypeInfo.hpp"
+#include "GlobalTypeRegistry.hpp"
 
-class MemoryManager;
+class MemoryHeap;
 class GenericTypedMemoryPool;
 
 //Strongly typed pointers (recommended)
@@ -14,7 +15,7 @@ class TypedMemoryPool
 	static_assert(!std::is_abstract_v<TObj>);
 
 private:
-	friend class MemoryManager;
+	friend class MemoryHeap;
 	GenericTypedMemoryPool* impl;
 public:
 	TypedMemoryPool(GenericTypedMemoryPool* impl) : impl(impl) {}
@@ -35,9 +36,27 @@ public:
 	//Pass through
 	inline void release(TObj* obj) { impl->release(obj); }
 
-	inline RawMemoryPool::const_iterator cbegin() const { return impl->cbegin(); }
-	inline RawMemoryPool::const_iterator cend  () const { return impl->cend  (); }
-	
+	//Pass through with type safety
+	class const_iterator
+	{
+	private:
+		RawMemoryPool::const_iterator inner;
+		inline const_iterator(RawMemoryPool::const_iterator inner) : inner(inner) {}
+		friend class TypedMemoryPool<TObj>;
+
+	public:
+		inline TObj& operator*() const { return *reinterpret_cast<TObj*>(*inner); }
+		inline TObj* operator->() const { return reinterpret_cast<TObj*>(*inner); }
+
+		inline const_iterator operator++() { ++inner; return *this; }
+
+		inline bool operator!=(const const_iterator& other) const { return inner != other.inner; }
+		inline bool operator==(const const_iterator& other) const { return inner == other.inner; }
+	};
+
+	inline const_iterator cbegin() const { return const_iterator(impl->cbegin()); }
+	inline const_iterator cend  () const { return const_iterator(impl->cend  ()); }
+
 protected:
 	TypedMemoryPool(TypedMemoryPool&&) = delete;
 	TypedMemoryPool(const TypedMemoryPool&) = delete;

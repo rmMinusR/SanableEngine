@@ -73,13 +73,13 @@ void Game::applyConcurrencyBuffers()
 
 void Game::refreshCallBatchers(bool force)
 {
-    updateList   .ensureFresh(application->getMemoryManager(), force);
-    _3dRenderList.ensureFresh(application->getMemoryManager(), force);
+    updateList   .ensureFresh(application->getLevelHeap(), force);
+    _3dRenderList.ensureFresh(application->getLevelHeap(), force);
 }
 
 GameObject* Game::addGameObject()
 {
-    GameObject* o = application->getMemoryManager()->create<GameObject>(this);
+    GameObject* o = application->getLevelHeap()->create<GameObject>(this);
     objectAddBuffer.push_back(o);
     return o;
 }
@@ -93,7 +93,7 @@ void Game::destroyImmediate(GameObject* go)
 {
     assert(std::find(objects.cbegin(), objects.cend(), go) != objects.cend());
     objects.erase(std::find(objects.begin(), objects.end(), go));
-    application->getMemoryManager()->destroy(go);
+    application->getLevelHeap()->destroy(go);
 }
 
 void Game::destroyImmediate(Component* c)
@@ -103,7 +103,7 @@ void Game::destroyImmediate(Component* c)
     auto it = std::find(l.cbegin(), l.cend(), c);
     assert(it != l.cend());
     l.erase(it);
-    application->getMemoryManager()->destroy(c);
+    application->getLevelHeap()->destroy(c);
 }
 
 void Game::tick()

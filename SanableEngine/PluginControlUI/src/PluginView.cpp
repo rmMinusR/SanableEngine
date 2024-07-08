@@ -4,6 +4,7 @@
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
 #include "gui/ImageWidget.hpp"
+#include "gui/UISprite.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/VerticalGroupWidget.hpp"
 #include "Resources.hpp"
@@ -52,7 +53,7 @@ void PluginView::tryInit()
 		status->transform.setParent(&statusLine->transform);
 		statusLine->setFlexWeight(&status->transform, 4);
 
-		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
+		imgToggleLoadedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackgroundSprite);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, lblToggleLoaded);
@@ -72,7 +73,7 @@ void PluginView::tryInit()
 			}
 		});
 
-		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackground);
+		imgToggleHookedBg = hud->addWidget<ImageWidget>(nullptr, Resources::buttonBackgroundSprite);
 		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, lblToggleHooked);

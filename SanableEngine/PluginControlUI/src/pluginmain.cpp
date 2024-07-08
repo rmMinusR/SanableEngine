@@ -12,8 +12,10 @@
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 #include "Texture.hpp"
+#include "Sprite.hpp"
 #include "Font.hpp"
 #include "Resources.hpp"
+#include "gui/UISprite.hpp"
 
 Game* game;
 PluginManagerView* ui;
@@ -48,11 +50,9 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
-        //ShaderProgram* imgShader = new ShaderProgram("resources/ui/shaders/image");
-        //if (!imgShader->load()) assert(false);
-        //Resources::imageMat = new Material(imgShader);
-        Resources::buttonBackground = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/grey_panel.png");
-        assert(*Resources::buttonBackground);
+        Resources::buttonBackgroundTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/grey_button10.png");
+        assert(*Resources::buttonBackgroundTexture);
+        Resources::buttonBackgroundSprite = new UISprite3x3(Resources::buttonBackgroundTexture);
 
         //Ready resources: text
         ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");

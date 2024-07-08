@@ -1,7 +1,7 @@
 #version 330 core
 
 uniform sampler2D img;
-uniform vec3 textColor;
+uniform vec3 color;
 
 in vec2 frag_uv;
 

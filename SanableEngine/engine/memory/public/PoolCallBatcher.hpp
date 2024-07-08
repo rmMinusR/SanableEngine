@@ -27,7 +27,7 @@ public:
 
 	ENGINEMEM_API void clear();
 	ENGINEMEM_API size_t count() const;
-	ENGINEMEM_API void ensureFresh(MemoryManager* src, bool force = false);
+	ENGINEMEM_API void ensureFresh(MemoryHeap* src, bool force = false);
 
 	ENGINEMEM_API void foreachObject(const std::function<void(void*)>& visitor) const; //Given pointer will already have been cast to correct type
 };
@@ -41,6 +41,12 @@ public:
 
 	template<typename TReturn, typename... TArgs>
 	void memberCall(TReturn(TObj::*func)(TArgs...), TArgs... funcArgs) const
+	{
+		foreachObject([&](void* obj) { (static_cast<TObj*>(obj)->*func)(funcArgs...); });
+	}
+
+	template<typename TReturn, typename... TArgs>
+	void memberCall(TReturn(TObj::* func)(TArgs...) const, TArgs... funcArgs) const
 	{
 		foreachObject([&](void* obj) { (static_cast<TObj*>(obj)->*func)(funcArgs...); });
 	}

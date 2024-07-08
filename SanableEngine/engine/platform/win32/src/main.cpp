@@ -2,6 +2,7 @@
 
 #include <SDL.h>
 
+#include "MemoryRoot.hpp"
 #include "application/Application.hpp"
 #include "game/Game.hpp"
 #include "game/GameWindowRenderPipeline.hpp"
@@ -31,6 +32,7 @@ int main(int argc, char* argv[])
     //Shutdown
     engine.shutdown();
     SDL_Quit();
+    MemoryRoot::cleanup();
     
     //Pause so we can read console
     system.DebugPause();
