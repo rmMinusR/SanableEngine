@@ -12,7 +12,7 @@ struct TypeInfo;
 class PluginManager;
 class _PoolCallBatcherBase;
 
-class MemoryManager
+class MemoryHeap
 {
 private:
 	std::vector<GenericTypedMemoryPool*> pools;
@@ -23,8 +23,8 @@ private:
 	GlobalTypeRegistry::Snapshot lastKnownRtti;
 
 public:
-	ENGINEMEM_API MemoryManager();
-	ENGINEMEM_API ~MemoryManager();
+	ENGINEMEM_API MemoryHeap();
+	ENGINEMEM_API ~MemoryHeap();
 
 	ENGINEMEM_API GenericTypedMemoryPool* getSpecificPool(const TypeName& type);
 	template<typename TObj>
@@ -56,7 +56,7 @@ private:
 };
 
 template<typename TObj>
-inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate)
+inline TypedMemoryPool<TObj>* MemoryHeap::getSpecificPool(bool fallbackCreate)
 {
 	GenericTypedMemoryPool* out = getSpecificPool(TypeName::create<TObj>());
 
@@ -72,13 +72,13 @@ inline TypedMemoryPool<TObj>* MemoryManager::getSpecificPool(bool fallbackCreate
 }
 
 template<typename TObj, typename... TCtorArgs>
-inline TObj* MemoryManager::create(TCtorArgs... ctorArgs)
+inline TObj* MemoryHeap::create(TCtorArgs... ctorArgs)
 {
 	return getSpecificPool<TObj>(true)->emplace(ctorArgs...);
 }
 
 template<typename TObj>
-void MemoryManager::destroy(TObj* obj)
+void MemoryHeap::destroy(TObj* obj)
 {
 	//Try direct lookup first
 	GenericTypedMemoryPool* pool = getSpecificPool(TypeName::create<TObj>());

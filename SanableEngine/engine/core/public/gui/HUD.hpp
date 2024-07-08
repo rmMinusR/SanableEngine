@@ -4,13 +4,13 @@
 
 #include "CallBatcher.inl"
 #include "Widget.hpp"
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 
 class HUD
 {
 private:
 	CallBatcher<Widget> widgets;
-	MemoryManager memory; //TODO reload safety
+	MemoryHeap memory; //TODO reload safety
 	WidgetTransform root;
 	
 	//Concurrency buffers
@@ -24,7 +24,7 @@ public:
 	ENGINEGUI_API HUD();
 	ENGINEGUI_API ~HUD();
 
-	ENGINEGUI_API MemoryManager* getMemory();
+	ENGINEGUI_API MemoryHeap* getMemory();
 	
 	ENGINEGUI_API void refreshLayout(Rect<float> viewport);
 	ENGINEGUI_API void tick();

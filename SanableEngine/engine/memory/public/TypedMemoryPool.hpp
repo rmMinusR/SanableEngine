@@ -4,7 +4,7 @@
 #include "TypeInfo.hpp"
 #include "GlobalTypeRegistry.hpp"
 
-class MemoryManager;
+class MemoryHeap;
 class GenericTypedMemoryPool;
 
 //Strongly typed pointers (recommended)
@@ -15,7 +15,7 @@ class TypedMemoryPool
 	static_assert(!std::is_abstract_v<TObj>);
 
 private:
-	friend class MemoryManager;
+	friend class MemoryHeap;
 	GenericTypedMemoryPool* impl;
 public:
 	TypedMemoryPool(GenericTypedMemoryPool* impl) : impl(impl) {}

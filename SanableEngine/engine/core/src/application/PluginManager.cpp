@@ -124,7 +124,7 @@ void PluginManager::reloadAll()
 	loadAll();
 
     std::cout << "Refreshing object layouts and vtables...\n";
-	engine->getMemoryManager()->ensureFresh();
+	engine->getLevelHeap()->ensureFresh();
 
     std::cout << "Refreshing pointers... (call batchers)\n";
 	engine->getGame()->refreshCallBatchers(true);

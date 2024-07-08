@@ -1,8 +1,8 @@
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 
 #include "GlobalTypeRegistry.hpp"
 
-void MemoryManager::registerPool(GenericTypedMemoryPool* pool)
+void MemoryHeap::registerPool(GenericTypedMemoryPool* pool)
 {
 	pools.push_back(pool);
 
@@ -11,7 +11,7 @@ void MemoryManager::registerPool(GenericTypedMemoryPool* pool)
 	poolStateHash = (poolStateHash*1103515245)+12345; //From glibc's rand()
 }
 
-GenericTypedMemoryPool* MemoryManager::getSpecificPool(const TypeName& typeName)
+GenericTypedMemoryPool* MemoryHeap::getSpecificPool(const TypeName& typeName)
 {
 	//Search for pool matching typename
 	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == typeName; });
@@ -21,17 +21,17 @@ GenericTypedMemoryPool* MemoryManager::getSpecificPool(const TypeName& typeName)
 	return nullptr;
 }
 
-void MemoryManager::foreachPool(const std::function<void(GenericTypedMemoryPool*)>& visitor)
+void MemoryHeap::foreachPool(const std::function<void(GenericTypedMemoryPool*)>& visitor)
 {
 	for (GenericTypedMemoryPool* i : pools) visitor(i);
 }
 
-void MemoryManager::foreachPool(const std::function<void(const GenericTypedMemoryPool*)>& visitor) const
+void MemoryHeap::foreachPool(const std::function<void(const GenericTypedMemoryPool*)>& visitor) const
 {
 	for (const GenericTypedMemoryPool* i : pools) visitor(i);
 }
 
-void MemoryManager::destroyPool(const TypeName& type)
+void MemoryHeap::destroyPool(const TypeName& type)
 {
 	auto it = std::find_if(pools.cbegin(), pools.cend(), [&](GenericTypedMemoryPool* p) { return p->getContentsTypeName() == type; });
 	if (it != pools.cend())
@@ -41,12 +41,12 @@ void MemoryManager::destroyPool(const TypeName& type)
 	}
 }
 
-MemoryManager::MemoryManager()
+MemoryHeap::MemoryHeap()
 {
 	poolStateHash = 0;
 }
 
-MemoryManager::~MemoryManager()
+MemoryHeap::~MemoryHeap()
 {
 	for (GenericTypedMemoryPool* i : pools)
 	{
@@ -55,7 +55,7 @@ MemoryManager::~MemoryManager()
 	pools.clear();
 }
 
-void MemoryManager::ensureFresh()
+void MemoryHeap::ensureFresh()
 {
 	MemoryMapper remapper;
 
@@ -90,12 +90,12 @@ void MemoryManager::ensureFresh()
 	updatePointers(remapper);
 }
 
-void MemoryManager::updatePointers(const MemoryMapper& remapper)
+void MemoryHeap::updatePointers(const MemoryMapper& remapper)
 {
 	//TODO implement
 }
 
-uint64_t MemoryManager::getPoolStateHash() const
+uint64_t MemoryHeap::getPoolStateHash() const
 {
 	return poolStateHash;
 }

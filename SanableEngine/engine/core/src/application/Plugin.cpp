@@ -3,7 +3,7 @@
 #include "application/Application.hpp"
 #include "application/PluginCore.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 
 #if __EMSCRIPTEN__
 #include <dlfcn.h>
@@ -125,7 +125,7 @@ bool Plugin::load(Application const* context)
 		ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
 		for (const TypeInfo& i : types->getTypes())
 		{
-			GenericTypedMemoryPool* pool = ((Application*)context)->getMemoryManager()->getSpecificPool(i.name);
+			GenericTypedMemoryPool* pool = ((Application*)context)->getLevelHeap()->getSpecificPool(i.name);
 			pool->releaseHook = i.capabilities.rawDtor;
 		}
 	}
@@ -176,7 +176,7 @@ void Plugin::unload(Application* context)
 	ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
 	for (const TypeInfo& i : types->getTypes())
 	{
-		GenericTypedMemoryPool* pool = context->getMemoryManager()->getSpecificPool(i.name);
+		GenericTypedMemoryPool* pool = context->getLevelHeap()->getSpecificPool(i.name);
 		if (pool) pool->releaseHook = tryFreeWarnUnloaded;
 	}
 	GlobalTypeRegistry::unloadModule(reportedData->name);

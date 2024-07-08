@@ -27,7 +27,7 @@ public:
 
 	ENGINEMEM_API void clear();
 	ENGINEMEM_API size_t count() const;
-	ENGINEMEM_API void ensureFresh(MemoryManager* src, bool force = false);
+	ENGINEMEM_API void ensureFresh(MemoryHeap* src, bool force = false);
 
 	ENGINEMEM_API void foreachObject(const std::function<void(void*)>& visitor) const; //Given pointer will already have been cast to correct type
 };

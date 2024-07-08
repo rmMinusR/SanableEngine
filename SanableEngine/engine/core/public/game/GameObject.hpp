@@ -5,7 +5,7 @@
 #include <vector>
 #include <cassert>
 
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 #include "application/Application.hpp"
 #include "Transform.hpp"
 
@@ -40,7 +40,7 @@ public:
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = engine->getApplication()->getMemoryManager()->create<T>(ctorArgs...);
+        component = engine->getApplication()->getLevelHeap()->create<T>(ctorArgs...);
         engine->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }

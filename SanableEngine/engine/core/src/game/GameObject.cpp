@@ -32,7 +32,7 @@ GameObject::~GameObject()
 {
 	if (components.size() != 0)
 	{
-		for (Component* c : components) engine->getApplication()->getMemoryManager()->destroy(c);
+		for (Component* c : components) engine->getApplication()->getLevelHeap()->destroy(c);
 		components.clear();
 	}
 }

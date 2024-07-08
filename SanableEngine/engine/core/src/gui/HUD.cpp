@@ -36,7 +36,7 @@ HUD::~HUD()
 {
 }
 
-MemoryManager* HUD::getMemory()
+MemoryHeap* HUD::getMemory()
 {
 	return &memory;
 }
