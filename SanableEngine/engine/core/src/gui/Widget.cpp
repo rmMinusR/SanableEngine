@@ -4,32 +4,73 @@
 
 #include "Material.hpp"
 #include "Renderer.hpp"
+#include "gui/HUD.hpp"
+
+bool Widget::raycastExact(Vector2f pos) const
+{
+    return transform->getRect().contains(pos);
+}
 
 Widget::Widget(HUD* hud) :
     hud(hud)
 {
+    transform = hud->getMemory()->create<WidgetTransform>(this, hud);
 }
 
 Widget::~Widget()
 {
-}
-
-void Widget::refreshLayout()
-{
+    hud->getMemory()->destroy(transform);
 }
 
 void Widget::tick()
 {
 }
 
-bool Widget::onMouseDown(Vector2f pos)
+WidgetTransform* Widget::getTransform()
 {
-    return false;
+    return transform;
 }
 
-bool Widget::onMouseUp(Vector2f pos)
+const WidgetTransform* Widget::getTransform() const
 {
-    return false;
+    return transform;
+}
+
+HUD* Widget::getHUD() const
+{
+    return hud;
+}
+
+void Widget::onMouseDown(Vector2f pos)
+{
+}
+
+void Widget::onMouseUp(Vector2f pos)
+{
+}
+
+void Widget::onMouseExit(Vector2f pos)
+{
+}
+
+void Widget::onMouseEnter(Vector2f pos)
+{
+}
+
+void Widget::onClicked(Vector2f pos)
+{
+}
+
+void Widget::onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos)
+{
+}
+
+void Widget::whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos, Widget* currentlyHoveredWidget)
+{
+}
+
+void Widget::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
+{
 }
 
 const ShaderProgram* Widget::getShader() const
@@ -40,5 +81,5 @@ const ShaderProgram* Widget::getShader() const
 
 void Widget::loadModelTransform(Renderer* renderer) const
 {
-    renderer->loadTransform(transform);
+    renderer->loadTransform(*transform);
 }

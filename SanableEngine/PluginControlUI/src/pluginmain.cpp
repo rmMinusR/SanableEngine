@@ -40,30 +40,47 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     if (firstRun)
     {
         {
-            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline();
-            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, renderer);
+            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600);
+            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline(game->getApplication());
+            builder.setRenderPipeline(renderer);
             ctlGuiRoot = &renderer->hud;
-            builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot));
+            builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot, 5));
             ctlWindow = builder.build();
         }
 
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
-        Resources::buttonBackgroundTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/grey_button10.png");
-        assert(*Resources::buttonBackgroundTexture);
-        Resources::buttonBackgroundSprite = new UISprite3x3(Resources::buttonBackgroundTexture);
+        ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
+        if (!imageShader->load()) assert(false);
+        Resources::imageMat = new Material(imageShader);
+        Resources::imageMat->setGroup(Material::Group::Transparent);
+        Resources::buttonNormalTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal.png");
+        Resources::buttonNormalSprite = new UISprite3x3(Resources::buttonNormalTexture);
+        Resources::buttonPressedTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal_pressed.png");
+        Resources::buttonPressedSprite = new UISprite3x3(Resources::buttonPressedTexture);
+        Resources::buttonDisabledTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/disabled.png");
+        Resources::buttonDisabledSprite = new UISprite3x3(Resources::buttonDisabledTexture);
+
+        Resources::rttiFieldTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/field.png");
+        Resources::rttiFieldSprite = new UISprite3x3(Resources::rttiFieldTexture);
+        Resources::rttiFieldSprite->setPixel({1,1}, {7,6});
+        Resources::rttiFieldSprite->setPixel({2,2}, {8,8});
+
+        Resources::rttiParentTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/parent.png");
+        Resources::rttiParentSprite = new UISprite3x3(Resources::rttiParentTexture);
 
         //Ready resources: text
         ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
         if (!textShader->load()) assert(false);
         Resources::textMat = new Material(textShader);
+        Resources::textMat->setGroup(Material::Group::Transparent);
         Resources::headerFont = new Font("resources/ui/fonts/arial.ttf", 48);
         Resources::labelFont = new Font("resources/ui/fonts/arial.ttf", 24);
 
         //Init UI elements
         ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), nullptr);
-        ui->transform.fillParent();
+        ui->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
         
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin

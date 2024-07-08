@@ -3,7 +3,8 @@
 #include "ShaderProgram.hpp"
 
 Material::Material(ShaderProgram* shader) :
-	shader(shader)
+	shader(shader),
+	group(Group::Opaque)
 {
 	for (const ShaderUniform& uniform : shader->getUniforms())
 	{
@@ -25,6 +26,16 @@ Material::Material(ShaderProgram* shader) :
 	}
 }
 
+Material::Group Material::getGroup() const
+{
+	return group;
+}
+
+void Material::setGroup(Group group)
+{
+	this->group = group;
+}
+
 const ShaderProgram* Material::getShader() const
 {
 	return shader;
@@ -34,6 +45,19 @@ const ShaderUniform* Material::getUserUniform(const std::string& name) const
 {
 	for (const ShaderUniform& i : userConfigurable) if (i.name == name) return &i;
 	return nullptr;
+}
+
+void Material::writeFlags(Renderer* context) const
+{
+	if (group == Group::Transparent)
+	{
+		glEnable(GL_BLEND);
+		//TODO set blend func
+	}
+	else
+	{
+		glDisable(GL_BLEND);
+	}
 }
 
 void Material::writeSharedUniforms(Renderer* context) const

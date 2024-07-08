@@ -2,8 +2,8 @@
 
 #include <ReflectionSpec.hpp>
 #include "gui/Widget.hpp"
+#include "application/Plugin.hpp"
 
-struct Plugin;
 class PluginManager;
 class LabelWidget;
 class ButtonWidget;
@@ -13,18 +13,24 @@ class PluginView : public Widget
 {
 	PluginManager* mgr;
 	Plugin* plugin;
+	Plugin::Status lastKnownStatus;
 
 	LabelWidget* path;
 	LabelWidget* name;
 	LabelWidget* status;
 	
 	ButtonWidget* btnToggleLoaded;
-	ButtonWidget* btnToggleHooked;
 	ImageWidget* imgToggleLoadedBg;
-	ImageWidget* imgToggleHookedBg;
 	LabelWidget* lblToggleLoaded;
+
+	ButtonWidget* btnToggleHooked;
+	ImageWidget* imgToggleHookedBg;
 	LabelWidget* lblToggleHooked;
-	//TODO manual control buttons
+	
+	ButtonWidget* btnInspectTypes;
+	ImageWidget* imgInspectTypesBg;
+	LabelWidget* lblInspectTypes;
+
 	//TODO RTTI status + details button
 
 	void tryInit();

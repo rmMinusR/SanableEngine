@@ -91,6 +91,18 @@ void Window::draw() const
     SDL_GL_SwapWindow(handle);
 }
 
+void Window::setRenderPipeline(WindowRenderPipeline* v)
+{
+    renderPipeline = v;
+    v->setup(this);
+}
+
+void Window::setInputProcessor(WindowInputProcessor* v)
+{
+    inputProcessor = v;
+    v->setup(this);
+}
+
 void Window::setActiveDrawTarget(const Window* w)
 {
     SDL_GL_MakeCurrent(w->handle, w->context);

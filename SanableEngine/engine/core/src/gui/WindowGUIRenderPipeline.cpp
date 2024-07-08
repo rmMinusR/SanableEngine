@@ -3,7 +3,8 @@
 #include <GL/glew.h>
 #include "application/Window.hpp"
 
-WindowGUIRenderPipeline::WindowGUIRenderPipeline()
+WindowGUIRenderPipeline::WindowGUIRenderPipeline(Application* application) :
+	hud(application)
 {
 }
 
@@ -29,5 +30,5 @@ void WindowGUIRenderPipeline::render(Rect<float> viewport)
 	//Tick and render GUI
 	hud.refreshLayout(viewport);
 	hud.tick();
-	hud.render(viewport, window->getRenderer());
+	hud.render(window->getRenderer());
 }

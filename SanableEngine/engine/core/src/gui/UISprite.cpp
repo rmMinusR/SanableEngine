@@ -26,6 +26,11 @@ void UISprite3x3::set(Vector2<int> index, Vector2f uv)
 	uvs[index.y].y = uv.y;
 }
 
+void UISprite3x3::setPixel(Vector2<int> index, Vector2f uv)
+{
+	set(index, uv/Vector2f(tex->getWidth(), tex->getHeight()));
+}
+
 Sprite UISprite3x3::get(Vector2<int> index) const
 {
 	Sprite out(tex);
@@ -36,12 +41,12 @@ Sprite UISprite3x3::get(Vector2<int> index) const
 	return out;
 }
 
-void UISprite3x3::renderImmediate(Renderer* renderer, Vector3f pos, float w, float h) const
+void UISprite3x3::renderImmediate(Renderer* renderer, const Material* mat, Vector3f pos, Vector2f size, SDL_Color tintColor) const
 {
 	//Calc corners
 	Vector2f locs[4];
 	locs[0] = pos.xy();
-	locs[3] = locs[0] + Vector2f(w,h);
+	locs[3] = locs[0] + size;
 
 	//Calc inners using corner sizes
 	Vector2f texSize(tex->getWidth(), tex->getHeight());
@@ -59,9 +64,11 @@ void UISprite3x3::renderImmediate(Renderer* renderer, Vector3f pos, float w, flo
 			Sprite s = get(Vector2<int>(ix, iy));
 			renderer->drawSprite(
 				&s,
+				mat,
 				Vector3f(locs[ix].x, locs[iy].y, pos.z),
 				locs[ix+1].x-locs[ix].x,
-				locs[iy+1].y-locs[iy].y
+				locs[iy+1].y-locs[iy].y,
+				tintColor
 			);
 		}
 	}
@@ -90,7 +97,7 @@ Sprite UISpriteSparse::get(Vector2<int> index) const
 	return out;
 }
 
-void UISpriteSparse::renderImmediate(Renderer* renderer, Vector3f pos, float w, float h) const
+void UISpriteSparse::renderImmediate(Renderer* renderer, const Material* mat, Vector3f pos, Vector2f size, SDL_Color tintColor) const
 {
 	assert(false && "TODO implement");
 }

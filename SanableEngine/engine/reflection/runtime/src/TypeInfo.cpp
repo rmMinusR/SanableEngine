@@ -170,6 +170,42 @@ void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor,
 	}
 }
 
+void TypeInfo::Layout::walkImplicits(std::function<void(const ImplicitInfo&)> visitor) const
+{
+	size_t begin = 0;
+
+	for (size_t i = 1; i < size; ++i)
+	{
+		//When we hit a border
+		if (byteUsage[i] != byteUsage[begin])
+		{
+			if (byteUsage[begin] != ByteUsage::ExplicitField) //If we should emit
+			{
+				ImplicitInfo ii;
+				ii.offset = begin;
+				ii.size = i-begin;
+				ii.data = byteUsage[begin]==ByteUsage::ImplicitConst ? (uint8_t*)&implicitValues[begin] : nullptr;
+
+				visitor(ii);
+			}
+
+			//Advance marker
+			begin = i;
+		}
+	}
+
+	//Same thing, in case there is a trailing vptr
+	if (byteUsage[begin] != ByteUsage::ExplicitField)
+	{
+		ImplicitInfo ii;
+		ii.offset = begin;
+		ii.size = size-begin;
+		ii.data = byteUsage[begin]==ByteUsage::ImplicitConst ? (uint8_t*)&implicitValues[begin] : nullptr;
+
+		visitor(ii);
+	}
+}
+
 void TypeInfo::Layout::vptrJam(void* obj) const
 {
 	assert(!byteUsage.empty());

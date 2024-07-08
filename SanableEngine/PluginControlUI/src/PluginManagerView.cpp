@@ -32,10 +32,11 @@ void PluginManagerView::tick()
 	while (pluginViews.size() < plugins.size())
 	{
 		PluginView* view = hud->addWidget<PluginView>();
-		view->transform.setParent(&transform);
-		view->transform.snapToCorner({ 0, 0 }, Vector2f(0, viewHeight));
-		view->transform.fillParentX();
-		view->transform.setCenterByOffsets(Vector2f(0, pluginViews.size()*(viewHeight+padding)), Vector2f(0, 0));
+		view->getTransform()->setParent(this->getTransform());
+		AnchoredPositioning* pos = view->getTransform()->setPositioningStrategy<AnchoredPositioning>();
+		pos->snapToCorner({ 0, 0 }, Vector2f(0, viewHeight));
+		pos->fillParentX();
+		pos->setCenterByOffsets(Vector2f(0, pluginViews.size()*(viewHeight+padding)), Vector2f(0, 0));
 		pluginViews.push_back(view);
 	}
 	while (pluginViews.size() > plugins.size())

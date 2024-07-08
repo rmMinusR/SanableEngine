@@ -62,6 +62,11 @@ bool Plugin::isHooked() const
 	return status >= Status::Hooked;
 }
 
+const ModuleTypeRegistry* Plugin::getRTTI() const
+{
+	return GlobalTypeRegistry::getModule(reportedData->name);
+}
+
 bool Plugin::load(Application const* context)
 {
 	if (status != Status::NotLoaded) return status > Status::NotLoaded;

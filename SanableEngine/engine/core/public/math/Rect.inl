@@ -17,6 +17,15 @@ struct Rect
 			&& topLeft.y <= pos.y && pos.y <= topLeft.y+size.y;
 	}
 
+	bool operator==(Rect<T> other) const { return topLeft == other.topLeft && size == other.size; }
+	bool operator!=(Rect<T> other) const { return !(*this == other); }
+
+	bool approxEquals(Rect<T> other, float margin) const
+	{
+		float marginSq = margin * margin;
+		return (topLeft-other.topLeft).mgnSq() < marginSq && (size-other.size).mgnSq() < marginSq;
+	}
+
 
 	static Rect<T> fromMinMax(Vector2<T> min, Vector2<T> max)
 	{

@@ -21,7 +21,8 @@ int main(int argc, char* argv[])
     //Init
     {
         GLSettings glSettings;
-        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, new GameWindowRenderPipeline(&game));
+        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT);
+        mainWindow.setRenderPipeline(new GameWindowRenderPipeline(&game));
         mainWindow.setInputProcessor(new GameWindowInputProcessor(&game));
         engine.init(&game, glSettings, mainWindow, system, nullptr);
     }
