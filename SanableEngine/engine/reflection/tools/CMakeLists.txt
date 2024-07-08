@@ -3,7 +3,7 @@ set (CMAKE_CXX_STANDARD 17)
 
 project("engine-reflection-tools")
 
-set(REFLECTION_COMMAND python "${CMAKE_CURRENT_LIST_DIR}/rttigen.py")
+option(STIX_RTTIGEN_PROFILING "Enable profiling during reflection generation time" FALSE)
 
 # Optional property setters. Must be set before calling stix_generate_reflection.
 
@@ -22,6 +22,7 @@ endfunction()
 
 # Main integration
 
+set(REFLECTION_COMMAND python "${CMAKE_CURRENT_LIST_DIR}/rttigen.py")
 function(stix_generate_reflection targetName rootDir)
 	# Resolve optional properties
 	get_target_property(TEMPLATE_FILE ${targetName} STIX_TEMPLATE_FILE)
@@ -56,19 +57,26 @@ function(stix_generate_reflection targetName rootDir)
 	if (NOT TARGET ${targetName}_RTTI)
 		get_target_property(OUTPUT_FILE_DIR ${targetName} BINARY_DIR)
 		set(OUTPUT_FILE "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}_rtti.generated.cpp")
-		set(CACHE_DIR "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}.rtticache")
+		set(CACHE_FILE "${OUTPUT_FILE_DIR}/generated-rtti/${targetName}.rtticache")
+
+		if (STIX_RTTIGEN_PROFILING)
+			set(PROFILING_ARGS --task-profiling --call-profiling)
+		else()
+			set(PROFILING_ARGS )
+		endif()
 
 		add_custom_target(
 			${targetName}_RTTI
-			BYPRODUCTS "${OUTPUT_FILE}" "${CACHE_DIR}"
+			BYPRODUCTS "${OUTPUT_FILE}" "${CACHE_FILE}"
  			COMMAND ${REFLECTION_COMMAND} --target $<TARGET_PROPERTY:${targetName},STIX_ROOT_DIRS>
 										--output "${OUTPUT_FILE}"
-										--cache "${CACHE_DIR}"
+										--cache "${CACHE_FILE}"
  										--include $<TARGET_PROPERTY:${targetName},INCLUDE_DIRECTORIES>
  										--define $<TARGET_PROPERTY:${targetName},COMPILE_DEFINITIONS>
  										${TEMPLATE_ARG}
 										${DEFAULT_IMAGE_CAPTURE_BACKEND_ARG}
 										${DEFAULT_IMAGE_CAPTURE_STATUS_ARG}
+										${PROFILING_ARGS}
  										-- $<TARGET_PROPERTY:${targetName},COMPILE_OPTIONS> $<TARGET_PROPERTY:${targetName},COMPILE_FLAGS> ${COMPILE_OPTIONS} ${COMPILE_FLAGS}
 			VERBATIM
 			USES_TERMINAL
