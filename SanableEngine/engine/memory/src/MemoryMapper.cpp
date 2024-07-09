@@ -3,6 +3,8 @@
 #include <cstring>
 #include <cassert>
 
+#include "TypeInfo.hpp"
+
 void MemoryMapper::rawMove(void* dst, void* src, size_t bytesToMove)
 {
 	memcpy(dst, src, bytesToMove); //Do actual move op
@@ -37,6 +39,44 @@ void* MemoryMapper::transformAddress(void* ptr, size_t ptrSize) const
 	}
 
 	return ptr;
+}
+
+void MemoryMapper::transformComposite(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const
+{
+	assert(type->isComposite());
+	type->layout.walkFields([&](const FieldInfo& fi)
+	{
+		if (const TypeInfo* fieldType = fi.type.resolve())
+		{
+			transformObjectAddresses(fi.getValue(object), fieldType, recurseFields, recursePointers);
+		}
+	});
+}
+
+void MemoryMapper::transformObjectAddresses(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const
+{
+	if (type->isPointer())
+	{
+		void** pPtr = (void**)object;
+		void* ptr = *pPtr;
+		*pPtr = transformAddress(ptr, type->layout.size);
+
+		if (recursePointers && recursePointers->count(ptr) == 0)
+		{
+			recursePointers->emplace(ptr);
+			const TypeInfo* pointee = type->name.getPointee().resolve();
+			if (pointee) transformObjectAddresses(ptr, pointee, recurseFields, recursePointers);
+		}
+	}
+	else if (recurseFields && type->isComposite())
+	{
+		if (recursePointers) recursePointers->emplace(object);
+		transformComposite(object, type, recurseFields, recursePointers);
+	}
+	else
+	{
+		if (recursePointers) recursePointers->emplace(object);
+	}
 }
 
 void MemoryMapper::clear()

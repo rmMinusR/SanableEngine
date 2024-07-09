@@ -94,13 +94,21 @@ void MemoryHeap::ensureFresh(bool selfOnly)
 	}
 
 	//Finalize
-	if (selfOnly) updatePointers(remapper);
-	else MemoryRoot::get()->updatePointers(remapper);
+	std::set<void*> visitRecord;
+	if (selfOnly) updatePointers(remapper, visitRecord);
+	else MemoryRoot::get()->updatePointers(remapper, visitRecord);
 }
 
-void MemoryHeap::updatePointers(const MemoryMapper& remapper)
+void MemoryHeap::updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord)
 {
-	//TODO implement
+	for (GenericTypedMemoryPool* p : pools)
+	{
+		const TypeInfo* ty = p->getContentsType();
+		for (auto it = p->cbegin(); it != p->cend(); ++it)
+		{
+			remapper.transformObjectAddresses(*it, ty, true, &visitRecord);
+		}
+	}
 }
 
 uint64_t MemoryHeap::getPoolStateHash() const

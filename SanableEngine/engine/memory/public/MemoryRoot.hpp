@@ -3,6 +3,7 @@
 #include <optional>
 #include <tuple>
 #include <map>
+#include <set>
 #include <functional>
 
 #include "dllapi.h"
@@ -26,7 +27,7 @@ public:
 	ENGINEMEM_API static void cleanup();
 	
 	ENGINEMEM_API void visitHeaps(const std::function<void(MemoryHeap*)>& visitor);
-	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
+	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord);
 
 	template<typename T>
 	void registerExternal(T* object, ExternalObjectOptions options)
@@ -45,4 +46,6 @@ private:
 
 	std::map<void*, std::tuple<TypeName, size_t, ExternalObjectOptions>> externalObjects;
 	ENGINEMEM_API void registerExternal_impl(void* object, TypeName&& type, size_t size, ExternalObjectOptions options);
+
+	void externals_updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord);
 };

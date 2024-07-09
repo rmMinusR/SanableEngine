@@ -31,10 +31,28 @@ void MemoryRoot::visitHeaps(const std::function<void(MemoryHeap*)>& visitor)
 	for (MemoryHeap* heap : livingHeaps) visitor(heap);
 }
 
-void MemoryRoot::updatePointers(const MemoryMapper& remapper)
+void MemoryRoot::updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord)
 {
-	for (MemoryHeap* heap : livingHeaps) heap->updatePointers(remapper);
-	//TODO visit externals
+	for (MemoryHeap* heap : livingHeaps) heap->updatePointers(remapper, visitRecord);
+	externals_updatePointers(remapper, visitRecord);
+}
+
+void MemoryRoot::externals_updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord)
+{
+	for (const auto& it : externalObjects)
+	{
+		const TypeInfo* ty = std::get<0>(it.second).resolve();
+		ExternalObjectOptions opts = std::get<2>(it.second);
+		if (ty)
+		{
+			remapper.transformObjectAddresses(
+				it.first,
+				ty,
+				(uint8_t)opts&(uint8_t)ExternalObjectOptions::AllowFieldRecursion,
+				((uint8_t)opts&(uint8_t)ExternalObjectOptions::AllowPtrRecursion) ? &visitRecord : nullptr
+			);
+		}
+	}
 }
 
 void MemoryRoot::registerHeap(MemoryHeap* heap)
