@@ -43,12 +43,12 @@ void Game::cleanup()
 
 void Game::applyConcurrencyBuffers()
 {
-    level.value().applyConcurrencyBuffers();
+    if (level.has_value()) level.value().applyConcurrencyBuffers();
 }
 
 void Game::refreshCallBatchers(bool force)
 {
-    level.value().refreshCallBatchers(force);
+    if (level.has_value()) level.value().refreshCallBatchers(force);
 }
 
 void Game::tick()
@@ -64,7 +64,23 @@ InputSystem* Game::getInput()
     return inputSystem;
 }
 
+Application* Game::getApplication() const
+{
+    return application;
+}
+
 void Game::visitLevels(const std::function<void(Level*)>& visitor)
 {
     visitor(&level.value());
+}
+
+Level* Game::getLevel(size_t which)
+{
+    assert(which == 0);
+    return &level.value();
+}
+
+size_t Game::getLevelCount() const
+{
+    return level.has_value() ? 1 : 0;
 }

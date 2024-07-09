@@ -40,8 +40,8 @@ public:
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = engine->getApplication()->getLevelHeap()->create<T>(ctorArgs...);
-        engine->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
+        component = level->getHeap()->create<T>(ctorArgs...);
+        level->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }
 
