@@ -25,6 +25,11 @@ private:
 public:
 	ENGINEMEM_API MemoryHeap();
 	ENGINEMEM_API ~MemoryHeap();
+	
+	MemoryHeap(const MemoryHeap& cpy) = delete;
+	MemoryHeap(MemoryHeap&& mov) = delete;
+	MemoryHeap& operator=(const MemoryHeap& cpy) = delete;
+	MemoryHeap& operator=(MemoryHeap&& mov) = delete;
 
 	ENGINEMEM_API GenericTypedMemoryPool* getSpecificPool(const TypeName& type);
 	template<typename TObj>
