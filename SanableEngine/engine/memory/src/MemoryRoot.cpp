@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "MemoryHeap.hpp"
+
 std::optional<MemoryRoot> MemoryRoot::instance;
 
 MemoryRoot* MemoryRoot::get()
@@ -29,6 +31,12 @@ void MemoryRoot::visitHeaps(const std::function<void(MemoryHeap*)>& visitor)
 	for (MemoryHeap* heap : livingHeaps) visitor(heap);
 }
 
+void MemoryRoot::updatePointers(const MemoryMapper& remapper)
+{
+	for (MemoryHeap* heap : livingHeaps) heap->updatePointers(remapper);
+	//TODO visit externals
+}
+
 void MemoryRoot::registerHeap(MemoryHeap* heap)
 {
 	livingHeaps.emplace_back(heap);
@@ -39,4 +47,10 @@ void MemoryRoot::removeHeap(MemoryHeap* heap)
 	auto it = std::find(livingHeaps.begin(), livingHeaps.end(), heap);
 	assert(it != livingHeaps.end());
 	livingHeaps.erase(it);
+}
+
+void MemoryRoot::registerExternal_impl(void* object, TypeName&& type, size_t size, ExternalObjectOptions options)
+{
+	typedef std::tuple<TypeName, size_t, ExternalObjectOptions> details_t;
+	externalObjects.try_emplace(object, details_t(type, size, options));
 }

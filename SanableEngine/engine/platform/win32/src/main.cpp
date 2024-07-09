@@ -17,6 +17,9 @@ int main(int argc, char* argv[])
     gpr460::System_Win32 system;
     Application engine;
     Game game;
+    MemoryRoot::get()->registerExternal(&system, ExternalObjectOptions::DefaultExternal);
+    MemoryRoot::get()->registerExternal(&engine, ExternalObjectOptions::DefaultExternal);
+    MemoryRoot::get()->registerExternal(&game  , ExternalObjectOptions::DefaultExternal);
 
     //Init
     {

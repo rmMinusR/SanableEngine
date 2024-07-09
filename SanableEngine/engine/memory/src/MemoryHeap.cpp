@@ -62,7 +62,7 @@ MemoryHeap::~MemoryHeap()
 	pools.clear();
 }
 
-void MemoryHeap::ensureFresh()
+void MemoryHeap::ensureFresh(bool selfOnly)
 {
 	MemoryMapper remapper;
 
@@ -94,7 +94,8 @@ void MemoryHeap::ensureFresh()
 	}
 
 	//Finalize
-	updatePointers(remapper);
+	if (selfOnly) updatePointers(remapper);
+	else MemoryRoot::get()->updatePointers(remapper);
 }
 
 void MemoryHeap::updatePointers(const MemoryMapper& remapper)
