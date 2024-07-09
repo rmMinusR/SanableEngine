@@ -5,24 +5,27 @@
 #include <functional>
 #include "../dllapi.h"
 #include "Level.hpp"
+#include "TypedMemoryPool.hpp"
 
 class Application;
 class PluginManager;
 class GameObject;
 class InputSystem;
+class GameWindowRenderPipeline;
 
 class Game
 {
     Application* application;
     InputSystem* inputSystem;
 
-    std::optional<Level> level;
+    TypedMemoryPool<Level>* levels;
     void applyConcurrencyBuffers(); //Passthrough for now
+    friend class GameWindowRenderPipeline;
     
     friend class PluginManager;
     void refreshCallBatchers(bool force = false);
 
-    //TODO allow accumulation from multiple levels
+    //TODO allow accumulation from multiple heaps to allow collection from multiple levels
     //PoolCallBatcher<IUpdatable> updateList;
     //PoolCallBatcher<I3DRenderable> _3dRenderList;
 
@@ -44,4 +47,6 @@ public:
 	ENGINECORE_API void visitLevels(const std::function<void(Level*)>& visitor);
 	ENGINECORE_API Level* getLevel(size_t which);
 	ENGINECORE_API size_t getLevelCount() const;
+	ENGINECORE_API Level* addLevel();
+	ENGINECORE_API void removeLevel(Level* level);
 };

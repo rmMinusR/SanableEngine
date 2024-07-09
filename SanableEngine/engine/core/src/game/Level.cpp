@@ -1,5 +1,8 @@
 #include "game/Level.hpp"
 
+#include "MeshRenderer.hpp"
+#include "Camera.hpp"
+
 void Level::applyConcurrencyBuffers()
 {
 	for (Component* c : componentDelBuffer) destroyImmediate(c);
@@ -52,6 +55,9 @@ void Level::tick()
 Level::Level(Game* game) :
     game(game)
 {
+    heap.getSpecificPool<GameObject>(true); //Force create GameObject pool now so it's owned by main module (avoiding nasty access violation errors)
+    heap.getSpecificPool<Camera>(true); //Same with Camera
+    heap.getSpecificPool<MeshRenderer>(true); //And MeshRenderer
 }
 
 Level::~Level()

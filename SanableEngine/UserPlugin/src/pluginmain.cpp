@@ -29,7 +29,7 @@ PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* repo
     report->name = L"UserPlugin";
 
     ::application = (Application*)application; //FIXME bad practice
-    ::level = application->getGame()->getLevel(0);
+    ::level = application->getGame()->addLevel(); //FIXME this should be in platform main, probably
 
     return true;
 }

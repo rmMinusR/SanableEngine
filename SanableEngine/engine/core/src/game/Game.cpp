@@ -5,6 +5,7 @@
 #include "game/GameObject.hpp"
 #include "game/Component.hpp"
 #include "game/InputSystem.hpp"
+#include "game/Level.hpp"
 
 Game::Game() :
     application(nullptr),
@@ -28,7 +29,7 @@ void Game::init(Application* application)
 
     this->inputSystem = new InputSystem();
 
-    level.emplace(this);
+    levels = application->getHeap()->getSpecificPool<Level>(true);
 }
 
 void Game::cleanup()
@@ -36,19 +37,27 @@ void Game::cleanup()
     assert(isAlive);
     isAlive = false;
 
-    level.reset();
+    //application->getHeap()->destroyPool<Level>(); //Don't do this, it throws incorrect warnings
+    for (auto it = levels->cbegin(); it != levels->cend(); ++it) application->getHeap()->destroy(&*it);
+    levels = nullptr;
 
     delete inputSystem;
 }
 
 void Game::applyConcurrencyBuffers()
 {
-    if (level.has_value()) level.value().applyConcurrencyBuffers();
+    for (auto it = levels->cbegin(); it != levels->cend(); ++it)
+    {
+        it->applyConcurrencyBuffers();
+    }
 }
 
 void Game::refreshCallBatchers(bool force)
 {
-    if (level.has_value()) level.value().refreshCallBatchers(force);
+    for (auto it = levels->cbegin(); it != levels->cend(); ++it)
+    {
+        it->refreshCallBatchers(force);
+    }
 }
 
 void Game::tick()
@@ -56,7 +65,12 @@ void Game::tick()
     assert(isAlive);
 
     frame++;
-    level.value().tick();
+    
+    refreshCallBatchers();
+    for (auto it = levels->cbegin(); it != levels->cend(); ++it)
+    {
+        it->tick();
+    }
 }
 
 InputSystem* Game::getInput()
@@ -71,16 +85,28 @@ Application* Game::getApplication() const
 
 void Game::visitLevels(const std::function<void(Level*)>& visitor)
 {
-    visitor(&level.value());
+    for (auto it = levels->cbegin(); it != levels->cend(); ++it)
+    {
+        visitor(&*it);
+    }
 }
 
 Level* Game::getLevel(size_t which)
 {
-    assert(which == 0);
-    return &level.value();
+    return &*(levels->cbegin()+which);
 }
 
 size_t Game::getLevelCount() const
 {
-    return level.has_value() ? 1 : 0;
+    return levels->asGeneric()->getNumAllocatedObjects();
+}
+
+Level* Game::addLevel()
+{
+    return levels->emplace(this);
+}
+
+void Game::removeLevel(Level* level)
+{
+    levels->release(level);
 }

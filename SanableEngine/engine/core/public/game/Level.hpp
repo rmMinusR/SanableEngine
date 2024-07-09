@@ -11,6 +11,20 @@ class Game;
 
 class Level
 {
+public:
+    ENGINECORE_API Level(Game* game);
+    ENGINECORE_API ~Level();
+
+    ENGINECORE_API GameObject* addGameObject();
+    ENGINECORE_API void destroy(GameObject* go);
+
+    ENGINECORE_API const PoolCallBatcher<I3DRenderable>* get3DRenderables() const;
+
+    ENGINECORE_API MemoryHeap* getHeap();
+    ENGINECORE_API MemoryHeap const* getHeap() const;
+
+    ENGINECORE_API Game* getGame() const;
+    
 private:
     MemoryHeap heap;
 
@@ -34,18 +48,4 @@ private:
     void tick();
 
     Game* game;
-
-public:
-    ENGINECORE_API Level(Game* game);
-    ENGINECORE_API ~Level();
-
-    ENGINECORE_API GameObject* addGameObject();
-    ENGINECORE_API void destroy(GameObject* go);
-
-    ENGINECORE_API const PoolCallBatcher<I3DRenderable>* get3DRenderables() const;
-
-    ENGINECORE_API MemoryHeap* getHeap();
-    ENGINECORE_API MemoryHeap const* getHeap() const;
-
-    ENGINECORE_API Game* getGame() const;
 };
