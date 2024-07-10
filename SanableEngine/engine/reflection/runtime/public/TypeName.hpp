@@ -64,6 +64,9 @@ public:
 
 	ENGINE_RTTI_API std::optional<TypeName> cvUnwrap() const;
 	ENGINE_RTTI_API std::optional<TypeName> dereference() const;
+	ENGINE_RTTI_API bool isComposite() const;
+	ENGINE_RTTI_API bool isFundamental() const;
+	ENGINE_RTTI_API bool isDataPtr() const;
 
 	ENGINE_RTTI_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.
 	ENGINE_RTTI_API TypeInfo const* resolve() const;

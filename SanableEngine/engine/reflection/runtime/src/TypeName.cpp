@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "GlobalTypeRegistry.hpp"
+#include "FundamentalTypes.hpp"
 
 bool TypeName::strip_leading(std::string& str, const std::string& phrase)
 {
@@ -123,6 +124,28 @@ std::optional<TypeName> TypeName::dereference() const
     std::string unwrappedName = name.substr(0, index);
     strip_trailing(unwrappedName, " ");
     return TypeName(unwrappedName, flags);
+}
+
+bool TypeName::isDataPtr() const
+{
+    auto ptrTokIndex = name.find_last_of("*");
+    auto templateCloseTokIndex = name.find_last_of(">"); //-1 if not found
+    auto fnArgCloseTokIndex = name.find_last_of(")"); //-1 if not found
+    return ptrTokIndex > templateCloseTokIndex && ptrTokIndex > fnArgCloseTokIndex;
+}
+
+bool TypeName::isComposite() const
+{
+    return !isFundamental() && !isDataPtr();
+}
+
+bool TypeName::isFundamental() const
+{
+    for (size_t i = 0; i < fundamentalTypes_names_sz; ++i)
+    {
+        if (name == fundamentalTypes_names[i]) return true;
+    }
+    return false;
 }
 
 bool TypeName::isValid() const

@@ -132,6 +132,16 @@ std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibi
 	return layout.getParent_internal(this->name, name, visibilityFlags, includeInherited, makeComplete);
 }
 
+bool TypeInfo::isComposite() const
+{
+	return !layout.fields.empty() || name.isComposite();
+}
+
+bool TypeInfo::isFundamental() const
+{
+	return layout.fields.empty() && name.isFundamental();
+}
+
 void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
 {
 	//Recurse into parents first
