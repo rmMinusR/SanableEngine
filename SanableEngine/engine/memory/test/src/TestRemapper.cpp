@@ -26,6 +26,31 @@ TEST_SUITE("MemoryMapper")
 		CHECK(remapper.transformAddress(&x) == &y);
 	}
 
+	TEST_CASE("Pointer within object")
+	{
+		//Setup
+		int x = 123;
+		int y;
+		PtrToInt ptrContainer;
+		ptrContainer.target = &x;
+
+		GlobalTypeRegistry::clear();
+		{
+			ModuleTypeRegistry reg;
+			test_reportTypes(&reg);
+			GlobalTypeRegistry::loadModule("Remapping test helpers", reg);
+		}
+
+		//Act
+		MemoryMapper remapper;
+		remapper.move(&y, &x);
+		std::set<void*> log;
+		remapper.transformObjectAddresses(&ptrContainer, TypeName::create<PtrToInt>(), true, &log);
+
+		//Check
+		CHECK(ptrContainer.target == &y);
+	}
+
 	TEST_CASE("Mapper is null")
 	{
 		//Setup
@@ -211,7 +236,7 @@ TEST_CASE("MemoryRoot remapping")
 			CHECK(ptrContainer->target == &y);
 
 			//Cleanup
-			MemoryRoot::get()->removeExternal(&ptrContainer);
+			MemoryRoot::get()->removeExternal(ptrContainer);
 		}
 	}
 }

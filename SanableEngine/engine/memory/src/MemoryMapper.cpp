@@ -46,34 +46,45 @@ void MemoryMapper::transformComposite(void* object, const TypeInfo* type, bool r
 	assert(type->isComposite());
 	type->layout.walkFields([&](const FieldInfo& fi)
 	{
-		if (const TypeInfo* fieldType = fi.type.resolve())
+		std::optional<TypeName> pointee = type->name.dereference();
+		if (pointee.has_value())
 		{
-			transformObjectAddresses(fi.getValue(object), fieldType, recurseFields, recursePointers);
+			void** pPtr = (void**)object;
+			void* ptr = *pPtr;
+			*pPtr = transformAddress(ptr, sizeof(void*));
+			
+			if (recursePointers && recursePointers->count(ptr) == 0)
+			{
+				recursePointers->emplace(ptr);
+				//TODO polymorphism check, snipe and downcast
+				transformObjectAddresses(ptr, pointee.value(), recurseFields, recursePointers);
+			}
 		}
+		else if (recurseFields) transformObjectAddresses(fi.getValue(object), fi.type, recurseFields, recursePointers);
 	});
 }
 
-void MemoryMapper::transformObjectAddresses(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const
+void MemoryMapper::transformObjectAddresses(void* object, const TypeName& typeName, bool recurseFields, std::set<void*>* recursePointers) const
 {
-	std::optional<TypeName> pointee = type->name.dereference();
+	std::optional<TypeName> pointee = typeName.dereference();
 	if (pointee.has_value())
 	{
 		void** pPtr = (void**)object;
 		void* ptr = *pPtr;
-		*pPtr = transformAddress(ptr, type->layout.size);
+		*pPtr = transformAddress(ptr, 1); //FIXME this wants size of pointed-to type for safety
 
 		if (recursePointers && recursePointers->count(ptr) == 0)
 		{
 			recursePointers->emplace(ptr);
-			const TypeInfo* pointeeType = pointee.value().resolve();
 			//TODO polymorphism check, snipe and downcast
-			if (pointeeType) transformObjectAddresses(ptr, pointeeType, recurseFields, recursePointers);
+			transformObjectAddresses(ptr, pointee.value(), recurseFields, recursePointers);
 		}
 	}
-	else if (recurseFields && type->isComposite())
+	else if (recurseFields && typeName.isComposite())
 	{
 		if (recursePointers) recursePointers->emplace(object);
-		transformComposite(object, type, recurseFields, recursePointers);
+		const TypeInfo* type = typeName.resolve();
+		if (type) transformComposite(object, type, recurseFields, recursePointers);
 	}
 	else
 	{

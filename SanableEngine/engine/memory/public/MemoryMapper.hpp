@@ -10,6 +10,7 @@
 #include <vector>
 #include <set>
 
+struct TypeName;
 struct TypeInfo;
 
 /// <summary>
@@ -60,7 +61,7 @@ public:
 	ENGINEMEM_API void logMove(void* dst, void* src, size_t bytesToMove);
 
 	/// <summary>
-	/// Returns the address where the pointed object ended up.
+	/// Returns the address where the pointed object ended up. Doesn't do any recursion into the object in question.
 	/// </summary>
 	ENGINEMEM_API void* transformAddress(void* ptr, size_t ptrSize) const;
 
@@ -80,7 +81,7 @@ public:
 	/// <param name="type">Type of object to scan</param>
 	/// <param name="recurseFields">Should we recurse into fields?</param>
 	/// <param name="recursePointers">If non-null, we should recurse into pointers (and record it here so we don't hit it twice)</param>
-	ENGINEMEM_API void transformObjectAddresses(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const;
+	ENGINEMEM_API void transformObjectAddresses(void* object, const TypeName& typeName, bool recurseFields, std::set<void*>* recursePointers) const;
 
 	ENGINEMEM_API void clear();
 };

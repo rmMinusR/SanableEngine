@@ -41,17 +41,14 @@ void MemoryRoot::externals_updatePointers(const MemoryMapper& remapper, std::set
 {
 	for (const auto& it : externalObjects)
 	{
-		const TypeInfo* ty = std::get<0>(it.second).resolve();
+		const TypeName& ty = std::get<0>(it.second);
 		ExternalObjectOptions opts = std::get<2>(it.second);
-		if (ty)
-		{
-			remapper.transformObjectAddresses(
-				it.first,
-				ty,
-				(uint8_t)opts&(uint8_t)ExternalObjectOptions::AllowFieldRecursion,
-				((uint8_t)opts&(uint8_t)ExternalObjectOptions::AllowPtrRecursion) ? &visitRecord : nullptr
-			);
-		}
+		remapper.transformObjectAddresses(
+			it.first,
+			ty,
+			(uint8_t)opts&(uint8_t)ExternalObjectOptions::AllowFieldRecursion,
+			((uint8_t)opts&(uint8_t)ExternalObjectOptions::AllowPtrRecursion) ? &visitRecord : nullptr
+		);
 	}
 }
 
@@ -70,10 +67,11 @@ void MemoryRoot::removeHeap(MemoryHeap* heap)
 void MemoryRoot::registerExternal_impl(void* object, TypeName&& type, size_t size, ExternalObjectOptions options)
 {
 	typedef std::tuple<TypeName, size_t, ExternalObjectOptions> details_t;
-	externalObjects.try_emplace(object, details_t(type, size, options));
+	externalObjects.emplace(object, details_t(type, size, options));
 }
 
 void MemoryRoot::removeExternal(void* object)
 {
-	externalObjects.erase(externalObjects.find(object));
+	auto it = externalObjects.find(object);
+	externalObjects.erase(it);
 }

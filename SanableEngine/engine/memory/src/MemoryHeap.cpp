@@ -103,10 +103,10 @@ void MemoryHeap::updatePointers(const MemoryMapper& remapper, std::set<void*>& v
 {
 	for (GenericTypedMemoryPool* p : pools)
 	{
-		const TypeInfo* ty = p->getContentsType();
+		//const TypeInfo* ty = p->getContentsType(); //TODO switch to this for better performance, avoiding lookups
 		for (auto it = p->cbegin(); it != p->cend(); ++it)
 		{
-			remapper.transformObjectAddresses(*it, ty, true, &visitRecord);
+			remapper.transformObjectAddresses(*it, p->getContentsTypeName(), true, &visitRecord);
 		}
 	}
 }
