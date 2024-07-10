@@ -80,7 +80,7 @@ public:
 	/// <param name="object">Object to scan and update addresses</param>
 	/// <param name="type">Type of object to scan</param>
 	/// <param name="recurseFields">Should we recurse into fields?</param>
-	/// <param name="recursePointers">If non-null, we should recurse into pointers (and record it here so we don't hit it twice)</param>
+	/// <param name="recursePointers">If non-null, we should recurse into pointers. Visited (source) addresses are recorded here so we don't hit them twice.</param>
 	ENGINEMEM_API void transformObjectAddresses(void* object, const TypeName& typeName, bool recurseFields, std::set<void*>* recursePointers) const;
 
 	ENGINEMEM_API void clear();

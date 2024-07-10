@@ -12,7 +12,7 @@
 
 TEST_SUITE("MemoryMapper")
 {
-	TEST_CASE("Minimal")
+	TEST_CASE("Minimal: bare int pointer")
 	{
 		//Setup
 		int x = 123;
@@ -28,18 +28,19 @@ TEST_SUITE("MemoryMapper")
 
 	TEST_CASE("Pointer within object")
 	{
-		//Setup
-		int x = 123;
-		int y;
-		PtrToInt ptrContainer;
-		ptrContainer.target = &x;
-
+		//Env setup
 		GlobalTypeRegistry::clear();
 		{
 			ModuleTypeRegistry reg;
 			test_reportTypes(&reg);
 			GlobalTypeRegistry::loadModule("Remapping test helpers", reg);
 		}
+
+		//Setup
+		int x = 123;
+		int y;
+		PtrToInt ptrContainer;
+		ptrContainer.target = &x;
 
 		//Act
 		MemoryMapper remapper;
@@ -183,7 +184,7 @@ TEST_SUITE("MemoryMapper")
 	}
 }
 
-TEST_CASE("MemoryRoot remapping")
+TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 {
 	GlobalTypeRegistry::clear();
 	{
@@ -192,7 +193,7 @@ TEST_CASE("MemoryRoot remapping")
 		GlobalTypeRegistry::loadModule("Remapping test helpers", reg);
 	}
 
-	SUBCASE("Pointer-to-int")
+	SUBCASE("Pointer-to-int within object")
 	{
 		SUBCASE("External")
 		{
@@ -239,4 +240,150 @@ TEST_CASE("MemoryRoot remapping")
 			MemoryRoot::get()->removeExternal(ptrContainer);
 		}
 	}
+
+	SUBCASE("Double pointer within object")
+	{
+		//Env setup
+		GlobalTypeRegistry::clear();
+		{
+			ModuleTypeRegistry reg;
+			test_reportTypes(&reg);
+			GlobalTypeRegistry::loadModule("Remapping test helpers", reg);
+		}
+
+		SUBCASE("Backing value remap")
+		{
+			//Setup
+			int x = 123;
+			int y;
+			int* px = &x;
+			DoublePtrToInt ptrContainer;
+			ptrContainer.target = &px;
+			MemoryRoot::get()->registerExternal(&ptrContainer);
+
+			//Act
+			MemoryMapper remapper;
+			remapper.move(&y, &x);
+			std::set<void*> log;
+			MemoryRoot::get()->updatePointers(remapper, log);
+
+			//Check
+			CHECK(ptrContainer.target == &px); //Expect unchanged
+			
+			//Cleanup
+			MemoryRoot::get()->removeExternal(&ptrContainer);
+		}
+
+		SUBCASE("Pointer remap")
+		{
+			//Setup
+			int x = 123;
+			int* px = &x;
+			int* py;
+			DoublePtrToInt ptrContainer;
+			ptrContainer.target = &px;
+			MemoryRoot::get()->registerExternal(&ptrContainer);
+
+			//Act
+			MemoryMapper remapper;
+			remapper.move(&py, &px);
+			std::set<void*> log;
+			MemoryRoot::get()->updatePointers(remapper, log);
+
+			//Check
+			CHECK(ptrContainer.target == &py);
+			
+			//Cleanup
+			MemoryRoot::get()->removeExternal(&ptrContainer);
+		}
+
+		SUBCASE("Simultaneous A")
+		{
+			//Setup
+			int x = 123;
+			int y;
+			int* px = &x;
+			int* py;
+			DoublePtrToInt ptrContainer;
+			ptrContainer.target = &px;
+			MemoryRoot::get()->registerExternal(&ptrContainer);
+
+			//Act
+			MemoryMapper remapper;
+			remapper.move(&y, &x);
+			remapper.move(&py, &px);
+			std::set<void*> log;
+			MemoryRoot::get()->updatePointers(remapper, log);
+
+			//Check
+			CHECK(ptrContainer.target == &py);
+			CHECK(*ptrContainer.target == &y);
+
+			//Cleanup
+			MemoryRoot::get()->removeExternal(&ptrContainer);
+		}
+
+		SUBCASE("Simultaneous B") //Same as before, but swapping move order
+		{
+			//Setup
+			int x = 123;
+			int y;
+			int* px = &x;
+			int* py;
+			DoublePtrToInt ptrContainer;
+			ptrContainer.target = &px;
+			MemoryRoot::get()->registerExternal(&ptrContainer);
+
+			//Act
+			MemoryMapper remapper;
+			remapper.move(&py, &px);
+			remapper.move(&y, &x);
+			std::set<void*> log;
+			MemoryRoot::get()->updatePointers(remapper, log);
+
+			//Check
+			CHECK(ptrContainer.target == &py);
+			CHECK(*ptrContainer.target == &y);
+
+			//Cleanup
+			MemoryRoot::get()->removeExternal(&ptrContainer);
+		}
+	}
+
+	SUBCASE("Linked chain")
+	{
+		//Setup
+		constexpr size_t chainLen = 3;
+		CylicalPtrsLinear chain[chainLen];
+		for (size_t i = 0; i < chainLen-1; ++i) chain[i].target = &chain[i+1];
+		SUBCASE("Looped chain") { chain[chainLen-1].target = &chain[0]; }
+
+		constexpr size_t movedIndex = 1;
+		static_assert(movedIndex != 0); //Will fail if this isn't the looped chain case
+		static_assert(movedIndex < chainLen);
+		for (size_t i = 0; i < chainLen; ++i)
+		{
+			if (i != movedIndex) MemoryRoot::get()->registerExternal(&chain[i]);
+		}
+		CylicalPtrsLinear displaced;
+		MemoryRoot::get()->registerExternal(&displaced);
+
+		//Act
+		MemoryMapper mover;
+		mover.move(&displaced, &chain[movedIndex]);
+		std::set<void*> log;
+		MemoryRoot::get()->updatePointers(mover, log);
+
+		//Check
+		CHECK(chain[movedIndex-1].target == &displaced);
+
+		//Cleanup
+		for (size_t i = 1; i < chainLen; ++i)
+		{
+			if (i != movedIndex) MemoryRoot::get()->removeExternal(&chain[i]);
+		}
+		MemoryRoot::get()->removeExternal(&displaced);
+	}
+
+	//TODO SUBCASE("Linked tree") {}
 }

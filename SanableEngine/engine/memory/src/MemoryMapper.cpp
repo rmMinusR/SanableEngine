@@ -71,7 +71,7 @@ void MemoryMapper::transformObjectAddresses(void* object, const TypeName& typeNa
 	{
 		void** pPtr = (void**)object;
 		void* ptr = *pPtr;
-		*pPtr = transformAddress(ptr, 1); //FIXME this wants size of pointed-to type for safety
+		ptr = *pPtr = transformAddress(ptr, 1); //FIXME this wants size of pointed-to type for safety
 
 		if (recursePointers && recursePointers->count(ptr) == 0)
 		{

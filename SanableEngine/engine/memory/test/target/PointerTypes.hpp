@@ -5,6 +5,11 @@ struct PtrToInt
 	int* target;
 };
 
+struct DoublePtrToInt
+{
+	int** target;
+};
+
 struct PtrToStruct
 {
 	PtrToInt* target;
