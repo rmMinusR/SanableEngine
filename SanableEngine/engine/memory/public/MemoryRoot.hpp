@@ -30,7 +30,7 @@ public:
 	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord);
 
 	template<typename T>
-	void registerExternal(T* object, ExternalObjectOptions options)
+	void registerExternal(T* object, ExternalObjectOptions options = ExternalObjectOptions::DefaultExternal)
 	{
 		registerExternal_impl(object, std::move(TypeName::create<T>()), sizeof(T), options);
 	}

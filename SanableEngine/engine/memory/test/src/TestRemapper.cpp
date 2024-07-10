@@ -6,6 +6,9 @@
 #include "TypedMemoryPool.hpp"
 #include "MemoryMapper.hpp"
 #include "MoveTester.hpp"
+#include "PointerTypes.hpp"
+#include "MemoryRoot.hpp"
+#include "MemoryHeap.hpp"
 
 TEST_SUITE("MemoryMapper")
 {
@@ -153,6 +156,62 @@ TEST_SUITE("MemoryMapper")
 		for (int i = 0; i < nObjs; ++i) pool.release(remappedObjs[i]);
 		delete poolBackend;
 	}
+}
 
+TEST_CASE("MemoryRoot remapping")
+{
+	GlobalTypeRegistry::clear();
+	{
+		ModuleTypeRegistry reg;
+		test_reportTypes(&reg);
+		GlobalTypeRegistry::loadModule("Remapping test helpers", reg);
+	}
 
+	SUBCASE("Pointer-to-int")
+	{
+		SUBCASE("External")
+		{
+			//Setup
+			int x = 123;
+			int y;
+			PtrToInt ptrContainer;
+			ptrContainer.target = &x;
+			MemoryRoot::get()->registerExternal(&ptrContainer);
+		
+			//Act
+			MemoryMapper remapper;
+			remapper.move(&y, &x);
+			std::set<void*> log;
+			MemoryRoot::get()->updatePointers(remapper, log);
+
+			//Check
+			CHECK(ptrContainer.target == &y);
+
+			//Cleanup
+			MemoryRoot::get()->removeExternal(&ptrContainer);
+		}
+
+		SUBCASE("Heap")
+		{
+			//Setup
+			int x = 123;
+			int y;
+			MemoryHeap heap;
+			PtrToInt* ptrContainer = heap.create<PtrToInt>();
+			ptrContainer->target = &x;
+			MemoryRoot::get()->registerExternal(ptrContainer);
+
+			//Act
+			MemoryMapper remapper;
+			remapper.move(&y, &x);
+			std::set<void*> log;
+			MemoryRoot::get()->updatePointers(remapper, log);
+
+			//Check
+			CHECK(ptrContainer->target == &y);
+
+			//Cleanup
+			MemoryRoot::get()->removeExternal(&ptrContainer);
+		}
+	}
 }

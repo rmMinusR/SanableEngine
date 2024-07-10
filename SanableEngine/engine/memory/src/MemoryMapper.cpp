@@ -55,7 +55,8 @@ void MemoryMapper::transformComposite(void* object, const TypeInfo* type, bool r
 
 void MemoryMapper::transformObjectAddresses(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const
 {
-	if (type->isPointer())
+	std::optional<TypeName> pointee = type->name.dereference();
+	if (pointee.has_value())
 	{
 		void** pPtr = (void**)object;
 		void* ptr = *pPtr;
@@ -64,8 +65,9 @@ void MemoryMapper::transformObjectAddresses(void* object, const TypeInfo* type, 
 		if (recursePointers && recursePointers->count(ptr) == 0)
 		{
 			recursePointers->emplace(ptr);
-			const TypeInfo* pointee = type->name.getPointee().resolve();
-			if (pointee) transformObjectAddresses(ptr, pointee, recurseFields, recursePointers);
+			const TypeInfo* pointeeType = pointee.value().resolve();
+			//TODO polymorphism check, snipe and downcast
+			if (pointeeType) transformObjectAddresses(ptr, pointeeType, recurseFields, recursePointers);
 		}
 	}
 	else if (recurseFields && type->isComposite())

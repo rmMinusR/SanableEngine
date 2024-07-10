@@ -72,3 +72,8 @@ void MemoryRoot::registerExternal_impl(void* object, TypeName&& type, size_t siz
 	typedef std::tuple<TypeName, size_t, ExternalObjectOptions> details_t;
 	externalObjects.try_emplace(object, details_t(type, size, options));
 }
+
+void MemoryRoot::removeExternal(void* object)
+{
+	externalObjects.erase(externalObjects.find(object));
+}
