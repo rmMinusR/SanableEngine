@@ -2,28 +2,28 @@
 
 struct PtrToInt
 {
-	int* target;
+	int* target = nullptr;
 };
 
 struct DoublePtrToInt
 {
-	int** target;
+	int** target = nullptr;
 };
 
 struct PtrToStruct
 {
-	PtrToInt* target;
+	PtrToInt* target = nullptr;
 };
 
 struct CylicalPtrsLinear
 {
-	CylicalPtrsLinear* target;
+	CylicalPtrsLinear* target = nullptr;
 };
 
 struct CylicalPtrsTree
 {
-	CylicalPtrsTree* a;
-	CylicalPtrsTree* b;
+	CylicalPtrsTree* a = nullptr;
+	CylicalPtrsTree* b = nullptr;
 };
 
 class ModuleTypeRegistry;

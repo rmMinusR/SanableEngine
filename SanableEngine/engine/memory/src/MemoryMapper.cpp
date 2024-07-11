@@ -50,14 +50,14 @@ void MemoryMapper::transformComposite(void* object, const TypeInfo* type, bool r
 		if (pointee.has_value())
 		{
 			void** pPtr = (void**)object;
-			void* ptr = *pPtr;
-			*pPtr = transformAddress(ptr, sizeof(void*));
+			void* srcPtr = *pPtr;
+			*pPtr = transformAddress(srcPtr, sizeof(void*));
 			
-			if (recursePointers && recursePointers->count(ptr) == 0)
+			if (recursePointers && *pPtr && recursePointers->count(srcPtr) == 0)
 			{
-				recursePointers->emplace(ptr);
+				recursePointers->emplace(srcPtr);
 				//TODO polymorphism check, snipe and downcast
-				transformObjectAddresses(ptr, pointee.value(), recurseFields, recursePointers);
+				transformObjectAddresses(srcPtr, pointee.value(), recurseFields, recursePointers);
 			}
 		}
 		else if (recurseFields) transformObjectAddresses(fi.getValue(object), fi.type, recurseFields, recursePointers);
@@ -70,14 +70,14 @@ void MemoryMapper::transformObjectAddresses(void* object, const TypeName& typeNa
 	if (pointee.has_value())
 	{
 		void** pPtr = (void**)object;
-		void* ptr = *pPtr;
-		ptr = *pPtr = transformAddress(ptr, 1); //FIXME this wants size of pointed-to type for safety
+		void* srcPtr = *pPtr;
+		srcPtr = *pPtr = transformAddress(srcPtr, 1); //FIXME this wants size of pointed-to type for safety
 
-		if (recursePointers && recursePointers->count(ptr) == 0)
+		if (recursePointers && *pPtr && recursePointers->count(srcPtr) == 0)
 		{
-			recursePointers->emplace(ptr);
+			recursePointers->emplace(srcPtr);
 			//TODO polymorphism check, snipe and downcast
-			transformObjectAddresses(ptr, pointee.value(), recurseFields, recursePointers);
+			transformObjectAddresses(srcPtr, pointee.value(), recurseFields, recursePointers);
 		}
 	}
 	else if (recurseFields && typeName.isComposite())
