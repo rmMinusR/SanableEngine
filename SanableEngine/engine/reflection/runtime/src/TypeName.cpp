@@ -83,6 +83,11 @@ TypeName TypeName::incomplete_ref()
     return TypeName(incomplete_ref_literal, Flags::Incomplete);
 }
 
+TypeName TypeName::createSynthetic(const std::string& name)
+{
+    return TypeName(name, Flags::Synthetic);
+}
+
 std::optional<TypeName> TypeName::cvUnwrap() const
 {
     std::string unwrappedName = name;
@@ -123,6 +128,11 @@ std::optional<TypeName> TypeName::dereference() const
     std::string unwrappedName = name.substr(0, index);
     strip_trailing(unwrappedName, " ");
     return TypeName(unwrappedName, flags);
+}
+
+bool TypeName::isSynthetic() const
+{
+    return flags & Flags::Synthetic;
 }
 
 bool TypeName::isValid() const

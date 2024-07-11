@@ -4,7 +4,7 @@
 
 SyntheticTypeBuilder::SyntheticTypeBuilder(const std::string& name)
 {
-	type.name = TypeName(name, TypeName::Flags::Normal);
+	type.name = TypeName::createSynthetic(name);
 }
 
 SyntheticTypeBuilder::~SyntheticTypeBuilder()

@@ -35,11 +35,11 @@ private:
 	enum Flags : uint8_t
 	{
 		Normal     = 0,
-		Incomplete = 1<<0
+		Incomplete = 1<<0,
+		Synthetic = 1<<1
 	} flags;
 	static const char* incomplete_ref_literal;
 	ENGINE_RTTI_API TypeName(const std::string& name, Flags flags);
-	friend class SyntheticTypeBuilder;
 public:
 	ENGINE_RTTI_API TypeName();
 	ENGINE_RTTI_API static TypeName incomplete_ref();
@@ -52,6 +52,8 @@ public:
 
 	template<typename... TPack>
 	static std::vector<TypeName> createPack() { return { create<TPack>()... }; }
+
+	ENGINE_RTTI_API static TypeName createSynthetic(const std::string& name);
 
 	template<typename T>
 	static TypeName tryCreate()
@@ -66,6 +68,7 @@ public:
 
 	ENGINE_RTTI_API std::optional<TypeName> cvUnwrap() const;
 	ENGINE_RTTI_API std::optional<TypeName> dereference() const;
+	ENGINE_RTTI_API bool isSynthetic() const;
 
 	ENGINE_RTTI_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.
 	ENGINE_RTTI_API TypeInfo const* resolve() const;
