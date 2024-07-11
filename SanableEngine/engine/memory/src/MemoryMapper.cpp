@@ -71,13 +71,14 @@ void MemoryMapper::transformObjectAddresses(void* object, const TypeName& typeNa
 	{
 		void** pPtr = (void**)object;
 		void* srcPtr = *pPtr;
-		srcPtr = *pPtr = transformAddress(srcPtr, 1); //FIXME this wants size of pointed-to type for safety
+		void* dstPtr = *pPtr = transformAddress(srcPtr, 1); //FIXME this wants size of pointed-to type for safety
 
-		if (recursePointers && *pPtr && recursePointers->count(srcPtr) == 0)
+		if (recursePointers && *pPtr && recursePointers->count(srcPtr) == 0 && recursePointers->count(dstPtr) == 0)
 		{
 			recursePointers->emplace(srcPtr);
+			recursePointers->emplace(dstPtr);
 			//TODO polymorphism check, snipe and downcast
-			transformObjectAddresses(srcPtr, pointee.value(), recurseFields, recursePointers);
+			transformObjectAddresses(dstPtr, pointee.value(), recurseFields, recursePointers);
 		}
 	}
 	else if (recurseFields && typeName.isComposite())
