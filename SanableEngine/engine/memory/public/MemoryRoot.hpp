@@ -11,7 +11,7 @@
 #include "ExternalObject.hpp"
 
 class MemoryHeap;
-class MemoryMapper;
+class ObjectRelocator;
 
 /// <summary>
 /// The base root of a program's "managed" memory. There can only be one.
@@ -27,7 +27,7 @@ public:
 	ENGINEMEM_API static void cleanup();
 	
 	ENGINEMEM_API void visitHeaps(const std::function<void(MemoryHeap*)>& visitor);
-	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord);
+	ENGINEMEM_API void updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord);
 
 	template<typename T>
 	void registerExternal(T* object, ExternalObjectOptions options = ExternalObjectOptions::DefaultExternal)
@@ -47,5 +47,5 @@ private:
 	std::map<void*, std::tuple<TypeName, size_t, ExternalObjectOptions>> externalObjects;
 	ENGINEMEM_API void registerExternal_impl(void* object, TypeName&& type, size_t size, ExternalObjectOptions options);
 
-	void externals_updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord);
+	void externals_updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord);
 };

@@ -4,13 +4,13 @@
 #include "TypeBuilder.hpp"
 
 #include "TypedMemoryPool.hpp"
-#include "MemoryMapper.hpp"
+#include "ObjectRelocator.hpp"
 #include "MoveTester.hpp"
 #include "PointerTypes.hpp"
 #include "MemoryRoot.hpp"
 #include "MemoryHeap.hpp"
 
-TEST_SUITE("MemoryMapper")
+TEST_SUITE("ObjectRelocator")
 {
 	TEST_CASE("Minimal: bare int pointer")
 	{
@@ -19,7 +19,7 @@ TEST_SUITE("MemoryMapper")
 		int y;
 
 		//Act
-		MemoryMapper remapper;
+		ObjectRelocator remapper;
 		remapper.move(&y, &x);
 
 		//Check
@@ -43,7 +43,7 @@ TEST_SUITE("MemoryMapper")
 		ptrContainer.target = &x;
 
 		//Act
-		MemoryMapper remapper;
+		ObjectRelocator remapper;
 		remapper.move(&y, &x);
 		std::set<void*> log;
 		remapper.transformObjectAddresses(&ptrContainer, TypeName::create<PtrToInt>(), true, &log);
@@ -59,7 +59,7 @@ TEST_SUITE("MemoryMapper")
 		int y;
 
 		//Act
-		MemoryMapper* remapper = nullptr;
+		ObjectRelocator* remapper = nullptr;
 		remapper->move(&y, &x);
 
 		//No check needed, since we would have errored
@@ -79,7 +79,7 @@ TEST_SUITE("MemoryMapper")
 		}
 
 		//Act
-		MemoryMapper remapper;
+		ObjectRelocator remapper;
 		pool.resizeObjects(sizeof(uint16_t), alignof(uint16_t), &remapper);
 		uint8_t* remappedObjs[nObjs];
 		for (int i = 0; i < nObjs; ++i)
@@ -114,7 +114,7 @@ TEST_SUITE("MemoryMapper")
 		}
 
 		//Act
-		MemoryMapper remapper;
+		ObjectRelocator remapper;
 		pool.setMaxNumObjects(endCount, &remapper);
 		uint8_t* remappedObjs[nToCreate];
 		for (int i = 0; i < nToCreate; ++i)
@@ -162,7 +162,7 @@ TEST_SUITE("MemoryMapper")
 		}
 
 		//Act: Do resize
-		MemoryMapper remapper;
+		ObjectRelocator remapper;
 		poolBackend->refreshObjects(*switchType, &remapper);
 		MoveTester* remappedObjs[nObjs];
 		for (int i = 0; i < nObjs; ++i)
@@ -205,7 +205,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 			MemoryRoot::get()->registerExternal(&ptrContainer);
 		
 			//Act
-			MemoryMapper remapper;
+			ObjectRelocator remapper;
 			remapper.move(&y, &x);
 			std::set<void*> log;
 			MemoryRoot::get()->updatePointers(remapper, log);
@@ -228,7 +228,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 			MemoryRoot::get()->registerExternal(ptrContainer);
 
 			//Act
-			MemoryMapper remapper;
+			ObjectRelocator remapper;
 			remapper.move(&y, &x);
 			std::set<void*> log;
 			MemoryRoot::get()->updatePointers(remapper, log);
@@ -262,7 +262,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 			MemoryRoot::get()->registerExternal(&ptrContainer);
 
 			//Act
-			MemoryMapper remapper;
+			ObjectRelocator remapper;
 			remapper.move(&y, &x);
 			std::set<void*> log;
 			MemoryRoot::get()->updatePointers(remapper, log);
@@ -285,7 +285,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 			MemoryRoot::get()->registerExternal(&ptrContainer);
 
 			//Act
-			MemoryMapper remapper;
+			ObjectRelocator remapper;
 			remapper.move(&py, &px);
 			std::set<void*> log;
 			MemoryRoot::get()->updatePointers(remapper, log);
@@ -309,7 +309,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 			MemoryRoot::get()->registerExternal(&ptrContainer);
 
 			//Act
-			MemoryMapper remapper;
+			ObjectRelocator remapper;
 			remapper.move(&y, &x);
 			remapper.move(&py, &px);
 			std::set<void*> log;
@@ -335,7 +335,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 			MemoryRoot::get()->registerExternal(&ptrContainer);
 
 			//Act
-			MemoryMapper remapper;
+			ObjectRelocator remapper;
 			remapper.move(&py, &px);
 			remapper.move(&y, &x);
 			std::set<void*> log;
@@ -369,7 +369,7 @@ TEST_CASE("MemoryRoot remapping" * doctest::timeout(1))
 		MemoryRoot::get()->registerExternal(&displaced);
 
 		//Act
-		MemoryMapper mover;
+		ObjectRelocator mover;
 		mover.move(&displaced, &chain[movedIndex]);
 		std::set<void*> log;
 		MemoryRoot::get()->updatePointers(mover, log);

@@ -64,7 +64,7 @@ MemoryHeap::~MemoryHeap()
 
 void MemoryHeap::ensureFresh(bool selfOnly)
 {
-	MemoryMapper remapper;
+	ObjectRelocator remapper;
 
 	//Fix new pools that haven't received their complete TypeInfo yet
 	for (GenericTypedMemoryPool* p : pools)
@@ -99,7 +99,7 @@ void MemoryHeap::ensureFresh(bool selfOnly)
 	else MemoryRoot::get()->updatePointers(remapper, visitRecord);
 }
 
-void MemoryHeap::updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord)
+void MemoryHeap::updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord)
 {
 	for (GenericTypedMemoryPool* p : pools)
 	{

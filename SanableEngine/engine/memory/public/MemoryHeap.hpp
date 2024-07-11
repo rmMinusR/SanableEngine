@@ -51,7 +51,7 @@ public:
 	inline void destroyPool() { destroyPool(TypeName::create<TObj>()); }
 
 	ENGINEMEM_API void ensureFresh(bool selfOnly = false); //If selfOnly = false, this calls updatePointers on ALL heaps and external objects - USE WITH EXTREME CAUTION.
-	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord); //USE WITH CAUTION.
+	ENGINEMEM_API void updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord); //USE WITH CAUTION.
 
 private:
 	friend class Application;

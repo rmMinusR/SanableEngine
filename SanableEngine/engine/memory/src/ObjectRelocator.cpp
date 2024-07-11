@@ -1,11 +1,11 @@
-#include "MemoryMapper.hpp"
+#include "ObjectRelocator.hpp"
 
 #include <cstring>
 #include <cassert>
 
 #include "TypeInfo.hpp"
 
-void MemoryMapper::rawMove(void* dst, void* src, size_t bytesToMove)
+void ObjectRelocator::rawMove(void* dst, void* src, size_t bytesToMove)
 {
 	memcpy(dst, src, bytesToMove); //Do actual move op
 	if (USE_INVALID_DATA_FILL) memset(src, INVALID_DATA_FILL_VALUE, bytesToMove); //Fill old memory
@@ -14,20 +14,20 @@ void MemoryMapper::rawMove(void* dst, void* src, size_t bytesToMove)
 	if (this) logMove(dst, src, bytesToMove);
 }
 
-void MemoryMapper::logMove(void* dst, void* src, size_t bytesToMove)
+void ObjectRelocator::logMove(void* dst, void* src, size_t bytesToMove)
 {
 	if (!this) return;
 
-	RemapOp op;
+	RelocOp op;
 	op.src = src;
 	op.dst = dst;
 	op.blockSize = bytesToMove;
 	opLog.push_back(op);
 }
 
-void* MemoryMapper::transformAddress(void* ptr, size_t ptrSize) const
+void* ObjectRelocator::transformAddress(void* ptr, size_t ptrSize) const
 {
-	for (const RemapOp& op : opLog)
+	for (const RelocOp& op : opLog)
 	{
 		void* srcEnd = ((char*)op.src) + op.blockSize; //First byte NOT in remapped block
 		if (op.src <= ptr && ptr < srcEnd)
@@ -41,7 +41,7 @@ void* MemoryMapper::transformAddress(void* ptr, size_t ptrSize) const
 	return ptr;
 }
 
-void MemoryMapper::transformComposite(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const
+void ObjectRelocator::transformComposite(void* object, const TypeInfo* type, bool recurseFields, std::set<void*>* recursePointers) const
 {
 	assert(type->isComposite());
 	type->layout.walkFields([&](const FieldInfo& fi)
@@ -64,7 +64,7 @@ void MemoryMapper::transformComposite(void* object, const TypeInfo* type, bool r
 	});
 }
 
-void MemoryMapper::transformObjectAddresses(void* object, const TypeName& typeName, bool recurseFields, std::set<void*>* recursePointers) const
+void ObjectRelocator::transformObjectAddresses(void* object, const TypeName& typeName, bool recurseFields, std::set<void*>* recursePointers) const
 {
 	std::optional<TypeName> pointee = typeName.dereference();
 	if (pointee.has_value())
@@ -93,7 +93,7 @@ void MemoryMapper::transformObjectAddresses(void* object, const TypeName& typeNa
 	}
 }
 
-void MemoryMapper::clear()
+void ObjectRelocator::clear()
 {
 	opLog.clear();
 }

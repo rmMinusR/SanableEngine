@@ -31,13 +31,13 @@ void MemoryRoot::visitHeaps(const std::function<void(MemoryHeap*)>& visitor)
 	for (MemoryHeap* heap : livingHeaps) visitor(heap);
 }
 
-void MemoryRoot::updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord)
+void MemoryRoot::updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord)
 {
 	for (MemoryHeap* heap : livingHeaps) heap->updatePointers(remapper, visitRecord);
 	externals_updatePointers(remapper, visitRecord);
 }
 
-void MemoryRoot::externals_updatePointers(const MemoryMapper& remapper, std::set<void*>& visitRecord)
+void MemoryRoot::externals_updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord)
 {
 	for (const auto& it : externalObjects)
 	{

@@ -120,7 +120,7 @@ void RawMemoryPool::reset()
 	mNumAllocatedObjects = 0;
 }
 
-void RawMemoryPool::resizeObjects(size_t newSize, size_t newAlign, MemoryMapper* mapper)
+void RawMemoryPool::resizeObjects(size_t newSize, size_t newAlign, ObjectRelocator* mapper)
 {
 	if (newSize != mObjectSize || newAlign != mObjectAlign)
 	{
@@ -157,7 +157,7 @@ void RawMemoryPool::resizeObjects(size_t newSize, size_t newAlign, MemoryMapper*
 	}
 }
 
-void RawMemoryPool::setMaxNumObjects(size_t newCount, MemoryMapper* mapper)
+void RawMemoryPool::setMaxNumObjects(size_t newCount, ObjectRelocator* mapper)
 {
 	if (newCount != mMaxNumObjects)
 	{

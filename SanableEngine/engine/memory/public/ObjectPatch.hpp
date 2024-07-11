@@ -4,14 +4,14 @@
 
 #include "dllapi.h"
 
-class MemoryMapper;
+class ObjectRelocator;
 
 struct ObjectPatch
 {
 	TypeInfo oldData;
 	TypeInfo newData;
 
-	ENGINEMEM_API void apply(void* target, MemoryMapper* remapLog = nullptr) const;
+	ENGINEMEM_API void apply(void* target, ObjectRelocator* remapLog = nullptr) const;
 	ENGINEMEM_API bool isValid() const;
 	ENGINEMEM_API TypeName getTypeName() const;
 

@@ -16,23 +16,23 @@ struct TypeInfo;
 /// <summary>
 /// An interface for moving that will allow pointers to be updated to new object addresses.
 /// </summary>
-class MemoryMapper
+class ObjectRelocator
 {
 	/// <summary>
 	/// INTERNAL. Represents a move that can be stored and replayed later.
 	/// </summary>
-	struct RemapOp
+	struct RelocOp
 	{
 		void* src;
 		void* dst;
 		size_t blockSize;
 	
 	private:
-		friend class MemoryMapper;
-		ENGINEMEM_API RemapOp() = default;
+		friend class ObjectRelocator;
+		RelocOp() = default;
 	};
 
-	std::vector<RemapOp> opLog;
+	std::vector<RelocOp> opLog;
 
 	static constexpr bool USE_INVALID_DATA_FILL = true;
 	static constexpr unsigned char INVALID_DATA_FILL_VALUE = 219;
