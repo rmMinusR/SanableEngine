@@ -345,6 +345,52 @@ void TypeInfo::create_internalFinalize()
 	memset(layout.byteUsage.data(), (uint8_t)Layout::ByteUsage::Unknown, layout.size);
 }
 
+size_t TypeInfo::computeHash() const
+{
+	//Hash: modified djb2
+	size_t hash = 5381;
+
+	//Hash: layout part
+	hash = ((hash << 5) + hash) + std::hash<TypeName>{}(name);
+	for (size_t i = 0; i < layout.size; ++i) hash = ((hash << 5) + hash) + (uint8_t)layout.byteUsage[i];
+	for (size_t i = 0; i < layout.size; ++i) if(layout.byteUsage[i] == TypeInfo::Layout::ByteUsage::ImplicitConst) hash = ((hash << 5) + hash) + layout.implicitValues[i] ^ i;
+	for (const FieldInfo& f : layout.fields)
+	{
+		hash = ((hash << 5) + hash) + f.offset;
+		hash = ((hash << 5) + hash) + std::hash<TypeName>{}(f.type);
+		hash = ((hash << 5) + hash) + std::hash<std::string>{}(f.name);
+	}
+	for (const ParentInfo& p : layout.parents)
+	{
+		hash = ((hash << 5) + hash) + p.size;
+		hash = ((hash << 5) + hash) + p.offset;
+		hash = ((hash << 5) + hash) + std::hash<TypeName>{}(p.typeName);
+	}
+
+	//Hash: capabilities part
+	for (const auto& i : capabilities.constructors)
+	{
+		size_t ctorHash = 5381;
+		for (const auto& p : i.thunk.parameters) ctorHash = ((ctorHash << 5) + ctorHash) + std::hash<TypeName>{}(p);
+		hash = ((hash << 5) + hash) + ctorHash;
+	}
+	for (const auto& i : capabilities.memberFuncs)
+	{
+		size_t ctorHash = std::hash<std::string>{}(i.name);
+		for (const auto& p : i.fn.parameters) ctorHash = ((ctorHash << 5) + ctorHash) + std::hash<TypeName>{}(p);
+		hash = ((hash << 5) + hash) + ctorHash;
+	}
+	for (const auto& i : capabilities.staticFuncs)
+	{
+		size_t ctorHash = std::hash<std::string>{}(i.name);
+		for (const auto& p : i.fn.parameters) ctorHash = ((ctorHash << 5) + ctorHash) + std::hash<TypeName>{}(p);
+		hash = ((hash << 5) + hash) + ctorHash;
+	}
+	hash = ((hash << 5) + hash) + (size_t)capabilities.rawDtor;
+
+	return hash;
+}
+
 bool TypeInfo::isDummy() const
 {
 	return hash == 0;

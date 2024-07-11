@@ -9,6 +9,7 @@
 #include "StaticTemplateUtils.inl"
 
 struct TypeInfo;
+class SyntheticTypeBuilder;
 
 namespace stix::detail
 {
@@ -38,6 +39,7 @@ private:
 	} flags;
 	static const char* incomplete_ref_literal;
 	ENGINE_RTTI_API TypeName(const std::string& name, Flags flags);
+	friend class SyntheticTypeBuilder;
 public:
 	ENGINE_RTTI_API TypeName();
 	ENGINE_RTTI_API static TypeName incomplete_ref();

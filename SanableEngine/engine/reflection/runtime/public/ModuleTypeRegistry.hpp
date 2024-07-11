@@ -5,6 +5,8 @@
 #include "TypeInfo.hpp"
 
 class GlobalTypeRegistry;
+class TypeBuilder;
+class SyntheticTypeBuilder;
 
 /// <summary>
 /// Reflection(ish) for all types within a module (read: DLL/plugin).
@@ -27,6 +29,7 @@ public:
 private:
 	std::vector<TypeInfo> types;
 	friend class TypeBuilder;
+	friend class SyntheticTypeBuilder;
 
 	void doLateBinding();
 	friend class GlobalTypeRegistry;
