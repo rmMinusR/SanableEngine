@@ -2,6 +2,7 @@ import abc
 from enum import Enum
 from functools import cached_property
 from source_discovery import SourceFile
+import config
 
 class SourceLocation:
     def __init__(this, file: SourceFile, line:int, column:int):
@@ -21,11 +22,14 @@ class ASTNode:
         this.children:list|None = None
 
     def __str__(this):
-        return f"{this.path} ({type(this)})"
+        typeStr = str(type(this))
+        typeStr = typeStr[len("<class 'cx_ast."):-len("'>")]
+        return f"{this.path} ({typeStr})"
     
     @cached_property
     def path(this):
-        return f"{this.ownerName}::{this.ownName}"
+        if this.ownerName != None: return f"{this.ownerName}::{this.ownName}"
+        else: return f"::{this.ownName}"
     
     @staticmethod
     def allowMultiple():
@@ -65,8 +69,9 @@ class Module:
         
         # Place in fast-lookup contents tree
         if not node.allowMultiple():
-            assert node.path not in this.contents.keys(), f"Tried to register f{node} twice!"
-            this.contents[node.path]
+            #assert node.path not in this.contents.keys(), f"Tried to register {node} twice!"
+            if node.path in this.contents.keys(): config.logger.warn(f"Node {node} registered multiple times!")
+            this.contents[node.path] = node
         else:
             if not node.path in this.contents.keys(): this.contents[node.path] = []
             this.contents[node.path].append(node)
@@ -78,8 +83,8 @@ class Module:
     def linkAll(this):
         assert not this.__linked, "Can only link once"
         this.__linked = True
-        for v in this.contents.values(): v.link()
-        for v in this.contents.values(): v.latelink()
+        for v in this.contents.values(): v.link(this)
+        for v in this.contents.values(): v.latelink(this)
         
     def find(this, path:str) -> ASTNode:
         assert this.__linked, "Can only be called after or during linking"
@@ -99,7 +104,7 @@ class Annotation(ASTNode):
 
 class TypeInfo(ASTNode):
     def __init__(this, ownerName:str|None, ownName:str, location: SourceLocation, isAbstract:bool):
-        super().__init__(this, ownerName, ownName, location)
+        super().__init__(ownerName, ownName, location)
         this.isAbstract = isAbstract
         
     @property

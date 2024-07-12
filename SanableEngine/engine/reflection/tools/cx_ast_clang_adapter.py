@@ -34,7 +34,7 @@ class ClangParseContext:
                 # Only capture what's in the current file
                 if this.__isOurs(cursor): this.__ingestCursor(None, cursor)
                 
-        this.module.link()
+        this.module.linkAll()
 
 
     @staticmethod
@@ -50,11 +50,13 @@ class ClangParseContext:
     factories:dict[CursorKind, typing.Callable[[cx_ast.ASTNode|None, Cursor, Project], cx_ast.ASTNode|None]] = dict()
 
     def __ingestCursor(this, parent:cx_ast.ASTNode|None, cursor:Cursor):
+        # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
         if kind in ClangParseContext.factories.keys():
             result = ClangParseContext.factories[kind](parent, cursor, this.project)
-            if result != None: this.module.register(result)
-            for child in ClangParseContext.__getChildren(cursor): this.__ingestCursor(child)
+            if result != None:
+                this.module.register(result)
+                for child in ClangParseContext.__getChildren(cursor): this.__ingestCursor(result, child)
         else:
             config.logger.debug(f"Skipping symbol of unhandled kind {kind}")
             
