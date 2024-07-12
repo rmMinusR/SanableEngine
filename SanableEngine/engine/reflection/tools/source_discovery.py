@@ -141,6 +141,12 @@ class Project:
 		# Failed to locate
 		return None
 
+	def getFile(this, path:str) -> SourceFile|None:
+		for i in this.files:
+			if i.path == path:
+				return i
+		return None
+
 class ProjectDiff:
 	def __init__(this, oldProj: Project|None, newProj: Project):
 		lookupMatchingFile = lambda file, _list: next(filter(lambda i: i.path == file.path, _list), None)

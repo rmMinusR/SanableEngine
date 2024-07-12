@@ -98,8 +98,9 @@ class Annotation(ASTNode):
     
 
 class TypeInfo(ASTNode):
-    def __init__(this, ownerName:str|None, ownName:str, location: SourceLocation):
+    def __init__(this, ownerName:str|None, ownName:str, location: SourceLocation, isAbstract:bool):
         super().__init__(this, ownerName, ownName, location)
+        this.isAbstract = isAbstract
         
     @property
     def immediateParents(this):
