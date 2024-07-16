@@ -23,7 +23,7 @@ class ASTNode:
 
     def __str__(this):
         typeStr = str(type(this))
-        typeStr = typeStr[len("<class 'cx_ast."):-len("'>")]
+        typeStr = typeStr[len("<class '"):-len("'>")].split(".")[-1]
         return f"{this.path} ({typeStr})"
     
     @cached_property

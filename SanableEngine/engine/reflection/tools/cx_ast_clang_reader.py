@@ -1,21 +1,22 @@
 import cx_ast
+import cx_ast_tooling
 from source_discovery import *
 import config
 import timings
 import clang.cindex
+import argparse
 
 from collections.abc import Iterator
 import typing
 
 
+class ClangParseContext(cx_ast_tooling.ASTParser):
+    @staticmethod
+    def argparser_add_defaults(parser: argparse.ArgumentParser):
+        cx_ast_tooling.ASTParser.argparser_add_defaults(parser)
 
-class ClangParseContext:
-    def __init__(this, module:cx_ast.Module|None, diff:ProjectDiff|None, project:Project):
-        if diff == None: diff = ProjectDiff(None, project)
-        if module == None: module = cx_ast.Module()
-        this.module = module
-        this.diff = diff
-        this.project = project
+    def __init__(this, module:cx_ast.Module|None, diff:ProjectDiff|None, project:Project, args:argparse.Namespace):
+        super().__init__(module, diff, project, parser)
 
     def ingest(this):
         #diff = ProjectDiff(prev_project, live_project)
@@ -201,3 +202,17 @@ def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, project:
 def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, project:Project):
     # TODO implement
     return None
+
+
+if __name__ == "__main__":
+    import source_discovery
+    import sys
+
+    timings.switchTask(timings.TASK_ID_INIT)
+    arg_parser = cx_ast_tooling.default_argument_parser(
+        prog=os.path.basename(__file__),
+        description="STIX Clang reader: Emitting and caching ASTs as a build step"
+    )
+    args = arg_parser.parse_args(sys.argv[1:])
+
+    cx_parser = ClangParseContext(cx_ast.Module(), source_discovery.ProjectDiff())
