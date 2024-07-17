@@ -9,6 +9,7 @@ import pickle
 
 
 def reduce_lists(args:list[str], delim=';'):
+    if isinstance(args, str): return [args]
     out:list[str] = []
     for i in args: out.extend([element for element in i.split(delim) if len(element)!=0])
     return out
@@ -22,7 +23,7 @@ class SavedAST:
         this.userData = userData
 
     @staticmethod
-    def load(file, requestedVersion) -> "SavedAST"|None:
+    def load(file, requestedVersion):
         try: cacheRaw = pickle.loads(file.read())
         except EOFError: return None # We have a blank file
         
@@ -76,13 +77,13 @@ class ASTParser:
         assert len(args.targets) > 0, "Must provide at least one target!"
         
         # Default output folder, if none specified
-        this.args_output:str = args.output if args.output != None else os.path.join(args.targets[0], "src")
+        this.output:str = args.output if args.output != None else os.path.join(args.targets[0], "src")
 
         # Default file name within folder, if a folder was specified
-        if os.path.isdir(this.args_output) or '.' not in os.path.basename(this.args_output):
-             this.args_output = os.path.join(args.output, "ast.stix")
+        if os.path.isdir(this.output) or '.' not in os.path.basename(this.output):
+             this.output = os.path.join(args.output, "ast.stix")
         else:
-             this.args_output:str = args.output
+             this.output:str = args.output
 
 
     def configure(this):

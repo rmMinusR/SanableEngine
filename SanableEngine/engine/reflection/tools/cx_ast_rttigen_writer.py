@@ -84,10 +84,11 @@ if __name__ == "__main__":
     import sys
 
     timings.switchTask(timings.TASK_ID_INIT)
-    parser = cx_ast_tooling.default_argument_parser(
+    parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description="STIX generation tool: Embedding RTTI in a C++ binary as a build step"
     )
+    RttiGenerator.argparser_add_defaults(parser)
     args = parser.parse_args(sys.argv[1:])
 
     rttigen = RttiGenerator(args)

@@ -120,7 +120,7 @@ class Member(ASTNode):
         Private   = "MemberVisibility::Private"
 
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Visibility):
-        super().__init__(this, ownerName, ownName, location)
+        ASTNode.__init__(this, ownerName, ownName, location)
         this.visibility = visibility
     
 
@@ -128,7 +128,7 @@ class MaybeVirtual(Member):
     __metaclass__ = abc.ABCMeta
     
     def __init__(this, ownerName:str, inheritedFromName:str|None, ownName:str, location: SourceLocation, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
-        super().__init__(this, ownerName, ownName, location, visibility)
+        Member.__init__(this, ownerName, ownName, location, visibility)
         this.__isExplicitVirtual = isExplicitVirtual
         this.__isExplicitOverride = isExplicitOverride
         this.inheritedFromName = inheritedFromName # TODO hacky, search parents instead?
@@ -160,7 +160,7 @@ class Callable(ASTNode):
             return True # In case they're nameless
             
     def __init__(this, ownerName:str, ownName:str, location: SourceLocation, returnTypeName:str, deleted:bool):
-        super().__init__(this, ownerName, ownName, location)
+        ASTNode.__init__(this, ownerName, ownName, location)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
 
@@ -177,8 +177,8 @@ class MemFuncInfo(MaybeVirtual, Callable):
     def __init__(this, ownerName:str, inheritedFromName:str|None, ownName:str, location: SourceLocation,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 returnTypeName:str, deleted:bool):
-        super(MaybeVirtual).__init__(ownerName, ownName, location, visibility, isExplicitVirtual, isExplicitOverride)
-        super(Callable).__init__(this, ownerName, ownName, location, returnTypeName, deleted)
+        MaybeVirtual.__init__(this, ownerName, ownName, location, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable.__init__(this, ownerName, ownName, location, returnTypeName, deleted)
         
 
 class ConstructorInfo(Member, Callable):
@@ -191,8 +191,8 @@ class DestructorInfo(MaybeVirtual, Callable):
     def __init__(this, owner:str, inheritedFromName:str|None, location: SourceLocation,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 deleted:bool):
-        super(MaybeVirtual).__init__(owner, owner, location, visibility, isExplicitVirtual, isExplicitOverride)
-        super(Callable).__init__(this, owner, owner, location, None, deleted)
+        MaybeVirtual.__init__(this, owner, inheritedFromName, owner, location, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable.__init__(this, owner, owner, location, None, deleted)
 
 
 class FieldInfo(Member):

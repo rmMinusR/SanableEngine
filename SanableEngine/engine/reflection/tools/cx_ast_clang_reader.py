@@ -33,7 +33,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         # Do parsing of outdated/new symbols
         for source in this.diff.outdated+this.diff.new:
             config.logger.info(f"Parsing {source}")
-            for cursor in ClangParseContext.__getChildren(source.parse()):
+            for cursor in ClangParseContext._getChildren(source.parse()):
                 # Only capture what's in the current file
                 cursorFilePath = cursor.location.file.name.replace(os.altsep, os.sep)
                 if source.path == cursorFilePath: this.__ingestCursor(None, cursor)
@@ -42,7 +42,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
 
 
     @staticmethod
-    def __getChildren(cursor: Cursor) -> Iterator[Cursor]:
+    def _getChildren(cursor: Cursor) -> Iterator[Cursor]:
         """
         Wrapper that helps us time most Clang operations
         """
@@ -64,7 +64,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
             result = ClangParseContext.factories[kind](parent, cursor, this.project)
             if result != None:
                 this.module.register(result)
-                for child in ClangParseContext.__getChildren(cursor): this.__ingestCursor(result, child)
+                for child in ClangParseContext._getChildren(cursor): this.__ingestCursor(result, child)
         else:
             config.logger.debug(f"Skipping symbol of unhandled kind {kind}")
             
@@ -99,7 +99,7 @@ def isExplicitVirtual(cursor:Cursor):
     return cursor.is_virtual_method() or cursor.is_pure_virtual_method()
 
 def isExplicitOverride(cursor:Cursor):
-    return any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in ClangParseContext.__getChildren(cursor)])
+    return any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in ClangParseContext._getChildren(cursor)])
 
 
 
@@ -142,7 +142,7 @@ def factory_ParentInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Pro
 def factory_FriendInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Project):
     return cx_ast.FriendInfo(
         lexicalParent.path,
-        _make_FullyQualifiedName( next(ClangParseContext.__getChildren(cursor)) ),
+        _make_FullyQualifiedName( next(ClangParseContext._getChildren(cursor)) ),
         makeSourceLocation(cursor, project),
         makeVisibility(cursor)
     )
@@ -166,7 +166,8 @@ def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project
         cursor.is_deleted_method(),
         makeVisibility(cursor),
         isExplicitVirtual(cursor),
-        isExplicitOverride(cursor)
+        isExplicitOverride(cursor),
+        cursor.is_deleted_method()
     )
 
 @ASTFactory(CursorKind.CXX_METHOD, CursorKind.FUNCTION_DECL, CursorKind.FUNCTION_TEMPLATE)
@@ -208,15 +209,19 @@ if __name__ == "__main__":
     import sys
 
     timings.switchTask(timings.TASK_ID_INIT)
-    arg_parser = cx_ast_tooling.default_argument_parser(
+    arg_parser = argparse.ArgumentParser(
         prog=os.path.basename(__file__),
         description="STIX Clang reader: Emitting and caching ASTs as a build step"
     )
+    ClangParseContext.argparser_add_defaults(arg_parser)
     args = arg_parser.parse_args(sys.argv[1:])
 
     config.logger.info("Discovering files")
     timings.switchTask(timings.TASK_ID_DISCOVER)
-    cx_project = Project(args.targets, args.includes)
+    cx_project = Project(
+        cx_ast_tooling.reduce_lists(args.targets),
+        cx_ast_tooling.reduce_lists(args.includes)
+    )
     cx_parser = ClangParseContext(cx_project, args)
     
     config.logger.info("Loading cache")
@@ -224,7 +229,7 @@ if __name__ == "__main__":
     cx_parser.loadPrevOutput()
     config.logger.user(str(cx_parser.diff))
     
-    config.logger.user("Parsing.")
+    config.logger.user("Parsing")
     timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
     cx_parser.ingest()
     
