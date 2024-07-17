@@ -15,13 +15,13 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
     def argparser_add_defaults(parser: argparse.ArgumentParser):
         cx_ast_tooling.ASTParser.argparser_add_defaults(parser)
 
-    def __init__(this, module:cx_ast.Module|None, diff:ProjectDiff|None, project:Project, args:argparse.Namespace):
-        super().__init__(module, diff, project, parser)
+    def __init__(this, project:Project, args:argparse.Namespace):
+        super().__init__(project, args)
+
+    def configure(this):
+        return super().configure()
 
     def ingest(this):
-        #diff = ProjectDiff(prev_project, live_project)
-        #config.logger.log(config.LOG_USER_LEVEL, str(diff))
-        
         timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
 
         # Do removal of outdated/removed symbols
@@ -205,7 +205,6 @@ def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, proj
 
 
 if __name__ == "__main__":
-    import source_discovery
     import sys
 
     timings.switchTask(timings.TASK_ID_INIT)
@@ -215,4 +214,20 @@ if __name__ == "__main__":
     )
     args = arg_parser.parse_args(sys.argv[1:])
 
-    cx_parser = ClangParseContext(cx_ast.Module(), source_discovery.ProjectDiff())
+    config.logger.info("Discovering files")
+    timings.switchTask(timings.TASK_ID_DISCOVER)
+    cx_project = Project(args.targets, args.includes)
+    cx_parser = ClangParseContext(cx_project, args)
+    
+    config.logger.info("Loading cache")
+    cx_parser.configure()
+    cx_parser.loadPrevOutput()
+    config.logger.user(str(cx_parser.diff))
+    
+    config.logger.user("Parsing.")
+    timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
+    cx_parser.ingest()
+    
+    config.logger.info("Finalizing")
+    timings.switchTask(timings.TASK_ID_FINALIZE)
+    cx_parser.saveOutput()

@@ -3,6 +3,39 @@ import source_discovery
 import abc
 import argparse
 import os.path
+import config
+import pickle
+
+
+
+def reduce_lists(args:list[str], delim=';'):
+    out:list[str] = []
+    for i in args: out.extend([element for element in i.split(delim) if len(element)!=0])
+    return out
+
+
+
+class SavedAST:
+    def __init__(this, project:source_discovery.Project, module:cx_ast.Module, userData=None):
+        this.project = project
+        this.module = module
+        this.userData = userData
+
+    @staticmethod
+    def load(file, requestedVersion) -> "SavedAST"|None:
+        try: cacheRaw = pickle.loads(file.read())
+        except EOFError: return None # We have a blank file
+        
+        cacheVersion = cacheRaw[0]
+        if cacheVersion != requestedVersion: return None # We have an outdated cache
+        
+        (_, prevModule, prevProject, userData) = cacheRaw
+        return SavedAST(prevProject, prevModule, userData)
+    
+    def save(this, file, programVersion):
+        data = (programVersion, this.module, this.project, this.userData)
+        file.write(pickle.dumps( data ))
+
 
 
 class ASTParser:
@@ -22,35 +55,61 @@ class ASTParser:
         parser.add_argument("--task-profiling", dest="task_profiling", action="store_true", help="Print per-task profiling")
         parser.add_argument("--call-profiling", dest="call_profiling", action="store_true", help="Enable function call profiling")
         
-    def __init__(this, module:cx_ast.Module|None, diff:source_discovery.ProjectDiff|None, project:source_discovery.Project, args:argparse.Namespace):
-        if diff == None: diff = source_discovery.ProjectDiff(None, project)
-        if module == None: module = cx_ast.Module()
-        this.module = module
-        this.diff = diff
+
+    def __init__(this, project:source_discovery.Project, args:argparse.Namespace):
         this.project = project
+        
+        # Vars loaded or derived from cache
+        this.module = cx_ast.Module()
+        this.diff   = source_discovery.ProjectDiff(None, this.project)
 
         # Process args
 
         this.debug_task_profiling:bool = args.task_profiling
         this.debug_call_profiling:bool = args.call_profiling
+        this.debug_verbose:bool = args.verbose
 
         # Process CMake-style lists
-        this.args_targets :list[str] = [i for i in args.targets.split(";") if len(i) != 0]
-        this.args_includes:list[str] = args.includes.split(";") if args.includes != None else []
-        this.args_defines :list[str] = args.defines .split(";") if args.defines  != None else []
+        this.args_targets  = reduce_lists(args.targets)
+        this.args_includes = reduce_lists(args.includes) if args.includes != None else []
+        this.args_defines  = reduce_lists(args.defines ) if args.defines  != None else []
         assert len(args.targets) > 0, "Must provide at least one target!"
         
         # Default output folder, if none specified
-        this.args_output = args.output if args.output != None else os.path.join(args.targets[0], "src")
+        this.args_output:str = args.output if args.output != None else os.path.join(args.targets[0], "src")
 
         # Default file name within folder, if a folder was specified
-        if os.path.isdir(args.output) or '.' not in os.path.basename(args.output):
+        if os.path.isdir(this.args_output) or '.' not in os.path.basename(this.args_output):
              this.args_output = os.path.join(args.output, "ast.stix")
         else:
-             this.args_output = args.output
-        
+             this.args_output:str = args.output
 
-    def ingest(this): pass    
+
+    def configure(this):
+        if this.debug_verbose:
+            config.logger.setLevel(0)
+
+    @abc.abstractmethod
+    def ingest(this): pass
+    
+    
+    def loadPrevOutput(this):
+        try:
+            
+            with open(this.output, 'rb') as file: oldOutput = SavedAST.load(file, config.version_hash)
+        
+            if oldOutput == None:
+                config.logger.info("Detected changes to RTTI generator script. Entire translation unit will be regenerated.")
+            else:
+                this.diff   = source_discovery.ProjectDiff(oldOutput.project, this.project)
+                this.module = oldOutput.module
+        
+        except Exception as e:
+            config.logger.error("Encountered the following error while loading cache. Cache will be discarded and regenerated.")
+            config.logger.error(e)
+            
+    def saveOutput(this):
+        with open(this.output, 'wb') as file: SavedAST(this.project, this.module).save(file, config.version_hash)
 
 
 
@@ -64,10 +123,20 @@ class ASTConsumer:
     @staticmethod
     def argparser_add_defaults(parser:argparse.ArgumentParser):
         parser.add_argument("-i", "--input", dest="input", help="AST file produced by a STIX parser")
-        parser.add_argument("-o", "--output", default=None, help="Specify an output folder/file. If not specified, defaults to target/src/rtti.generated.cpp")
         parser.add_argument("-v", "--verbose", action="store_true")
         
-    def __init__(this, module:cx_ast.Module, args:argparse.Namespace):
-        this.module = module
+
+    def __init__(this, args:argparse.Namespace):
+        # Process args
+        this.args_input  :str = args.input
+        this.args_verbose:bool = args.verbose
     
+
+    def configure(this):
+        if this.args_verbose:
+            config.logger.setLevel(0)
+            
+        this.input = SavedAST.load(this.args_input, config.version_hash)
+
+
     def execute(this): pass
