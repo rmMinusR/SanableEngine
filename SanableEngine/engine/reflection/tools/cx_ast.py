@@ -53,7 +53,7 @@ class Module:
         
     def __getstate__(this):
         out = [i for i in this.contents.values()]
-        out.sort(lambda node: node.path)
+        out.sort(key=lambda node: node.path)
         return out
     
     def __setstate__(this, vals):
@@ -81,7 +81,6 @@ class Module:
         this.byType[type(node)].append(node)
             
     def linkAll(this):
-        assert not this.__linked, "Can only link once"
         this.__linked = True
         for v in this.contents.values(): v.link(this)
         for v in this.contents.values(): v.latelink(this)
@@ -110,6 +109,24 @@ class TypeInfo(ASTNode):
     @property
     def immediateParents(this):
         return (i for i in this.children if isinstance(i, ParentInfo))
+    
+    def find(this, memberName, searchParents=False) -> "Member":
+        for i in this.children:
+            if isinstance(i, Member) and i.ownName == memberName:
+                return i
+            
+        if searchParents:
+            return this.findInParents(memberName)
+            
+        return None
+    
+    def findInParents(this, memberName) -> "Member":
+        for i in this.children:
+            if isinstance(i, ParentInfo):
+                potentialMatch = i.parentType.find(memberName, searchParents=True)
+                if potentialMatch != None: return potentialMatch
+        return None
+        
      
         
 class Member(ASTNode):
@@ -122,25 +139,30 @@ class Member(ASTNode):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Visibility):
         ASTNode.__init__(this, ownerName, ownName, location)
         this.visibility = visibility
+        this.owner = None
+        
+    def link(this, module:"Module"):
+        super().link(module)
+        this.owner = module.find(this.ownerName)
     
 
 class MaybeVirtual(Member):
     __metaclass__ = abc.ABCMeta
     
-    def __init__(this, ownerName:str, inheritedFromName:str|None, ownName:str, location: SourceLocation, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
+    def __init__(this, ownerName:str, ownName:str, location: SourceLocation, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
         Member.__init__(this, ownerName, ownName, location, visibility)
         this.__isExplicitVirtual = isExplicitVirtual
         this.__isExplicitOverride = isExplicitOverride
-        this.inheritedFromName = inheritedFromName # TODO hacky, search parents instead?
+        this.inheritedFrom = None
         this.inheritedVersion = None
         this.isVirtual = None
         this.isOverride = None
         
     def latelink(this, module: Module):
+        this.inheritedVersion = this.owner.findInParents(this.ownName)
+        
         def __isVirtual (v:MaybeVirtual): return v.__isExplicitVirtual  or __isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False
         def __isOverride(v:MaybeVirtual): return v.__isExplicitOverride or __isOverride(v.inheritedVersion) if v.inheritedVersion != None else False
-        
-        this.inheritedVersion = module.find(f"{this.inheritedFromName}::{this.ownName}")
         this.isVirtual = __isVirtual(this)
         this.isOverride = __isOverride(this)
 
@@ -174,7 +196,7 @@ class Callable(ASTNode):
 
 
 class MemFuncInfo(MaybeVirtual, Callable):
-    def __init__(this, ownerName:str, inheritedFromName:str|None, ownName:str, location: SourceLocation,
+    def __init__(this, ownerName:str, ownName:str, location: SourceLocation,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 returnTypeName:str, deleted:bool):
         MaybeVirtual.__init__(this, ownerName, ownName, location, visibility, isExplicitVirtual, isExplicitOverride)
@@ -183,21 +205,21 @@ class MemFuncInfo(MaybeVirtual, Callable):
 
 class ConstructorInfo(Member, Callable):
     def __init__(this, owner:str, location: SourceLocation, deleted:bool, visibility:Member.Visibility):
-        super(Member).__init__(owner, owner, location, visibility)
-        super(Callable).__init__(owner, owner, location, None, deleted)
+        Member.__init__(this, owner, owner, location, visibility)
+        Callable.__init__(this, owner, owner, location, None, deleted)
 
 
 class DestructorInfo(MaybeVirtual, Callable):
-    def __init__(this, owner:str, inheritedFromName:str|None, location: SourceLocation,
+    def __init__(this, owner:str, location: SourceLocation,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 deleted:bool):
-        MaybeVirtual.__init__(this, owner, inheritedFromName, owner, location, visibility, isExplicitVirtual, isExplicitOverride)
+        MaybeVirtual.__init__(this, owner, owner, location, visibility, isExplicitVirtual, isExplicitOverride)
         Callable.__init__(this, owner, owner, location, None, deleted)
 
 
 class FieldInfo(Member):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
-        super().__init__(this, ownerName, ownName, location, visibility)
+        Member.__init__(this, ownerName, ownName, location, visibility)
         this.typeName = typeName
         this.type = None
         
@@ -209,7 +231,7 @@ class ParentInfo(Member):
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
     def __init__(this, ownerTypeName:str, parentTypeName:str, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
-        super().__init__(this, ownerTypeName, None, location, visibility)
+        Member.__init__(this, ownerTypeName, None, location, visibility)
         this.parentTypeName = parentTypeName
         this.parentType = None
         this.explicitlyVirtual = explicitlyVirtual
@@ -227,7 +249,7 @@ class ParentInfo(Member):
 
 class FriendInfo(Member):
     def __init__(this, ownerTypeName:str, friendedSymbolName:str, location:SourceLocation, visibility:Member.Visibility):
-        super().__init__(this, ownerTypeName, None, location, visibility)
+        Member.__init__(this, ownerTypeName, None, location, visibility)
         this.friendedSymbolName = friendedSymbolName
         this.friendedSymbol = None
         

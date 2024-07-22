@@ -163,7 +163,6 @@ def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project
     return cx_ast.DestructorInfo(
         lexicalParent.path,
         makeSourceLocation(cursor, project),
-        cursor.is_deleted_method(),
         makeVisibility(cursor),
         isExplicitVirtual(cursor),
         isExplicitOverride(cursor),
@@ -203,6 +202,129 @@ def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, project:
 def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, project:Project):
     # TODO implement
     return None
+
+
+
+# TODO probably slow, profile and rewrite
+
+def _getAbsName(target: Cursor) -> str:
+    if type(target) == type(None) or target.kind == CursorKind.TRANSLATION_UNIT:
+        # Root case: Translation unit has no name
+        return ""
+    else:
+        # Loop case
+
+        # Strip leading C-style record type specifier
+        ownName = target.displayname
+        def stripexact(val: str, leading: str): return val[len(leading):] if val.startswith(leading) else val
+        ownName = stripexact(ownName, "enum ")
+        ownName = stripexact(ownName, "class ") # Since this is after "enum" it will also catch "enum class"
+        ownName = stripexact(ownName, "struct ")
+
+        # Concat and loop
+        return _getAbsName(target.semantic_parent) + "::" + ownName
+
+def _isTemplate(kind: CursorKind):
+    return kind in [
+        CursorKind.CLASS_TEMPLATE,
+        CursorKind.FUNCTION_TEMPLATE
+    ]
+
+def _typeGetAbsName(target: Type, noneOnAnonymous=True) -> str | None:
+    # Special case: Can't deduce auto, decltype(auto)
+    if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
+    
+    # Special case: Can't reference an anonymous struct by name
+    if noneOnAnonymous and any([(i in target.spelling) for i in ["(unnamed struct at ", "(unnamed union at ", "(unnamed class at "] ]): return None
+    
+    out: str
+
+    mainDecl: Cursor = target.get_declaration()
+    hasMainDecl = (len(mainDecl.spelling) != 0)
+
+    # Resolve namespaces
+    pointedToType: Type = target.get_pointee()
+    if pointedToType.kind != TypeKind.INVALID:
+        # Pointer case: unwrap and abs-ify pointed-to type
+        out = _typeGetAbsName(pointedToType)
+        cvUnwrapped = cvpUnwrapTypeName(target.spelling, unwrapPointers=False, unwrapArrays=False)
+        if cvUnwrapped.endswith("&&"): out += "&&"
+        elif cvUnwrapped.endswith("&"): out += "&"
+        elif cvUnwrapped.endswith("*"): out += "*"
+        elif cvUnwrapped.endswith("]"):
+            arrayPart = cvUnwrapped[cvUnwrapped.rfind("["):]
+            out = out[:-len(arrayPart)]
+            if   cvUnwrapped[:-len(arrayPart)].endswith("(&&)"): out += "(&&)"
+            elif cvUnwrapped[:-len(arrayPart)].endswith("(&)"): out += "(&)"
+            elif cvUnwrapped[:-len(arrayPart)].endswith("(*)"): out += "(*)"
+            out += arrayPart
+        else:
+            groupStarts = [i   for i in range(len(cvUnwrapped)) if cvUnwrapped[i]=="(" and cvUnwrapped[i  :].count(")")==cvUnwrapped[i  :].count("(")]
+            groupEnds   = [i+1 for i in range(len(cvUnwrapped)) if cvUnwrapped[i]==")" and cvUnwrapped[i+1:].count(")")==cvUnwrapped[i+1:].count("(")]
+            assert len(groupStarts) == len(groupEnds)
+            parenGroups = [
+                cvUnwrapped[ groupStarts[idx]:groupEnds[idx] ]
+                for idx in range(len(groupStarts))
+            ]
+            if len(parenGroups) >= 2 and ">" not in cvUnwrapped[groupEnds[-2]:groupStarts[-1]]: # It's a function pointer
+                assert out[-len(parenGroups[1]):] == parenGroups[1]
+                out = out[:-len(parenGroups[-1])] + parenGroups[-2] + out[-len(parenGroups[-1]):] # This is so stupid.
+                # TODO unwrap further
+            else:
+                assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
+
+    elif not hasMainDecl:
+        # Primitive types
+        out = target.spelling
+
+    else:
+        if mainDecl.kind == CursorKind.TYPEDEF_DECL:
+            # Typedefs can't be templated. Don't bother following them.
+            out = mainDecl.spelling
+
+        else:
+            # Main case: Try to resolve
+            if mainDecl.kind == CursorKind.TYPE_ALIAS_DECL:
+                # Using statements ("using Ty = ...")
+                out = mainDecl.type.get_canonical().get_declaration().spelling
+            else:
+                out = mainDecl.spelling
+
+            # Recurse over template args
+            templateArgs = [target.get_template_argument_type(i) for i in range(target.get_num_template_arguments())]
+            templateArgStr = ", ".join([_typeGetAbsName(i) for i in templateArgs])
+
+            if len(templateArgs) != 0:
+                out = out.split("<")[0]
+                out += "<"+templateArgStr+">"
+    
+        # Abs-ify name
+        if hasMainDecl:
+            out = _getAbsName(mainDecl.semantic_parent) + "::" + out
+            if out.startswith("::::"): out = out[2:]
+
+    # Resolve qualifiers
+    def addQualifier(s: str, qual: str):
+        baseName = s.split("<")[0] + (s.split(">")[1] if ">" in s else "")
+        alreadyHasQualifier = (baseName.find("*") < baseName.find(qual))
+        if not alreadyHasQualifier:
+            s += " "+qual
+        return s
+
+    if target.is_const_qualified():
+        out = addQualifier(out, "const")
+    if target.is_volatile_qualified():
+        out = addQualifier(out, "volatile")
+    if target.is_restrict_qualified():
+        out = addQualifier(out, "restrict")
+
+    return out
+
+def _make_FullyQualifiedTypeName(ty:Type):
+    return _typeGetAbsName(ty, False)
+
+def _make_FullyQualifiedName(cursor:Cursor):
+    return _getAbsName(cursor)
 
 
 if __name__ == "__main__":
