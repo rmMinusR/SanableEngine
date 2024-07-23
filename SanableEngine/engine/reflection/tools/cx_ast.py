@@ -84,8 +84,14 @@ class Module:
             
     def linkAll(this):
         this.__linked = True
-        for v in this.contents.values(): v.link(this)
-        for v in this.contents.values(): v.latelink(this)
+        
+        def _reducing_invoke(obj, op):
+            if isinstance(obj, list):
+                for i in obj: op(i)
+            else: op(obj)
+
+        for v in this.contents.values(): _reducing_invoke(v, lambda o:o.link(this))
+        for v in this.contents.values(): _reducing_invoke(v, lambda o:o.latelink(this))
         
     def find(this, path:str) -> ASTNode:
         assert this.__linked, "Can only be called after or during linking"
@@ -183,7 +189,7 @@ class Callable(ASTNode):
         def allowMultiple():
             return True # In case they're nameless
             
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
+    def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
         ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
@@ -193,10 +199,18 @@ class Callable(ASTNode):
     def path(this):
         argTypes = ", ".join([i.typeName for i in this.parameters])
         return super().path+"(" + argTypes + ")"
+
+    @staticmethod
+    def allowMultiple():
+        return True
         
 
+class GlobalFuncInfo(Callable):
+    def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
+        Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted)
+    
+    
 # TODO implement:
-#class GlobalFuncInfo
 #class GlobalVarInfo - doubles as class static
 
 

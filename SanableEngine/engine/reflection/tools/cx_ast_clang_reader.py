@@ -185,8 +185,13 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
         )
     else:
         # Nonmember or static member function
-        # TODO implement, and ensure only one copy makes it through
-        return None
+        return cx_ast.GlobalFuncInfo(
+            (lexicalParent.path if lexicalParent != None else "")+"::"+cursor.spelling,
+            makeSourceLocation(cursor, project),
+            cursor.is_definition(),
+            _make_FullyQualifiedTypeName(cursor.result_type),
+            cursor.is_deleted_method()
+        )
 
 @ASTFactory(CursorKind.PARM_DECL)
 def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, project:Project):
@@ -326,6 +331,39 @@ def _make_FullyQualifiedTypeName(ty:Type):
 
 def _make_FullyQualifiedName(cursor:Cursor):
     return _getAbsName(cursor)
+
+def cvpUnwrapTypeName(name: str, unwrapCv=True, unwrapPointers=True, unwrapArrays=True) -> str:
+    # Preprocess name
+    name = name.strip()
+
+    # Pointers
+    if unwrapPointers:
+        if name[-1] in "*&":
+            return cvpUnwrapTypeName(name[:-1], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
+
+    # Arrays
+    if unwrapArrays:
+        if name.endswith("]"):
+            return cvpUnwrapTypeName(name[:name.rfind("[")], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
+
+    # Outer const/volatile
+    if unwrapCv:
+        # const/volatile qualifiers (after name) - will only be present if already a ptr
+        for symbolToStrip in ["const", "volatile"]:
+            if name.endswith(symbolToStrip):
+                charBeforeSymbol = name[-len(symbolToStrip)-1]
+                if not (charBeforeSymbol.isalnum() or charBeforeSymbol == "_"):
+                    return cvpUnwrapTypeName(name[:-len(symbolToStrip)], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
+            
+        if name[-1] not in "*&":
+            # const/volatile qualifiers (before name) - only if not already a ptr
+            for symbolToStrip in ["const ", "volatile "]:
+                if name.startswith(symbolToStrip):
+                    return cvpUnwrapTypeName(name[len(symbolToStrip):], unwrapCv=unwrapCv, unwrapPointers=unwrapPointers, unwrapArrays=unwrapArrays)
+
+    # Nothing to strip
+    return name
+
 
 
 if __name__ == "__main__":
