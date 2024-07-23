@@ -186,7 +186,7 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
     else:
         # Nonmember or static member function
         return cx_ast.GlobalFuncInfo(
-            (lexicalParent.path if lexicalParent != None else "")+"::"+cursor.spelling,
+            ( (lexicalParent.path if lexicalParent != None else "")+"::"+cursor.spelling )[2::],
             makeSourceLocation(cursor, project),
             cursor.is_definition(),
             _make_FullyQualifiedTypeName(cursor.result_type),

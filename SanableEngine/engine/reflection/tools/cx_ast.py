@@ -76,10 +76,18 @@ class Module:
     def __setstate__(this, vals):
         this.contents = dict()
         this.byType = dict()
-        for i in vals:
-            this.contents[i.path] = i
+
+        def _put_byType(i):
             if type(i) not in this.byType.keys(): this.byType[type(i)] = []
             this.byType[type(i)].append(i)
+
+        for i in vals:
+            this.contents[i.path] = i
+            if not isinstance(i, list):
+                _put_byType(i)
+            else:
+                for j in i: _put_byType(j)
+                
 
     def register(this, node:ASTNode):
         assert not this.__linked, "Cannot register new nodes after linking"
