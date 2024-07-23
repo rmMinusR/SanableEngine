@@ -18,8 +18,12 @@ class ASTNode:
     def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation, isDefinition:bool):
         this.ownerName = ownerName
         this.ownName = ownName
-        this.location = location
-        this.isDefinition = isDefinition
+
+        this.declarationLocations = []
+        this.definitionLocation = None
+        if isDefinition: this.definitionLocation = location
+        else: this.declarationLocations.append(location)
+        
         this.astParent:ASTNode|None = None
         this.children:list|None = None
 
@@ -28,6 +32,15 @@ class ASTNode:
         typeStr = typeStr[len("<class '"):-len("'>")].split(".")[-1]
         return f"{this.path} ({typeStr})"
     
+    def merge(this, new:"ASTNode"): # Called on existing instance
+        # Already aware of this symbol: check that previous record was a declaration
+        if new.definitionLocation != None:
+            assert this.definitionLocation == None, f"Node {this} registered multiple times!"
+
+        # Merge locational data
+        this.definitionLocation = new.definitionLocation
+        this.declarationLocations.extend(new.declarationLocations)
+
     @cached_property
     def path(this):
         if this.ownerName != None: return f"{this.ownerName}::{this.ownName}"
@@ -43,6 +56,8 @@ class ASTNode:
             if this.astParent.children == None: this.astParent.children = []
             this.astParent.children.append(this)
             
+        if this.children == None: this.children = []
+            
     def latelink(this, module: "Module"):
         pass
 
@@ -55,7 +70,7 @@ class Module:
         
     def __getstate__(this):
         out = [i for i in this.contents.values()]
-        out.sort(key=lambda node: node.path)
+        out.sort(key=lambda node: node.path if isinstance(node, ASTNode) else node[0].path)
         return out
     
     def __setstate__(this, vals):
@@ -71,10 +86,13 @@ class Module:
         
         # Place in fast-lookup contents tree
         if not node.allowMultiple():
-            #assert node.path not in this.contents.keys(), f"Tried to register {node} twice!"
-            if node.path in this.contents.keys(): config.logger.warn(f"Node {node} registered multiple times!")
-            this.contents[node.path] = node
+            # Aware of symbol: merge into existing entry
+            if node.path in this.contents.keys(): this.contents[node.path].merge(node)
+            
+            # Not aware of symbol: nothing to do
+            else: this.contents[node.path] = node
         else:
+            # Duplicate-allowed symbols are complete and utter chaos
             if not node.path in this.contents.keys(): this.contents[node.path] = []
             this.contents[node.path].append(node)
         
@@ -184,25 +202,22 @@ class Callable(ASTNode):
             
         def latelink(this, module:Module):
             this.type = module.find(this.typeName)
-            
+
         @staticmethod
         def allowMultiple():
-            return True # In case they're nameless
+            return True
             
     def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
         ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
         this.parameters:list[Callable.Parameter] = []
+        # TODO: if inline, mark self as declaration as well (even if definition)
 
     @cached_property
     def path(this):
         argTypes = ", ".join([i.typeName for i in this.parameters])
         return super().path+"(" + argTypes + ")"
-
-    @staticmethod
-    def allowMultiple():
-        return True
         
 
 class GlobalFuncInfo(Callable):
