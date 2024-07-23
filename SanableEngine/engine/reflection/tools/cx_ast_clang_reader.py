@@ -63,8 +63,8 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         if kind in ClangParseContext.factories.keys():
             result = ClangParseContext.factories[kind](parent, cursor, this.project)
             if result != None:
-                this.module.register(result)
                 for child in ClangParseContext._getChildren(cursor): this.__ingestCursor(result, child)
+                this.module.register(result)
         else:
             config.logger.debug(f"Skipping symbol of unhandled kind {kind}")
             
@@ -190,12 +190,14 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
 
 @ASTFactory(CursorKind.PARM_DECL)
 def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, project:Project):
-    return cx_ast.Callable.Parameter(
+    out = cx_ast.Callable.Parameter(
         lexicalParent.path,
         cursor.displayname,
         makeSourceLocation(cursor, project),
         _make_FullyQualifiedTypeName(cursor.type)
     )
+    lexicalParent.parameters.append(out)
+    return out
 
 @ASTFactory(CursorKind.VAR_DECL)
 def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, project:Project):

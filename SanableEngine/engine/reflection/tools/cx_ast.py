@@ -187,9 +187,12 @@ class Callable(ASTNode):
         ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
+        this.parameters:list[Callable.Parameter] = []
 
-    def latelink(this, module:Module):
-        this.children = [i for i in this.children if isinstance(i, Callable.Parameter)]
+    @cached_property
+    def path(this):
+        argTypes = ", ".join([i.typeName for i in this.parameters])
+        return super().path+"(" + argTypes + ")"
         
 
 # TODO implement:
@@ -207,16 +210,18 @@ class MemFuncInfo(MaybeVirtual, Callable):
 
 class ConstructorInfo(Member, Callable):
     def __init__(this, owner:str, location:SourceLocation, isDefinition:bool, deleted:bool, visibility:Member.Visibility):
-        Member  .__init__(this, owner, owner, location, isDefinition, visibility)
-        Callable.__init__(this, owner, owner, location, isDefinition, None, deleted)
+        ownName = owner.split("::")[-1]
+        Member  .__init__(this, owner, ownName, location, isDefinition, visibility)
+        Callable.__init__(this, owner, ownName, location, isDefinition, None, deleted)
 
 
 class DestructorInfo(MaybeVirtual, Callable):
     def __init__(this, owner:str, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 deleted:bool):
-        MaybeVirtual.__init__(this, owner, owner, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable    .__init__(this, owner, owner, location, isDefinition, None, deleted)
+        ownName = "~"+owner.split("::")[-1]
+        MaybeVirtual.__init__(this, owner, ownName, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable    .__init__(this, owner, ownName, location, isDefinition, None, deleted)
 
 
 class FieldInfo(Member):
@@ -233,7 +238,7 @@ class ParentInfo(Member):
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
     def __init__(this, ownerTypeName:str, parentTypeName:str, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
-        Member.__init__(this, ownerTypeName, None, location, True, visibility)
+        Member.__init__(this, ownerTypeName, f"(parent {parentTypeName})", location, True, visibility)
         this.parentTypeName = parentTypeName
         this.parentType = None
         this.explicitlyVirtual = explicitlyVirtual
