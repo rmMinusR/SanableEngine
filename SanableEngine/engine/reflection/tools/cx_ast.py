@@ -4,6 +4,7 @@ from functools import cached_property
 from source_discovery import SourceFile
 import config
 
+
 class SourceLocation:
     def __init__(this, file: SourceFile, line:int, column:int):
         this.file = file
@@ -14,10 +15,11 @@ class SourceLocation:
 class ASTNode:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation):
+    def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation, isDefinition:bool):
         this.ownerName = ownerName
         this.ownName = ownName
         this.location = location
+        this.isDefinition = isDefinition
         this.astParent:ASTNode|None = None
         this.children:list|None = None
 
@@ -92,8 +94,8 @@ class Module:
 
 
 class Annotation(ASTNode):
-    def __init__(this, ownerName:str, text:str, location: SourceLocation):
-        super().__init__(this, ownerName, None, location)
+    def __init__(this, ownerName:str, text:str, location:SourceLocation, isDefinition:bool):
+        ASTNode.__init__(this, ownerName, None, location, isDefinition)
         this.text = text
         
     @staticmethod
@@ -102,8 +104,8 @@ class Annotation(ASTNode):
     
 
 class TypeInfo(ASTNode):
-    def __init__(this, ownerName:str|None, ownName:str, location: SourceLocation, isAbstract:bool):
-        super().__init__(ownerName, ownName, location)
+    def __init__(this, ownerName:str|None, ownName:str, location: SourceLocation, isDefinition:bool, isAbstract:bool):
+        ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.isAbstract = isAbstract
         
     @property
@@ -136,8 +138,8 @@ class Member(ASTNode):
         Protected = "MemberVisibility::Protected"
         Private   = "MemberVisibility::Private"
 
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Visibility):
-        ASTNode.__init__(this, ownerName, ownName, location)
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, visibility:Visibility):
+        ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.visibility = visibility
         this.owner = None
         
@@ -149,8 +151,8 @@ class Member(ASTNode):
 class MaybeVirtual(Member):
     __metaclass__ = abc.ABCMeta
     
-    def __init__(this, ownerName:str, ownName:str, location: SourceLocation, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
-        Member.__init__(this, ownerName, ownName, location, visibility)
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
+        Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
         this.__isExplicitVirtual = isExplicitVirtual
         this.__isExplicitOverride = isExplicitOverride
         this.inheritedFrom = None
@@ -169,8 +171,8 @@ class MaybeVirtual(Member):
 
 class Callable(ASTNode):
     class Parameter(ASTNode):
-        def __init__(this, ownerName:str, ownName:str, location: SourceLocation, typeName:str):
-            super().__init__(this, ownerName, ownName, location)
+        def __init__(this, ownerName:str, ownName:str, location:SourceLocation, typeName:str):
+            ASTNode.__init__(this, ownerName, ownName, location, True)
             this.typeName = typeName
             this.type:TypeInfo|None = None
             
@@ -181,8 +183,8 @@ class Callable(ASTNode):
         def allowMultiple():
             return True # In case they're nameless
             
-    def __init__(this, ownerName:str, ownName:str, location: SourceLocation, returnTypeName:str, deleted:bool):
-        ASTNode.__init__(this, ownerName, ownName, location)
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
+        ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
 
@@ -196,30 +198,30 @@ class Callable(ASTNode):
 
 
 class MemFuncInfo(MaybeVirtual, Callable):
-    def __init__(this, ownerName:str, ownName:str, location: SourceLocation,
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 returnTypeName:str, deleted:bool):
-        MaybeVirtual.__init__(this, ownerName, ownName, location, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable.__init__(this, ownerName, ownName, location, returnTypeName, deleted)
+        MaybeVirtual.__init__(this, ownerName, ownName, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable    .__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted)
         
 
 class ConstructorInfo(Member, Callable):
-    def __init__(this, owner:str, location: SourceLocation, deleted:bool, visibility:Member.Visibility):
-        Member.__init__(this, owner, owner, location, visibility)
-        Callable.__init__(this, owner, owner, location, None, deleted)
+    def __init__(this, owner:str, location:SourceLocation, isDefinition:bool, deleted:bool, visibility:Member.Visibility):
+        Member  .__init__(this, owner, owner, location, isDefinition, visibility)
+        Callable.__init__(this, owner, owner, location, isDefinition, None, deleted)
 
 
 class DestructorInfo(MaybeVirtual, Callable):
-    def __init__(this, owner:str, location: SourceLocation,
+    def __init__(this, owner:str, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 deleted:bool):
-        MaybeVirtual.__init__(this, owner, owner, location, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable.__init__(this, owner, owner, location, None, deleted)
+        MaybeVirtual.__init__(this, owner, owner, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable    .__init__(this, owner, owner, location, isDefinition, None, deleted)
 
 
 class FieldInfo(Member):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
-        Member.__init__(this, ownerName, ownName, location, visibility)
+        Member.__init__(this, ownerName, ownName, location, True, visibility)
         this.typeName = typeName
         this.type = None
         
@@ -231,7 +233,7 @@ class ParentInfo(Member):
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
     def __init__(this, ownerTypeName:str, parentTypeName:str, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
-        Member.__init__(this, ownerTypeName, None, location, visibility)
+        Member.__init__(this, ownerTypeName, None, location, True, visibility)
         this.parentTypeName = parentTypeName
         this.parentType = None
         this.explicitlyVirtual = explicitlyVirtual
@@ -249,7 +251,7 @@ class ParentInfo(Member):
 
 class FriendInfo(Member):
     def __init__(this, ownerTypeName:str, friendedSymbolName:str, location:SourceLocation, visibility:Member.Visibility):
-        Member.__init__(this, ownerTypeName, None, location, visibility)
+        Member.__init__(this, ownerTypeName, None, location, True, visibility)
         this.friendedSymbolName = friendedSymbolName
         this.friendedSymbol = None
         

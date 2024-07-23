@@ -109,17 +109,16 @@ def isExplicitOverride(cursor:Cursor):
     # TODO Removed temporarily: CursorKind.CLASS_TEMPLATE
 )
 def factory_TypeInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, project:Project):
-    if not cursor.is_definition(): return None
     return cx_ast.TypeInfo(
         lexicalParent.path if lexicalParent != None else None,
         cursor.displayname,
         makeSourceLocation(cursor, project),
+        cursor.is_definition(),
         cursor.is_abstract_record()
     ) # TODO add visibility specifier
 
 @ASTFactory(CursorKind.FIELD_DECL)
 def factory_FieldInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Project):
-    if cursor.is_definition(): return None # Discard definition, all we care about is the declaration in the class braces
     return cx_ast.FieldInfo(
         lexicalParent.path,
         cursor.displayname,
@@ -149,20 +148,20 @@ def factory_FriendInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Pro
 
 @ASTFactory(CursorKind.CONSTRUCTOR)
 def factory_ConstructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Project):
-    if cursor.is_definition() and not isinstance(lexicalParent, cx_ast.TypeInfo): return None # Discard out-of-line definitions, but keep inline definitions and declarations
     return cx_ast.ConstructorInfo(
         lexicalParent.path,
         makeSourceLocation(cursor, project),
+        cursor.is_definition(),
         cursor.is_deleted_method(),
         makeVisibility(cursor)
     )
 
 @ASTFactory(CursorKind.DESTRUCTOR)
 def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Project):
-    if cursor.is_definition() and not isinstance(lexicalParent, cx_ast.TypeInfo): return None # Discard out-of-line definitions, but keep inline definitions and declarations
     return cx_ast.DestructorInfo(
         lexicalParent.path,
         makeSourceLocation(cursor, project),
+        cursor.is_definition(),
         makeVisibility(cursor),
         isExplicitVirtual(cursor),
         isExplicitOverride(cursor),
@@ -175,9 +174,9 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
         # Nonstatic member function
         return cx_ast.MemFuncInfo(
             lexicalParent.path,
-            # TODO: where did we inherit from?
             cursor.displayname,
             makeSourceLocation(cursor, project),
+            cursor.is_definition(),
             makeVisibility(cursor),
             isExplicitVirtual(cursor),
             isExplicitOverride(cursor),
