@@ -15,8 +15,8 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
     def argparser_add_defaults(parser: argparse.ArgumentParser):
         cx_ast_tooling.ASTParser.argparser_add_defaults(parser)
 
-    def __init__(this, project:Project, args:argparse.Namespace):
-        super().__init__(project, args)
+    def __init__(this, project:Project, args:argparse.Namespace, parser_version_hash):
+        super().__init__(project, args, parser_version_hash)
 
     def configure(this):
         return super().configure()
@@ -384,7 +384,7 @@ if __name__ == "__main__":
         cx_ast_tooling.reduce_lists(args.targets),
         cx_ast_tooling.reduce_lists(args.includes)
     )
-    cx_parser = ClangParseContext(cx_project, args)
+    cx_parser = ClangParseContext(cx_project, args, config.batch_stable_hash(["cx_ast_clang_reader.py"]))
     
     config.logger.info("Loading cache")
     cx_parser.configure()

@@ -23,18 +23,21 @@ class SavedAST:
         this.userData = userData
 
     @staticmethod
-    def load(file, requestedVersion):
+    def load(file, requestedASTVersion, requestedParserVersion):
         try: cacheRaw = pickle.loads(file.read())
         except EOFError: return None # We have a blank file
         
-        cacheVersion = cacheRaw[0]
-        if cacheVersion != requestedVersion: return None # We have an outdated cache
+        # Check for outdated cache
+        cacheASTVersion = cacheRaw[0]
+        cacheParserVersion = cacheRaw[1]
+        if cacheASTVersion != requestedASTVersion: return None
+        if requestedParserVersion != None and cacheParserVersion != requestedParserVersion: return None
         
-        (_, prevModule, prevProject, userData) = cacheRaw
+        (_1, _2, prevModule, prevProject, userData) = cacheRaw
         return SavedAST(prevProject, prevModule, userData)
     
-    def save(this, file, programVersion):
-        data = (programVersion, this.module, this.project, this.userData)
+    def save(this, file, programASTVersion, programParserVersion):
+        data = (programASTVersion, programParserVersion, this.module, this.project, this.userData)
         file.write(pickle.dumps( data ))
 
 
@@ -57,8 +60,9 @@ class ASTParser:
         parser.add_argument("--call-profiling", dest="call_profiling", action="store_true", help="Enable function call profiling")
         
 
-    def __init__(this, project:source_discovery.Project, args:argparse.Namespace):
+    def __init__(this, project:source_discovery.Project, args:argparse.Namespace, parser_version_hash):
         this.project = project
+        this.parser_version_hash = parser_version_hash
         
         # Vars loaded or derived from cache
         this.module = cx_ast.Module()
@@ -95,10 +99,9 @@ class ASTParser:
     
     
     def loadPrevOutput(this):
-        """
         try:
             
-            with open(this.output, 'rb') as file: oldOutput = SavedAST.load(file, config.version_hash)
+            with open(this.output, 'rb') as file: oldOutput = SavedAST.load(file, config.ast_version_hash, this.parser_version_hash)
         
             if oldOutput == None:
                 config.logger.info("Detected changes to RTTI generator script. Entire translation unit will be regenerated.")
@@ -109,17 +112,9 @@ class ASTParser:
         except Exception as e:
             config.logger.error("Encountered the following error while loading cache. Cache will be discarded and regenerated.")
             config.logger.error(e)
-        """
-        with open(this.output, 'rb') as file: oldOutput = SavedAST.load(file, config.version_hash)
-        
-        if oldOutput == None:
-            config.logger.info("Detected changes to RTTI generator script. Entire translation unit will be regenerated.")
-        else:
-            this.diff   = source_discovery.ProjectDiff(oldOutput.project, this.project)
-            this.module = oldOutput.module
             
     def saveOutput(this):
-        with open(this.output, 'wb') as file: SavedAST(this.project, this.module).save(file, config.version_hash)
+        with open(this.output, 'wb') as file: SavedAST(this.project, this.module).save(file, config.ast_version_hash, this.parser_version_hash)
 
 
 
