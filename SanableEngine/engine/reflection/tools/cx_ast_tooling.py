@@ -95,6 +95,7 @@ class ASTParser:
     
     
     def loadPrevOutput(this):
+        """
         try:
             
             with open(this.output, 'rb') as file: oldOutput = SavedAST.load(file, config.version_hash)
@@ -108,6 +109,14 @@ class ASTParser:
         except Exception as e:
             config.logger.error("Encountered the following error while loading cache. Cache will be discarded and regenerated.")
             config.logger.error(e)
+        """
+        with open(this.output, 'rb') as file: oldOutput = SavedAST.load(file, config.version_hash)
+        
+        if oldOutput == None:
+            config.logger.info("Detected changes to RTTI generator script. Entire translation unit will be regenerated.")
+        else:
+            this.diff   = source_discovery.ProjectDiff(oldOutput.project, this.project)
+            this.module = oldOutput.module
             
     def saveOutput(this):
         with open(this.output, 'wb') as file: SavedAST(this.project, this.module).save(file, config.version_hash)

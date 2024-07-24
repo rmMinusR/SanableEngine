@@ -202,6 +202,7 @@ def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, project:
         _make_FullyQualifiedTypeName(cursor.type)
     )
     lexicalParent.parameters.append(out)
+    out.astParent = lexicalParent
     return out
 
 @ASTFactory(CursorKind.VAR_DECL)

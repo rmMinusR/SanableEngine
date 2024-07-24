@@ -35,7 +35,7 @@ class ASTNode:
     def merge(this, new:"ASTNode"): # Called on existing instance
         # Already aware of this symbol: check that previous record was a declaration
         if new.definitionLocation != None:
-            assert this.definitionLocation == None, f"Node {this} registered multiple times!"
+            assert this.definitionLocation == None, f"Node {this} defined multiple times!"
 
         # Merge locational data
         this.definitionLocation = new.definitionLocation
@@ -82,10 +82,12 @@ class Module:
             this.byType[type(i)].append(i)
 
         for i in vals:
-            this.contents[i.path] = i
             if not isinstance(i, list):
+                this.contents[i.path] = i
                 _put_byType(i)
             else:
+                if not i[0].path in this.contents.keys(): this.contents[i[0].path] = []
+                this.contents[i[0].path].extend(i)
                 for j in i: _put_byType(j)
                 
 
@@ -207,6 +209,14 @@ class Callable(ASTNode):
             ASTNode.__init__(this, ownerName, ownName, location, True)
             this.typeName = typeName
             this.type:TypeInfo|None = None
+
+        def link(this, module:Module):
+            assert this.astParent != None
+            # Awful hack to skip owner resolution. This is done explicitly by reader.
+            temp = this.ownerName
+            this.ownerName = None
+            super().link(module)
+            this.ownerName = temp
             
         def latelink(this, module:Module):
             this.type = module.find(this.typeName)
@@ -214,6 +224,10 @@ class Callable(ASTNode):
         @staticmethod
         def allowMultiple():
             return True
+
+        @property
+        def path(this):
+            return this.astParent.path + f"::(parameter {this.typeName} {this.ownName})"
             
     def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
         ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
@@ -222,7 +236,7 @@ class Callable(ASTNode):
         this.parameters:list[Callable.Parameter] = []
         # TODO: if inline, mark self as declaration as well (even if definition)
 
-    @cached_property
+    @property
     def path(this):
         argTypes = ", ".join([i.typeName for i in this.parameters])
         return super().path+"(" + argTypes + ")"
