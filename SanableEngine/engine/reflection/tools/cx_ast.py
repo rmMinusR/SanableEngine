@@ -19,8 +19,8 @@ class ASTNode:
         this.ownerName = ownerName
         this.ownName = ownName
 
-        this.declarationLocations = []
-        this.definitionLocation = None
+        this.declarationLocations:list[SourceLocation] = []
+        this.definitionLocation:SourceLocation = None
         if isDefinition: this.definitionLocation = location
         else: this.declarationLocations.append(location)
         
@@ -229,12 +229,13 @@ class Callable(ASTNode):
         def path(this):
             return this.astParent.path + f"::(parameter {this.typeName} {this.ownName})"
             
-    def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
+    def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
         ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
+        this.inline = inline
+        if inline and isDefinition: this.declarationLocations.append(location)
         this.parameters:list[Callable.Parameter] = []
-        # TODO: if inline, mark self as declaration as well (even if definition)
 
     @property
     def path(this):
@@ -243,8 +244,8 @@ class Callable(ASTNode):
         
 
 class GlobalFuncInfo(Callable):
-    def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool):
-        Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted)
+    def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
+        Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted, inline)
     
     
 # TODO implement:
@@ -254,25 +255,28 @@ class GlobalFuncInfo(Callable):
 class MemFuncInfo(MaybeVirtual, Callable):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
-                returnTypeName:str, deleted:bool):
+                returnTypeName:str, deleted:bool, inline:bool,
+                isThisObjConst:bool, isThisObjVolatile:bool):
         MaybeVirtual.__init__(this, ownerName, ownName, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable    .__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted)
+        Callable    .__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted, inline)
+        this.isThisObjConst = isThisObjConst
+        this.isThisObjVolatile = isThisObjVolatile
         
 
 class ConstructorInfo(Member, Callable):
-    def __init__(this, owner:str, location:SourceLocation, isDefinition:bool, deleted:bool, visibility:Member.Visibility):
+    def __init__(this, owner:str, location:SourceLocation, isDefinition:bool, deleted:bool, inline:bool, visibility:Member.Visibility):
         ownName = owner.split("::")[-1]
         Member  .__init__(this, owner, ownName, location, isDefinition, visibility)
-        Callable.__init__(this, owner, ownName, location, isDefinition, None, deleted)
+        Callable.__init__(this, owner, ownName, location, isDefinition, None, deleted, inline)
 
 
 class DestructorInfo(MaybeVirtual, Callable):
     def __init__(this, owner:str, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
-                deleted:bool):
+                deleted:bool, inline:bool):
         ownName = "~"+owner.split("::")[-1]
         MaybeVirtual.__init__(this, owner, ownName, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable    .__init__(this, owner, ownName, location, isDefinition, None, deleted)
+        Callable    .__init__(this, owner, ownName, location, isDefinition, None, deleted, inline)
 
 
 class FieldInfo(Member):

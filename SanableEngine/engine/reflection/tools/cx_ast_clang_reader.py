@@ -104,7 +104,7 @@ def isExplicitOverride(cursor:Cursor):
 
 
 @ASTFactory(
-    CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION,
+    CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION, # TODO only if fully specialized, else defer to CLASS_TEMPLATE handler
 	CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
     # TODO Removed temporarily: CursorKind.CLASS_TEMPLATE
 )
@@ -153,7 +153,8 @@ def factory_ConstructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, projec
         makeSourceLocation(cursor, project),
         cursor.is_definition(),
         cursor.is_deleted_method(),
-        makeVisibility(cursor)
+        makeVisibility(cursor),
+        False # TODO inline support
     )
 
 @ASTFactory(CursorKind.DESTRUCTOR)
@@ -165,7 +166,8 @@ def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project
         makeVisibility(cursor),
         isExplicitVirtual(cursor),
         isExplicitOverride(cursor),
-        cursor.is_deleted_method()
+        cursor.is_deleted_method(),
+        False # TODO inline support
     )
 
 @ASTFactory(CursorKind.CXX_METHOD, CursorKind.FUNCTION_DECL, CursorKind.FUNCTION_TEMPLATE)
@@ -181,7 +183,10 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
             isExplicitVirtual(cursor),
             isExplicitOverride(cursor),
             _make_FullyQualifiedTypeName(cursor.result_type),
-            cursor.is_deleted_method()
+            cursor.is_deleted_method(),
+            False, # TODO inline support
+            cursor.is_const_method(),
+            False # TODO volatile support
         )
     else:
         # Nonmember or static member function
@@ -190,7 +195,8 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
             makeSourceLocation(cursor, project),
             cursor.is_definition(),
             _make_FullyQualifiedTypeName(cursor.result_type),
-            cursor.is_deleted_method()
+            cursor.is_deleted_method(),
+            False # TODO inline support
         )
 
 @ASTFactory(CursorKind.PARM_DECL)

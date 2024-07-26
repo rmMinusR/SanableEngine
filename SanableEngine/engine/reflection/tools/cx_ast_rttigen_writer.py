@@ -28,9 +28,11 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         this.default_image_capture_backend:str = args.default_image_capture_backend
         this.default_image_capture_status :str = args.default_image_capture_status
 
-    def __isOurs(this, symbol:cx_ast.ASTNode):
-        if symbol.definitionLocation != None:
+    def __isOurs(this, symbol:cx_ast.ASTNode|list[cx_ast.ASTNode]):
+        if isinstance(symbol, cx_ast.ASTNode) and symbol.definitionLocation != None:
             return symbol.definitionLocation.file in this.input.project.files
+        elif isinstance(symbol, list) and symbol[0].definitionLocation != None:
+            return symbol[0].definitionLocation.file in this.input.project.files
         else:
             return False # Probably...
 
@@ -38,7 +40,7 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         super().configure()
         stableSymbols = this.input.module.contents.values()
         stableSymbols = [i for i in stableSymbols if this.__isOurs(i)] # Filter: only our files
-        stableSymbols.sort(lambda i: i.path if isinstance(i, cx_ast.ASTNode) else i[0].path)
+        stableSymbols.sort(key=lambda i: i.path if isinstance(i, cx_ast.ASTNode) else i[0].path)
         this.stableSymbols = stableSymbols
 
     def execute(this):
@@ -158,7 +160,7 @@ def makePubCastKey(obj:cx_ast.ASTNode):
 def render_field(field:cx_ast.FieldInfo):
     # Detect how to reference
     #if field.visibility != cx_ast.Member.Visibility.Public:
-    pubCastKey = makePubCastKey(field.path)
+    pubCastKey = makePubCastKey(field)
     preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({pubCastKey}, {field.astParent.path}, {field.ownName}, {field.typeName});'
     pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({pubCastKey}, {field.astParent.path})"
     #else:
@@ -174,7 +176,7 @@ def render_field(field:cx_ast.FieldInfo):
 def render_memFunc(func:cx_ast.MemFuncInfo):
     # Detect how to reference
     #if func.visibility != cx_ast.Member.Visibility.Public:
-    pubCastKey = makePubCastKey(func.path)
+    pubCastKey = makePubCastKey(func)
     formatter = {
         "key": pubCastKey,
         "TClass": func.astParent.path,
