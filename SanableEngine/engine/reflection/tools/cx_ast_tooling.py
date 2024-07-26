@@ -141,7 +141,8 @@ class ASTConsumer:
         if this.args_verbose:
             config.logger.setLevel(0)
             
-        this.input = SavedAST.load(this.args_input, config.version_hash)
+        with open(this.args_input, 'rb') as inFile: this.input:SavedAST = SavedAST.load(inFile, config.ast_version_hash, None)
+        assert this.input != None, "Couldn't load AST. Usually this is because you need to regenerate it first."
 
 
     def execute(this): pass
