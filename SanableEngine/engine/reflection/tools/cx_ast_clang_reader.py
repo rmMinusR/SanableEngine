@@ -172,24 +172,37 @@ def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project
 
 @ASTFactory(CursorKind.CXX_METHOD, CursorKind.FUNCTION_DECL, CursorKind.FUNCTION_TEMPLATE)
 def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:Cursor, project:Project):
-    if isinstance(lexicalParent, cx_ast.TypeInfo) and not cursor.is_static_method():
-        # Nonstatic member function
-        return cx_ast.MemFuncInfo(
-            lexicalParent.path,
-            cursor.displayname,
-            makeSourceLocation(cursor, project),
-            cursor.is_definition(),
-            makeVisibility(cursor),
-            isExplicitVirtual(cursor),
-            isExplicitOverride(cursor),
-            _make_FullyQualifiedTypeName(cursor.result_type),
-            cursor.is_deleted_method(),
-            False, # TODO inline support
-            cursor.is_const_method(),
-            False # TODO volatile support
-        )
+    if isinstance(lexicalParent, cx_ast.TypeInfo):
+        if not cursor.is_static_method():
+            # Nonstatic member function
+            return cx_ast.MemFuncInfo(
+                lexicalParent.path,
+                cursor.spelling,
+                makeSourceLocation(cursor, project),
+                cursor.is_definition(),
+                makeVisibility(cursor),
+                isExplicitVirtual(cursor),
+                isExplicitOverride(cursor),
+                _make_FullyQualifiedTypeName(cursor.result_type),
+                cursor.is_deleted_method(),
+                False, # TODO inline support
+                cursor.is_const_method(),
+                False # TODO volatile support
+            )
+        else:
+            # Static member function
+            return cx_ast.StaticFuncInfo(
+                lexicalParent.path,
+                cursor.spelling,
+                makeSourceLocation(cursor, project),
+                cursor.is_definition(),
+                makeVisibility(cursor),
+                _make_FullyQualifiedTypeName(cursor.result_type),
+                cursor.is_deleted_method(),
+                False # TODO inline support
+            )
     else:
-        # Nonmember or static member function
+        # Nonmember static function
         return cx_ast.GlobalFuncInfo(
             ( (lexicalParent.path if lexicalParent != None else "")+"::"+cursor.spelling )[2::],
             makeSourceLocation(cursor, project),

@@ -3,7 +3,7 @@ from enum import Enum
 from functools import cached_property
 from source_discovery import SourceFile
 import config
-
+import typing
 
 class SourceLocation:
     def __init__(this, file: SourceFile, line:int, column:int):
@@ -159,6 +159,12 @@ class TypeInfo(ASTNode):
                 potentialMatch = i.parentType.find(memberName, searchParents=True)
                 if potentialMatch != None: return potentialMatch
         return None
+
+    def isFriended(this, selector:typing.Callable[["FriendInfo"], bool]):
+        return any((
+            isinstance(i, FriendInfo) and selector(i)
+            for i in this.children
+        ))
         
      
         
@@ -238,12 +244,17 @@ class Callable(ASTNode):
     def path(this):
         argTypes = ", ".join([i.typeName for i in this.parameters])
         return super().path+"(" + argTypes + ")"
-        
+   
 
+class StaticFuncInfo(Callable, Member):
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
+        Callable.__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted, inline)
+        Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
+        
 class GlobalFuncInfo(Callable):
     def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
         Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted, inline)
-    
+   
     
 # TODO implement:
 #class GlobalVarInfo - doubles as class static

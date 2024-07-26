@@ -132,7 +132,7 @@ def MemRttiRenderer(*types:typing.Type):
 
 
 @RttiRenderer(cx_ast.TypeInfo)
-def render_Type(ty:cx_ast.TypeInfo):
+def render_type(ty:cx_ast.TypeInfo):
     preDecls :list[str] = []
     bodyDecls:list[str] = [f"TypeBuilder builder = TypeBuilder::create<{ty.path}>();"]
 
@@ -178,12 +178,28 @@ def render_field(field:cx_ast.FieldInfo):
     pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({pubCastKey}, {field.astParent.path})"
     #else:
     #    preDecl = f"//{field.path} is already public: no need for public_cast"
-    #    pubReference = f"[]({field.astParent.path})" + "{ " + f"return offsetof({field.path});" + " }"
+    #    pubReference = f"[]({field.astParent.path}*)" + "{ " + f"return offsetof({field.path});" + " }"
 
     # TODO handle anonymous types (especially if private)
     body = f'builder.addField<{field.typeName}>("{field.ownName}", {pubReference});'
     
     return (preDecl, body)
+
+@MemRttiRenderer(cx_ast.ConstructorInfo)
+def render_constructor(ctor:cx_ast.ConstructorInfo):
+    paramNames = [i.displayName for i in ctor.parameters] # TODO implement name capture
+    paramTypes = ", ".join([i.typeName for i in ctor.parameters]) # Can't rely on template arg deduction in case of overloading
+    
+    thunkUtilsInstance = f"thunk_utils<{ctor.owner.path}>"
+    ctorThunkInstance = thunkUtilsInstance+f"::thunk_newInPlace<{paramTypes}>"
+    
+    if not ctor.deleted:
+        if ctor.visibility == cx_ast.Member.Visibility.Public or ctor.astParent.isFriended(lambda f: thunkUtilsInstance in f.targetName):
+            return ("", f"builder.addConstructor(stix::StaticFunction::make(&{ctorThunkInstance}), {ctor.visibility});")
+        else:
+            return ("", f"Skipping inaccessible constructor {ctor.path}")
+    else:
+        return ("", f"Skipping deleted constructor {ctor.path}")
 
 @MemRttiRenderer(cx_ast.MemFuncInfo)
 def render_memFunc(func:cx_ast.MemFuncInfo):
@@ -196,11 +212,11 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
         "name": func.ownName,
-        "this_maybe_const": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
+        "this_qualifiers": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
     }
     preDecl = "\n".join([
         'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
-		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_maybe_const};'.format_map(formatter) + ' };',
+		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_qualifiers};'.format_map(formatter) + ' };',
 		'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
     ])
     pubReference = f"DO_PUBLIC_CAST({pubCastKey})"
@@ -214,6 +230,34 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     else:
         body = f"//Cannot capture deleted function {func.path}"
         # TODO handle template funcs
+
+    return (preDecl, body)
+
+@MemRttiRenderer(cx_ast.StaticFuncInfo)
+def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
+    # Detect how to reference
+    #if func.visibility != cx_ast.Member.Visibility.Public:
+    pubCastKey = makePubCastKey(func)
+    formatter = {
+        "key": pubCastKey,
+        "TClass": func.astParent.path,
+        "returnType": func.returnTypeName,
+        "params": ", ".join([i.typeName for i in func.parameters]),
+        "name": func.ownName
+    }
+    preDecl = "\n".join([
+        'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
+		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} (*)({params});'.format_map(formatter) + ' };',
+		'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
+    ])
+    pubReference = f"DO_PUBLIC_CAST({pubCastKey})"
+    #else:
+    #    preDecl = f"//{func.path} is already public: no need for public_cast"
+    #    pubReference = func.path
+   
+    paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
+    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.ownName}\", {func.visibility});"
+    # TODO handle template funcs
 
     return (preDecl, body)
 
