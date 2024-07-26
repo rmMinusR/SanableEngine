@@ -115,6 +115,7 @@ class Module:
                 for i in obj: op(i)
             else: op(obj)
 
+        for v in this.contents.values(): _reducing_invoke(v, lambda o:setattr(o, "children", [])) # Nasty hack to prevent symbol duplication
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.link(this))
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.latelink(this))
         
