@@ -53,7 +53,7 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         renderedBody     = "\n\n".join(_rendered[1])
 
         generated = template \
-                    .replace("GENERATED_RTTI", renderedBody) \
+                    .replace("GENERATED_RTTI", indent(renderedBody, ' '*4)) \
                     .replace("PUBLIC_CAST_DECLS", renderedPreDecls) \
                     .replace("INCLUDE_DEPENDENCIES", this.__renderIncludes())
         
@@ -66,15 +66,14 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         
         # Render symbols
         for sym in this.stableSymbols:
-            isOurs = sym.definitionLocation != None and sym.definitionLocation.file in this.input.project.files
-            if isOurs and type(sym) in RttiGenerator.renderers.keys() and not isinstance(sym, cx_ast.Member):
+            if this.__isOurs(sym) and type(sym) in RttiGenerator.renderers.keys() and not isinstance(sym, cx_ast.Member):
                 genFn = RttiGenerator.renderers[type(sym)]
                 generated = genFn(sym)
                 if generated != None:
-                    forwardDecls.extend(generated[0])
-                    bodyDecls   .extend(generated[1])
+                    forwardDecls.append(f"//Forward decls for {sym.path}\n"+generated[0])
+                    bodyDecls   .append(generated[1])
             else:
-                bodyDecls.append(f"//Skipping forward-declared {type(sym)} missing definition: {sym.path}")
+                bodyDecls.append(f"//Skipping forward-declared symbol missing definition: {sym.path if not isinstance(sym, list) else sym[0].path}")
 
         return (forwardDecls, bodyDecls)
     
@@ -84,11 +83,12 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
     memRenderers:dict[typing.Type, renderer_t] = dict()
 
     def __renderIncludes(this):
-        includes:set[source_discovery.SourceFile] = set()
-        for ty in this.stableTypes:
-            includes.add(ty.location.file)
-        includes:list[source_discovery.SourceFile] = list(includes)
-        includes.sort(lambda i: i.path)
+        includes:list[source_discovery.SourceFile] = list()
+        for ty in this.stableSymbols:
+            if type(ty) in [cx_ast.TypeInfo, cx_ast.GlobalFuncInfo]:
+                includes.extend([i.file for i in ty.declarationLocations])
+        includes = list(set(includes))
+        includes.sort(key=lambda i: i.path)
         
         def shortestRelPath(sourceFile:source_discovery.SourceFile):
             def makeRelPath(parentDir:str):
@@ -130,24 +130,33 @@ def MemRttiRenderer(*types:typing.Type):
 @RttiRenderer(cx_ast.TypeInfo)
 def render_Type(ty:cx_ast.TypeInfo):
     preDecls :list[str] = []
-    bodyDecls:list[str] = []
+    bodyDecls:list[str] = [f"TypeBuilder builder = TypeBuilder::create<{ty.path}>();"]
 
+    # Render children
     for mem in ty.children:
         if type(mem) in RttiGenerator.memRenderers.keys():
             genFn = RttiGenerator.memRenderers[type(mem)]
             memGenerated = genFn(mem)
             if memGenerated != None:
-                preDecls .extend(memGenerated[0])
-                bodyDecls.extend(memGenerated[1])
+                preDecls .append(memGenerated[0])
+                bodyDecls.append(memGenerated[1])
 
+    # Render finalizers
+    if ty.isAbstract:
+        bodyDecls.append(f"//{ty.path} is abstract. Skipping class image capture.")
+    else:
+        pass # TODO implement
+        
+    bodyDecls.append("builder.registerType(registry);")
+    
     return (
         "\n".join(preDecls),
-        "\n".join(
+        "\n".join([
             f"//{ty.path}",
             "{",
             indent("\n".join(bodyDecls), ' '*4),
             "}"
-        )
+        ])
     )
 
 def makePubCastKey(obj:cx_ast.ASTNode):
@@ -183,7 +192,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
         "name": func.ownName,
-        "this_maybe_const": " const" if func.isConstMethod else ""
+        "this_maybe_const": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
     }
     preDecl = "\n".join([
         'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
@@ -195,7 +204,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     #    preDecl = f"//{func.path} is already public: no need for public_cast"
     #    pubReference = func.path
     
-    if not func.isDeleted:
+    if not func.deleted:
         paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
         body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.ownName}\", {func.visibility}, {str(func.isVirtual).lower()});"
     else:
