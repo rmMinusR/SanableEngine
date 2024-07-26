@@ -25,7 +25,7 @@ class ASTNode:
         else: this.declarationLocations.append(location)
         
         this.astParent:ASTNode|None = None
-        this.children:list|None = None
+        this.children:list[ASTNode] = []
 
     def __str__(this):
         typeStr = str(type(this))
@@ -53,10 +53,7 @@ class ASTNode:
     def link(this, module: "Module"):
         if this.ownerName != None:
             this.astParent = module.find(this.ownerName)
-            if this.astParent.children == None: this.astParent.children = []
             this.astParent.children.append(this)
-            
-        if this.children == None: this.children = []
             
     def latelink(this, module: "Module"):
         pass

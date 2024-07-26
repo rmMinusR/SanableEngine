@@ -28,18 +28,21 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         this.default_image_capture_backend:str = args.default_image_capture_backend
         this.default_image_capture_status :str = args.default_image_capture_status
 
-    def __isOurs(this, symbol:cx_ast.ASTNode|list[cx_ast.ASTNode]):
+    def __isDefinitionOurs(this, symbol:cx_ast.ASTNode|list[cx_ast.ASTNode]):
         if isinstance(symbol, cx_ast.ASTNode) and symbol.definitionLocation != None:
             return symbol.definitionLocation.file in this.input.project.files
-        elif isinstance(symbol, list) and symbol[0].definitionLocation != None:
-            return symbol[0].definitionLocation.file in this.input.project.files
+        elif isinstance(symbol, list):
+            return any((
+                s.definitionLocation != None and s.definitionLocation.file in this.input.project.files
+                for s in symbol
+            )) # Strongly discouraged
         else:
             return False # Probably...
 
     def configure(this):
         super().configure()
         stableSymbols = this.input.module.contents.values()
-        stableSymbols = [i for i in stableSymbols if this.__isOurs(i)] # Filter: only our files
+        stableSymbols = [i for i in stableSymbols if this.__isDefinitionOurs(i)] # Filter: only our files
         stableSymbols.sort(key=lambda i: i.path if isinstance(i, cx_ast.ASTNode) else i[0].path)
         this.stableSymbols = stableSymbols
 
@@ -66,14 +69,15 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         
         # Render symbols
         for sym in this.stableSymbols:
-            if this.__isOurs(sym) and type(sym) in RttiGenerator.renderers.keys() and not isinstance(sym, cx_ast.Member):
-                genFn = RttiGenerator.renderers[type(sym)]
-                generated = genFn(sym)
-                if generated != None:
-                    forwardDecls.append(f"//Forward decls for {sym.path}\n"+generated[0])
-                    bodyDecls   .append(generated[1])
-            else:
-                bodyDecls.append(f"//Skipping forward-declared symbol missing definition: {sym.path if not isinstance(sym, list) else sym[0].path}")
+            if type(sym) in RttiGenerator.renderers.keys() and not isinstance(sym, cx_ast.Member):
+                if this.__isDefinitionOurs(sym):
+                    genFn = RttiGenerator.renderers[type(sym)]
+                    generated = genFn(sym)
+                    if generated != None:
+                        forwardDecls.append(f"//Forward decls for {sym.path}\n"+generated[0])
+                        bodyDecls   .append(generated[1])
+                else:
+                    bodyDecls.append(f"//Skipping forward-declared symbol missing definition: {sym.path if not isinstance(sym, list) else sym[0].path}")
 
         return (forwardDecls, bodyDecls)
     
@@ -179,7 +183,7 @@ def render_field(field:cx_ast.FieldInfo):
     # TODO handle anonymous types (especially if private)
     body = f'builder.addField<{field.typeName}>("{field.ownName}", {pubReference});'
     
-    return (body, pubReference)
+    return (preDecl, body)
 
 @MemRttiRenderer(cx_ast.MemFuncInfo)
 def render_memFunc(func:cx_ast.MemFuncInfo):
