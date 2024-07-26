@@ -64,6 +64,8 @@ class Module:
         this.contents:dict[str, ASTNode|list[ASTNode]] = dict()
         this.byType:dict[type, list[ASTNode]] = dict()
         this.__linked = False
+        this.__linking = False
+        this.__concurrentlyAdded = []
         
     def __getstate__(this):
         out = [i for i in this.contents.values()]
@@ -86,11 +88,15 @@ class Module:
                 if not i[0].path in this.contents.keys(): this.contents[i[0].path] = []
                 this.contents[i[0].path].extend(i)
                 for j in i: _put_byType(j)
-                
 
     def register(this, node:ASTNode):
-        assert not this.__linked, "Cannot register new nodes after linking"
-        
+        if this.__linking:
+            this.__concurrentlyAdded.append(node) # Defer
+        else:
+            assert not this.__linked, "Cannot register new nodes after linking"
+            this.__registerInternal(node)
+    
+    def __registerInternal(this, node:ASTNode):
         # Place in fast-lookup contents tree
         if not node.allowMultiple():
             # Aware of symbol: merge into existing entry
@@ -106,18 +112,28 @@ class Module:
         # Place in by-type lookup
         if not type(node) in this.byType.keys(): this.byType[type(node)] = []
         this.byType[type(node)].append(node)
-            
+
     def linkAll(this):
         this.__linked = True
+        this.__linking = True
         
         def _reducing_invoke(obj, op):
             if isinstance(obj, list):
                 for i in obj: op(i)
             else: op(obj)
-
+        
         for v in this.contents.values(): _reducing_invoke(v, lambda o:setattr(o, "children", [])) # Nasty hack to prevent symbol duplication
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.link(this))
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.latelink(this))
+        
+        while len(this.__concurrentlyAdded) > 0:
+            node = this.__concurrentlyAdded.pop(0)
+            this.__registerInternal(node)
+            _reducing_invoke(node, lambda o:o.link(this))
+            _reducing_invoke(node, lambda o:o.latelink(this))
+            
+
+        this.__linking = False
         
     def find(this, path:str) -> ASTNode:
         assert this.__linked, "Can only be called after or during linking"
@@ -143,7 +159,15 @@ class TypeInfo(ASTNode):
     @property
     def immediateParents(this):
         return (i for i in this.children if isinstance(i, ParentInfo))
-    
+
+    def link(this, module:"Module"):
+        # Implicit default ctor
+        if not any((isinstance(i, ConstructorInfo) for i in this.children)):
+            implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, False, Member.Visibility.Public)
+            module.register(implicitDefaultCtor) # FIXME this causes a concurrency error
+
+        super().link(module)
+
     def find(this, memberName, searchParents=False) -> "Member":
         for i in this.children:
             if isinstance(i, Member) and i.ownName == memberName:
