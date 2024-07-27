@@ -153,8 +153,8 @@ def factory_ConstructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, projec
         makeSourceLocation(cursor, project),
         cursor.is_definition(),
         cursor.is_deleted_method(),
-        makeVisibility(cursor),
-        False # TODO inline support
+        False, # TODO inline support
+        makeVisibility(cursor)
     )
 
 @ASTFactory(CursorKind.DESTRUCTOR)

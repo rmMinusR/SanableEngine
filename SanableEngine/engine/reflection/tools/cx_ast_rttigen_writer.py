@@ -326,39 +326,30 @@ def ImageCaptureBackend(name:str):
 @ImageCaptureBackend("cdo")
 def __renderImageCapture_cdo(ty:cx_ast.TypeInfo):
     # Gather valid constructors
-    ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, this.module.defaultImageCaptureStatus) )]
-    hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
-    isGeneratorFnFriended = this.isFriended(lambda f: "TypeBuilder" in f.targetName)
-    if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
+    ctors = [i for i in ty.children if isinstance(i, cx_ast.ConstructorInfo) and not i.deleted]
+    isGeneratorFnFriended = ty.isFriended(lambda i: "thunk_utils" in i.friendedSymbolName)
+    if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == cx_ast.Member.Visibility.Public] # Filter to what we can see
     ctors.sort(key=lambda i: len(i.parameters))
         
-    # Emit code
-    if len(ctors) > 0 and len(ctors[0].parameters) == 0:
-        return f"builder.captureClassImage_v1<{this.absName}>();"
-    else:
-        return f"#error {this.absName} has no accessible CDO-compatible constructor, and cannot have its image snapshotted"
+    defaultCtor = next((i for i in ctors if len(i.parameters)==0), None)
+    if defaultCtor == None:
+        return f"#error {ty.path} has no accessible CDO-compatible constructor, and cannot have its image snapshotted"
+
+    return f"builder.captureClassImage_v1<{ty.path}>();"
 
 @ImageCaptureBackend("disassembly")
 def __renderImageCapture_disassembly(ty:cx_ast.TypeInfo):
     # Gather valid constructors
-    ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted]
-    hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
-    isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "thunk_utils" in i.targetName) for i in this.__contents ])
-    if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
+    ctors = [i for i in ty.children if isinstance(i, cx_ast.ConstructorInfo) and not i.deleted]
+    isGeneratorFnFriended = ty.isFriended(lambda i: "thunk_utils" in i.friendedSymbolName)
+    if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == cx_ast.Member.Visibility.Public] # Filter to what we can see
     ctors.sort(key=lambda i: len(i.parameters))
 
-    # Gather args for explicit template
-    ctorParamArgs = None
-    if len(ctors) > 0:
-        ctorParamArgs = [this.absName] + [i.typeName for i in ctors[0].parameters]
-    elif hasDefaultCtor:
-        ctorParamArgs = [this.absName]
-
-    # Emit code
-    if ctorParamArgs != None:
-        return f"builder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
-    else:
-        return f"#error {this.absName} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
+    if len(ctors) == 0:
+        return f"#error {ty.path} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
+        
+    ctorParamArgs = [ty.path] + [i.typeName for i in ctors[0].parameters]
+    return f"builder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
 
 
 
