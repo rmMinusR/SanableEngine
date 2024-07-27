@@ -142,8 +142,8 @@ class Module:
 
 
 class Annotation(ASTNode):
-    def __init__(this, ownerName:str, text:str, location:SourceLocation, isDefinition:bool):
-        ASTNode.__init__(this, ownerName, None, location, isDefinition)
+    def __init__(this, ownerName:str, text:str, location:SourceLocation):
+        ASTNode.__init__(this, ownerName, None, location, True)
         this.text = text
         
     @staticmethod

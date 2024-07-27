@@ -1,5 +1,6 @@
 from functools import cached_property
 from textwrap import indent
+from turtle import back
 import cx_ast
 import cx_ast_tooling
 import timings
@@ -86,6 +87,9 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
     renderers:dict[typing.Type, renderer_t] = dict() # Only applies to global symbols
     memRenderers:dict[typing.Type, renderer_t] = dict()
 
+    defaultImageCaptureStatus = "enabled"
+    defaultImageCaptureBackend = "disassembly"
+
     def __renderIncludes(this):
         includes:list[source_discovery.SourceFile] = list()
         for ty in this.stableSymbols:
@@ -131,6 +135,8 @@ def MemRttiRenderer(*types:typing.Type):
     return registrar
 
 
+########################## AST node renderers ##########################
+
 @RttiRenderer(cx_ast.TypeInfo)
 def render_type(ty:cx_ast.TypeInfo):
     preDecls :list[str] = []
@@ -145,12 +151,19 @@ def render_type(ty:cx_ast.TypeInfo):
                 preDecls .append(memGenerated[0])
                 bodyDecls.append(memGenerated[1])
 
-    # Render finalizers
+    # Render CDO capture
     if ty.isAbstract:
         bodyDecls.append(f"//{ty.path} is abstract. Skipping class image capture.")
+    elif not detectImageCaptureStatus(ty):
+        bodyDecls.append(f"//Class image capture is disabled for {ty.path}")
     else:
-        pass # TODO implement
+        backend = detectImageCaptureBackend(ty)
+        if backend in imageCaptureBackends.keys():
+            bodyDecls.append(imageCaptureBackends[backend](ty))
+        else:
+            bodyDecls.append(f"#error Unknown image capture backend: {backend}")
         
+    # Render finalizer
     bodyDecls.append("builder.registerType(registry);")
     
     return (
@@ -260,6 +273,92 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     # TODO handle template funcs
 
     return (preDecl, body)
+
+
+########################## Annotation misc ##########################
+
+def evalAsBool(val:str):
+    if val.lower() in ["y", "yes", "true" , "enable" , "enabled" , "on" ]: return True
+    if val.lower() in ["n", "no" , "false", "disable", "disabled", "off"]: return False
+    assert False
+
+def searchAnnotations(node:cx_ast.ASTNode, selector, includeParents=True) -> cx_ast.Annotation|None:
+    for i in node.children:
+        if isinstance(i, cx_ast.Annotation) and selector(i): return i
+
+    if includeParents and node.astParent != None: return searchAnnotations(node.astParent, selector, includeParents=True)
+    return None
+
+########################## Annotation: CDO enable/backend ##########################
+
+def detectImageCaptureStatus(ty:cx_ast.TypeInfo):
+    prefix = "stix::do_image_capture"
+    annot = searchAnnotations(ty, lambda a: a.text.startswith(prefix))
+    if annot != None:
+        status = annot.text[len(prefix)+1:]
+        if status == "default": status = RttiGenerator.defaultImageCaptureStatus
+    else:
+        status = RttiGenerator.defaultImageCaptureStatus
+    return evalAsBool(status)
+
+def detectImageCaptureBackend(ty:cx_ast.TypeInfo):
+    prefix = "stix::image_capture_backend"
+    annot = searchAnnotations(ty, lambda a: a.text.startswith(prefix))
+    if annot != None:
+        backend = annot.text[len(prefix)+1:]
+        if backend == "default": backend = RttiGenerator.defaultImageCaptureBackend
+    else:
+        backend = RttiGenerator.defaultImageCaptureBackend
+    return backend
+
+imageCaptureBackend_t = typing.Callable[[cx_ast.TypeInfo], str]
+imageCaptureBackends:dict[str, imageCaptureBackend_t] = dict()
+def ImageCaptureBackend(name:str):
+    """
+    Helper to auto-register renderer functions
+    """
+    def registrar(func:imageCaptureBackend_t):
+        assert name not in imageCaptureBackends.keys()
+        imageCaptureBackends[name] = func
+        return func
+    return registrar
+
+@ImageCaptureBackend("cdo")
+def __renderImageCapture_cdo(ty:cx_ast.TypeInfo):
+    # Gather valid constructors
+    ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted and Annotations.evalAsBool( this.getAnnotationOrDefault(Annotations.DO_IMAGE_CAPTURE, this.module.defaultImageCaptureStatus) )]
+    hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
+    isGeneratorFnFriended = this.isFriended(lambda f: "TypeBuilder" in f.targetName)
+    if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
+    ctors.sort(key=lambda i: len(i.parameters))
+        
+    # Emit code
+    if len(ctors) > 0 and len(ctors[0].parameters) == 0:
+        return f"builder.captureClassImage_v1<{this.absName}>();"
+    else:
+        return f"#error {this.absName} has no accessible CDO-compatible constructor, and cannot have its image snapshotted"
+
+@ImageCaptureBackend("disassembly")
+def __renderImageCapture_disassembly(ty:cx_ast.TypeInfo):
+    # Gather valid constructors
+    ctors = [i for i in this.__contents if isinstance(i, ConstructorInfo) and not i.isDeleted]
+    hasDefaultCtor = len(ctors)==0 # TODO doesn't cover if default ctor is explicitly deleted
+    isGeneratorFnFriended = any([ (isinstance(i, FriendInfo) and "thunk_utils" in i.targetName) for i in this.__contents ])
+    if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == Member.Visibility.Public] # Ignore private ctors
+    ctors.sort(key=lambda i: len(i.parameters))
+
+    # Gather args for explicit template
+    ctorParamArgs = None
+    if len(ctors) > 0:
+        ctorParamArgs = [this.absName] + [i.typeName for i in ctors[0].parameters]
+    elif hasDefaultCtor:
+        ctorParamArgs = [this.absName]
+
+    # Emit code
+    if ctorParamArgs != None:
+        return f"builder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
+    else:
+        return f"#error {this.absName} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
 
 
 

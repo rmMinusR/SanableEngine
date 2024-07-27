@@ -229,6 +229,14 @@ def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, proj
     # TODO implement
     return None
 
+@ASTFactory(CursorKind.ANNOTATE_ATTR)
+def factory_Annotation(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, project:Project):
+    return cx_ast.Annotation(
+        lexicalParent.path,
+        cursor.displayname,
+        makeSourceLocation(cursor, project)
+    )
+
 
 
 # TODO probably slow, profile and rewrite
