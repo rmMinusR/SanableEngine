@@ -3,21 +3,21 @@ import os
 
 import source_discovery
 
-class TestCacheInvalidation(unittest.TestCase):
+class TestDiffs(unittest.TestCase):
     
     @classmethod
     def setUpClass(this):
         this.selfpath = os.path.dirname(os.path.realpath(__file__))
 
-        emptyDir = os.path.join( this.selfpath, "test_data", "empty")
+        emptyDir = os.path.join( this.selfpath, "test_data", "diffs", "empty")
         if not os.path.exists(emptyDir): os.mkdir(emptyDir)
             
-        os.chdir(emptyDir                                               ) ; this.data_empty     = source_discovery.Project(".", [])
-        os.chdir(os.path.join( this.selfpath, "test_data", "simple1"   )) ; this.data_simple1   = source_discovery.Project(".", [])
-        os.chdir(os.path.join( this.selfpath, "test_data", "simple2"   )) ; this.data_simple2   = source_discovery.Project(".", [])
-        os.chdir(os.path.join( this.selfpath, "test_data", "includes1" )) ; this.data_includes1 = source_discovery.Project(".", [])
-        os.chdir(os.path.join( this.selfpath, "test_data", "includes2" )) ; this.data_includes2 = source_discovery.Project(".", [])
-        os.chdir(os.path.join( this.selfpath, "test_data", "includes3" )) ; this.data_includes3 = source_discovery.Project(".", [])
+        os.chdir(emptyDir                                                        ) ; this.data_empty     = source_discovery.Project(".", [])
+        os.chdir(os.path.join( this.selfpath, "test_data", "diffs", "simple1"   )) ; this.data_simple1   = source_discovery.Project(".", [])
+        os.chdir(os.path.join( this.selfpath, "test_data", "diffs", "simple2"   )) ; this.data_simple2   = source_discovery.Project(".", [])
+        os.chdir(os.path.join( this.selfpath, "test_data", "diffs", "includes1" )) ; this.data_includes1 = source_discovery.Project(".", [])
+        os.chdir(os.path.join( this.selfpath, "test_data", "diffs", "includes2" )) ; this.data_includes2 = source_discovery.Project(".", [])
+        os.chdir(os.path.join( this.selfpath, "test_data", "diffs", "includes3" )) ; this.data_includes3 = source_discovery.Project(".", [])
         os.chdir(this.selfpath)
         assert this.data_simple1.files[0].contents != this.data_simple2.files[0].contents
 
@@ -83,6 +83,78 @@ class TestCacheInvalidation(unittest.TestCase):
         this.assertEqual(len(diff.removed ), 0, "Upstream added: False positive")
         this.assertEqual(len(diff.outdated), 1, "Upstream added: False negative")
         this.assertEqual(len(diff.upToDate), 1, "Upstream added: False positive")
+
+
+from cx_ast_clang_reader import ClangParseContext
+import argparse, cx_ast_tooling, cx_ast
+
+class TestClangReader(unittest.TestCase):
+    def invoke_parser(target:str, includes:list[str]):
+        stixPath = os.path.dirname(__file__)
+        stixPath = stixPath.replace("/", os.path.sep)
+        assert os.path.exists(stixPath)
+        args = [
+            "--verbose",
+            "--target" , f"{stixPath}/{target}"                   .replace("/", os.path.sep),
+            "--output" , f"{stixPath}/tools/test_tmp/ast.stix-ast".replace("/", os.path.sep), # We'll never read/write this
+            "--define" , "PLATFORM_DLL_EXTENSION=\".dll\";CS_ARCH_OURS=CS_ARCH_X86;NOMINMAX"
+        ]
+        if len(includes) > 0:
+            args.append("--include")
+            args.append(';'.join([f"{stixPath}/{i}" for i in includes]).replace("/", os.path.sep))
+        
+        arg_parser = argparse.ArgumentParser()
+        ClangParseContext.argparser_add_defaults(arg_parser)
+        args = arg_parser.parse_args(args)
+
+        cx_project = source_discovery.Project(
+            cx_ast_tooling.reduce_lists(args.targets),
+            cx_ast_tooling.reduce_lists(args.includes)
+        )
+        cx_parser = ClangParseContext(cx_project, args, 0)
+        cx_parser.configure()
+        cx_parser.ingest()
+        return cx_parser.module
+        
+
+    @classmethod
+    def setUpClass(this):
+        this.module = this.invoke_parser("test_data/parser", [])
+
+    def assertExpectSymbol(this, name, _ty):
+        sym = this.module.find(name)
+        if _ty == None:
+            this.assertIsNone(sym)
+        elif sym == None:
+            this.assertIsNotNone(sym)
+        else:
+            this.assertIsInstance(sym, _ty)
+        return sym
+
+    def test_symbols_exist(this):
+        this.assertExpectSymbol("::globalFunc(int, char, const void*)", cx_ast.GlobalFuncInfo)
+        
+        this.assertExpectSymbol("::MyClass", cx_ast.TypeInfo)
+        this.assertExpectSymbol("::MyClass::MyClass()", cx_ast.ConstructorInfo)
+        this.assertExpectSymbol("::MyClass::~MyClass()", cx_ast.DestructorInfo)
+        this.assertExpectSymbol("::MyClass::MyClass(::MyClass const&)", cx_ast.ConstructorInfo)
+        this.assertExpectSymbol("::MyClass::foo", cx_ast.FieldInfo)
+        this.assertExpectSymbol("::MyClass::bar", cx_ast.FieldInfo)
+        this.assertExpectSymbol("::MyClass::myClassFunc(int)", cx_ast.MemFuncInfo)
+        this.assertExpectSymbol("::MyClass::myConstClassFunc(int)", cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
+        this.assertExpectSymbol("::MyClass::myStaticClassFunc(int, ::MyClass*)", cx_ast.StaticFuncInfo)
+        
+        this.assertExpectSymbol("::NonDefaulted", cx_ast.TypeInfo)
+        this.assertExpectSymbol("::NonDefaulted::NonDefaulted()", None) # Explicit ctor defined, no implicit default ctor
+        this.assertExpectSymbol("::NonDefaulted::NonDefaulted(int)", cx_ast.ConstructorInfo)
+        this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
+
+        this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.ConstructorInfo)
+        this.assertExpectSymbol("::MyNamespace::ClassInNamespace()", cx_ast.TypeInfo)
+        this.assertExpectSymbol("::MyNamespace::ClassInNamespace::ClassInNamespace()", cx_ast.ConstructorInfo) # Implicit default ctor
+
+        pass
+        
 
 
 if __name__ == '__main__':

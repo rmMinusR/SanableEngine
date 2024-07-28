@@ -8,8 +8,9 @@ import pickle
 
 
 
-def reduce_lists(args:list[str], delim=';'):
+def reduce_lists(args:list[str], delim=';') -> list[str]:
     if isinstance(args, str): return [args]
+    if args == None: return []
     out:list[str] = []
     for i in args: out.extend([element for element in i.split(delim) if len(element)!=0])
     return out

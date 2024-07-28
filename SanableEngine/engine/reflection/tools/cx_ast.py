@@ -161,10 +161,16 @@ class TypeInfo(ASTNode):
         return (i for i in this.children if isinstance(i, ParentInfo))
 
     def link(this, module:"Module"):
-        # Implicit default ctor
-        if not any((isinstance(i, ConstructorInfo) for i in this.children)):
-            implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, False, Member.Visibility.Public)
-            module.register(implicitDefaultCtor) # FIXME this causes a concurrency error
+        if this.definitionLocation != None:
+            # Implicit default ctor
+            if not any((isinstance(i, ConstructorInfo) for i in this.children)):
+                implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, False, Member.Visibility.Public)
+                module.register(implicitDefaultCtor)
+
+            # Implicit default ctor
+            if not any((isinstance(i, DestructorInfo) for i in this.children)):
+                implicitDefaultDtor = DestructorInfo(this.path, this.definitionLocation, True, Member.Visibility.Public, False, False, False, False)
+                module.register(implicitDefaultDtor)
 
         super().link(module)
 

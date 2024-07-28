@@ -28,7 +28,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         for source in this.diff.outdated+this.diff.removed:
             symbolsToRemove = [i for i in this.module.contents.values() if i.sourceFile == source]
             for i in symbolsToRemove:
-                del this.module.symbols[i.path]
+                del this.module.symbols[i.path] # FIXME move into Module and add handling for by-type lookup
 
         # Do parsing of outdated/new symbols
         for source in this.diff.outdated+this.diff.new:
