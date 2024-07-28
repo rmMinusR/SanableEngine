@@ -60,7 +60,9 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
     def __ingestCursor(this, parent:cx_ast.ASTNode|None, cursor:Cursor):
         # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
-        if kind in ClangParseContext.factories.keys():
+        if kind == CursorKind.NAMESPACE:
+            for i in ClangParseContext._getChildren(cursor): this.__ingestCursor(parent, i) # TODO fully-qualified name handling?
+        elif kind in ClangParseContext.factories.keys():
             result = ClangParseContext.factories[kind](parent, cursor, this.project)
             if result != None:
                 for child in ClangParseContext._getChildren(cursor): this.__ingestCursor(result, child)
