@@ -27,3 +27,10 @@ namespace MyNamespace
 	void globalFuncInNamespace(int a, char b, const void* c);
 	class ClassInNamespace {};
 }
+
+[[clang::annotate("annot_globfunc")]] void annotatedGlobalFunc();
+class [[clang::annotate("annot_cls")]] AnnotatedClass
+{
+	[[clang::annotate("annot_field")]] int foo;
+	[[clang::annotate("annot_memfunc")]] void annotatedMemFunc();
+};

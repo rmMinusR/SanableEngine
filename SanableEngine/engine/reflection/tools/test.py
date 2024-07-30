@@ -121,17 +121,19 @@ class TestClangReader(unittest.TestCase):
     def setUpClass(this):
         this.module = this.invoke_parser("test_data/parser", [])
 
-    def assertExpectSymbol(this, name, _ty):
+    def assertExpectSymbol(this, name, _ty) -> cx_ast.ASTNode:
         sym = this.module.find(name)
         if _ty == None:
-            this.assertIsNone(sym)
+            this.assertIsNone(sym, msg=f"Symbol {name} shouldn't exist")
+            return None
         elif sym == None:
-            this.assertIsNotNone(sym)
+            this.assertIsNotNone(sym, msg=f"Symbol {name} doesn't exist'")
+            return None
         else:
-            this.assertIsInstance(sym, _ty)
-        return sym
+            this.assertIsInstance(sym, _ty, msg=f"Symbol {name} has the wrong type")
+            return sym
 
-    def test_symbols_exist(this):
+    def test_basic_symbols_exist(this):
         this.assertExpectSymbol("::globalFunc(int, char, const void*)", cx_ast.GlobalFuncInfo)
         
         this.assertExpectSymbol("::MyClass", cx_ast.TypeInfo)
@@ -145,15 +147,24 @@ class TestClangReader(unittest.TestCase):
         this.assertExpectSymbol("::MyClass::myStaticClassFunc(int, ::MyClass*)", cx_ast.StaticFuncInfo)
         
         this.assertExpectSymbol("::NonDefaulted", cx_ast.TypeInfo)
-        this.assertExpectSymbol("::NonDefaulted::NonDefaulted()", None) # Explicit ctor defined, no implicit default ctor
+        this.assertExpectSymbol("::NonDefaulted::NonDefaulted()", None) # Explicit ctor defined, removes implicit default ctor
         this.assertExpectSymbol("::NonDefaulted::NonDefaulted(int)", cx_ast.ConstructorInfo)
         this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
 
+    def test_namespaced_exist(this):
         this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.ConstructorInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace()", cx_ast.TypeInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace::ClassInNamespace()", cx_ast.ConstructorInfo) # Implicit default ctor
-
-        pass
+        
+    def test_annotations_exist(this):
+        annotTgt = this.assertExpectSymbol("::annotatedGlobalFunc()", cx_ast.GlobalFuncInfo)
+        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_globfunc" for i in annotTgt.children)) )
+        annotTgt = this.assertExpectSymbol("::AnnotatedClass", cx_ast.TypeInfo)
+        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_cls" for i in annotTgt.children)) )
+        annotTgt = this.assertExpectSymbol("::AnnotatedClass::foo", cx_ast.FieldInfo)
+        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_field" for i in annotTgt.children)) )
+        annotTgt = this.assertExpectSymbol("::AnnotatedClass::annotatedMemFunc()", cx_ast.MemFuncInfo)
+        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_memfunc" for i in annotTgt.children)) )
         
 
 
