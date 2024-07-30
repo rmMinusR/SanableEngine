@@ -85,38 +85,15 @@ class TestDiffs(unittest.TestCase):
         this.assertEqual(len(diff.upToDate), 1, "Upstream added: False positive")
 
 
-from cx_ast_clang_reader import ClangParseContext
-import argparse, cx_ast_tooling, cx_ast
+import argparse, cx_ast_tooling, cx_ast, abc
 
-class TestClangReader(unittest.TestCase):
+class TestParser(unittest.TestCase):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
     def invoke_parser(target:str, includes:list[str]):
-        stixPath = os.path.dirname(__file__)
-        stixPath = stixPath.replace("/", os.path.sep)
-        assert os.path.exists(stixPath)
-        args = [
-            "--verbose",
-            "--target" , f"{stixPath}/{target}"                   .replace("/", os.path.sep),
-            "--output" , f"{stixPath}/tools/test_tmp/ast.stix-ast".replace("/", os.path.sep), # We'll never read/write this
-            "--define" , "PLATFORM_DLL_EXTENSION=\".dll\";CS_ARCH_OURS=CS_ARCH_X86;NOMINMAX"
-        ]
-        if len(includes) > 0:
-            args.append("--include")
-            args.append(';'.join([f"{stixPath}/{i}" for i in includes]).replace("/", os.path.sep))
+        pass
         
-        arg_parser = argparse.ArgumentParser()
-        ClangParseContext.argparser_add_defaults(arg_parser)
-        args = arg_parser.parse_args(args)
-
-        cx_project = source_discovery.Project(
-            cx_ast_tooling.reduce_lists(args.targets),
-            cx_ast_tooling.reduce_lists(args.includes)
-        )
-        cx_parser = ClangParseContext(cx_project, args, 0)
-        cx_parser.configure()
-        cx_parser.ingest()
-        return cx_parser.module
-        
-
     @classmethod
     def setUpClass(this):
         this.module = this.invoke_parser("test_data/parser", [])
@@ -166,6 +143,34 @@ class TestClangReader(unittest.TestCase):
         annotTgt = this.assertExpectSymbol("::AnnotatedClass::annotatedMemFunc()", cx_ast.MemFuncInfo)
         this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_memfunc" for i in annotTgt.children)) )
         
+from cx_ast_clang_reader import ClangParseContext
+class TestClangParser(TestParser):
+    def invoke_parser(target:str, includes:list[str]):
+        stixPath = os.path.dirname(__file__)
+        stixPath = stixPath.replace("/", os.path.sep)
+        assert os.path.exists(stixPath)
+        args = [
+            "--verbose",
+            "--target" , f"{stixPath}/{target}"                   .replace("/", os.path.sep),
+            "--output" , f"{stixPath}/tools/test_tmp/ast.stix-ast".replace("/", os.path.sep), # We'll never read/write this
+            "--define" , "PLATFORM_DLL_EXTENSION=\".dll\";CS_ARCH_OURS=CS_ARCH_X86;NOMINMAX"
+        ]
+        if len(includes) > 0:
+            args.append("--include")
+            args.append(';'.join([f"{stixPath}/{i}" for i in includes]).replace("/", os.path.sep))
+        
+        arg_parser = argparse.ArgumentParser()
+        ClangParseContext.argparser_add_defaults(arg_parser)
+        args = arg_parser.parse_args(args)
+
+        cx_project = source_discovery.Project(
+            cx_ast_tooling.reduce_lists(args.targets),
+            cx_ast_tooling.reduce_lists(args.includes)
+        )
+        cx_parser = ClangParseContext(cx_project, args, 0)
+        cx_parser.configure()
+        cx_parser.ingest()
+        return cx_parser.module
 
 
 if __name__ == '__main__':
