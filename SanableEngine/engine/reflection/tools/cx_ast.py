@@ -240,8 +240,8 @@ class MaybeVirtual(Member):
     def latelink(this, module: Module):
         this.inheritedVersion = this.owner.findInParents(this.ownName)
         
-        def __isVirtual (v:MaybeVirtual): return v.__isExplicitVirtual  or __isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False
-        def __isOverride(v:MaybeVirtual): return v.__isExplicitOverride or __isOverride(v.inheritedVersion) if v.inheritedVersion != None else False
+        def __isVirtual (v:MaybeVirtual): return v.__isExplicitVirtual  or (__isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False)
+        def __isOverride(v:MaybeVirtual): return v.__isExplicitOverride or (__isOverride(v.inheritedVersion) if v.inheritedVersion != None else False)
         this.isVirtual = __isVirtual(this)
         this.isOverride = __isOverride(this)
 

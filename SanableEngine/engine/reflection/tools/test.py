@@ -128,6 +128,30 @@ class TestParser:
         this.assertExpectSymbol("::NonDefaulted::NonDefaulted(int)", cx_ast.ConstructorInfo)
         this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
 
+        mySubclass = this.assertExpectSymbol("::MySubclass", cx_ast.TypeInfo)
+        parents = [i for i in mySubclass.children if isinstance(i, cx_ast.ParentInfo)]
+        this.assertTrue(len(parents) == 1)
+        this.assertTrue(parents[0].parentTypeName == "::MyClass")
+
+    def test_virtual_method_detection(this):
+        # Not virtual
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myClassFunc(int)", cx_ast.MemFuncInfo)
+        this.assertFalse(func.isVirtual)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myConstClassFunc(int)", cx_ast.MemFuncInfo)
+        this.assertFalse(func.isVirtual)
+        
+        # Explicitly virtual
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myVirtualFunc(int)", cx_ast.MemFuncInfo)
+        this.assertTrue(func.isVirtual)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myPureVirtualFunc(int)", cx_ast.MemFuncInfo)
+        this.assertTrue(func.isVirtual)
+        
+        # Implicitly virtual
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MySubclass::myVirtualFunc(int)", cx_ast.MemFuncInfo)
+        this.assertTrue(func.isVirtual)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MySubclass::myPureVirtualFunc(int)", cx_ast.MemFuncInfo)
+        this.assertTrue(func.isVirtual)
+        
     def test_namespaced_exist(this):
         this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.GlobalFuncInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace", cx_ast.TypeInfo)

@@ -15,6 +15,17 @@ class MyClass
 	void myClassFunc(int param);
 	const int* myConstClassFunc(int param) const;
 	static void myStaticClassFunc(int param, MyClass* cls);
+
+public:
+	virtual void myVirtualFunc(int param);
+	virtual void myPureVirtualFunc(int param) = 0;
+};
+
+class MySubclass : public MyClass
+{
+public:
+	void myVirtualFunc(int param);
+	void myPureVirtualFunc(int param) override;
 };
 
 class NonDefaulted
