@@ -60,9 +60,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
     def __ingestCursor(this, parent:cx_ast.ASTNode|None, cursor:Cursor):
         # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
-        if kind == CursorKind.NAMESPACE:
-            for i in ClangParseContext._getChildren(cursor): this.__ingestCursor(parent, i) # TODO fully-qualified name handling?
-        elif kind in ClangParseContext.factories.keys():
+        if kind in ClangParseContext.factories.keys():
             result = ClangParseContext.factories[kind](parent, cursor, this.project)
             if result != None:
                 for child in ClangParseContext._getChildren(cursor): this.__ingestCursor(result, child)
@@ -104,6 +102,13 @@ def isExplicitOverride(cursor:Cursor):
     return any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in ClangParseContext._getChildren(cursor)])
 
 
+@ASTFactory(CursorKind.NAMESPACE)
+def factory_Namespace(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, project:Project):
+    return cx_ast.Namespace(
+        lexicalParent.path if lexicalParent != None else None,
+        cursor.displayname,
+        makeSourceLocation(cursor, project)
+    )
 
 @ASTFactory(
     CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION, # TODO only if fully specialized, else defer to CLASS_TEMPLATE handler

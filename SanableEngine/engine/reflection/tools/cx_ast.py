@@ -141,6 +141,15 @@ class Module:
         except KeyError: return None
 
 
+class Namespace(ASTNode):
+    def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation):
+        ASTNode.__init__(this, ownerName, ownName, location, False)
+        
+    #@staticmethod
+    #def allowMultiple():
+    #    return True
+
+
 class Annotation(ASTNode):
     def __init__(this, ownerName:str, text:str, location:SourceLocation):
         ASTNode.__init__(this, ownerName, None, location, True)

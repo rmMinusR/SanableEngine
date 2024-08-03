@@ -87,14 +87,14 @@ class TestDiffs(unittest.TestCase):
 
 import argparse, cx_ast_tooling, cx_ast, abc
 
-class TestParser(unittest.TestCase):
+class TestParser:
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod
-    def invoke_parser(target:str, includes:list[str]):
-        pass
+    def invoke_parser(target:str, includes:list[str]) -> cx_ast.Module:
+        assert False, "Implement this!"
         
-    @classmethod
+    @classmethod    
     def setUpClass(this):
         this.module = this.invoke_parser("test_data/parser", [])
 
@@ -107,7 +107,7 @@ class TestParser(unittest.TestCase):
             this.assertIsNotNone(sym, msg=f"Symbol {name} doesn't exist'")
             return None
         else:
-            this.assertIsInstance(sym, _ty, msg=f"Symbol {name} has the wrong type")
+            this.assertIsInstance(sym, _ty, msg=f"Symbol {name}: expected {_ty}, but was {type(sym)}")
             return sym
 
     def test_basic_symbols_exist(this):
@@ -129,8 +129,8 @@ class TestParser(unittest.TestCase):
         this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
 
     def test_namespaced_exist(this):
-        this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.ConstructorInfo)
-        this.assertExpectSymbol("::MyNamespace::ClassInNamespace()", cx_ast.TypeInfo)
+        this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.GlobalFuncInfo)
+        this.assertExpectSymbol("::MyNamespace::ClassInNamespace", cx_ast.TypeInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace::ClassInNamespace()", cx_ast.ConstructorInfo) # Implicit default ctor
         
     def test_annotations_exist(this):
@@ -144,7 +144,7 @@ class TestParser(unittest.TestCase):
         this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_memfunc" for i in annotTgt.children)) )
         
 from cx_ast_clang_reader import ClangParseContext
-class TestClangParser(TestParser):
+class TestClangParser(TestParser, unittest.TestCase):
     def invoke_parser(target:str, includes:list[str]):
         stixPath = os.path.dirname(__file__)
         stixPath = stixPath.replace("/", os.path.sep)
