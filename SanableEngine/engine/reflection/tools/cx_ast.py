@@ -345,16 +345,24 @@ class ParentInfo(Member):
         this.parentTypeName = parentTypeName
         this.parentType = None
         this.explicitlyVirtual = explicitlyVirtual
+        #this.isVirtuallyInherited = None
     
     def link(this, module: Module):
         super().link(module)
         this.parentType = module.find(this.parentTypeName)
 
     def latelink(this, module: Module):
-        if not this.explicitlyVirtual:
-            def __isVirtual(ty:TypeInfo):
-                return any((i.explicitlyVirtual for i in ty.immediateParents)) or \
-                       any((__isVirtual(i.parentType) for i in ty.immediateParents))
+        #if this.explicitlyVirtual:
+        #    this.isVirtuallyInherited = True
+        #else:
+        #    def __immediateParents(ty:TypeInfo): return (i for i in ty if isinstance(i, ParentInfo))
+        #    def __isVirtuallyInherited(p:ParentInfo):
+        #        
+        #    def __isVirtual(ty:TypeInfo):
+        #        return any(( i.explicitlyVirtual for i in __immediateParents(ty) )) or \
+        #               any(( __isVirtual(i.parentType) for i in __immediateParents(ty) ))
+        #    this.isVirtuallyInherited = __isVirtual(this)
+        pass
 
 
 class FriendInfo(Member):
