@@ -114,6 +114,11 @@ class Module:
         if not type(node) in this.byType.keys(): this.byType[type(node)] = []
         this.byType[type(node)].append(node)
 
+    def remove(this, node:ASTNode):
+        del this.symbols[node.path]
+        this.byType[type(node)].remove(node)
+        if node.astParent != None: node.astParent.children.remove(node)
+
     def linkAll(this):
         this.__linked = True
         this.__linking = True
@@ -176,11 +181,13 @@ class TypeInfo(ASTNode):
             if not any((isinstance(i, ConstructorInfo) for i in this.children)):
                 implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, False, Member.Visibility.Public)
                 module.register(implicitDefaultCtor)
+                this.children.append(implicitDefaultCtor)
 
             # Implicit default ctor
             if not any((isinstance(i, DestructorInfo) for i in this.children)):
                 implicitDefaultDtor = DestructorInfo(this.path, this.definitionLocation, True, Member.Visibility.Public, False, False, False, False)
                 module.register(implicitDefaultDtor)
+                this.children.append(implicitDefaultDtor)
 
         super().link(module)
 
