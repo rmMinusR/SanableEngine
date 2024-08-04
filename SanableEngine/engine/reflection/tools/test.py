@@ -1,3 +1,4 @@
+import typing
 import unittest
 import os
 
@@ -110,6 +111,14 @@ class TestParser:
             this.assertIsInstance(sym, _ty, msg=f"Symbol {name}: expected {_ty}, but was {type(sym)}")
             return sym
 
+    def assertExpectAnnotation(this, sym:cx_ast.ASTNode, selector:typing.Callable[[cx_ast.Annotation], bool], count:int):
+        matches = []
+        for i in sym.children:
+            if isinstance(i, cx_ast.Annotation) and selector(i):
+                matches.append(i)
+        this.assertTrue(len(matches) == count)
+        return matches
+
     def test_basic_symbols_exist(this):
         this.assertExpectSymbol("::globalFunc(int, char, const void*)", cx_ast.GlobalFuncInfo)
         
@@ -123,15 +132,16 @@ class TestParser:
         this.assertExpectSymbol("::MyClass::myConstClassFunc(int)", cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
         this.assertExpectSymbol("::MyClass::myStaticClassFunc(int, ::MyClass*)", cx_ast.StaticFuncInfo)
         
-        this.assertExpectSymbol("::NonDefaulted", cx_ast.TypeInfo)
-        this.assertExpectSymbol("::NonDefaulted::NonDefaulted()", None) # Explicit ctor defined, removes implicit default ctor
-        this.assertExpectSymbol("::NonDefaulted::NonDefaulted(int)", cx_ast.ConstructorInfo)
-        this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
-
         mySubclass = this.assertExpectSymbol("::MySubclass", cx_ast.TypeInfo)
         parents = [i for i in mySubclass.children if isinstance(i, cx_ast.ParentInfo)]
         this.assertTrue(len(parents) == 1)
         this.assertTrue(parents[0].parentTypeName == "::MyClass")
+        
+    def test_implicit_symbols_exist(this):
+        this.assertExpectSymbol("::NonDefaulted", cx_ast.TypeInfo)
+        this.assertExpectSymbol("::NonDefaulted::NonDefaulted()", None) # Explicit ctor defined, removes implicit default ctor
+        this.assertExpectSymbol("::NonDefaulted::NonDefaulted(int)", cx_ast.ConstructorInfo)
+        this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
 
     def test_virtual_method_detection(this):
         # Not virtual
@@ -174,23 +184,24 @@ class TestParser:
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
 
     def test_namespaced_exist(this):
+        this.assertExpectSymbol("::MyNamespace", cx_ast.Namespace)
         this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.GlobalFuncInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace", cx_ast.TypeInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace::ClassInNamespace()", cx_ast.ConstructorInfo) # Implicit default ctor
         
     def test_annotations_exist(this):
         annotTgt = this.assertExpectSymbol("::annotatedGlobalFunc()", cx_ast.GlobalFuncInfo)
-        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_globfunc" for i in annotTgt.children)) )
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_globfunc", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedClass", cx_ast.TypeInfo)
-        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_cls" for i in annotTgt.children)) )
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_cls", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedClass::foo", cx_ast.FieldInfo)
-        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_field" for i in annotTgt.children)) )
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_field", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedClass::annotatedMemFunc()", cx_ast.MemFuncInfo)
-        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_memfunc" for i in annotTgt.children)) )
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_memfunc", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceA", cx_ast.Namespace)
-        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_ns_a" for i in annotTgt.children)) )
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_ns_a", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceB", cx_ast.Namespace)
-        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_ns_b" for i in annotTgt.children)) )
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_ns_b", 2)
         
 from cx_ast_clang_reader import ClangParseContext
 class TestClangParser(TestParser, unittest.TestCase):

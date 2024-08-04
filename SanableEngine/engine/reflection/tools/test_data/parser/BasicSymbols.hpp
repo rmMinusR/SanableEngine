@@ -39,7 +39,6 @@ public:
 	int myPublic;
 };
 
-
 struct StructVisibilityTester
 {
 	int myDefault;
@@ -77,3 +76,4 @@ namespace [[clang::annotate("annot_ns_a")]] AnnotatedNamespaceA { }
 
 namespace AnnotatedNamespaceB { }
 namespace [[clang::annotate("annot_ns_b")]] AnnotatedNamespaceB { }
+namespace [[clang::annotate("annot_ns_b")]] AnnotatedNamespaceB { } //Someone's bound to try this at some point, and this is why we should avoid annotated namespaces. It creates vagueness.
