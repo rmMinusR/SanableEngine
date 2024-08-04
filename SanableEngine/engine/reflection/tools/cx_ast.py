@@ -75,6 +75,7 @@ class Module:
     def __setstate__(this, vals):
         this.contents = dict()
         this.byType = dict()
+        this.__concurrentlyAdded = []
 
         def _put_byType(i):
             if type(i) not in this.byType.keys(): this.byType[type(i)] = []
