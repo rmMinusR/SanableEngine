@@ -92,14 +92,16 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
     def __renderIncludes(this):
         includes:list[source_discovery.SourceFile] = list()
         for ty in this.stableSymbols:
-            if type(ty) in [cx_ast.TypeInfo, cx_ast.GlobalFuncInfo]:
-                includes.extend([i.file for i in ty.declarationLocations])
+            if isinstance(ty, cx_ast.TypeInfo) and ty.definitionLocation != None:
+                includes.append(ty.definitionLocation.file)
+            elif isinstance(ty, cx_ast.GlobalFuncInfo):
+                includes.extend([i.file for i in ty.declarationLocations])  
         includes = list(set(includes))
         includes.sort(key=lambda i: i.path)
         
         def shortestRelPath(sourceFile:source_discovery.SourceFile):
             def makeRelPath(parentDir:str):
-                if sourceFile.abspath.startswith(parentDir):
+                if sourceFile.path.startswith(parentDir):
                     return sourceFile.abspath[:-len(parentDir)]
                 else:
                     return None
@@ -107,9 +109,10 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
             candidates = [makeRelPath(i) for i in this.input.project.includeDirs]
             candidates = [i for i in candidates if i != None]
             
-            return min(candidates, key=len)
+            return min(candidates, key=len) if len(candidates)>0 else None
 
-        return "\n".join([ f'#include "{shortestRelPath(i)}"' for i in includes ])
+        relFiles = [shortestRelPath(i) for i in includes]
+        return "\n".join([ f'#include "{i}"' for i in relFiles if i != None ])
     
 def RttiRenderer(*types:typing.Type):
     """

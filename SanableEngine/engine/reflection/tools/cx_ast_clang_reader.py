@@ -156,7 +156,7 @@ def factory_FriendInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Pro
 @ASTFactory(CursorKind.CONSTRUCTOR)
 def factory_ConstructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Project):
     return cx_ast.ConstructorInfo(
-        lexicalParent.path,
+        lexicalParent.path if lexicalParent != None else "::".join(_make_FullyQualifiedName(cursor).split("::")[:-1]),
         makeSourceLocation(cursor, project),
         cursor.is_definition(),
         cursor.is_deleted_method(),
@@ -167,7 +167,7 @@ def factory_ConstructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, projec
 @ASTFactory(CursorKind.DESTRUCTOR)
 def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, project:Project):
     return cx_ast.DestructorInfo(
-        lexicalParent.path,
+        lexicalParent.path if lexicalParent != None else "::".join(_make_FullyQualifiedName(cursor).split("::")[:-1]),
         makeSourceLocation(cursor, project),
         cursor.is_definition(),
         makeVisibility(cursor),
@@ -183,7 +183,7 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
         if not cursor.is_static_method():
             # Nonstatic member function
             return cx_ast.MemFuncInfo(
-                lexicalParent.path,
+                lexicalParent.path if lexicalParent != None else "::".join(_make_FullyQualifiedName(cursor).split("::")[:-1]),
                 cursor.spelling,
                 makeSourceLocation(cursor, project),
                 cursor.is_definition(),
@@ -199,7 +199,7 @@ def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:C
         else:
             # Static member function
             return cx_ast.StaticFuncInfo(
-                lexicalParent.path,
+                lexicalParent.path if lexicalParent != None else "::".join(_make_FullyQualifiedName(cursor).split("::")[:-1]),
                 cursor.spelling,
                 makeSourceLocation(cursor, project),
                 cursor.is_definition(),
