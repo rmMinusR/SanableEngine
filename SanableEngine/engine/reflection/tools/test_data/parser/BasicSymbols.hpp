@@ -28,6 +28,32 @@ public:
 	void myPureVirtualFunc(int param) override;
 };
 
+class ClassVisibilityTester
+{
+	int myDefault;
+private:
+	int myPrivate;
+protected:
+	int myProtected;
+public:
+	int myPublic;
+};
+
+
+struct StructVisibilityTester
+{
+	int myDefault;
+private:
+	int myPrivate;
+protected:
+	int myProtected;
+public:
+	int myPublic;
+};
+
+//class SubclassVisibilityTester : protected ClassVisibilityTester {};
+//struct SubStructVisibilityTester : private StructVisibilityTester {};
+
 class NonDefaulted
 {
 	NonDefaulted(int foo);
@@ -45,3 +71,9 @@ class [[clang::annotate("annot_cls")]] AnnotatedClass
 	[[clang::annotate("annot_field")]] int foo;
 	[[clang::annotate("annot_memfunc")]] void annotatedMemFunc();
 };
+
+//Not sure if STIX will use this, but just in case...
+namespace [[clang::annotate("annot_ns_a")]] AnnotatedNamespaceA { }
+
+namespace AnnotatedNamespaceB { }
+namespace [[clang::annotate("annot_ns_b")]] AnnotatedNamespaceB { }

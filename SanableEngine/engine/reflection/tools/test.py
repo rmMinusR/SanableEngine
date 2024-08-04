@@ -97,8 +97,8 @@ class TestParser:
     @classmethod    
     def setUpClass(this):
         this.module = this.invoke_parser("test_data/parser", [])
-
-    def assertExpectSymbol(this, name, _ty) -> cx_ast.ASTNode:
+        
+    def assertExpectSymbol(this, name:str, _ty:cx_ast.ASTNode) -> cx_ast.ASTNode|None:
         sym = this.module.find(name)
         if _ty == None:
             this.assertIsNone(sym, msg=f"Symbol {name} shouldn't exist")
@@ -152,6 +152,27 @@ class TestParser:
         func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MySubclass::myPureVirtualFunc(int)", cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
         
+    def test_visibility_detection(this):
+        # ClassVisibilityTester
+        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myDefault", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Private)
+        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myPrivate", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Private)
+        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myProtected", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Protected)
+        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myPublic", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
+        
+        # StructVisibilityTester
+        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myDefault", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
+        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myPrivate", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Private)
+        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myProtected", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Protected)
+        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myPublic", cx_ast.Member)
+        this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
+
     def test_namespaced_exist(this):
         this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.GlobalFuncInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace", cx_ast.TypeInfo)
@@ -166,6 +187,10 @@ class TestParser:
         this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_field" for i in annotTgt.children)) )
         annotTgt = this.assertExpectSymbol("::AnnotatedClass::annotatedMemFunc()", cx_ast.MemFuncInfo)
         this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_memfunc" for i in annotTgt.children)) )
+        annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceA", cx_ast.Namespace)
+        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_ns_a" for i in annotTgt.children)) )
+        annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceB", cx_ast.Namespace)
+        this.assertTrue( any((isinstance(i, cx_ast.Annotation) and i.text == "annot_ns_b" for i in annotTgt.children)) )
         
 from cx_ast_clang_reader import ClangParseContext
 class TestClangParser(TestParser, unittest.TestCase):
