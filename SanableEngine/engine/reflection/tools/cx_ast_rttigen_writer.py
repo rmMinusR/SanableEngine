@@ -101,8 +101,9 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         
         def shortestRelPath(sourceFile:source_discovery.SourceFile):
             def makeRelPath(parentDir:str):
-                if sourceFile.path.startswith(parentDir):
-                    return sourceFile.abspath[:-len(parentDir)]
+                parentDir = os.path.normpath(parentDir)
+                if os.path.normpath(sourceFile.path).startswith(parentDir):
+                    return os.path.relpath(sourceFile.path, parentDir)
                 else:
                     return None
 
@@ -231,7 +232,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     #    pubReference = func.path
     
     if not func.deleted:
-        paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
+        paramNames = [i.ownName for i in func.parameters] # TODO implement name capture on C++ side
         body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.ownName}\", {func.visibility}, {str(func.isVirtual).lower()});"
     else:
         body = f"//Cannot capture deleted function {func.path}"
