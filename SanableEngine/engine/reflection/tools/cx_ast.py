@@ -82,7 +82,7 @@ class Module:
         this.byType = dict()
         this.__concurrentlyAdded = []
 
-        def _put_byType(i):
+        def _put_byType(i:ASTNode):
             if type(i) not in this.byType.keys(): this.byType[type(i)] = []
             this.byType[type(i)].append(i)
 
@@ -319,7 +319,12 @@ class StaticFuncInfo(Callable, Member):
 class GlobalFuncInfo(Callable):
     def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
         Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted, inline)
-   
+    
+    @property
+    def path(this):
+        argTypes = ", ".join([i.typeName for i in this.parameters])
+        leadingGlobal = "::" if not this.ownName.startswith("::") else ""
+        return f"{leadingGlobal}{this.ownName}({argTypes})"
     
 # TODO implement:
 #class GlobalVarInfo - doubles as class static
