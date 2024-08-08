@@ -18,6 +18,7 @@ class ASTNode:
     def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation, isDefinition:bool):
         this.ownerName = ownerName
         this.ownName = ownName
+        this.transient:bool = False # Used by implicits added during the link phase
 
         this.declarationLocations:list[SourceLocation] = []
         this.definitionLocation:SourceLocation = None
@@ -32,6 +33,9 @@ class ASTNode:
         typeStr = typeStr[len("<class '"):-len("'>")].split(".")[-1]
         return f"{this.path} ({typeStr})"
     
+    def __repr__(this):
+        return str(this)
+
     def merge(this, new:"ASTNode"): # Called on existing instance
         # Already aware of this symbol: check that previous record was a declaration
         if new.definitionLocation != None:
@@ -68,7 +72,8 @@ class Module:
         this.__concurrentlyAdded = []
         
     def __getstate__(this):
-        out = [i for i in this.contents.values()]
+        out = [i for i in this.contents.values() if isinstance(i, ASTNode) and not i.transient] \
+            + [[i for i in grp if not i.transient] for grp in this.contents.values() if isinstance(grp, list)]
         out.sort(key=lambda node: node.path if isinstance(node, ASTNode) else node[0].path)
         return out
     
@@ -82,7 +87,7 @@ class Module:
             this.byType[type(i)].append(i)
 
         for i in vals:
-            if not isinstance(i, list):
+            if isinstance(i, ASTNode):
                 this.contents[i.path] = i
                 _put_byType(i)
             else:
@@ -129,16 +134,26 @@ class Module:
             else: op(obj)
         
         for v in this.contents.values(): _reducing_invoke(v, lambda o:setattr(o, "children", [])) # Nasty hack to prevent symbol duplication
+        
+        # Link explicit symbols
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.link(this))
+        
+        # Link implicit symbols added in link()
+        while len(this.__concurrentlyAdded) > 0:
+            node = this.__concurrentlyAdded.pop(0)
+            this.__registerInternal(node)
+            _reducing_invoke(node, lambda o:o.link(this))
+            
+        # Late-link explicit symbols
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.latelink(this))
         
+        # Fully link implicit symbols added in latelink()
         while len(this.__concurrentlyAdded) > 0:
             node = this.__concurrentlyAdded.pop(0)
             this.__registerInternal(node)
             _reducing_invoke(node, lambda o:o.link(this))
             _reducing_invoke(node, lambda o:o.latelink(this))
-            
-
+        
         this.__linking = False
         
     def find(this, path:str) -> ASTNode:
@@ -176,19 +191,21 @@ class TypeInfo(ASTNode):
         return (i for i in this.children if isinstance(i, ParentInfo))
 
     def link(this, module:"Module"):
-        if this.definitionLocation != None:
+        if this.definitionLocation != None: # Somehow this is being called multiple times per type??? This causes multiple ctors to be registered in a single run but somehow they sneak in after verification...
             # Implicit default ctor
             if not any((isinstance(i, ConstructorInfo) for i in this.children)):
                 implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, False, Member.Visibility.Public)
+                implicitDefaultCtor.transient = True
                 module.register(implicitDefaultCtor)
                 this.children.append(implicitDefaultCtor)
 
             # Implicit default ctor
             if not any((isinstance(i, DestructorInfo) for i in this.children)):
                 implicitDefaultDtor = DestructorInfo(this.path, this.definitionLocation, True, Member.Visibility.Public, False, False, False, False)
+                implicitDefaultDtor.transient = True
                 module.register(implicitDefaultDtor)
                 this.children.append(implicitDefaultDtor)
-
+        
         super().link(module)
 
     def find(this, memberName, searchParents=False) -> "Member":
