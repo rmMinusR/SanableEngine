@@ -203,8 +203,8 @@ def render_field(field:cx_ast.FieldInfo):
 
 @MemRttiRenderer(cx_ast.ConstructorInfo)
 def render_constructor(ctor:cx_ast.ConstructorInfo):
-    if ctor.astParent.isAbstract: return ("", f"Skipping abstract constructor {ctor.path}")
-    if ctor.deleted: return ("", f"Skipping deleted constructor {ctor.path}")
+    if ctor.astParent.isAbstract: return ("", f"//Skipping abstract constructor {ctor.path}")
+    if ctor.deleted: return ("", f"//Skipping deleted constructor {ctor.path}")
 
     paramNames = [i.displayName for i in ctor.parameters] # TODO implement name capture
     paramTypes = ", ".join([i.typeName for i in ctor.parameters]) # Can't rely on template arg deduction in case of overloading
@@ -215,7 +215,7 @@ def render_constructor(ctor:cx_ast.ConstructorInfo):
     if ctor.visibility == cx_ast.Member.Visibility.Public or ctor.astParent.isFriended(lambda f: thunkUtilsInstance in f.targetName):
         return ("", f"builder.addConstructor(stix::StaticFunction::make(&{ctorThunkInstance}), {ctor.visibility});")
     else:
-        return ("", f"Skipping inaccessible constructor {ctor.path}")
+        return ("", f"//Skipping inaccessible constructor {ctor.path}")
 
 @MemRttiRenderer(cx_ast.MemFuncInfo)
 def render_memFunc(func:cx_ast.MemFuncInfo):
