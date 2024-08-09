@@ -238,11 +238,17 @@ def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, module:c
 
 @ASTFactory(CursorKind.VAR_DECL)
 def factory_VarInfo_GlobalOrStatic(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):
-    if isinstance(lexicalParent, cx_ast.TypeInfo):
+    parent_fqname = "::".join( _make_FullyQualifiedName(cursor) .split("::")[:-1])
+    isStaticVar = isinstance(lexicalParent, cx_ast.TypeInfo)
+    if not isStaticVar and parent_fqname in module.contents.keys():
+        isStaticVar = isinstance(module.contents[parent_fqname], cx_ast.TypeInfo)
+    
+    if isStaticVar:
         return cx_ast.StaticVarInfo(
-            lexicalParent.path,
+            parent_fqname, # For definitions, lexicalParent will likely be null. It certainly won't be our owning Type.
             cursor.spelling,
             makeSourceLocation(cursor, project),
+            cursor.is_definition(),
             makeVisibility(cursor),
             _make_FullyQualifiedTypeName(cursor.type)
         )

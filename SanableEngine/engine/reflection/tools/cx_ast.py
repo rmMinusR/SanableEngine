@@ -367,8 +367,8 @@ class GlobalVarInfo(ASTNode):
 
 
 class StaticVarInfo(Member):
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
-        Member.__init__(this, ownerName, ownName, location, True, visibility)
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, typeName:str|None):
+        Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
         this.typeName = typeName
         this.type = None
         
