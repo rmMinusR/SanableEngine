@@ -237,13 +237,22 @@ def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, module:c
     return out
 
 @ASTFactory(CursorKind.VAR_DECL)
-def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):
-    return cx_ast.GlobalVarInfo(
-        (lexicalParent.path[2:]+"::" if lexicalParent != None else "")+cursor.spelling,
-        makeSourceLocation(cursor, project),
-        cursor.is_definition(),
-        _make_FullyQualifiedTypeName(cursor.type)
-    )
+def factory_VarInfo_GlobalOrStatic(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):
+    if isinstance(lexicalParent, cx_ast.TypeInfo):
+        return cx_ast.StaticVarInfo(
+            lexicalParent.path,
+            cursor.spelling,
+            makeSourceLocation(cursor, project),
+            makeVisibility(cursor),
+            _make_FullyQualifiedTypeName(cursor.type)
+        )
+    else:
+        return cx_ast.GlobalVarInfo(
+            (lexicalParent.path[2:]+"::" if lexicalParent != None else "")+cursor.spelling,
+            makeSourceLocation(cursor, project),
+            cursor.is_definition(),
+            _make_FullyQualifiedTypeName(cursor.type)
+        )
 
 @ASTFactory(CursorKind.ANNOTATE_ATTR)
 def factory_Annotation(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):

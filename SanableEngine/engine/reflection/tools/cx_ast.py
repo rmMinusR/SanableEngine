@@ -366,6 +366,17 @@ class GlobalVarInfo(ASTNode):
         this.type = module.find(this.typeName)
 
 
+class StaticVarInfo(Member):
+    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
+        Member.__init__(this, ownerName, ownName, location, True, visibility)
+        this.typeName = typeName
+        this.type = None
+        
+    def link(this, module:Module):
+        super().link(module)
+        this.type = module.find(this.typeName)
+
+
 class FieldInfo(Member):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
         Member.__init__(this, ownerName, ownName, location, True, visibility)

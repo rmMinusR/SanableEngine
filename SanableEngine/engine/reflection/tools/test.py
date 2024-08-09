@@ -132,6 +132,7 @@ class TestParser:
         this.assertExpectSymbol("::MyClass::MyClass(::MyClass const&)", cx_ast.ConstructorInfo)
         this.assertExpectSymbol("::MyClass::foo", cx_ast.FieldInfo)
         this.assertExpectSymbol("::MyClass::bar", cx_ast.FieldInfo)
+        this.assertExpectSymbol("::MyClass::staticVar", cx_ast.StaticVarInfo)
         this.assertExpectSymbol("::MyClass::myClassFunc(int)", cx_ast.MemFuncInfo)
         this.assertExpectSymbol("::MyClass::myConstClassFunc(int)", cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
         this.assertExpectSymbol("::MyClass::myStaticClassFunc(int, ::MyClass*)", cx_ast.StaticFuncInfo)
