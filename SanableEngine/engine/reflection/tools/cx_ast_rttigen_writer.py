@@ -140,6 +140,21 @@ def MemRttiRenderer(*types:typing.Type):
 
 ########################## AST node renderers ##########################
 
+def _getAllParents(ty:cx_ast.TypeInfo):
+    out:list[cx_ast.ParentInfo] = []
+    
+    # Accumulate
+    for i in ty.children:
+        if isinstance(i, cx_ast.ParentInfo):
+            out.append(i)
+            out.extend(_getAllParents(i.parentType))
+
+    # Deduplicate
+    out = list(set(out))
+    out.sort(key=lambda v: v.parentTypeName)
+    
+    return out
+
 @RttiRenderer(cx_ast.TypeInfo)
 def render_type(ty:cx_ast.TypeInfo):
     preDecls :list[str] = []
@@ -153,6 +168,12 @@ def render_type(ty:cx_ast.TypeInfo):
             if memGenerated != None:
                 preDecls .append(memGenerated[0])
                 bodyDecls.append(memGenerated[1])
+
+    # Render implicit virtual parents
+    for p in _getAllParents(ty):
+        if p.explicitlyVirtual and not p.owner == ty:
+            # Always render. We break it with C-style cast, which ignores visibility.
+            bodyDecls.append(f"builder.addParent<{p.ownerName}, {p.parentTypeName}>({p.visibility}, {cx_ast.ParentInfo.Virtualness.VirtualInherited});")
 
     # Render CDO capture
     if ty.isAbstract:
@@ -178,6 +199,13 @@ def render_type(ty:cx_ast.TypeInfo):
             "}"
         ])
     )
+
+@MemRttiRenderer(cx_ast.ParentInfo)
+def render_parent(parent:cx_ast.ParentInfo):
+    # Always render. We break it with C-style cast, which ignores visibility.
+    virtualness = cx_ast.ParentInfo.Virtualness.VirtualExplicit if parent.explicitlyVirtual else cx_ast.ParentInfo.Virtualness.NonVirtual
+    body = f"builder.addParent<{parent.ownerName}, {parent.parentTypeName}>({parent.visibility}, {virtualness});"
+    return ("", body)
 
 def makePubCastKey(obj:cx_ast.ASTNode):
     return "".join([
