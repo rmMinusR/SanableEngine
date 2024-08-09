@@ -179,12 +179,19 @@ def render_type(ty:cx_ast.TypeInfo):
         ])
     )
 
+def makePubCastKey(obj:cx_ast.ASTNode):
+    return "".join([
+        (i if i.isalnum() or i in "_" else '_')
+        for i in obj.path
+    ])
+
 @MemRttiRenderer(cx_ast.FieldInfo)
 def render_field(field:cx_ast.FieldInfo):
     # Detect how to reference
     #if field.visibility != cx_ast.Member.Visibility.Public:
-    preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({field.astParent.path}, {field.ownName}, {field.typeName});'
-    pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({field.astParent.path}, {field.ownName})"
+    pubCastKey = makePubCastKey(field)
+    preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({pubCastKey}, {field.astParent.path}, {field.ownName}, {field.typeName});'
+    pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({pubCastKey}, {field.astParent.path})"
     #else:
     #    preDecl = f"//{field.path} is already public: no need for public_cast"
     #    pubReference = f"[]({field.astParent.path}*)" + "{ " + f"return offsetof({field.path});" + " }"
@@ -196,8 +203,8 @@ def render_field(field:cx_ast.FieldInfo):
 
 @MemRttiRenderer(cx_ast.ConstructorInfo)
 def render_constructor(ctor:cx_ast.ConstructorInfo):
-    if ctor.astParent.isAbstract: return ("", f"//Skipping abstract constructor {ctor.path}")
-    if ctor.deleted: return ("", f"//Skipping deleted constructor {ctor.path}")
+    if ctor.astParent.isAbstract: return ("", f"Skipping abstract constructor {ctor.path}")
+    if ctor.deleted: return ("", f"Skipping deleted constructor {ctor.path}")
 
     paramNames = [i.displayName for i in ctor.parameters] # TODO implement name capture
     paramTypes = ", ".join([i.typeName for i in ctor.parameters]) # Can't rely on template arg deduction in case of overloading
@@ -214,7 +221,9 @@ def render_constructor(ctor:cx_ast.ConstructorInfo):
 def render_memFunc(func:cx_ast.MemFuncInfo):
     # Detect how to reference
     #if func.visibility != cx_ast.Member.Visibility.Public:
+    pubCastKey = makePubCastKey(func)
     formatter = {
+        "key": pubCastKey,
         "TClass": func.astParent.path,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
@@ -222,11 +231,11 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
         "this_qualifiers": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
     }
     preDecl = "\n".join([
-        'PUBLIC_CAST_DECLARE_KEY_BARE({TClass}, {name});'.format_map(formatter),
-		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({TClass}, {name})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_qualifiers};'.format_map(formatter) + ' };',
-		'PUBLIC_CAST_GIVE_ACCESS_BARE({TClass}, {name});'.format_map(formatter)
+        'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
+		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_qualifiers};'.format_map(formatter) + ' };',
+		'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
     ])
-    pubReference = f"DO_PUBLIC_CAST({func.astParent.path}, {func.ownName})"
+    pubReference = f"DO_PUBLIC_CAST({pubCastKey})"
     #else:
     #    preDecl = f"//{func.path} is already public: no need for public_cast"
     #    pubReference = func.path
@@ -244,18 +253,20 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
 def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     # Detect how to reference
     #if func.visibility != cx_ast.Member.Visibility.Public:
+    pubCastKey = makePubCastKey(func)
     formatter = {
+        "key": pubCastKey,
         "TClass": func.astParent.path,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
         "name": func.ownName
     }
     preDecl = "\n".join([
-        'PUBLIC_CAST_DECLARE_KEY_BARE({TClass}, {name});'.format_map(formatter),
-		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({TClass}, {name})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} (*)({params});'.format_map(formatter) + ' };',
-		'PUBLIC_CAST_GIVE_ACCESS_BARE({TClass}, {name});'.format_map(formatter)
+        'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
+		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} (*)({params});'.format_map(formatter) + ' };',
+		'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
     ])
-    pubReference = f"DO_PUBLIC_CAST({func.astParent.path}, {func.ownName})"
+    pubReference = f"DO_PUBLIC_CAST({pubCastKey})"
     #else:
     #    preDecl = f"//{func.path} is already public: no need for public_cast"
     #    pubReference = func.path
@@ -266,13 +277,6 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
 
     return (preDecl, body)
 
-@MemRttiRenderer(cx_ast.ParentInfo)
-def render_parent(parent:cx_ast.ParentInfo):
-    virtualness = "ParentInfo::Virtualness::"+(
-        "VirtualExplicit" if parent.explicitlyVirtual else "NonVirtual"
-    )
-    body = f"builder.addParent<{parent.astParent.path}, {parent.parentTypeName}>({parent.visibility}, {virtualness});"
-    return ("", body)
 
 ########################## Annotation misc ##########################
 
