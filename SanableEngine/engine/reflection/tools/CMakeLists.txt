@@ -64,6 +64,9 @@ endfunction()
 set(STIX_RTTI_CODEGEN_COMMAND python "${CMAKE_CURRENT_LIST_DIR}/cx_ast_rttigen_writer.py")
 function(stix_generate_reflection targetName)
 	# Requires stix_extract_ast() to be run before this
+	if (NOT TARGET ${targetName}_STIX_AST)
+		message(FATAL_ERROR "Missing AST data to generate RTTI binders for ${targetName} - call stix_extract_ast before stix_generate_reflection")
+	endif()
 
 	# Resolve optional properties
 	get_target_property(TEMPLATE_FILE ${targetName} STIX_TEMPLATE_FILE)
