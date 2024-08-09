@@ -1,6 +1,8 @@
 #pragma once
 
 void globalFunc(int a, char b, const void* c);
+void* globalVarDefined;
+extern void* globalVarExterned;
 
 class MyClass
 {
@@ -61,10 +63,15 @@ class NonDefaulted
 namespace MyNamespace
 {
 	void globalFuncInNamespace(int a, char b, const void* c);
+	
+	void* globalVarInNSDefined;
+	extern void* globalVarInNSExterned;
+
 	class ClassInNamespace {};
 }
 
 [[clang::annotate("annot_globfunc")]] void annotatedGlobalFunc();
+[[clang::annotate("annot_globvar")]] void* annotatedGlobalVar;
 class [[clang::annotate("annot_cls")]] AnnotatedClass
 {
 	[[clang::annotate("annot_field")]] int foo;

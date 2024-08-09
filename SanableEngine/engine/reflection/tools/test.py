@@ -121,6 +121,10 @@ class TestParser:
 
     def test_basic_symbols_exist(this):
         this.assertExpectSymbol("::globalFunc(int, char, const void*)", cx_ast.GlobalFuncInfo)
+        sym = this.assertExpectSymbol("::globalVarDefined", cx_ast.GlobalVarInfo)
+        this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
+        sym = this.assertExpectSymbol("::globalVarExterned", cx_ast.GlobalVarInfo)
+        this.assertIsNone(sym.definitionLocation, msg="Symbol should not be defined")
         
         this.assertExpectSymbol("::MyClass", cx_ast.TypeInfo)
         this.assertExpectSymbol("::MyClass::MyClass()", cx_ast.ConstructorInfo)
@@ -185,13 +189,23 @@ class TestParser:
 
     def test_namespaced_exist(this):
         this.assertExpectSymbol("::MyNamespace", cx_ast.Namespace)
+        
         this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.GlobalFuncInfo)
+        
+        sym = this.assertExpectSymbol("::MyNamespace::globalVarInNSDefined", cx_ast.GlobalVarInfo)
+        this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
+        sym = this.assertExpectSymbol("::MyNamespace::globalVarInNSExterned", cx_ast.GlobalVarInfo)
+        this.assertIsNone(sym.definitionLocation, msg="Symbol should not be defined")
+        
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace", cx_ast.TypeInfo)
         this.assertExpectSymbol("::MyNamespace::ClassInNamespace::ClassInNamespace()", cx_ast.ConstructorInfo) # Implicit default ctor
+        this.assertExpectSymbol("::MyNamespace::ClassInNamespace::~ClassInNamespace()", cx_ast.DestructorInfo) # Implicit default dtor
         
     def test_annotations_exist(this):
         annotTgt = this.assertExpectSymbol("::annotatedGlobalFunc()", cx_ast.GlobalFuncInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_globfunc", 1)
+        annotTgt = this.assertExpectSymbol("::annotatedGlobalVar", cx_ast.GlobalVarInfo)
+        this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_globvar", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedClass", cx_ast.TypeInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_cls", 1)
         annotTgt = this.assertExpectSymbol("::AnnotatedClass::foo", cx_ast.FieldInfo)

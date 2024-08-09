@@ -178,7 +178,7 @@ def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, module:
     )
 
 @ASTFactory(CursorKind.CXX_METHOD, CursorKind.FUNCTION_DECL, CursorKind.FUNCTION_TEMPLATE)
-def factory_FuncInfo_MemberOrStatic(lexicalParent:cx_ast.TypeInfo|None, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_FuncInfo_MemberOrStaticOrGlobal(lexicalParent:cx_ast.TypeInfo|None, cursor:Cursor, module:cx_ast.Module, project:Project):
     # Deduce parent, whether inline or out-of-line
     parentPath = lexicalParent.path if lexicalParent != None else "::".join(_make_FullyQualifiedName(cursor).split("::")[:-1])
     parentIsType = isinstance(lexicalParent, cx_ast.TypeInfo)
@@ -238,8 +238,12 @@ def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, module:c
 
 @ASTFactory(CursorKind.VAR_DECL)
 def factory_GlobalVarInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):
-    # TODO implement
-    return None
+    return cx_ast.GlobalVarInfo(
+        (lexicalParent.path[2:]+"::" if lexicalParent != None else "")+cursor.spelling,
+        makeSourceLocation(cursor, project),
+        cursor.is_definition(),
+        _make_FullyQualifiedTypeName(cursor.type)
+    )
 
 @ASTFactory(CursorKind.ANNOTATE_ATTR)
 def factory_Annotation(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):

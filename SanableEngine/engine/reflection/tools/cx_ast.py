@@ -316,6 +316,7 @@ class StaticFuncInfo(Callable, Member):
         Callable.__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted, inline)
         Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
         
+
 class GlobalFuncInfo(Callable):
     def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
         Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted, inline)
@@ -326,9 +327,6 @@ class GlobalFuncInfo(Callable):
         leadingGlobal = "::" if not this.ownName.startswith("::") else ""
         return f"{leadingGlobal}{this.ownName}({argTypes})"
     
-# TODO implement:
-#class GlobalVarInfo - doubles as class static
-
 
 class MemFuncInfo(MaybeVirtual, Callable):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool,
@@ -357,11 +355,26 @@ class DestructorInfo(MaybeVirtual, Callable):
         Callable    .__init__(this, owner, ownName, location, isDefinition, None, deleted, inline)
 
 
+class GlobalVarInfo(ASTNode):
+    def __init__(this, ownName:str, location: SourceLocation, isDefinition:bool, typeName:str|None):
+        ASTNode.__init__(this, None, ownName, location, isDefinition)
+        this.typeName = typeName
+        this.type = None
+        
+    def link(this, module:Module):
+        super().link(module)
+        this.type = module.find(this.typeName)
+
+
 class FieldInfo(Member):
     def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
         Member.__init__(this, ownerName, ownName, location, True, visibility)
         this.typeName = typeName
         this.type = None
+        
+    def link(this, module:Module):
+        super().link(module)
+        this.type = module.find(this.typeName)
         
 
 class ParentInfo(Member):
