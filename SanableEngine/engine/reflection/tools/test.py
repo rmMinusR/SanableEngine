@@ -169,6 +169,22 @@ class TestParser:
         func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MySubclass::myPureVirtualFunc(int)", cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
         
+    def test_virtual_inheritance_detection(this):
+        base      :cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondSharedBase", cx_ast.TypeInfo)
+        a         :cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondA", cx_ast.TypeInfo)
+        b         :cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondB", cx_ast.TypeInfo)
+        grandchild:cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondGrandchild", cx_ast.TypeInfo)
+        
+        base_in_a = next((i for i in a.immediateParents if i.parentType==base))
+        base_in_b = next((i for i in b.immediateParents if i.parentType==base))
+        a_in_grandchild = next((i for i in grandchild.immediateParents if i.parentType==a))
+        b_in_grandchild = next((i for i in grandchild.immediateParents if i.parentType==b))
+        
+        this.assertTrue(base_in_a.explicitlyVirtual)
+        this.assertTrue(base_in_b.explicitlyVirtual)
+        this.assertTrue(a_in_grandchild.explicitlyVirtual)
+        this.assertTrue(b_in_grandchild.explicitlyVirtual)
+
     def test_visibility_detection(this):
         # ClassVisibilityTester
         sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myDefault", cx_ast.Member)

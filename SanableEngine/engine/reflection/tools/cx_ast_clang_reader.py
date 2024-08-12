@@ -95,7 +95,7 @@ def makeVisibility(cursor:Cursor):
             clang.cindex.AccessSpecifier.INVALID  : cx_ast.Member.Visibility.Public # TODO imply that it's public but only because it isn't nested?
         }[cursor.access_specifier]
 
-def isExplicitVirtual(cursor:Cursor):
+def isExplicitVirtualMethod(cursor:Cursor):
     return cursor.is_virtual_method() or cursor.is_pure_virtual_method()
 
 def isExplicitOverride(cursor:Cursor):
@@ -141,7 +141,7 @@ def factory_ParentInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, module:cx_a
         _make_FullyQualifiedName(cursor),
         makeSourceLocation(cursor, project),
         makeVisibility(cursor),
-        isExplicitVirtual(cursor)
+        any([i.spelling == "virtual" for i in cursor.get_tokens()])
     )
 
 @ASTFactory(CursorKind.FRIEND_DECL)
@@ -171,7 +171,7 @@ def factory_DestructorInfo(lexicalParent:cx_ast.TypeInfo, cursor:Cursor, module:
         makeSourceLocation(cursor, project),
         cursor.is_definition(),
         makeVisibility(cursor),
-        isExplicitVirtual(cursor),
+        isExplicitVirtualMethod(cursor),
         isExplicitOverride(cursor),
         cursor.is_deleted_method(),
         False # TODO inline support
@@ -193,7 +193,7 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(lexicalParent:cx_ast.TypeInfo|None, 
                 makeSourceLocation(cursor, project),
                 cursor.is_definition(),
                 makeVisibility(cursor),
-                isExplicitVirtual(cursor),
+                isExplicitVirtualMethod(cursor),
                 isExplicitOverride(cursor),
                 _make_FullyQualifiedTypeName(cursor.result_type),
                 cursor.is_deleted_method(),

@@ -173,7 +173,7 @@ def render_type(ty:cx_ast.TypeInfo):
     for p in _getAllParents(ty):
         if p.explicitlyVirtual and not p.owner == ty:
             # Always render. We break it with C-style cast, which ignores visibility.
-            bodyDecls.append(f"builder.addParent<{p.ownerName}, {p.parentTypeName}>({p.visibility}, {cx_ast.ParentInfo.Virtualness.VirtualInherited});")
+            bodyDecls.append(f"builder.addParent<{ty.path}, {p.parentTypeName}>({p.visibility}, {cx_ast.ParentInfo.Virtualness.VirtualInherited});")
 
     # Render CDO capture
     if ty.isAbstract:

@@ -194,14 +194,14 @@ class TypeInfo(ASTNode):
         if this.definitionLocation != None: # Somehow this is being called multiple times per type??? This causes multiple ctors to be registered in a single run but somehow they sneak in after verification...
             # Implicit default ctor
             if not any((isinstance(i, ConstructorInfo) for i in this.children)):
-                implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, False, Member.Visibility.Public)
+                implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, True, Member.Visibility.Public)
                 implicitDefaultCtor.transient = True
                 module.register(implicitDefaultCtor)
                 this.children.append(implicitDefaultCtor)
 
             # Implicit default ctor
             if not any((isinstance(i, DestructorInfo) for i in this.children)):
-                implicitDefaultDtor = DestructorInfo(this.path, this.definitionLocation, True, Member.Visibility.Public, False, False, False, False)
+                implicitDefaultDtor = DestructorInfo(this.path, this.definitionLocation, True, Member.Visibility.Public, False, False, False, True)
                 implicitDefaultDtor.transient = True
                 module.register(implicitDefaultDtor)
                 this.children.append(implicitDefaultDtor)
