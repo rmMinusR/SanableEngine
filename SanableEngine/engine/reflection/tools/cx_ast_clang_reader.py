@@ -226,6 +226,7 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(lexicalParent:cx_ast.TypeInfo|None, 
 
 @ASTFactory(CursorKind.PARM_DECL)
 def factory_ParameterInfo(lexicalParent:cx_ast.Callable, cursor:Cursor, module:cx_ast.Module, project:Project):
+    if isinstance(lexicalParent, cx_ast.Callable.Parameter): return None # Working around a very stupid bug
     out = cx_ast.Callable.Parameter(
         lexicalParent.path,
         cursor.displayname,

@@ -425,5 +425,9 @@ class FriendInfo(Member):
         this.friendedSymbolName = friendedSymbolName
         this.friendedSymbol = None
         
+    @property
+    def path(this):
+        return f"{this.ownerName}::(friend {this.friendedSymbolName})"
+
     def latelink(this, module: Module):
         this.friendedSymbol = module.find(this.friendedSymbolName)
