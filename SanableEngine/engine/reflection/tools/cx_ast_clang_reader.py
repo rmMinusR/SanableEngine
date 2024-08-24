@@ -118,7 +118,7 @@ def factory_Namespace(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:c
 def factory_TypeInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):
     return cx_ast.TypeInfo(
         lexicalParent.path if lexicalParent != None else None,
-        cursor.displayname,
+        cursor.spelling,
         makeSourceLocation(cursor, project),
         cursor.is_definition(),
         cursor.is_abstract_record()
@@ -279,9 +279,11 @@ def factory_TemplateParam(lexicalParent:cx_ast.ASTNode, cursor:Cursor, module:cx
     relevantLines = sourceFileContent[cursor.extent.start.line-1:cursor.extent.end.line]
     relevantLines[-1] = relevantLines[-1][:cursor.extent.end.column-1] # Must chop off end first in case this is single-line
     relevantLines[0] = relevantLines[0][cursor.extent.start.column-1:]
-    paramLiteralText = "\n".join(relevantLines)
+    paramLiteralText = "\n".join(relevantLines) # FIXME this won't work in macros
     
-    defaultVal = None # TODO: default values will be a sub-cursor
+    # TODO: default values will be a sub-cursor?
+    # TODO if we're doing it this way we also need to normalize names
+    defaultVal = paramLiteralText.split("=")[-1].strip() if "=" in paramLiteralText else None
     
     return cx_ast.TemplateParameter(
         lexicalParent.path,
@@ -303,11 +305,15 @@ def _getAbsName(target: Cursor) -> str:
         # Loop case
 
         # Strip leading C-style record type specifier
-        ownName = target.displayname
+        ownName = target.spelling
         def stripexact(val: str, leading: str): return val[len(leading):] if val.startswith(leading) else val
         ownName = stripexact(ownName, "enum ")
         ownName = stripexact(ownName, "class ") # Since this is after "enum" it will also catch "enum class"
         ownName = stripexact(ownName, "struct ")
+        
+        # Reconstruct template parameters
+        # TODO get literal text so we can figure out whether typename/class/integral literal/etc
+        #templateParams = [i for i in ClangParseContext._getChildren(target) if i.kind in [CursorKind.TEMPLATE_TYPE_PARAMETER, CursorKind.TEMPLATE_NON_TYPE_PARAMETER, CursorKind.TEMPLATE_TEMPLATE_PARAMETER]]
 
         # Concat and loop
         return _getAbsName(target.semantic_parent) + "::" + ownName
