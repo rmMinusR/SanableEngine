@@ -112,8 +112,8 @@ def factory_Namespace(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:c
 
 @ASTFactory(
     CursorKind.CLASS_DECL, CursorKind.CLASS_TEMPLATE_PARTIAL_SPECIALIZATION, # TODO only if fully specialized, else defer to CLASS_TEMPLATE handler
-	CursorKind.STRUCT_DECL, CursorKind.UNION_DECL
-    # TODO Removed temporarily: CursorKind.CLASS_TEMPLATE
+	CursorKind.STRUCT_DECL, CursorKind.UNION_DECL,
+    CursorKind.CLASS_TEMPLATE
 )
 def factory_TypeInfo(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:cx_ast.Module, project:Project):
     return cx_ast.TypeInfo(
@@ -267,6 +267,28 @@ def factory_Annotation(lexicalParent:cx_ast.ASTNode|None, cursor:Cursor, module:
         lexicalParent.path,
         cursor.displayname,
         makeSourceLocation(cursor, project)
+    )
+
+@ASTFactory(
+    CursorKind.TEMPLATE_TYPE_PARAMETER,
+    CursorKind.TEMPLATE_NON_TYPE_PARAMETER,
+    CursorKind.TEMPLATE_TEMPLATE_PARAMETER
+)
+def factory_TemplateParam(lexicalParent:cx_ast.ASTNode, cursor:Cursor, module:cx_ast.Module, project:Project):
+    sourceFileContent = project.getFile(cursor.location.file.name).contents.split("\n")
+    relevantLines = sourceFileContent[cursor.extent.start.line-1:cursor.extent.end.line]
+    relevantLines[-1] = relevantLines[-1][:cursor.extent.end.column-1] # Must chop off end first in case this is single-line
+    relevantLines[0] = relevantLines[0][cursor.extent.start.column-1:]
+    paramLiteralText = "\n".join(relevantLines)
+    
+    defaultVal = None # TODO: default values will be a sub-cursor
+    
+    return cx_ast.TemplateParameter(
+        lexicalParent.path,
+        cursor.displayname,
+        makeSourceLocation(cursor, project),
+        paramLiteralText.split(" ")[0], # First word will be template, class, int, etc
+        defaultVal
     )
 
 

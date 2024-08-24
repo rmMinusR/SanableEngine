@@ -236,6 +236,48 @@ class TestParser:
         annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceB", cx_ast.Namespace)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_ns_b", 2)
         
+    def test_templated_types_exist(this):
+        tgt = this.assertExpectSymbol("::TemplatedType_Typename<T>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "T" and tgt.defaultValue == None)
+
+        tgt = this.assertExpectSymbol("::TemplatedType_Class<T>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "class" and tgt.ownName == "T" and tgt.defaultValue == None)
+        
+        tgt = this.assertExpectSymbol("::TemplatedType_Int<val>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "int" and tgt.ownName == "val" and tgt.defaultValue == None)
+
+        tgt = this.assertExpectSymbol("::TemplatedType_VoidPtr<val>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "void*" and tgt.ownName == "val" and tgt.defaultValue == None)
+
+        tgt = this.assertExpectSymbol("::TemplatedType_DefaultType<T>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "T" and tgt.defaultValue == "int")
+
+        tgt = this.assertExpectSymbol("::TemplatedType_DefaultInt<val>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "int" and tgt.ownName == "val" and tgt.defaultValue == "3")
+        
+        tgt = this.assertExpectSymbol("::TemplatedType_NamelessParam<typename>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "" and tgt.defaultValue == None)
+        
+        tgt = this.assertExpectSymbol("::TemplatedType_NamelessDefaultedParam<typename>", cx_ast.TypeInfo)
+        tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
+        this.assertTrue(tgt != None)
+        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "" and tgt.defaultValue == "int")
+        
+        
 from cx_ast_clang_reader import ClangParseContext
 class TestClangParser(TestParser, unittest.TestCase):
     def invoke_parser(target:str, includes:list[str]):

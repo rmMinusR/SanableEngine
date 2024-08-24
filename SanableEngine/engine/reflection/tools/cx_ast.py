@@ -431,3 +431,14 @@ class FriendInfo(Member):
 
     def latelink(this, module: Module):
         this.friendedSymbol = module.find(this.friendedSymbolName)
+
+
+class TemplateParameter(ASTNode):
+    def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
+        ASTNode.__init__(this, ownerName, ownName, location, True)
+        this.paramType = paramType
+        this.defaultValue = defaultValue
+
+    @cached_property
+    def path(this):
+        return f"{this.ownerName}::(template parameter {this.ownName})" # FIXME parameter index
