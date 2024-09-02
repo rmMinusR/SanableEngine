@@ -218,8 +218,8 @@ def render_field(field:cx_ast.FieldInfo):
     # Detect how to reference
     #if field.visibility != cx_ast.Member.Visibility.Public:
     pubCastKey = makePubCastKey(field)
-    preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({pubCastKey}, {field.astParent.path}, {field.ownName}, {field.typeName});'
-    pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({pubCastKey}, {field.astParent.path})"
+    preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({pubCastKey}, {field.owner.path}, {field.ownName}, {field.typeName});'
+    pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({pubCastKey}, {field.owner.path})"
     #else:
     #    preDecl = f"//{field.path} is already public: no need for public_cast"
     #    pubReference = f"[]({field.astParent.path}*)" + "{ " + f"return offsetof({field.path});" + " }"
@@ -231,7 +231,7 @@ def render_field(field:cx_ast.FieldInfo):
 
 @MemRttiRenderer(cx_ast.ConstructorInfo)
 def render_constructor(ctor:cx_ast.ConstructorInfo):
-    if ctor.astParent.isAbstract: return ("", f"//Skipping abstract constructor {ctor.path}")
+    if ctor.owner.isAbstract: return ("", f"//Skipping abstract constructor {ctor.path}")
     if ctor.deleted: return ("", f"//Skipping deleted constructor {ctor.path}")
 
     paramNames = [i.displayName for i in ctor.parameters] # TODO implement name capture
@@ -240,7 +240,7 @@ def render_constructor(ctor:cx_ast.ConstructorInfo):
     thunkUtilsInstance = f"thunk_utils<{ctor.owner.path}>"
     ctorThunkInstance = thunkUtilsInstance+f"::thunk_newInPlace<{paramTypes}>"
     
-    if ctor.visibility == cx_ast.Member.Visibility.Public or ctor.astParent.isFriended(lambda f: thunkUtilsInstance in f.targetName):
+    if ctor.visibility == cx_ast.Member.Visibility.Public or ctor.owner.isFriended(lambda f: thunkUtilsInstance in f.targetName):
         return ("", f"builder.addConstructor(stix::StaticFunction::make(&{ctorThunkInstance}), {ctor.visibility});")
     else:
         return ("", f"//Skipping inaccessible constructor {ctor.path}")
@@ -252,7 +252,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     pubCastKey = makePubCastKey(func)
     formatter = {
         "key": pubCastKey,
-        "TClass": func.astParent.path,
+        "TClass": func.owner.path,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
         "name": func.ownName,
@@ -284,7 +284,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     pubCastKey = makePubCastKey(func)
     formatter = {
         "key": pubCastKey,
-        "TClass": func.astParent.path,
+        "TClass": func.owner.path,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
         "name": func.ownName
@@ -317,7 +317,7 @@ def searchAnnotations(node:cx_ast.ASTNode, selector, includeParents=True) -> cx_
     for i in node.children:
         if isinstance(i, cx_ast.Annotation) and selector(i): return i
 
-    if includeParents and node.astParent != None: return searchAnnotations(node.astParent, selector, includeParents=True)
+    if includeParents and node.owner != None: return searchAnnotations(node.owner, selector, includeParents=True)
     return None
 
 ########################## Annotation: CDO enable/backend ##########################

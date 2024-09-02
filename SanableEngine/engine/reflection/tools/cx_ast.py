@@ -10,14 +10,105 @@ class SourceLocation:
         this.file = file
         this.line = line
         this.column = column
+        
+    def __repr__(this):
+        return f"{this.file.name} : L{this.line}.C{this.column}"
+
+
+class SymbolPath:
+    BasicSegment = str
+    class TemplatedSegment:
+        def __init__(this, base:str):
+            this.base = base
+            this.templateParams:list[str|SymbolPath] = [] # SymbolPath for type arguments, str for values (int, char, enum, etc)
+            
+        def __str__(this): return this.base+"<" + ", ".join(this.templateParams) + ">"
+        def __repr__(this): return this.__str__()
+
+        def __eq__(this, rhs):
+            if not isinstance(rhs, SymbolPath.TemplatedSegment): return False
+            if this.base != rhs.base or len(this.templateParams) != len(rhs.templateParams): return False
+            return all(this.templateParams[i]==rhs.templateParams[i] for i in range(len(this.templateParams)))
+    class Anonymous:
+        def __init__(this, location:SourceLocation, _type:str = "anonymous"):
+            this.location = location
+            this._type = _type
+            
+        def __str__(this): return f"({this._type} at {this.location})"
+        def __repr__(this): return this.__str__()
+        
+        def __eq__(this, rhs):
+            return isinstance(rhs, SymbolPath.Anonymous) and this.location == rhs.location
+            
+    SegmentAny = BasicSegment|TemplatedSegment|Anonymous
+
+    def __init__(this):
+        this.__parts:list[SymbolPath.SegmentAny] = []
+
+    def __str__(this): return "::" + "::".join([str(i) for i in this.__parts])
+    def __repr__(this): return this.__str__()
+    
+    def __hash__(this): return hash(this.__str__())
+
+    def __div__(this, rhs:"SymbolPath.SegmentAny"):
+        out = SymbolPath()
+        out.__parts.extend(this.__parts)
+        out.__parts.append(rhs)
+        return out
+    def __add__(this, rhs): return this.__div__(rhs)
+    
+    def __eq__(this, rhs):
+        if not isinstance(rhs, SymbolPath): return False
+        if len(this.__parts) != len(rhs.__parts): return False
+        return all(this.__parts[i]==rhs.__parts[i] for i in range(len(this.__parts)))
+    
+    @cached_property
+    def parent(this) -> "SymbolPath|None":
+        if len(this.__parts) > 1:
+            out = SymbolPath()
+            out.__parts = this.__parts[:-1]
+            return out
+        else: return None
+        
+    @cached_property
+    def ownName(this): return this.__parts[-1]
+
+    @cached_property
+    def name(this): return str(this.__parts[-1])
+    
+    @cached_property # NOTE: Doesn't do visibility checks
+    def referenceable(this): return any((isinstance(i, SymbolPath.Anonymous) for i in this.__parts))
+
+    #@staticmethod
+    #def naive_parse(raw:str): # TODO gets completely screwed if someone does a boolean less-than compare. Scrap?
+    #    out = SymbolPath()
+    #    braces = ("()", "<>", "{}", "[]", '""', "''") # Hope nobody uses trigraphs...
+    #    
+    #    if raw.startswith("::"): raw = raw[2:]
+    #
+    #    while len(raw) > 0:
+    #        braceStack = []
+    #        for idx in range(1, len(raw)):
+    #            if len(braceStack) > 0 and any( braceStack[-1]==brace[0] and raw[idx] == brace[1] for brace in braces ):
+    #                # Closing brace or quote
+    #                braceStack.pop()
+    #            elif any( raw[idx] == brace[0] for brace in braces ):
+    #                # Opening brace or quote
+    #                braceStack.append(raw[idx])
+    #            elif len(braceStack)==0 and idx<len(raw)-1 and raw[idx:idx+2] == "::":
+    #                break
+    #        out.__parts.append(raw[:idx])
+    #        raw = raw[idx+2:]
+    #            
+    #    return out
+
 
 
 class ASTNode:
     __metaclass__ = abc.ABCMeta
 
-    def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation, isDefinition:bool):
-        this.ownerName = ownerName
-        this.ownName = ownName
+    def __init__(this, path:SymbolPath|None, location: SourceLocation, isDefinition:bool):
+        this.path = path
         this.transient:bool = False # Used by implicits added during the link phase
 
         this.declarationLocations:list[SourceLocation] = []
@@ -25,8 +116,8 @@ class ASTNode:
         if isDefinition: this.definitionLocation = location
         else: this.declarationLocations.append(location)
         
-        this.astParent:ASTNode|None = None
-        this.children:list[ASTNode] = []
+        this.owner:ASTNode|None = None
+        this.children = []
 
     def __str__(this):
         typeStr = str(type(this))
@@ -35,7 +126,7 @@ class ASTNode:
     
     def __repr__(this):
         return str(this)
-
+    
     def merge(this, new:"ASTNode"): # Called on existing instance
         # Already aware of this symbol: check that previous record was a declaration
         if new.definitionLocation != None:
@@ -44,20 +135,15 @@ class ASTNode:
         # Merge locational data
         this.definitionLocation = new.definitionLocation
         this.declarationLocations.extend(new.declarationLocations)
+        
+        assert new.children == None, f"Node {new} is not a definition, and cannot define new children!"
 
-    @cached_property
-    def path(this):
-        if this.ownerName != None: return f"{this.ownerName}::{this.ownName}"
-        else: return f"::{this.ownName}"
-    
     @staticmethod
     def allowMultiple():
         return False
 
     def link(this, module: "Module"):
-        if this.ownerName != None:
-            this.astParent = module.find(this.ownerName)
-            this.astParent.children.append(this)
+        pass
             
     def latelink(this, module: "Module"):
         pass
@@ -65,7 +151,7 @@ class ASTNode:
 
 class Module:
     def __init__(this):
-        this.contents:dict[str, ASTNode|list[ASTNode]] = dict()
+        this.contents:dict[SymbolPath, ASTNode|list[ASTNode]] = dict()
         this.byType:dict[type, list[ASTNode]] = dict()
         this.__linked = False
         this.__linking = False
@@ -122,7 +208,7 @@ class Module:
     def remove(this, node:ASTNode):
         del this.symbols[node.path]
         this.byType[type(node)].remove(node)
-        if node.astParent != None: node.astParent.children.remove(node)
+        if node.owner != None: node.owner.children.remove(node)
 
     def linkAll(this):
         this.__linked = True
@@ -156,15 +242,15 @@ class Module:
         
         this.__linking = False
         
-    def find(this, path:str) -> ASTNode:
+    def find(this, path:SymbolPath) -> ASTNode:
         assert this.__linked, "Can only be called after or during linking"
         try: return this.contents[path]
         except KeyError: return None
 
 
 class Namespace(ASTNode):
-    def __init__(this, ownerName:str|None, ownName:str|None, location: SourceLocation):
-        ASTNode.__init__(this, ownerName, ownName, location, False)
+    def __init__(this, path:SymbolPath, location: SourceLocation):
+        ASTNode.__init__(this, path, location, False)
         
     #@staticmethod
     #def allowMultiple():
@@ -172,8 +258,8 @@ class Namespace(ASTNode):
 
 
 class Annotation(ASTNode):
-    def __init__(this, ownerName:str, text:str, location:SourceLocation):
-        ASTNode.__init__(this, ownerName, None, location, True)
+    def __init__(this, ownerPath:SymbolPath, text:str, location:SourceLocation):
+        ASTNode.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"annotation '{text}'"), location, True)
         this.text = text
         
     @staticmethod
@@ -182,8 +268,8 @@ class Annotation(ASTNode):
     
 
 class TypeInfo(ASTNode):
-    def __init__(this, ownerName:str|None, ownName:str, location: SourceLocation, isDefinition:bool, isAbstract:bool):
-        ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
+    def __init__(this, path:SymbolPath, location: SourceLocation, isDefinition:bool, isAbstract:bool):
+        ASTNode.__init__(this, path, location, isDefinition)
         this.isAbstract = isAbstract
         
     @property
@@ -210,7 +296,7 @@ class TypeInfo(ASTNode):
 
     def find(this, memberName, searchParents=False) -> "Member":
         for i in this.children:
-            if isinstance(i, Member) and i.ownName == memberName:
+            if isinstance(i, Member) and i.path.ownName == memberName:
                 return i
             
         if searchParents:
@@ -240,21 +326,17 @@ class Member(ASTNode):
         Protected = "MemberVisibility::Protected"
         Private   = "MemberVisibility::Private"
 
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, visibility:Visibility):
-        ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, visibility:Visibility):
+        ASTNode.__init__(this, path, location, isDefinition)
         this.visibility = visibility
         this.owner = None
-        
-    def link(this, module:"Module"):
-        super().link(module)
-        this.owner = module.find(this.ownerName)
     
 
 class MaybeVirtual(Member):
     __metaclass__ = abc.ABCMeta
     
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
-        Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
+        Member.__init__(this, path, location, isDefinition, visibility)
         this.__isExplicitVirtual = isExplicitVirtual
         this.__isExplicitOverride = isExplicitOverride
         this.inheritedFrom = None
@@ -263,7 +345,7 @@ class MaybeVirtual(Member):
         this.isOverride = None
         
     def latelink(this, module: Module):
-        this.inheritedVersion = this.owner.findInParents(this.ownName)
+        this.inheritedVersion = this.owner.findInParents(this.path.ownName)
         
         def __isVirtual (v:MaybeVirtual): return v.__isExplicitVirtual  or (__isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False)
         def __isOverride(v:MaybeVirtual): return v.__isExplicitOverride or (__isOverride(v.inheritedVersion) if v.inheritedVersion != None else False)
@@ -273,18 +355,18 @@ class MaybeVirtual(Member):
 
 class Callable(ASTNode):
     class Parameter(ASTNode):
-        def __init__(this, ownerName:str, ownName:str, location:SourceLocation, typeName:str):
-            ASTNode.__init__(this, ownerName, ownName, location, True)
+        def __init__(this, path:SymbolPath, location:SourceLocation, typeName:str):
+            ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"parameter {typeName} {path.ownName}"), location, True)
             this.typeName = typeName
             this.type:TypeInfo|None = None
 
         def link(this, module:Module):
-            assert this.astParent != None
+            assert this.owner != None
             # Awful hack to skip owner resolution. This is done explicitly by reader.
-            temp = this.ownerName
-            this.ownerName = None
+            temp = this.path
+            this.path = None
             super().link(module)
-            this.ownerName = temp
+            this.path = temp
             
         def latelink(this, module:Module):
             this.type = module.find(this.typeName)
@@ -292,72 +374,59 @@ class Callable(ASTNode):
         @staticmethod
         def allowMultiple():
             return True
-
-        @property
-        def path(this):
-            return this.astParent.path + f"::(parameter {this.typeName} {this.ownName})"
             
-    def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
-        ASTNode.__init__(this, ownerName, ownName, location, isDefinition)
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
+        ASTNode.__init__(this, path, location, isDefinition)
         this.returnTypeName = returnTypeName
         this.deleted = deleted
         this.inline = inline
         if inline and isDefinition: this.declarationLocations.append(location)
         this.parameters:list[Callable.Parameter] = []
 
-    @property
-    def path(this):
+    def __repr__(this):
         argTypes = ", ".join([i.typeName for i in this.parameters])
-        return super().path+"(" + argTypes + ")"
+        return str(this.path)+"(" + argTypes + ")"
    
 
 class StaticFuncInfo(Callable, Member):
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
-        Callable.__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted, inline)
-        Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, returnTypeName:str, deleted:bool, inline:bool):
+        Callable.__init__(this, path, location, isDefinition, returnTypeName, deleted, inline)
+        Member.__init__(this, path, location, isDefinition, visibility)
         
 
 class GlobalFuncInfo(Callable):
-    def __init__(this, ownName:str, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
-        Callable.__init__(this, None, ownName, location, isDefinition, returnTypeName, deleted, inline)
-    
-    @property
-    def path(this):
-        argTypes = ", ".join([i.typeName for i in this.parameters])
-        leadingGlobal = "::" if not this.ownName.startswith("::") else ""
-        return f"{leadingGlobal}{this.ownName}({argTypes})"
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, returnTypeName:str, deleted:bool, inline:bool):
+        Callable.__init__(this, path, location, isDefinition, returnTypeName, deleted, inline)
     
 
 class MemFuncInfo(MaybeVirtual, Callable):
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool,
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 returnTypeName:str, deleted:bool, inline:bool,
                 isThisObjConst:bool, isThisObjVolatile:bool):
-        MaybeVirtual.__init__(this, ownerName, ownName, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable    .__init__(this, ownerName, ownName, location, isDefinition, returnTypeName, deleted, inline)
+        MaybeVirtual.__init__(this, path, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable    .__init__(this, path, location, isDefinition, returnTypeName, deleted, inline)
         this.isThisObjConst = isThisObjConst
         this.isThisObjVolatile = isThisObjVolatile
         
 
 class ConstructorInfo(Member, Callable):
-    def __init__(this, owner:str, location:SourceLocation, isDefinition:bool, deleted:bool, inline:bool, visibility:Member.Visibility):
-        ownName = owner.split("::")[-1]
-        Member  .__init__(this, owner, ownName, location, isDefinition, visibility)
-        Callable.__init__(this, owner, ownName, location, isDefinition, None, deleted, inline)
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, deleted:bool, inline:bool, visibility:Member.Visibility):
+        Member  .__init__(this, path, location, isDefinition, visibility)
+        Callable.__init__(this, path, location, isDefinition, None, deleted, inline)
 
 
 class DestructorInfo(MaybeVirtual, Callable):
-    def __init__(this, owner:str, location:SourceLocation, isDefinition:bool,
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool,
                 visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool,\
                 deleted:bool, inline:bool):
-        ownName = "~"+owner.split("::")[-1]
-        MaybeVirtual.__init__(this, owner, ownName, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
-        Callable    .__init__(this, owner, ownName, location, isDefinition, None, deleted, inline)
+        MaybeVirtual.__init__(this, path, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
+        Callable    .__init__(this, path, location, isDefinition, None, deleted, inline)
 
 
 class GlobalVarInfo(ASTNode):
-    def __init__(this, ownName:str, location: SourceLocation, isDefinition:bool, typeName:str|None):
-        ASTNode.__init__(this, None, ownName, location, isDefinition)
+    def __init__(this, path:SymbolPath, location: SourceLocation, isDefinition:bool, typeName:str|None):
+        ASTNode.__init__(this, path, location, isDefinition)
         this.typeName = typeName
         this.type = None
         
@@ -367,8 +436,8 @@ class GlobalVarInfo(ASTNode):
 
 
 class StaticVarInfo(Member):
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, typeName:str|None):
-        Member.__init__(this, ownerName, ownName, location, isDefinition, visibility)
+    def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, typeName:str|None):
+        Member.__init__(this, path, location, isDefinition, visibility)
         this.typeName = typeName
         this.type = None
         
@@ -378,8 +447,8 @@ class StaticVarInfo(Member):
 
 
 class FieldInfo(Member):
-    def __init__(this, ownerName:str, ownName:str, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
-        Member.__init__(this, ownerName, ownName, location, True, visibility)
+    def __init__(this, path:SymbolPath, location:SourceLocation, visibility:Member.Visibility, typeName:str|None):
+        Member.__init__(this, path, location, True, visibility)
         this.typeName = typeName
         this.type = None
         
@@ -394,8 +463,8 @@ class ParentInfo(Member):
         VirtualExplicit  = "ParentInfo::Virtualness::VirtualExplicit"
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
-    def __init__(this, ownerTypeName:str, parentTypeName:str, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
-        Member.__init__(this, ownerTypeName, f"(parent {parentTypeName})", location, True, visibility)
+    def __init__(this, ownerPath:SymbolPath, parentTypeName:str, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
+        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"parent {parentTypeName}"), location, True, visibility)
         this.parentTypeName = parentTypeName
         this.parentType = None
         this.explicitlyVirtual = explicitlyVirtual
@@ -420,25 +489,18 @@ class ParentInfo(Member):
 
 
 class FriendInfo(Member):
-    def __init__(this, ownerTypeName:str, friendedSymbolName:str, location:SourceLocation, visibility:Member.Visibility):
-        Member.__init__(this, ownerTypeName, None, location, True, visibility)
+    def __init__(this, ownerPath:SymbolPath, friendedSymbolName:str, location:SourceLocation, visibility:Member.Visibility):
+        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, type=f"friend {this.friendedSymbolName}"), location, True, visibility)
         this.friendedSymbolName = friendedSymbolName
         this.friendedSymbol = None
-        
-    @property
-    def path(this):
-        return f"{this.ownerName}::(friend {this.friendedSymbolName})"
 
     def latelink(this, module: Module):
         this.friendedSymbol = module.find(this.friendedSymbolName)
 
 
 class TemplateParameter(ASTNode):
-    def __init__(this, ownerName:str|None, ownName:str|None, location:SourceLocation, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
-        ASTNode.__init__(this, ownerName, ownName, location, True)
+    def __init__(this, path:SymbolPath, location:SourceLocation, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
+        ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, type=f"template parameter {paramType} {path.ownName}"), location, True)
+        # FIXME parameter index!
         this.paramType = paramType
         this.defaultValue = defaultValue
-
-    @cached_property
-    def path(this):
-        return f"{this.ownerName}::(template parameter {this.ownName})" # FIXME parameter index
