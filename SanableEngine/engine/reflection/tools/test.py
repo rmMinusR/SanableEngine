@@ -99,16 +99,20 @@ class TestParser:
     def setUpClass(this):
         this.module = this.invoke_parser("test_data/parser", [])
         
-    def assertExpectSymbol(this, name:str, _ty:cx_ast.ASTNode) -> cx_ast.ASTNode|None:
-        sym = this.module.find(name)
+    def assertExpectSymbol(this, path_raw:list[cx_ast.SymbolPath.SegmentAny], _ty:cx_ast.ASTNode) -> cx_ast.ASTNode|None:
+        # Build path
+        path = cx_ast.SymbolPath()
+        for i in path_raw: path = path+i
+        
+        sym = this.module.find(path)
         if _ty == None:
-            this.assertIsNone(sym, msg=f"Symbol {name} shouldn't exist")
+            this.assertIsNone(sym, msg=f"Symbol {path} shouldn't exist")
             return None
         elif sym == None:
-            this.assertIsNotNone(sym, msg=f"Symbol {name} doesn't exist'")
+            this.assertIsNotNone(sym, msg=f"Symbol {path} doesn't exist'")
             return None
         else:
-            this.assertIsInstance(sym, _ty, msg=f"Symbol {name}: expected {_ty}, but was {type(sym)}")
+            this.assertIsInstance(sym, _ty, msg=f"Symbol {path}: expected {_ty}, but was {type(sym)}")
             return sym
 
     def assertExpectAnnotation(this, sym:cx_ast.ASTNode, selector:typing.Callable[[cx_ast.Annotation], bool], count:int):
@@ -116,64 +120,68 @@ class TestParser:
         for i in sym.children:
             if isinstance(i, cx_ast.Annotation) and selector(i):
                 matches.append(i)
-        this.assertTrue(len(matches) == count)
+        this.assertEqual(len(matches), count, f"Expected {count} annotations, but found {len(matches)}")
         return matches
 
     def test_basic_symbols_exist(this):
-        this.assertExpectSymbol("::globalFunc(int, char, const void*)", cx_ast.GlobalFuncInfo)
-        sym = this.assertExpectSymbol("::globalVarDefined", cx_ast.GlobalVarInfo)
+        sym:cx_ast.GlobalFuncInfo = this.assertExpectSymbol(["globalFunc"], cx_ast.GlobalFuncInfo)
+        this.assertEqual([i.typeName for i in sym.parameters], ["int", "char", "const void*"])
+        sym = this.assertExpectSymbol(["globalVarDefined"], cx_ast.GlobalVarInfo)
         this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
-        sym = this.assertExpectSymbol("::globalVarExterned", cx_ast.GlobalVarInfo)
+        sym = this.assertExpectSymbol(["globalVarExterned"], cx_ast.GlobalVarInfo)
         this.assertIsNone(sym.definitionLocation, msg="Symbol should not be defined")
         
-        this.assertExpectSymbol("::MyClass", cx_ast.TypeInfo)
-        this.assertExpectSymbol("::MyClass::MyClass()", cx_ast.ConstructorInfo)
-        this.assertExpectSymbol("::MyClass::~MyClass()", cx_ast.DestructorInfo)
-        this.assertExpectSymbol("::MyClass::MyClass(::MyClass const&)", cx_ast.ConstructorInfo)
-        this.assertExpectSymbol("::MyClass::foo", cx_ast.FieldInfo)
-        this.assertExpectSymbol("::MyClass::bar", cx_ast.FieldInfo)
-        sym = this.assertExpectSymbol("::MyClass::staticVar", cx_ast.StaticVarInfo)
+        this.assertExpectSymbol(["MyClass"], cx_ast.TypeInfo)
+        this.assertExpectSymbol(["MyClass", "MyClass"], cx_ast.ConstructorInfo)
+        this.assertExpectSymbol(["MyClass", "~MyClass"], cx_ast.DestructorInfo)
+        this.assertExpectSymbol(["MyClass", "MyClass(::MyClass const&)"], cx_ast.ConstructorInfo) TODO FIX
+        this.assertExpectSymbol(["MyClass", "foo"], cx_ast.FieldInfo)
+        this.assertExpectSymbol(["MyClass", "bar"], cx_ast.FieldInfo)
+        sym = this.assertExpectSymbol(["MyClass", "staticVar"], cx_ast.StaticVarInfo)
         this.assertTrue(len(sym.declarationLocations) != 0 and sym.definitionLocation != None)
         this.assertTrue(sym.declarationLocations[0] != sym.definitionLocation)
-        this.assertExpectSymbol("::MyClass::myClassFunc(int)", cx_ast.MemFuncInfo)
-        this.assertExpectSymbol("::MyClass::myConstClassFunc(int)", cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
-        this.assertExpectSymbol("::MyClass::myStaticClassFunc(int, ::MyClass*)", cx_ast.StaticFuncInfo)
+        sym = this.assertExpectSymbol(["MyClass", "myClassFunc"], cx_ast.MemFuncInfo)
+        this.assertTrue(len(sym.parameters) == 1 and sym.parameters[0].typeName == "int")
+        sym = this.assertExpectSymbol(["MyClass", "myConstClassFunc"], cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
+        this.assertTrue(len(sym.parameters) == 1 and sym.parameters[0].typeName == "int")
+        sym = this.assertExpectSymbol(["MyClass", "myStaticClassFunc"], cx_ast.StaticFuncInfo)
+        this.assertTrue(len(sym.parameters) == 2 and sym.parameters[0].typeName == "int" and sym.parameters[1].typeName == "::MyClass*")
         
-        mySubclass = this.assertExpectSymbol("::MySubclass", cx_ast.TypeInfo)
+        mySubclass = this.assertExpectSymbol(["MySubclass"], cx_ast.TypeInfo)
         parents = [i for i in mySubclass.children if isinstance(i, cx_ast.ParentInfo)]
         this.assertTrue(len(parents) == 1)
         this.assertTrue(parents[0].parentTypeName == "::MyClass")
         
     def test_implicit_symbols_exist(this):
-        this.assertExpectSymbol("::NonDefaulted", cx_ast.TypeInfo)
-        this.assertExpectSymbol("::NonDefaulted::NonDefaulted()", None) # Explicit ctor defined, removes implicit default ctor
-        this.assertExpectSymbol("::NonDefaulted::NonDefaulted(int)", cx_ast.ConstructorInfo)
-        this.assertExpectSymbol("::NonDefaulted::~NonDefaulted()", cx_ast.DestructorInfo) # Implicit dtor
+        this.assertExpectSymbol(["NonDefaulted"], cx_ast.TypeInfo)
+        this.assertExpectSymbol(["NonDefaulted", "NonDefaulted"], None) # Explicit ctor defined, removes implicit default ctor
+        this.assertExpectSymbol(["NonDefaulted", "NonDefaulted(int)"], cx_ast.ConstructorInfo) TODO FIX
+        this.assertExpectSymbol(["NonDefaulted", "~NonDefaulted"], cx_ast.DestructorInfo) # Implicit dtor
 
     def test_virtual_method_detection(this):
         # Not virtual
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myClassFunc(int)", cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", "myClassFunc"], cx_ast.MemFuncInfo)
         this.assertFalse(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myConstClassFunc(int)", cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", "myConstClassFunc"], cx_ast.MemFuncInfo)
         this.assertFalse(func.isVirtual)
         
         # Explicitly virtual
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myVirtualFunc(int)", cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", "myVirtualFunc"], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MyClass::myPureVirtualFunc(int)", cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", "myPureVirtualFunc"], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
         
         # Implicitly virtual
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MySubclass::myVirtualFunc(int)", cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MySubclass", "myVirtualFunc"], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol("::MySubclass::myPureVirtualFunc(int)", cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MySubclass", "myPureVirtualFunc"], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
         
     def test_virtual_inheritance_detection(this):
-        base      :cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondSharedBase", cx_ast.TypeInfo)
-        a         :cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondA", cx_ast.TypeInfo)
-        b         :cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondB", cx_ast.TypeInfo)
-        grandchild:cx_ast.TypeInfo = this.assertExpectSymbol("::DiamondGrandchild", cx_ast.TypeInfo)
+        base      :cx_ast.TypeInfo = this.assertExpectSymbol(["DiamondSharedBase"], cx_ast.TypeInfo)
+        a         :cx_ast.TypeInfo = this.assertExpectSymbol(["DiamondA"], cx_ast.TypeInfo)
+        b         :cx_ast.TypeInfo = this.assertExpectSymbol(["DiamondB"], cx_ast.TypeInfo)
+        grandchild:cx_ast.TypeInfo = this.assertExpectSymbol(["DiamondGrandchild"], cx_ast.TypeInfo)
         
         base_in_a = next((i for i in a.immediateParents if i.parentType==base))
         base_in_b = next((i for i in b.immediateParents if i.parentType==base))
@@ -187,92 +195,93 @@ class TestParser:
 
     def test_visibility_detection(this):
         # ClassVisibilityTester
-        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myDefault", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["ClassVisibilityTester", "myDefault"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Private)
-        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myPrivate", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["ClassVisibilityTester", "myPrivate"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Private)
-        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myProtected", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["ClassVisibilityTester", "myProtected"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Protected)
-        sym:cx_ast.Member = this.assertExpectSymbol("::ClassVisibilityTester::myPublic", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["ClassVisibilityTester", "myPublic"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
         
         # StructVisibilityTester
-        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myDefault", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["StructVisibilityTester", "myDefault"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
-        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myPrivate", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["StructVisibilityTester", "myPrivate"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Private)
-        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myProtected", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["StructVisibilityTester", "myProtected"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Protected)
-        sym:cx_ast.Member = this.assertExpectSymbol("::StructVisibilityTester::myPublic", cx_ast.Member)
+        sym:cx_ast.Member = this.assertExpectSymbol(["StructVisibilityTester", "myPublic"], cx_ast.Member)
         this.assertTrue(sym.visibility == cx_ast.Member.Visibility.Public)
 
     def test_namespaced_exist(this):
-        this.assertExpectSymbol("::MyNamespace", cx_ast.Namespace)
+        this.assertExpectSymbol(["MyNamespace"], cx_ast.Namespace)
         
-        this.assertExpectSymbol("::MyNamespace::globalFuncInNamespace(int, char, const void*)", cx_ast.GlobalFuncInfo)
+        sym = this.assertExpectSymbol(["MyNamespace", "globalFuncInNamespace(int, char, const void*)"], cx_ast.GlobalFuncInfo)
+        this.assertEqual([i.typeName for i in sym.parameters], ["int", "char", "const void*"])
         
-        sym = this.assertExpectSymbol("::MyNamespace::globalVarInNSDefined", cx_ast.GlobalVarInfo)
+        sym = this.assertExpectSymbol(["MyNamespace", "globalVarInNSDefined"], cx_ast.GlobalVarInfo)
         this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
-        sym = this.assertExpectSymbol("::MyNamespace::globalVarInNSExterned", cx_ast.GlobalVarInfo)
+        sym = this.assertExpectSymbol(["MyNamespace", "globalVarInNSExterned"], cx_ast.GlobalVarInfo)
         this.assertIsNone(sym.definitionLocation, msg="Symbol should not be defined")
         
-        this.assertExpectSymbol("::MyNamespace::ClassInNamespace", cx_ast.TypeInfo)
-        this.assertExpectSymbol("::MyNamespace::ClassInNamespace::ClassInNamespace()", cx_ast.ConstructorInfo) # Implicit default ctor
-        this.assertExpectSymbol("::MyNamespace::ClassInNamespace::~ClassInNamespace()", cx_ast.DestructorInfo) # Implicit default dtor
+        this.assertExpectSymbol(["MyNamespace", "ClassInNamespace"], cx_ast.TypeInfo)
+        this.assertExpectSymbol(["MyNamespace", "ClassInNamespace", "ClassInNamespace"], cx_ast.ConstructorInfo) # Implicit default ctor
+        this.assertExpectSymbol(["MyNamespace", "ClassInNamespace", "~ClassInNamespace"], cx_ast.DestructorInfo) # Implicit default dtor
         
     def test_annotations_exist(this):
-        annotTgt = this.assertExpectSymbol("::annotatedGlobalFunc()", cx_ast.GlobalFuncInfo)
+        annotTgt = this.assertExpectSymbol(["annotatedGlobalFunc"], cx_ast.GlobalFuncInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_globfunc", 1)
-        annotTgt = this.assertExpectSymbol("::annotatedGlobalVar", cx_ast.GlobalVarInfo)
+        annotTgt = this.assertExpectSymbol(["annotatedGlobalVar"], cx_ast.GlobalVarInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_globvar", 1)
-        annotTgt = this.assertExpectSymbol("::AnnotatedClass", cx_ast.TypeInfo)
+        annotTgt = this.assertExpectSymbol(["AnnotatedClass"], cx_ast.TypeInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_cls", 1)
-        annotTgt = this.assertExpectSymbol("::AnnotatedClass::foo", cx_ast.FieldInfo)
+        annotTgt = this.assertExpectSymbol(["AnnotatedClass", "foo"], cx_ast.FieldInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_field", 1)
-        annotTgt = this.assertExpectSymbol("::AnnotatedClass::annotatedMemFunc()", cx_ast.MemFuncInfo)
+        annotTgt = this.assertExpectSymbol(["AnnotatedClass", "annotatedMemFunc"], cx_ast.MemFuncInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_memfunc", 1)
-        annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceA", cx_ast.Namespace)
+        annotTgt = this.assertExpectSymbol(["AnnotatedNamespaceA"], cx_ast.Namespace)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_ns_a", 1)
-        annotTgt = this.assertExpectSymbol("::AnnotatedNamespaceB", cx_ast.Namespace)
+        annotTgt = this.assertExpectSymbol(["AnnotatedNamespaceB"], cx_ast.Namespace)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_ns_b", 2)
         
     def test_templated_types_exist(this):
-        tgt = this.assertExpectSymbol("::TemplatedType_Typename", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_Typename"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "T" and tgt.defaultValue == None)
 
-        tgt = this.assertExpectSymbol("::TemplatedType_Class", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_Class"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "class" and tgt.ownName == "T" and tgt.defaultValue == None)
         
-        tgt = this.assertExpectSymbol("::TemplatedType_Int", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_Int"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "int" and tgt.ownName == "val" and tgt.defaultValue == None)
 
-        tgt = this.assertExpectSymbol("::TemplatedType_VoidPtr", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_VoidPtr"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "void*" and tgt.ownName == "val" and tgt.defaultValue == None)
 
-        tgt = this.assertExpectSymbol("::TemplatedType_DefaultType", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_DefaultType"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "T" and tgt.defaultValue == "int")
 
-        tgt = this.assertExpectSymbol("::TemplatedType_DefaultInt", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_DefaultInt"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "int" and tgt.ownName == "val" and tgt.defaultValue == "3")
         
-        tgt = this.assertExpectSymbol("::TemplatedType_NamelessParam", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_NamelessParam"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "" and tgt.defaultValue == None)
         
-        tgt = this.assertExpectSymbol("::TemplatedType_NamelessDefaultedParam", cx_ast.TypeInfo)
+        tgt = this.assertExpectSymbol(["TemplatedType_NamelessDefaultedParam"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
         this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "" and tgt.defaultValue == "int")

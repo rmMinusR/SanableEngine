@@ -399,7 +399,10 @@ class Callable(ASTNode):
         this.deleted = deleted
         this.inline = inline
         if inline and isDefinition: this.declarationLocations.append(location)
-        this.parameters:list[Callable.Parameter] = []
+
+    @property
+    def parameters(this) -> list[Parameter]:
+        return [i for i in this.children if isinstance(Callable.Parameter, i)]
 
     def __repr__(this):
         argTypes = ", ".join([i.typeName for i in this.parameters])

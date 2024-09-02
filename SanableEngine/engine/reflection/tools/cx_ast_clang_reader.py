@@ -61,7 +61,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
         if kind in ClangParseContext.factories.keys():
-            path = parentPath+cursor.displayname # FIXME will namespaced globals/statics defined outside their container need unwinding?
+            path = parentPath+cursor.spelling # FIXME will namespaced globals/statics defined outside their container need unwinding?
             
             # Try to parse node
             result = ClangParseContext.factories[kind](path, cursor, this.module, this.project)
