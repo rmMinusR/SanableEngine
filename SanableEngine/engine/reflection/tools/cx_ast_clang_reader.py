@@ -66,6 +66,8 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
             # Try to parse node
             result = ClangParseContext.factories[kind](path, cursor, this.module, this.project)
             if result != None:
+                this.module.register(result)
+                
                 # Recurse into children
                 for clang_child in ClangParseContext._getChildren(cursor):
                     child = this.__ingestCursor(path, clang_child)
@@ -73,7 +75,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                         child.owner = result
                         result.children.append(child)
                         
-                # TEMPFIX paths of callables and their parameters
+                # TEMPFIX paths of callables so they include parameters
                 if isinstance(result, cx_ast.Callable):
                     # Fix path
                     params = [i.typeName for i in result.parameters]
@@ -86,13 +88,13 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                     
                     # Fix child paths
                     def _temp_fix_child_paths(tgt:cx_ast.ASTNode):
-                        tgt.path = (tgt.owner.path if tgt.owner != None else cx_ast.SymbolPath()) + tgt.path.ownName
-                        this.module.refreshPath(tgt)
-                        for i in tgt.children: _temp_fix_child_paths(i)
+                        for i in tgt.children:
+                            i.path = (i.owner.path if i.owner != None else cx_ast.SymbolPath()) + i.path.ownName
+                            this.module.refreshPath(i)
+                            _temp_fix_child_paths(i)
                     _temp_fix_child_paths(result)
-                        
-                this.module.register(result)
-                return result
+                    
+            return result
         else:
             config.logger.debug(f"Skipping symbol of unhandled kind {kind}")
             
@@ -163,7 +165,7 @@ def factory_FieldInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Modul
 def factory_ParentInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
     return cx_ast.ParentInfo(
         ownPath.parent,
-        _make_FullyQualifiedName(cursor),
+        _make_FullyQualifiedPath(cursor),
         makeSourceLocation(cursor, project),
         makeVisibility(cursor),
         any([i.spelling == "virtual" for i in cursor.get_tokens()])
@@ -173,7 +175,7 @@ def factory_ParentInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.M
 def factory_FriendInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
     return cx_ast.FriendInfo(
         ownPath.parent,
-        _make_FullyQualifiedName( next(ClangParseContext._getChildren(cursor)) ),
+        _make_FullyQualifiedPath( next(ClangParseContext._getChildren(cursor)) ),
         makeSourceLocation(cursor, project),
         makeVisibility(cursor)
     )
@@ -432,8 +434,28 @@ def _typeGetAbsName(target: Type, noneOnAnonymous=True) -> str | None:
 def _make_FullyQualifiedTypeName(ty:Type):
     return _typeGetAbsName(ty, False)
 
-def _make_FullyQualifiedName(cursor:Cursor):
-    return _getAbsName(cursor)
+def _make_FullyQualifiedPath(cursor:Cursor):
+    parts = []
+    
+    while type(cursor) != type(None) and cursor.kind != CursorKind.TRANSLATION_UNIT:
+        # Strip leading C-style record type specifier
+        ownName = cursor.spelling
+        def stripexact(val: str, leading: str): return val[len(leading):] if val.startswith(leading) else val
+        ownName = stripexact(ownName, "enum ")
+        ownName = stripexact(ownName, "class ") # Since this is after "enum" it will also catch "enum class"
+        ownName = stripexact(ownName, "struct ")
+        
+        # Reconstruct template parameters
+        # TODO
+        #templateParams = [i for i in ClangParseContext._getChildren(target) if i.kind in [CursorKind.TEMPLATE_TYPE_PARAMETER, CursorKind.TEMPLATE_NON_TYPE_PARAMETER, CursorKind.TEMPLATE_TEMPLATE_PARAMETER]]
+        
+        parts.insert(0, ownName)
+        cursor = cursor.semantic_parent
+
+    out = cx_ast.SymbolPath()
+    for i in parts: out = out + i
+    return out
+    
 
 def cvpUnwrapTypeName(name: str, unwrapCv=True, unwrapPointers=True, unwrapArrays=True) -> str:
     # Preprocess name

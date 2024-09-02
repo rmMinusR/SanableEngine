@@ -48,7 +48,7 @@ class SymbolPath:
             this.affixes.sort()
             
         def __str__(this):
-            out = this.base+"(" + ", ".join(this.args) + ")"
+            out = this.base+"(" + ", ".join([str(i) for i in this.args]) + ")"
             if len(this.affixes) > 0: out += " "+" ".join(this.affixes)
             return out
         def __repr__(this): return this.__str__()
@@ -233,7 +233,7 @@ class Module:
 
     def refreshPath(this, node:ASTNode):
         if node in this.contents.values():
-            oldPath = list(this.symbols.keys())[ list(this.contents.values()).index(node) ]
+            oldPath = next(p for p,n in this.contents.items() if n == node)
             del this.contents[oldPath]
             this.contents[node.path] = node
         
@@ -246,7 +246,11 @@ class Module:
                 for i in obj: op(i)
             else: op(obj)
         
-        for v in this.contents.values(): _reducing_invoke(v, lambda o:setattr(o, "children", [])) # Nasty hack to prevent symbol duplication
+        # Nasty hack to prevent symbol duplication
+        for v in this.contents.values(): _reducing_invoke(v, lambda o: setattr(o, "children", []))
+        def _associate_owner_with_child(o):
+            if o.owner != None: o.owner.children.append(o)
+        for v in this.contents.values(): _reducing_invoke(v, _associate_owner_with_child)
         
         # Link explicit symbols
         for v in this.contents.values(): _reducing_invoke(v, lambda o:o.link(this))
@@ -503,16 +507,16 @@ class ParentInfo(Member):
         VirtualExplicit  = "ParentInfo::Virtualness::VirtualExplicit"
         VirtualInherited = "ParentInfo::Virtualness::VirtualInherited"
 
-    def __init__(this, ownerPath:SymbolPath, parentTypeName:str, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
-        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"parent {parentTypeName}"), location, True, visibility)
-        this.parentTypeName = parentTypeName
+    def __init__(this, ownerPath:SymbolPath, parentTypePath:SymbolPath, location:SourceLocation, visibility:Member.Visibility, explicitlyVirtual:bool):
+        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"parent {parentTypePath}"), location, True, visibility)
+        this.parentTypePath = parentTypePath
         this.parentType = None
         this.explicitlyVirtual = explicitlyVirtual
         #this.isVirtuallyInherited = None
     
     def link(this, module: Module):
         super().link(module)
-        this.parentType = module.find(this.parentTypeName)
+        this.parentType = module.find(this.parentTypePath)
 
     def latelink(this, module: Module):
         #if this.explicitlyVirtual:
@@ -529,13 +533,13 @@ class ParentInfo(Member):
 
 
 class FriendInfo(Member):
-    def __init__(this, ownerPath:SymbolPath, friendedSymbolName:str, location:SourceLocation, visibility:Member.Visibility):
+    def __init__(this, ownerPath:SymbolPath, friendedSymbolPath:SymbolPath, location:SourceLocation, visibility:Member.Visibility):
         Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"friend {this.friendedSymbolName}"), location, True, visibility)
-        this.friendedSymbolName = friendedSymbolName
+        this.friendedSymbolPath = friendedSymbolPath
         this.friendedSymbol = None
 
     def latelink(this, module: Module):
-        this.friendedSymbol = module.find(this.friendedSymbolName)
+        this.friendedSymbol = module.find(this.friendedSymbolPath)
 
 
 class TemplateParameter(ASTNode):

@@ -87,10 +87,10 @@ class TestDiffs(unittest.TestCase):
 
 
 import argparse, cx_ast_tooling, cx_ast, abc
-def CallParams(base:str, args:str|cx_ast.SymbolPath, affixes=None) -> cx_ast.SymbolPath.CallParameterized:
-    for idx in range(len(args)):
-        if isinstance(args[idx], str):
-            args[idx] = cx_ast.SymbolPath() + args[idx]
+def CallParams(base:str, args:list[cx_ast.SymbolPath], affixes=None) -> cx_ast.SymbolPath.CallParameterized:
+    #for idx in range(len(args)):
+    #    if isinstance(args[idx], str):
+    #        args[idx] = cx_ast.SymbolPath() + args[idx]
             
     return cx_ast.SymbolPath.CallParameterized(base, args, affixes if affixes!=None else [])
 
@@ -106,7 +106,7 @@ class TestParser:
     def setUpClass(this):
         this.module = this.invoke_parser("test_data/parser", [])
         
-    def assertExpectSymbol(this, path_raw:list[cx_ast.SymbolPath.SegmentAny], _ty:cx_ast.ASTNode) -> cx_ast.ASTNode|None:
+    def assertExpectSymbol(this, path_raw:list[cx_ast.SymbolPath.SegmentAny], _ty:type) -> cx_ast.ASTNode|None:
         # Build path
         path = cx_ast.SymbolPath()
         for i in path_raw: path = path+i
@@ -116,7 +116,7 @@ class TestParser:
             this.assertIsNone(sym, msg=f"Symbol {path} shouldn't exist")
             return None
         elif sym == None:
-            this.assertIsNotNone(sym, msg=f"Symbol {path} doesn't exist'")
+            this.assertIsNotNone(sym, msg=f"Symbol {path} doesn't exist")
             return None
         else:
             this.assertIsInstance(sym, _ty, msg=f"Symbol {path}: expected {_ty}, but was {type(sym)}")
@@ -240,7 +240,7 @@ class TestParser:
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_cls", 1)
         annotTgt = this.assertExpectSymbol(["AnnotatedClass", "foo"], cx_ast.FieldInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_field", 1)
-        annotTgt = this.assertExpectSymbol(["AnnotatedClass", "annotatedMemFunc()"], cx_ast.MemFuncInfo)
+        annotTgt = this.assertExpectSymbol(["AnnotatedClass", CallParams("annotatedMemFunc", [])], cx_ast.MemFuncInfo)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_memfunc", 1)
         annotTgt = this.assertExpectSymbol(["AnnotatedNamespaceA"], cx_ast.Namespace)
         this.assertExpectAnnotation(annotTgt, lambda a: a.text == "annot_ns_a", 1)
@@ -320,4 +320,5 @@ class TestClangParser(TestParser, unittest.TestCase):
 
 
 if __name__ == '__main__':
+    unittest.defaultTestLoader.sortTestMethodsUsing = lambda *args: -1 # Execute tests in the order they're declared
     unittest.main()
