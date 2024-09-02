@@ -37,7 +37,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                 # Only capture what's in the current file
                 cursorFilePath = cursor.location.file.name.replace(os.altsep, os.sep)
                 if source.path == cursorFilePath: this.__ingestCursor(cx_ast.SymbolPath(), cursor)
-                
+        
         this.module.linkAll()
 
 
@@ -66,8 +66,6 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
             # Try to parse node
             result = ClangParseContext.factories[kind](path, cursor, this.module, this.project)
             if result != None:
-                this.module.register(result)
-
                 # Recurse into children
                 for clang_child in ClangParseContext._getChildren(cursor):
                     child = this.__ingestCursor(path, clang_child)
@@ -75,6 +73,25 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                         child.owner = result
                         result.children.append(child)
                         
+                # TEMPFIX paths of callables and their parameters
+                if isinstance(result, cx_ast.Callable):
+                    # Fix path
+                    params = [i.typeName for i in result.parameters]
+                    affixes = []
+                    if isinstance(result, cx_ast.MemFuncInfo):
+                        if result.isThisObjConst   : affixes.append("const")
+                        if result.isThisObjVolatile: affixes.append("volatile")
+                    ownPart = cx_ast.SymbolPath.CallParameterized(result.path.ownName, params, affixes)
+                    result.path = (result.path.parent if result.path.parent != None else cx_ast.SymbolPath()) + ownPart
+                    
+                    # Fix child paths
+                    def _temp_fix_child_paths(tgt:cx_ast.ASTNode):
+                        tgt.path = (tgt.owner.path if tgt.owner != None else cx_ast.SymbolPath()) + tgt.path.ownName
+                        this.module.refreshPath(tgt)
+                        for i in tgt.children: _temp_fix_child_paths(i)
+                    _temp_fix_child_paths(result)
+                        
+                this.module.register(result)
                 return result
         else:
             config.logger.debug(f"Skipping symbol of unhandled kind {kind}")

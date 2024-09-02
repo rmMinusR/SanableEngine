@@ -1,6 +1,7 @@
 import abc
 from enum import Enum
 from functools import cached_property
+from symtable import Symbol
 from source_discovery import SourceFile
 import config
 import typing
@@ -39,8 +40,26 @@ class SymbolPath:
         
         def __eq__(this, rhs):
             return isinstance(rhs, SymbolPath.Anonymous) and this.location == rhs.location
+    class CallParameterized: # Used to disambiguate method groups with argument or constness overloading
+        def __init__(this, base:"SymbolPath.SegmentAny", args:"list[SymbolPath]", affixes:list[str]):
+            this.base = base
+            this.args = args
+            this.affixes = affixes # const/volatile. NOT virtual/override.
+            this.affixes.sort()
             
-    SegmentAny = BasicSegment|TemplatedSegment|Anonymous
+        def __str__(this):
+            out = this.base+"(" + ", ".join(this.args) + ")"
+            if len(this.affixes) > 0: out += " "+" ".join(this.affixes)
+            return out
+        def __repr__(this): return this.__str__()
+
+        def __eq__(this, rhs):
+            if not isinstance(rhs, SymbolPath.CallParameterized): return False
+            if this.base != rhs.base or len(this.args) != len(rhs.args) or len(this.affixes) != len(rhs.affixes): return False
+            return all(this.affixes[i]==rhs.affixes[i] for i in range(len(this.affixes))) \
+               and all(this.args[i]==rhs.args[i] for i in range(len(this.args)))
+
+    SegmentAny = BasicSegment|TemplatedSegment|Anonymous|CallParameterized
 
     def __init__(this):
         this.__parts:list[SymbolPath.SegmentAny] = []
@@ -208,10 +227,16 @@ class Module:
         this.byType[type(node)].append(node)
 
     def remove(this, node:ASTNode):
-        del this.symbols[node.path]
+        del this.contents[node.path]
         this.byType[type(node)].remove(node)
         if node.owner != None: node.owner.children.remove(node)
 
+    def refreshPath(this, node:ASTNode):
+        if node in this.contents.values():
+            oldPath = list(this.symbols.keys())[ list(this.contents.values()).index(node) ]
+            del this.contents[oldPath]
+            this.contents[node.path] = node
+        
     def linkAll(this):
         this.__linked = True
         this.__linking = True
@@ -298,14 +323,16 @@ class TypeInfo(ASTNode):
         if this.definitionLocation != None: # Somehow this is being called multiple times per type??? This causes multiple ctors to be registered in a single run but somehow they sneak in after verification...
             # Implicit default ctor
             if not any((isinstance(i, ConstructorInfo) for i in this.children)):
-                implicitDefaultCtor = ConstructorInfo(this.path+str(this.path.ownName), this.definitionLocation, True, False, True, Member.Visibility.Public)
+                ctorPathPart = SymbolPath.CallParameterized(str(this.path.ownName), [], [])
+                implicitDefaultCtor = ConstructorInfo(this.path+ctorPathPart, this.definitionLocation, True, False, True, Member.Visibility.Public)
                 implicitDefaultCtor.transient = True
                 module.register(implicitDefaultCtor)
                 this.children.append(implicitDefaultCtor)
 
             # Implicit default ctor
             if not any((isinstance(i, DestructorInfo) for i in this.children)):
-                implicitDefaultDtor = DestructorInfo(this.path+f"~{this.path.ownName}", this.definitionLocation, True, Member.Visibility.Public, False, False, False, True)
+                dtorPathPart = SymbolPath.CallParameterized(f"~{this.path.ownName}", [], [])
+                implicitDefaultDtor = DestructorInfo(this.path+dtorPathPart, this.definitionLocation, True, Member.Visibility.Public, False, False, False, True)
                 implicitDefaultDtor.transient = True
                 module.register(implicitDefaultDtor)
                 this.children.append(implicitDefaultDtor)
@@ -378,14 +405,6 @@ class Callable(ASTNode):
             this.typeName = typeName
             this.type:TypeInfo|None = None
 
-        def link(this, module:Module):
-            assert this.owner != None
-            # Awful hack to skip owner resolution. This is done explicitly by reader.
-            temp = this.path
-            this.path = None
-            super().link(module)
-            this.path = temp
-            
         def latelink(this, module:Module):
             this.type = module.find(this.typeName)
 
@@ -400,13 +419,13 @@ class Callable(ASTNode):
         this.inline = inline
         if inline and isDefinition: this.declarationLocations.append(location)
 
+    def link(this, module:Module):
+         super().link(module)
+         assert isinstance(this.path.ownName, SymbolPath.CallParameterized)
+
     @property
     def parameters(this) -> list[Parameter]:
-        return [i for i in this.children if isinstance(Callable.Parameter, i)]
-
-    def __repr__(this):
-        argTypes = ", ".join([i.typeName for i in this.parameters])
-        return str(this.path)+"(" + argTypes + ")"
+        return [i for i in this.children if isinstance(i, Callable.Parameter)]
    
 
 class StaticFuncInfo(Callable, Member):
