@@ -231,12 +231,6 @@ class Module:
         this.byType[type(node)].remove(node)
         if node.owner != None: node.owner.children.remove(node)
 
-    def refreshPath(this, node:ASTNode):
-        if node in this.contents.values():
-            oldPath = next(p for p,n in this.contents.items() if n == node)
-            del this.contents[oldPath]
-            this.contents[node.path] = node
-        
     def linkAll(this):
         this.__linked = True
         this.__linking = True

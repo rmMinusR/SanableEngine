@@ -36,7 +36,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
             for cursor in ClangParseContext._getChildren(source.parse()):
                 # Only capture what's in the current file
                 cursorFilePath = cursor.location.file.name.replace(os.altsep, os.sep)
-                if source.path == cursorFilePath: this.__ingestCursor(cx_ast.SymbolPath(), cursor)
+                if source.path == cursorFilePath: this.__ingestCursor(None, cursor)
         
         this.module.linkAll()
 
@@ -54,23 +54,21 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         return any((cursorFilePath == i.path for i in this.project.files))
 
 
-    factory_t = typing.Callable[[cx_ast.SymbolPath, Cursor, cx_ast.Module, Project], cx_ast.ASTNode|None]
+    factory_t = typing.Callable[[cx_ast.SymbolPath, Cursor, cx_ast.ASTNode, cx_ast.Module, Project], cx_ast.ASTNode|None]
     factories:dict[CursorKind, factory_t] = dict()
 
-    def __ingestCursor(this, parentPath:cx_ast.SymbolPath, cursor:Cursor) -> cx_ast.ASTNode|None:
+    def __ingestCursor(this, parent:cx_ast.ASTNode, cursor:Cursor) -> cx_ast.ASTNode|None:
         # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
         if kind in ClangParseContext.factories.keys():
-            path = parentPath+cursor.spelling # FIXME will namespaced globals/statics defined outside their container need unwinding?
+            path = (parent.path if parent != None else cx_ast.SymbolPath())+cursor.spelling # FIXME will namespaced globals/statics defined outside their container need unwinding?
             
             # Try to parse node
-            result = ClangParseContext.factories[kind](path, cursor, this.module, this.project)
+            result = ClangParseContext.factories[kind](path, cursor, parent, this.module, this.project)
             if result != None:
-                this.module.register(result)
-                
                 # Recurse into children
                 for clang_child in ClangParseContext._getChildren(cursor):
-                    child = this.__ingestCursor(path, clang_child)
+                    child = this.__ingestCursor(result, clang_child)
                     if child != None:
                         child.owner = result
                         result.children.append(child)
@@ -87,13 +85,15 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                     result.path = (result.path.parent if result.path.parent != None else cx_ast.SymbolPath()) + ownPart
                     
                     # Fix child paths
-                    def _temp_fix_child_paths(tgt:cx_ast.ASTNode):
-                        for i in tgt.children:
-                            i.path = (i.owner.path if i.owner != None else cx_ast.SymbolPath()) + i.path.ownName
-                            this.module.refreshPath(i)
-                            _temp_fix_child_paths(i)
-                    _temp_fix_child_paths(result)
-                    
+                    #def _temp_fix_child_paths(tgt:cx_ast.ASTNode):
+                    #    for i in tgt.children:
+                    #        i.path = (i.owner.path if i.owner != None else cx_ast.SymbolPath()) + i.path.ownName
+                    #        this.module.refreshPath(i)
+                    #        _temp_fix_child_paths(i)
+                    #_temp_fix_child_paths(result)
+                
+                this.module.register(result)
+
             return result
         else:
             config.logger.debug(f"Skipping symbol of unhandled kind {kind}")
@@ -133,7 +133,7 @@ def isExplicitOverride(cursor:Cursor):
 
 
 @ASTFactory(CursorKind.NAMESPACE)
-def factory_Namespace(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_Namespace(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.Namespace(
         path,
         makeSourceLocation(cursor, project)
@@ -144,7 +144,7 @@ def factory_Namespace(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Modul
 	CursorKind.STRUCT_DECL, CursorKind.UNION_DECL,
     CursorKind.CLASS_TEMPLATE
 )
-def factory_TypeInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_TypeInfo(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.TypeInfo(
         path,
         makeSourceLocation(cursor, project),
@@ -153,7 +153,7 @@ def factory_TypeInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module
     ) # TODO add visibility specifier
 
 @ASTFactory(CursorKind.FIELD_DECL)
-def factory_FieldInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_FieldInfo(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.FieldInfo(
         path,
         makeSourceLocation(cursor, project),
@@ -162,7 +162,7 @@ def factory_FieldInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Modul
     )
 
 @ASTFactory(CursorKind.CXX_BASE_SPECIFIER)
-def factory_ParentInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_ParentInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.ParentInfo(
         ownPath.parent,
         _make_FullyQualifiedPath(cursor),
@@ -172,7 +172,7 @@ def factory_ParentInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.M
     )
 
 @ASTFactory(CursorKind.FRIEND_DECL)
-def factory_FriendInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_FriendInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.FriendInfo(
         ownPath.parent,
         _make_FullyQualifiedPath( next(ClangParseContext._getChildren(cursor)) ),
@@ -181,7 +181,7 @@ def factory_FriendInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.M
     )
 
 @ASTFactory(CursorKind.CONSTRUCTOR)
-def factory_ConstructorInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_ConstructorInfo(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.ConstructorInfo(
         path,
         makeSourceLocation(cursor, project),
@@ -192,7 +192,7 @@ def factory_ConstructorInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast
     )
 
 @ASTFactory(CursorKind.DESTRUCTOR)
-def factory_DestructorInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_DestructorInfo(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.DestructorInfo(
         path,
         makeSourceLocation(cursor, project),
@@ -205,10 +205,10 @@ def factory_DestructorInfo(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.
     )
 
 @ASTFactory(CursorKind.CXX_METHOD, CursorKind.FUNCTION_DECL, CursorKind.FUNCTION_TEMPLATE)
-def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     # Deduce parent, whether inline or out-of-line
-    # TODO this is order dependent. Bad if we refactor.
-    parentIsType = path.parent in module.contents.keys() and isinstance(module.contents[path.parent], cx_ast.TypeInfo)
+    parentIsType = isinstance(parent, cx_ast.TypeInfo)
+    if not parentIsType: parentIsType = path.parent in module.contents.keys() and isinstance(module.contents[path.parent], cx_ast.TypeInfo)
     
     if parentIsType:
         if not cursor.is_static_method():
@@ -249,7 +249,7 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Curso
         )
 
 @ASTFactory(CursorKind.PARM_DECL)
-def factory_ParameterInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_ParameterInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     #if isinstance(lexicalParent, cx_ast.Callable.Parameter): return None # Working around a very stupid bug
     return cx_ast.Callable.Parameter(
         ownPath,
@@ -258,10 +258,10 @@ def factory_ParameterInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, module:cx_as
     )
 
 @ASTFactory(CursorKind.VAR_DECL)
-def factory_VarInfo_GlobalOrStatic(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_VarInfo_GlobalOrStatic(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     # Deduce parent, whether inline or out-of-line
-    # TODO this is order dependent. Bad if we refactor.
-    parentIsType = path.parent in module.contents.keys() and isinstance(module.contents[path.parent], cx_ast.TypeInfo)
+    parentIsType = isinstance(parent, cx_ast.TypeInfo)
+    if not parentIsType: parentIsType = path.parent in module.contents.keys() and isinstance(module.contents[path.parent], cx_ast.TypeInfo)
 
     if parentIsType:
         return cx_ast.StaticVarInfo(
@@ -280,7 +280,7 @@ def factory_VarInfo_GlobalOrStatic(path:cx_ast.SymbolPath, cursor:Cursor, module
         )
 
 @ASTFactory(CursorKind.ANNOTATE_ATTR)
-def factory_Annotation(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_Annotation(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     return cx_ast.Annotation(
         path.parent,
         cursor.displayname,
@@ -292,7 +292,7 @@ def factory_Annotation(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Modu
     CursorKind.TEMPLATE_NON_TYPE_PARAMETER,
     CursorKind.TEMPLATE_TEMPLATE_PARAMETER
 )
-def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, module:cx_ast.Module, project:Project):
+def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNode, module:cx_ast.Module, project:Project):
     sourceFileContent = project.getFile(cursor.location.file.name).contents.split("\n")
     relevantLines = sourceFileContent[cursor.extent.start.line-1:cursor.extent.end.line]
     relevantLines[-1] = relevantLines[-1][:cursor.extent.end.column-1] # Must chop off end first in case this is single-line

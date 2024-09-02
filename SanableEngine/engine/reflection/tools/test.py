@@ -147,7 +147,7 @@ class TestParser:
         this.assertTrue(len(sym.declarationLocations) != 0 and sym.definitionLocation != None)
         this.assertTrue(sym.declarationLocations[0] != sym.definitionLocation)
         this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", ["int"])], cx_ast.MemFuncInfo)
-        this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"])], cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
+        this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"], ["const"])], cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
         this.assertExpectSymbol(["MyClass", CallParams("myStaticClassFunc", ["int", "::MyClass*"])], cx_ast.StaticFuncInfo)
         
         mySubclass = this.assertExpectSymbol(["MySubclass"], cx_ast.TypeInfo)
@@ -165,7 +165,7 @@ class TestParser:
         # Not virtual
         func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", ["int"])], cx_ast.MemFuncInfo)
         this.assertFalse(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"], ["const"])], cx_ast.MemFuncInfo)
         this.assertFalse(func.isVirtual)
         
         # Explicitly virtual
