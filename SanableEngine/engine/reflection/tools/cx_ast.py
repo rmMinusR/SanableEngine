@@ -136,7 +136,9 @@ class ASTNode:
         this.definitionLocation = new.definitionLocation
         this.declarationLocations.extend(new.declarationLocations)
         
-        assert new.children == None, f"Node {new} is not a definition, and cannot define new children!"
+        # Move over children
+        this.children.extend(new.children)
+        for i in new.children: i.owner = this
 
     @staticmethod
     def allowMultiple():
@@ -228,6 +230,14 @@ class Module:
         while len(this.__concurrentlyAdded) > 0:
             node = this.__concurrentlyAdded.pop(0)
             this.__registerInternal(node)
+            
+            # Handle parent/children connection
+            parent = this.find(node.path.parent)
+            if parent != None:
+                parent.children.append(node)
+                node.owner = parent
+                
+            # Link
             _reducing_invoke(node, lambda o:o.link(this))
             
         # Late-link explicit symbols
@@ -237,6 +247,14 @@ class Module:
         while len(this.__concurrentlyAdded) > 0:
             node = this.__concurrentlyAdded.pop(0)
             this.__registerInternal(node)
+            
+            # Handle parent/children connection
+            parent = this.find(node.path.parent)
+            if parent != None:
+                parent.children.append(node)
+                node.owner = parent
+                
+            # Link and late-link
             _reducing_invoke(node, lambda o:o.link(this))
             _reducing_invoke(node, lambda o:o.latelink(this))
         
@@ -280,14 +298,14 @@ class TypeInfo(ASTNode):
         if this.definitionLocation != None: # Somehow this is being called multiple times per type??? This causes multiple ctors to be registered in a single run but somehow they sneak in after verification...
             # Implicit default ctor
             if not any((isinstance(i, ConstructorInfo) for i in this.children)):
-                implicitDefaultCtor = ConstructorInfo(this.path, this.definitionLocation, True, False, True, Member.Visibility.Public)
+                implicitDefaultCtor = ConstructorInfo(this.path+str(this.path.ownName), this.definitionLocation, True, False, True, Member.Visibility.Public)
                 implicitDefaultCtor.transient = True
                 module.register(implicitDefaultCtor)
                 this.children.append(implicitDefaultCtor)
 
             # Implicit default ctor
             if not any((isinstance(i, DestructorInfo) for i in this.children)):
-                implicitDefaultDtor = DestructorInfo(this.path, this.definitionLocation, True, Member.Visibility.Public, False, False, False, True)
+                implicitDefaultDtor = DestructorInfo(this.path+f"~{this.path.ownName}", this.definitionLocation, True, Member.Visibility.Public, False, False, False, True)
                 implicitDefaultDtor.transient = True
                 module.register(implicitDefaultDtor)
                 this.children.append(implicitDefaultDtor)
@@ -490,7 +508,7 @@ class ParentInfo(Member):
 
 class FriendInfo(Member):
     def __init__(this, ownerPath:SymbolPath, friendedSymbolName:str, location:SourceLocation, visibility:Member.Visibility):
-        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, type=f"friend {this.friendedSymbolName}"), location, True, visibility)
+        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"friend {this.friendedSymbolName}"), location, True, visibility)
         this.friendedSymbolName = friendedSymbolName
         this.friendedSymbol = None
 
@@ -500,7 +518,7 @@ class FriendInfo(Member):
 
 class TemplateParameter(ASTNode):
     def __init__(this, path:SymbolPath, location:SourceLocation, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
-        ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, type=f"template parameter {paramType} {path.ownName}"), location, True)
+        ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"template parameter {paramType} {path.ownName}"), location, True)
         # FIXME parameter index!
         this.paramType = paramType
         this.defaultValue = defaultValue
