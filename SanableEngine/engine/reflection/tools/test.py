@@ -251,42 +251,42 @@ class TestParser:
         tgt = this.assertExpectSymbol(["TemplatedType_Typename"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "T" and tgt.defaultValue == None)
+        this.assertTrue(tgt.paramType == "typename" and tgt.paramName == "T" and tgt.defaultValue == None)
 
         tgt = this.assertExpectSymbol(["TemplatedType_Class"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "class" and tgt.ownName == "T" and tgt.defaultValue == None)
+        this.assertTrue(tgt.paramType == "class" and tgt.paramName == "T" and tgt.defaultValue == None)
         
         tgt = this.assertExpectSymbol(["TemplatedType_Int"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "int" and tgt.ownName == "val" and tgt.defaultValue == None)
+        this.assertTrue(tgt.paramType == "int" and tgt.paramName == "val" and tgt.defaultValue == None)
 
         tgt = this.assertExpectSymbol(["TemplatedType_VoidPtr"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "void*" and tgt.ownName == "val" and tgt.defaultValue == None)
+        this.assertTrue(tgt.paramType == "void*" and tgt.paramName == "val" and tgt.defaultValue == None)
 
         tgt = this.assertExpectSymbol(["TemplatedType_DefaultType"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "T" and tgt.defaultValue == "int")
+        this.assertTrue(tgt.paramType == "typename" and tgt.paramName == "T" and tgt.defaultValue == "int")
 
         tgt = this.assertExpectSymbol(["TemplatedType_DefaultInt"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "int" and tgt.ownName == "val" and tgt.defaultValue == "3")
+        this.assertTrue(tgt.paramType == "int" and tgt.paramName == "val" and tgt.defaultValue == "3")
         
         tgt = this.assertExpectSymbol(["TemplatedType_NamelessParam"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "" and tgt.defaultValue == None)
+        this.assertTrue(tgt.paramType == "typename" and tgt.paramName == "" and tgt.defaultValue == None)
         
         tgt = this.assertExpectSymbol(["TemplatedType_NamelessDefaultedParam"], cx_ast.TypeInfo)
         tgt = next(( i for i in tgt.children if isinstance(i, cx_ast.TemplateParameter) ), None)
         this.assertTrue(tgt != None)
-        this.assertTrue(tgt.paramType == "typename" and tgt.ownName == "" and tgt.defaultValue == "int")
+        this.assertTrue(tgt.paramType == "typename" and tgt.paramName == "" and tgt.defaultValue == "int")
         
         
 from cx_ast_clang_reader import ClangParseContext

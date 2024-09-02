@@ -21,9 +21,9 @@ class SymbolPath:
     class TemplatedSegment:
         def __init__(this, base:str):
             this.base = base
-            this.templateParams:list[str|SymbolPath] = [] # SymbolPath for type arguments, str for values (int, char, enum, etc)
+            this.templateParams:list[ str|SymbolPath ] = [] # SymbolPath for type arguments, str for values (int, char, enum, etc)
             
-        def __str__(this): return this.base+"<" + ", ".join(this.templateParams) + ">"
+        def __str__(this): return this.base+"<" + ", ".join(str(i) for i in this.templateParams) + ">"
         def __repr__(this): return this.__str__()
 
         def __eq__(this, rhs):
@@ -538,6 +538,7 @@ class FriendInfo(Member):
 
 class TemplateParameter(ASTNode):
     def __init__(this, path:SymbolPath, location:SourceLocation, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
+        this.paramName = path.ownName
         ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"template parameter {paramType} {path.ownName}"), location, True)
         # FIXME parameter index!
         this.paramType = paramType
