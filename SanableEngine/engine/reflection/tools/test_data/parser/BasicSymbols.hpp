@@ -4,6 +4,9 @@ void globalFunc(int a, char b, const void* c);
 void* globalVarDefined;
 extern void* globalVarExterned;
 
+extern void* globalVarExternedDefined;
+void* globalVarExternedDefined;
+
 class MyClass
 {
 	MyClass();

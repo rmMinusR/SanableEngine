@@ -136,6 +136,10 @@ class TestParser:
         this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
         sym = this.assertExpectSymbol(["globalVarExterned"], cx_ast.GlobalVarInfo)
         this.assertIsNone(sym.definitionLocation, msg="Symbol should not be defined")
+        sym = this.assertExpectSymbol(["globalVarExternedDefined"], cx_ast.GlobalVarInfo)
+        this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
+        this.assertEqual(len(sym.declarationLocations), 1, msg="Symbol should be declared separate from definition")
+        this.assertNotEqual(sym.declarationLocations[0], sym.definitionLocation, msg="Symbol should be declared separate from definition")
         
         this.assertExpectSymbol(["MyClass"], cx_ast.TypeInfo)
         this.assertExpectSymbol(["MyClass", CallParams("MyClass", [])], cx_ast.ConstructorInfo)
