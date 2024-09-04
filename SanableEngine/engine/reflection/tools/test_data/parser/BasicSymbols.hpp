@@ -13,7 +13,8 @@ class MyClass
 
 	int foo;
 	char bar;
-	static bool staticVar;
+	static bool staticVarDefined;
+	static bool staticVarUndefined;
 
 	void myClassFunc(int param);
 	const int* myConstClassFunc(int param) const;
@@ -23,7 +24,7 @@ public:
 	virtual void myVirtualFunc(int param);
 	virtual void myPureVirtualFunc(int param) = 0;
 };
-bool MyClass::staticVar = false;
+bool MyClass::staticVarDefined = false;
 
 class MySubclass : public MyClass
 {

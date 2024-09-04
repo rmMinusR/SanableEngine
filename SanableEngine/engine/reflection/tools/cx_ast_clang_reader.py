@@ -61,7 +61,16 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
         if kind in ClangParseContext.factories.keys():
-            path = (parent.path if parent != None else cx_ast.SymbolPath())+cursor.spelling # FIXME will namespaced globals/statics defined outside their container need unwinding?
+            if parent != None:
+                # Nested symbol
+                path = parent.path+cursor.spelling
+            elif cursor.semantic_parent.kind != CursorKind.TRANSLATION_UNIT:
+                # Namespaced globals/statics defined outside their
+                # container need to have their paths fixed
+                path = _make_FullyQualifiedPath(cursor)
+            else:
+                # Non-namespaced non-class-static global
+                path = cx_ast.SymbolPath()+cursor.spelling
             
             # Try to parse node
             result = ClangParseContext.factories[kind](path, cursor, parent, this.module, this.project)

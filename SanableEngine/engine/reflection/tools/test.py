@@ -143,9 +143,11 @@ class TestParser:
         this.assertExpectSymbol(["MyClass", CallParams("MyClass", ["::MyClass const&"])], cx_ast.ConstructorInfo)
         this.assertExpectSymbol(["MyClass", "foo"], cx_ast.FieldInfo)
         this.assertExpectSymbol(["MyClass", "bar"], cx_ast.FieldInfo)
-        sym = this.assertExpectSymbol(["MyClass", "staticVar"], cx_ast.StaticVarInfo)
+        sym = this.assertExpectSymbol(["MyClass", "staticVarDefined"], cx_ast.StaticVarInfo)
         this.assertTrue(len(sym.declarationLocations) != 0 and sym.definitionLocation != None)
         this.assertTrue(sym.declarationLocations[0] != sym.definitionLocation)
+        sym = this.assertExpectSymbol(["MyClass", "staticVarUndefined"], cx_ast.StaticVarInfo)
+        this.assertTrue(len(sym.declarationLocations) != 0 and sym.definitionLocation == None)
         this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", ["int"])], cx_ast.MemFuncInfo)
         this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"], ["const"])], cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
         this.assertExpectSymbol(["MyClass", CallParams("myStaticClassFunc", ["int", "::MyClass*"])], cx_ast.StaticFuncInfo)
@@ -153,7 +155,7 @@ class TestParser:
         mySubclass = this.assertExpectSymbol(["MySubclass"], cx_ast.TypeInfo)
         parents = [i for i in mySubclass.children if isinstance(i, cx_ast.ParentInfo)]
         this.assertTrue(len(parents) == 1)
-        this.assertTrue(parents[0].parentTypeName == "::MyClass")
+        this.assertTrue(parents[0].parentTypePath == cx_ast.SymbolPath()+"MyClass")
         
     def test_implicit_symbols_exist(this):
         this.assertExpectSymbol(["NonDefaulted"], cx_ast.TypeInfo)
