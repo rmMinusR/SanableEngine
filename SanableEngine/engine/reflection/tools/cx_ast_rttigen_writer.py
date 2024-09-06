@@ -43,7 +43,7 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
         super().configure()
         stableSymbols = this.input.module.contents.values()
         stableSymbols = [i for i in stableSymbols if this.__isDefinitionOurs(i)] # Filter: only our files
-        stableSymbols.sort(key=lambda i: i.path if isinstance(i, cx_ast.ASTNode) else i[0].path)
+        stableSymbols.sort(key=lambda i: str(i.path if isinstance(i, cx_ast.ASTNode) else i[0].path))
         this.stableSymbols = stableSymbols
 
     def execute(this):
@@ -151,7 +151,7 @@ def _getAllParents(ty:cx_ast.TypeInfo):
 
     # Deduplicate
     out = list(set(out))
-    out.sort(key=lambda v: v.parentTypeName)
+    out.sort(key=lambda v: str(v.parentTypePath))
     
     return out
 
@@ -176,7 +176,7 @@ def render_type(ty:cx_ast.TypeInfo):
     for p in _getAllParents(ty):
         if p.explicitlyVirtual and not p.owner == ty:
             # Always render. We break it with C-style cast, which ignores visibility.
-            bodyDecls.append(f"builder.addParent<{ty.path}, {p.parentTypeName}>({p.visibility}, {cx_ast.ParentInfo.Virtualness.VirtualInherited});")
+            bodyDecls.append(f"builder.addParent<{ty.path}, {p.parentTypePath}>({p.visibility}, {cx_ast.ParentInfo.Virtualness.VirtualInherited});")
 
     # Render CDO capture
     if ty.isAbstract:
@@ -207,13 +207,13 @@ def render_type(ty:cx_ast.TypeInfo):
 def render_parent(parent:cx_ast.ParentInfo):
     # Always render. We break it with C-style cast, which ignores visibility.
     virtualness = cx_ast.ParentInfo.Virtualness.VirtualExplicit if parent.explicitlyVirtual else cx_ast.ParentInfo.Virtualness.NonVirtual
-    body = f"builder.addParent<{parent.ownerName}, {parent.parentTypeName}>({parent.visibility}, {virtualness});"
+    body = f"builder.addParent<{parent.owner.path}, {parent.parentTypePath}>({parent.visibility}, {virtualness});"
     return ("", body)
 
 def makePubCastKey(obj:cx_ast.ASTNode):
     return "".join([
         (i if i.isalnum() or i in "_" else '_')
-        for i in obj.path
+        for i in str(obj.path)
     ])
 
 @MemRttiRenderer(cx_ast.FieldInfo)
@@ -221,14 +221,14 @@ def render_field(field:cx_ast.FieldInfo):
     # Detect how to reference
     #if field.visibility != cx_ast.Member.Visibility.Public:
     pubCastKey = makePubCastKey(field)
-    preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({pubCastKey}, {field.owner.path}, {field.ownName}, {field.typeName});'
+    preDecl = f'PUBLIC_CAST_GIVE_FIELD_ACCESS({pubCastKey}, {field.path.parent}, {field.path.ownName}, {field.typeName});'
     pubReference = f"DO_PUBLIC_CAST_OFFSETOF_LAMBDA({pubCastKey}, {field.owner.path})"
     #else:
     #    preDecl = f"//{field.path} is already public: no need for public_cast"
     #    pubReference = f"[]({field.astParent.path}*)" + "{ " + f"return offsetof({field.path});" + " }"
 
     # TODO handle anonymous types (especially if private)
-    body = f'builder.addField<{field.typeName}>("{field.ownName}", {pubReference});'
+    body = f'builder.addField<{field.typeName}>("{field.path.ownName}", {pubReference});'
     
     return (preDecl, body)
 
@@ -255,10 +255,10 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     pubCastKey = makePubCastKey(func)
     formatter = {
         "key": pubCastKey,
-        "TClass": func.owner.path,
+        "TClass": func.path.parent,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
-        "name": func.ownName,
+        "name": func.path.ownName,
         "this_qualifiers": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
     }
     preDecl = "\n".join([
@@ -272,8 +272,8 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     #    pubReference = func.path
     
     if not func.deleted:
-        paramNames = [i.ownName for i in func.parameters] # TODO implement name capture on C++ side
-        body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.ownName}\", {func.visibility}, {str(func.isVirtual).lower()});"
+        paramNames = [i.path.ownName for i in func.parameters] # TODO implement name capture on C++ side
+        body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.path.ownName}\", {func.visibility}, {str(func.isVirtual).lower()});"
     else:
         body = f"//Cannot capture deleted function {func.path}"
         # TODO handle template funcs
@@ -287,10 +287,10 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     pubCastKey = makePubCastKey(func)
     formatter = {
         "key": pubCastKey,
-        "TClass": func.owner.path,
+        "TClass": func.path.parent,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
-        "name": func.ownName
+        "name": func.path.ownName
     }
     preDecl = "\n".join([
         'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
@@ -303,7 +303,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     #    pubReference = func.path
    
     paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
-    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.ownName}\", {func.visibility});"
+    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.path.ownName}\", {func.visibility});"
     # TODO handle template funcs
 
     return (preDecl, body)
@@ -382,7 +382,7 @@ def __renderImageCapture_disassembly(ty:cx_ast.TypeInfo):
     if len(ctors) == 0:
         return f"#error {ty.path} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
         
-    ctorParamArgs = [ty.path] + [i.typeName for i in ctors[0].parameters]
+    ctorParamArgs = [str(ty.path)] + [i.typeName for i in ctors[0].parameters]
     return f"builder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
 
 

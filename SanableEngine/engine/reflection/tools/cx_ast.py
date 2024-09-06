@@ -181,7 +181,7 @@ class Module:
     def __getstate__(this):
         out = [i for i in this.contents.values() if isinstance(i, ASTNode) and not i.transient] \
             + [[i for i in grp if not i.transient] for grp in this.contents.values() if isinstance(grp, list)]
-        out.sort(key=lambda node: node.path if isinstance(node, ASTNode) else node[0].path)
+        out.sort(key=lambda node: str(node.path if isinstance(node, ASTNode) else node[0].path))
         return out
     
     def __setstate__(this, vals):
