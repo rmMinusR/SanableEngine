@@ -240,8 +240,8 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Curso
             return cx_ast.StaticFuncInfo(
                 path,
                 makeSourceLocation(cursor, project),
-                makeVisibility(cursor),
                 cursor.is_definition(),
+                makeVisibility(cursor),
                 _make_FullyQualifiedTypeName(cursor.result_type),
                 cursor.is_deleted_method(),
                 False # TODO inline support
