@@ -273,7 +273,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
     
     if not func.deleted:
         paramNames = [i.path.ownName for i in func.parameters] # TODO implement name capture on C++ side
-        body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.path.ownName}\", {func.visibility}, {str(func.isVirtual).lower()});"
+        body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility}, {str(func.isVirtual).lower()});"
     else:
         body = f"//Cannot capture deleted function {func.path}"
         # TODO handle template funcs
@@ -303,7 +303,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     #    pubReference = func.path
    
     paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
-    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.path.ownName}\", {func.visibility});"
+    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility});"
     # TODO handle template funcs
 
     return (preDecl, body)
