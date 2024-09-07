@@ -258,7 +258,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
         "TClass": func.path.parent,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
-        "name": func.path.ownName,
+        "name": func.path.ownName.base,
         "this_qualifiers": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
     }
     preDecl = "\n".join([
@@ -290,7 +290,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
         "TClass": func.path.parent,
         "returnType": func.returnTypeName,
         "params": ", ".join([i.typeName for i in func.parameters]),
-        "name": func.path.ownName
+        "name": func.path.ownName.base
     }
     preDecl = "\n".join([
         'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),

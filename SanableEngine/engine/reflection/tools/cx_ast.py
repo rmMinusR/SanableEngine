@@ -1,7 +1,6 @@
 import abc
 from enum import Enum
 from functools import cached_property
-from symtable import Symbol
 from source_discovery import SourceFile
 import config
 import typing
@@ -398,13 +397,24 @@ class MaybeVirtual(Member):
 
 class Callable(ASTNode):
     class Parameter(ASTNode):
-        def __init__(this, path:SymbolPath, location:SourceLocation, typeName:str):
-            ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"parameter {typeName} {path.ownName}"), location, True)
+        def __init__(this, path:SymbolPath, location:SourceLocation, index:int, typeName:str):
+            ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"parameter #{index}: {typeName} {path.ownName}"), location, False)
+            this.index = index
             this.typeName = typeName
             this.type:TypeInfo|None = None
 
         def latelink(this, module:Module):
             this.type = module.find(this.typeName)
+            
+        def merge(this, new:"Callable.Parameter"):
+            assert this.type == new.type
+            assert this.index == new.index
+
+            # If named in new copy but not current, update name
+            if isinstance(this.path.ownName, SymbolPath.Anonymous) and not isinstance(new.path.ownName, SymbolPath.Anonymous):
+                this.path = new.path
+
+            super().merge(new)
 
         @staticmethod
         def allowMultiple():
@@ -420,6 +430,19 @@ class Callable(ASTNode):
     def link(this, module:Module):
          super().link(module)
          assert isinstance(this.path.ownName, SymbolPath.CallParameterized)
+
+    def merge(this, new:"Callable"):
+        # We need to de-duplicate parameters caused by multiple decls/defs of the function
+
+        # Sanity check: param types match
+        assert [i.type for i in this.parameters] == [i.type for i in new.parameters], f"Parameter mismatch: {this} vs {new}"
+        
+        # Merge params
+        for i in range(len(this.parameters)): this.parameters[i].merge(new.parameters[i])
+
+        # Prevent param duplication and proceed with standard merge
+        new.children = [i for i in new.children if not isinstance(i, Callable.Parameter)]
+        super().merge(new)
 
     @property
     def parameters(this) -> list[Parameter]:
@@ -537,9 +560,9 @@ class FriendInfo(Member):
 
 
 class TemplateParameter(ASTNode):
-    def __init__(this, path:SymbolPath, location:SourceLocation, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
+    def __init__(this, path:SymbolPath, location:SourceLocation, index:int, paramType:str, defaultValue:str|None): # paramType is one of: typename, concept, class, struct, int... (or any other templatable)
         this.paramName = path.ownName
         ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"template parameter {paramType} {path.ownName}"), location, True)
-        # FIXME parameter index!
+        this.index = index
         this.paramType = paramType
         this.defaultValue = defaultValue

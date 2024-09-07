@@ -263,6 +263,7 @@ def factory_ParameterInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, parent:cx_as
     return cx_ast.Callable.Parameter(
         ownPath,
         makeSourceLocation(cursor, project),
+        len([i for i in parent.children if isinstance(i, cx_ast.Callable.Parameter)]),
         _make_FullyQualifiedTypeName(cursor.type)
     )
 
@@ -315,6 +316,7 @@ def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.A
     return cx_ast.TemplateParameter(
         path,
         makeSourceLocation(cursor, project),
+        len([i for i in parent.children if isinstance(i, cx_ast.TemplateParam)]),
         paramLiteralText.split(" ")[0], # First word will be template, class, int, etc
         defaultVal
     )
