@@ -551,7 +551,7 @@ class ParentInfo(Member):
 
 class FriendInfo(Member):
     def __init__(this, ownerPath:SymbolPath, friendedSymbolPath:SymbolPath, location:SourceLocation, visibility:Member.Visibility):
-        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"friend {this.friendedSymbolName}"), location, True, visibility)
+        Member.__init__(this, ownerPath+SymbolPath.Anonymous(location, _type=f"friend {friendedSymbolPath}"), location, True, visibility)
         this.friendedSymbolPath = friendedSymbolPath
         this.friendedSymbol = None
 
@@ -566,3 +566,72 @@ class TemplateParameter(ASTNode):
         this.index = index
         this.paramType = paramType
         this.defaultValue = defaultValue
+
+
+
+class QualifiedType:
+    class PointerSpec(str, Enum):
+        NONE = "{base} {qualifiers} {name}"
+        POINTER = "{base}* {qualifiers} {name}"
+        FUNC_POINTER = "{return_type} ({name}* {qualifiers})({func_args})"
+        REFERENCE = "{base}& {name} {qualifiers}"
+        MOVE_REFERENCE = "{base}&& {name} {qualifiers}"
+        MEM_FIELD_POINTER = "{base}::{name}* {qualifiers}"
+        MEM_FUNC_POINTER = "{return_type} ({base}::{name}* {qualifiers})({func_args}) {this_obj_qualifiers}"
+
+    def __init__(this, base:"SymbolPath|QualifiedType|str", qualifiers:list[str]=[], pointer_spec:PointerSpec=PointerSpec.NONE, return_type:"QualifiedType"=None, this_obj_qualifiers:list[str]=[], func_args:"list[QualifiedType]"=[]):
+        this.base = base
+        this.qualifiers = qualifiers
+        this.pointer_spec = pointer_spec
+        this.return_type = return_type
+        this.this_obj_qualifiers = this_obj_qualifiers
+        this.func_args = func_args
+        
+        this.qualifiers.sort()
+        
+        if isinstance(base, QualifiedType):
+            assert base.pointer_spec not in [QualifiedType.PointerSpec.REFERENCE, QualifiedType.PointerSpec.MOVE_REFERENCE], "Pointer-to-reference is not valid syntax"
+        
+    def __get_formatter(this):
+        return {
+            "base": this.base,
+            "qualifiers": "".join(" "+str(i) for i in this.qualifiers),
+            "return_type": this.return_type if this.return_type != None else "",
+            "func_args": ", ".join(str(i) for i in this.func_args),
+            "this_obj_qualifiers": "".join(" "+str(i) for i in this.this_obj_qualifiers),
+            "name": "",
+        }
+
+    def __str__(this):
+        return this.pointer_spec.format(**this.__get_formatter()).strip().replace("  ", " ")
+    
+    def __repr__(this): return this.__str__()
+    
+    def __eq__(this, other):
+        if not isinstance(other, QualifiedType): return False
+        
+        # If any form of func ptr, check args and return type
+        if this.pointer_spec in [QualifiedType.PointerSpec.FUNC_POINTER, QualifiedType.PointerSpec.MEM_FUNC_POINTER]:
+            if this.return_type != other.return_type or this.func_args != other.func_args: return False
+
+        # Check basics
+        return this.base == other.base \
+           and this.pointer_spec == other.pointer_spec \
+           and set(this.qualifiers) == set(other.qualifiers)
+    
+    def __hash__(this):
+        if hasattr(this, "__hash_val"): return getattr(this, "__hash_val")
+        
+        val = hash(this.base) ^ hash(this.pointer_spec)
+        for i in this.qualifiers: val ^= hash(i)
+        if this.pointer_spec in [QualifiedType.PointerSpec.FUNC_POINTER, QualifiedType.PointerSpec.MEM_FUNC_POINTER]:
+            val ^= hash(this.return_type)
+            val ^= hash(this.func_args)
+        
+        setattr(this, "__hash_val", val)
+        return val
+
+    def instantiate_var(this, name) -> str:
+        formatter = this.__get_formatter()
+        formatter["name"] = name
+        return this.pointer_spec.format(**this.__get_formatter())

@@ -95,6 +95,19 @@ def CallParams(base:str, args:list[cx_ast.SymbolPath], affixes=None) -> cx_ast.S
     return cx_ast.SymbolPath.CallParameterized(base, args, affixes if affixes!=None else [])
 
 
+ty_int = cx_ast.QualifiedType("int")
+ty_char = cx_ast.QualifiedType("char")
+ty_void = cx_ast.QualifiedType("void")
+ty_const_void = cx_ast.QualifiedType("void", qualifiers=["const"])
+def ty_ptr(ty:cx_ast.QualifiedType): return cx_ast.QualifiedType(ty, pointer_spec=cx_ast.QualifiedType.PointerSpec.POINTER)
+def ty_ref(ty:cx_ast.QualifiedType): return cx_ast.QualifiedType(ty, pointer_spec=cx_ast.QualifiedType.PointerSpec.REFERENCE)
+ty_const_void_ptr = ty_ptr(ty_const_void)
+ty_MyClass = cx_ast.QualifiedType("MyClass")
+ty_MyClass_const = cx_ast.QualifiedType("MyClass", qualifiers=["const"])
+ty_MyClass_ptr = ty_ptr(ty_MyClass)
+ty_MyClass_const_ref = ty_ref(ty_MyClass_const)
+
+
 class TestParser:
     __metaclass__ = abc.ABCMeta
 
@@ -131,7 +144,7 @@ class TestParser:
         return matches
 
     def test_basic_symbols_exist(this):
-        this.assertExpectSymbol([CallParams("globalFunc", ["int", "char", "const void*"])], cx_ast.GlobalFuncInfo)
+        this.assertExpectSymbol([CallParams("globalFunc", [ty_int, ty_char, ty_const_void_ptr])], cx_ast.GlobalFuncInfo)
         sym = this.assertExpectSymbol(["globalVarDefined"], cx_ast.GlobalVarInfo)
         this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")
         sym = this.assertExpectSymbol(["globalVarExterned"], cx_ast.GlobalVarInfo)
@@ -144,7 +157,7 @@ class TestParser:
         this.assertExpectSymbol(["MyClass"], cx_ast.TypeInfo)
         this.assertExpectSymbol(["MyClass", CallParams("MyClass", [])], cx_ast.ConstructorInfo)
         this.assertExpectSymbol(["MyClass", CallParams("~MyClass", [])], cx_ast.DestructorInfo)
-        this.assertExpectSymbol(["MyClass", CallParams("MyClass", ["::MyClass const&"])], cx_ast.ConstructorInfo)
+        this.assertExpectSymbol(["MyClass", CallParams("MyClass", [ty_MyClass_const_ref])], cx_ast.ConstructorInfo)
         this.assertExpectSymbol(["MyClass", "foo"], cx_ast.FieldInfo)
         this.assertExpectSymbol(["MyClass", "bar"], cx_ast.FieldInfo)
         sym = this.assertExpectSymbol(["MyClass", "staticVarDefined"], cx_ast.StaticVarInfo)
@@ -152,9 +165,9 @@ class TestParser:
         this.assertTrue(sym.declarationLocations[0] != sym.definitionLocation)
         sym = this.assertExpectSymbol(["MyClass", "staticVarUndefined"], cx_ast.StaticVarInfo)
         this.assertTrue(len(sym.declarationLocations) != 0 and sym.definitionLocation == None)
-        this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", ["int"])], cx_ast.MemFuncInfo)
-        this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"], ["const"])], cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
-        this.assertExpectSymbol(["MyClass", CallParams("myStaticClassFunc", ["int", "::MyClass*"])], cx_ast.StaticFuncInfo)
+        this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", [ty_int])], cx_ast.MemFuncInfo)
+        this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", [ty_int], ["const"])], cx_ast.MemFuncInfo) # TODO test disambiguation with this-const overloading
+        this.assertExpectSymbol(["MyClass", CallParams("myStaticClassFunc", [ty_int, ty_MyClass_ptr])], cx_ast.StaticFuncInfo)
         
         mySubclass = this.assertExpectSymbol(["MySubclass"], cx_ast.TypeInfo)
         parents = [i for i in mySubclass.children if isinstance(i, cx_ast.ParentInfo)]
@@ -164,26 +177,26 @@ class TestParser:
     def test_implicit_symbols_exist(this):
         this.assertExpectSymbol(["NonDefaulted"], cx_ast.TypeInfo)
         this.assertExpectSymbol(["NonDefaulted", CallParams("NonDefaulted", [])], None) # Explicit ctor defined, removes implicit default ctor
-        this.assertExpectSymbol(["NonDefaulted", CallParams("NonDefaulted", ["int"])], cx_ast.ConstructorInfo)
+        this.assertExpectSymbol(["NonDefaulted", CallParams("NonDefaulted", [ty_int])], cx_ast.ConstructorInfo)
         this.assertExpectSymbol(["NonDefaulted", CallParams("~NonDefaulted", [])], cx_ast.DestructorInfo) # Implicit dtor
 
     def test_virtual_method_detection(this):
         # Not virtual
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", ["int"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myClassFunc", [ty_int])], cx_ast.MemFuncInfo)
         this.assertFalse(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", ["int"], ["const"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myConstClassFunc", [ty_int], ["const"])], cx_ast.MemFuncInfo)
         this.assertFalse(func.isVirtual)
         
         # Explicitly virtual
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myVirtualFunc", ["int"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myVirtualFunc", [ty_int])], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myPureVirtualFunc", ["int"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MyClass", CallParams("myPureVirtualFunc", [ty_int])], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
         
         # Implicitly virtual
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MySubclass", CallParams("myVirtualFunc", ["int"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MySubclass", CallParams("myVirtualFunc", [ty_int])], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
-        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MySubclass", CallParams("myPureVirtualFunc", ["int"])], cx_ast.MemFuncInfo)
+        func:cx_ast.MemFuncInfo = this.assertExpectSymbol(["MySubclass", CallParams("myPureVirtualFunc", [ty_int])], cx_ast.MemFuncInfo)
         this.assertTrue(func.isVirtual)
         
     def test_virtual_inheritance_detection(this):
@@ -226,7 +239,7 @@ class TestParser:
     def test_namespaced_exist(this):
         this.assertExpectSymbol(["MyNamespace"], cx_ast.Namespace)
         
-        this.assertExpectSymbol(["MyNamespace", CallParams("globalFuncInNamespace", ["int", "char", "const void*"])], cx_ast.GlobalFuncInfo)
+        this.assertExpectSymbol(["MyNamespace", CallParams("globalFuncInNamespace", [ty_int, ty_char, ty_const_void_ptr])], cx_ast.GlobalFuncInfo)
         
         sym = this.assertExpectSymbol(["MyNamespace", "globalVarInNSDefined"], cx_ast.GlobalVarInfo)
         this.assertIsNotNone(sym.definitionLocation, msg="Symbol should be defined")

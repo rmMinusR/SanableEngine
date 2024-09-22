@@ -167,7 +167,7 @@ def factory_FieldInfo(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.ASTNo
         path,
         makeSourceLocation(cursor, project),
         makeVisibility(cursor),
-        _make_FullyQualifiedTypeName(cursor.type)
+        _make_FullyQualifiedTypePath(cursor.type)
     )
 
 @ASTFactory(CursorKind.CXX_BASE_SPECIFIER)
@@ -229,7 +229,7 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Curso
                 makeVisibility(cursor),
                 isExplicitVirtualMethod(cursor),
                 isExplicitOverride(cursor),
-                _make_FullyQualifiedTypeName(cursor.result_type),
+                _make_FullyQualifiedTypePath(cursor.result_type),
                 cursor.is_deleted_method(),
                 False, # TODO inline support
                 cursor.is_const_method(),
@@ -242,7 +242,7 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Curso
                 makeSourceLocation(cursor, project),
                 cursor.is_definition(),
                 makeVisibility(cursor),
-                _make_FullyQualifiedTypeName(cursor.result_type),
+                _make_FullyQualifiedTypePath(cursor.result_type),
                 cursor.is_deleted_method(),
                 False # TODO inline support
             )
@@ -252,7 +252,7 @@ def factory_FuncInfo_MemberOrStaticOrGlobal(path:cx_ast.SymbolPath, cursor:Curso
             path,
             makeSourceLocation(cursor, project),
             cursor.is_definition(),
-            _make_FullyQualifiedTypeName(cursor.result_type),
+            _make_FullyQualifiedTypePath(cursor.result_type),
             cursor.is_deleted_method(),
             False # TODO inline support
         )
@@ -264,7 +264,7 @@ def factory_ParameterInfo(ownPath:cx_ast.SymbolPath, cursor:Cursor, parent:cx_as
         ownPath,
         makeSourceLocation(cursor, project),
         len([i for i in parent.children if isinstance(i, cx_ast.Callable.Parameter)]),
-        _make_FullyQualifiedTypeName(cursor.type)
+        _make_FullyQualifiedTypePath(cursor.type)
     )
 
 @ASTFactory(CursorKind.VAR_DECL)
@@ -279,14 +279,14 @@ def factory_VarInfo_GlobalOrStatic(path:cx_ast.SymbolPath, cursor:Cursor, parent
             makeSourceLocation(cursor, project),
             cursor.is_definition(),
             makeVisibility(cursor),
-            _make_FullyQualifiedTypeName(cursor.type)
+            _make_FullyQualifiedTypePath(cursor.type)
         )
     else:
         return cx_ast.GlobalVarInfo(
             path,
             makeSourceLocation(cursor, project),
             cursor.is_definition(),
-            _make_FullyQualifiedTypeName(cursor.type)
+            _make_FullyQualifiedTypePath(cursor.type)
         )
 
 @ASTFactory(CursorKind.ANNOTATE_ATTR)
@@ -316,7 +316,7 @@ def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.A
     return cx_ast.TemplateParameter(
         path,
         makeSourceLocation(cursor, project),
-        len([i for i in parent.children if isinstance(i, cx_ast.TemplateParam)]),
+        len([i for i in parent.children if isinstance(i, cx_ast.TemplateParameter)]),
         paramLiteralText.split(" ")[0], # First word will be template, class, int, etc
         defaultVal
     )
@@ -325,125 +325,53 @@ def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.A
 
 # TODO probably slow, profile and rewrite
 
-def _getAbsName(target: Cursor) -> str:
-    if type(target) == type(None) or target.kind == CursorKind.TRANSLATION_UNIT:
-        # Root case: Translation unit has no name
-        return ""
+def _make_FullyQualifiedTypePath(target:Type):
+    qualifiers = []
+    if target.is_const_qualified   (): qualifiers.append("const")
+    if target.is_volatile_qualified(): qualifiers.append("volatile")
+    if target.is_restrict_qualified(): qualifiers.append("restrict")
+
+    if target.spelling in ["auto", "decltype(auto)"]:
+        # Special case: Can't deduce auto, decltype(auto)
+        return cx_ast.QualifiedType(
+            target.spelling,
+            qualifiers=qualifiers,
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
+        )
+    elif target.kind == TypeKind.POINTER:
+        return cx_ast.QualifiedType(
+            _make_FullyQualifiedTypePath(target.get_pointee()),
+            qualifiers=qualifiers,
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.POINTER
+        )
+    elif target.kind == TypeKind.MEMBERPOINTER:
+        return cx_ast.QualifiedType(
+            _make_FullyQualifiedTypePath(target.get_class_type()),
+            qualifiers=qualifiers,
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.MEM_FIELD_POINTER # TODO implement member field pointer vs member func pointer
+        )
+    elif target.kind in [TypeKind.LVALUEREFERENCE, TypeKind.RVALUEREFERENCE]:
+        return cx_ast.QualifiedType(
+            _make_FullyQualifiedTypePath(target.get_pointee()),
+            qualifiers=qualifiers,
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.REFERENCE # TODO move-reference support
+        )
+    elif target.get_declaration().kind == CursorKind.NO_DECL_FOUND:
+        # Template parameter or fundamental literal type
+        return cx_ast.QualifiedType(
+            target.spelling,
+            qualifiers=qualifiers,
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
+        )
+    elif target.kind == TypeKind.ELABORATED:
+        # Plain old type
+        return cx_ast.QualifiedType(
+            _make_FullyQualifiedPath(target.get_declaration()),
+            qualifiers=qualifiers,
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
+        )
     else:
-        # Loop case
-
-        # Strip leading C-style record type specifier
-        ownName = target.spelling
-        def stripexact(val: str, leading: str): return val[len(leading):] if val.startswith(leading) else val
-        ownName = stripexact(ownName, "enum ")
-        ownName = stripexact(ownName, "class ") # Since this is after "enum" it will also catch "enum class"
-        ownName = stripexact(ownName, "struct ")
-        
-        # Reconstruct template parameters
-        # TODO get literal text so we can figure out whether typename/class/integral literal/etc
-        #templateParams = [i for i in ClangParseContext._getChildren(target) if i.kind in [CursorKind.TEMPLATE_TYPE_PARAMETER, CursorKind.TEMPLATE_NON_TYPE_PARAMETER, CursorKind.TEMPLATE_TEMPLATE_PARAMETER]]
-
-        # Concat and loop
-        return _getAbsName(target.semantic_parent) + "::" + ownName
-
-def _isTemplate(kind: CursorKind):
-    return kind in [
-        CursorKind.CLASS_TEMPLATE,
-        CursorKind.FUNCTION_TEMPLATE
-    ]
-
-def _typeGetAbsName(target: Type, noneOnAnonymous=True) -> str | None:
-    # Special case: Can't deduce auto, decltype(auto)
-    if target.spelling in ["auto", "decltype(auto)"]: return target.spelling
-    
-    # Special case: Can't reference an anonymous struct by name
-    if noneOnAnonymous and any([(i in target.spelling) for i in ["(unnamed struct at ", "(unnamed union at ", "(unnamed class at "] ]): return None
-    
-    out: str
-
-    mainDecl: Cursor = target.get_declaration()
-    hasMainDecl = (len(mainDecl.spelling) != 0)
-
-    # Resolve namespaces
-    pointedToType: Type = target.get_pointee()
-    if pointedToType.kind != TypeKind.INVALID:
-        # Pointer case: unwrap and abs-ify pointed-to type
-        out = _typeGetAbsName(pointedToType)
-        cvUnwrapped = cvpUnwrapTypeName(target.spelling, unwrapPointers=False, unwrapArrays=False)
-        if cvUnwrapped.endswith("&&"): out += "&&"
-        elif cvUnwrapped.endswith("&"): out += "&"
-        elif cvUnwrapped.endswith("*"): out += "*"
-        elif cvUnwrapped.endswith("]"):
-            arrayPart = cvUnwrapped[cvUnwrapped.rfind("["):]
-            out = out[:-len(arrayPart)]
-            if   cvUnwrapped[:-len(arrayPart)].endswith("(&&)"): out += "(&&)"
-            elif cvUnwrapped[:-len(arrayPart)].endswith("(&)"): out += "(&)"
-            elif cvUnwrapped[:-len(arrayPart)].endswith("(*)"): out += "(*)"
-            out += arrayPart
-        else:
-            groupStarts = [i   for i in range(len(cvUnwrapped)) if cvUnwrapped[i]=="(" and cvUnwrapped[i  :].count(")")==cvUnwrapped[i  :].count("(")]
-            groupEnds   = [i+1 for i in range(len(cvUnwrapped)) if cvUnwrapped[i]==")" and cvUnwrapped[i+1:].count(")")==cvUnwrapped[i+1:].count("(")]
-            assert len(groupStarts) == len(groupEnds)
-            parenGroups = [
-                cvUnwrapped[ groupStarts[idx]:groupEnds[idx] ]
-                for idx in range(len(groupStarts))
-            ]
-            if len(parenGroups) >= 2 and ">" not in cvUnwrapped[groupEnds[-2]:groupStarts[-1]]: # It's a function pointer
-                assert out[-len(parenGroups[1]):] == parenGroups[1]
-                out = out[:-len(parenGroups[-1])] + parenGroups[-2] + out[-len(parenGroups[-1]):] # This is so stupid.
-                # TODO unwrap further
-            else:
-                assert False, f"Tried to unwrap {target.spelling} to {pointedToType.spelling}, but couldn't detect pointer or reference"
-
-    elif not hasMainDecl:
-        # Primitive types
-        out = target.spelling
-
-    else:
-        if mainDecl.kind == CursorKind.TYPEDEF_DECL:
-            # Typedefs can't be templated. Don't bother following them.
-            out = mainDecl.spelling
-
-        else:
-            # Main case: Try to resolve
-            if mainDecl.kind == CursorKind.TYPE_ALIAS_DECL:
-                # Using statements ("using Ty = ...")
-                out = mainDecl.type.get_canonical().get_declaration().spelling
-            else:
-                out = mainDecl.spelling
-
-            # Recurse over template args
-            templateArgs = [target.get_template_argument_type(i) for i in range(target.get_num_template_arguments())]
-            templateArgStr = ", ".join([_typeGetAbsName(i) for i in templateArgs])
-
-            if len(templateArgs) != 0:
-                out = out.split("<")[0]
-                out += "<"+templateArgStr+">"
-    
-        # Abs-ify name
-        if hasMainDecl:
-            out = _getAbsName(mainDecl.semantic_parent) + "::" + out
-            if out.startswith("::::"): out = out[2:]
-
-    # Resolve qualifiers
-    def addQualifier(s: str, qual: str):
-        baseName = s.split("<")[0] + (s.split(">")[1] if ">" in s else "")
-        alreadyHasQualifier = (baseName.find("*") < baseName.find(qual))
-        if not alreadyHasQualifier:
-            s += " "+qual
-        return s
-
-    if target.is_const_qualified():
-        out = addQualifier(out, "const")
-    if target.is_volatile_qualified():
-        out = addQualifier(out, "volatile")
-    if target.is_restrict_qualified():
-        out = addQualifier(out, "restrict")
-
-    return out
-
-def _make_FullyQualifiedTypeName(ty:Type):
-    return _typeGetAbsName(ty, False)
+        assert False, f"Unknown type kind: {target.kind} {target.spelling}"
 
 def _make_FullyQualifiedPath(cursor:Cursor):
     parts = []
