@@ -158,8 +158,8 @@ def _getAllParents(ty:cx_ast.TypeInfo):
 @RttiRenderer(cx_ast.TypeInfo)
 def render_type(ty:cx_ast.TypeInfo):
     # Don't write template types (for now)
-    if any(isinstance(i, cx_ast.TemplateParameter) for i in ty.children): return None
-    
+    if ty.path.isDynamicallyInstanced: return None
+
     preDecls :list[str] = []
     bodyDecls:list[str] = [f"TypeBuilder builder = TypeBuilder::create<{ty.path}>();"]
 
@@ -234,6 +234,9 @@ def render_field(field:cx_ast.FieldInfo):
 
 @MemRttiRenderer(cx_ast.ConstructorInfo)
 def render_constructor(ctor:cx_ast.ConstructorInfo):
+    # Don't write template callables
+    if ctor.path.isDynamicallyInstanced: return None
+
     if ctor.owner.isAbstract: return ("", f"//Skipping abstract constructor {ctor.path}")
     if ctor.deleted: return ("", f"//Skipping deleted constructor {ctor.path}")
 
@@ -250,6 +253,9 @@ def render_constructor(ctor:cx_ast.ConstructorInfo):
 
 @MemRttiRenderer(cx_ast.MemFuncInfo)
 def render_memFunc(func:cx_ast.MemFuncInfo):
+    # Don't write template callables
+    if func.path.isDynamicallyInstanced: return None
+
     # Detect how to reference
     #if func.visibility != cx_ast.Member.Visibility.Public:
     pubCastKey = makePubCastKey(func)
@@ -282,6 +288,9 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
 
 @MemRttiRenderer(cx_ast.StaticFuncInfo)
 def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
+    # Don't write template callables
+    if func.path.isDynamicallyInstanced: return None
+
     # Detect how to reference
     #if func.visibility != cx_ast.Member.Visibility.Public:
     pubCastKey = makePubCastKey(func)

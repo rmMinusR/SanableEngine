@@ -100,7 +100,12 @@ class SymbolPath:
     def name(this): return str(this.__parts[-1])
     
     @cached_property # NOTE: Doesn't do visibility checks
-    def referenceable(this): return any((isinstance(i, SymbolPath.Anonymous) for i in this.__parts))
+    def referenceable(this):
+        return not any(isinstance(i, SymbolPath.Anonymous) for i in this.__parts)
+
+    @cached_property
+    def isDynamicallyInstanced(this): # Anything within a template doesn't have a defined location, and is instead compiler generated upon instantiation
+        return any(isinstance(i, SymbolPath.TemplatedSegment) for i in this.__parts)
 
     #@staticmethod
     #def naive_parse(raw:str): # TODO gets completely screwed if someone does a boolean less-than compare. Scrap?
