@@ -323,20 +323,45 @@ def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.A
 
 
 
-# TODO probably slow, profile and rewrite
-
 def _dropLeading(val:str, to_drop:list[str]):
     for i in to_drop:
         if val.startswith(i):
             return _dropLeading(val[len(i):].strip(), to_drop)
     return val
 
+def _getTemplateParameter(target:Type, index:int) -> cx_ast.QualifiedType|str:
+    assert target.get_num_template_arguments() != 0, f"Symbol {target.spelling} is not a template"
+    cursor:Cursor = target.get_declaration()
+    
+    try:
+        paramKind = cursor.get_template_argument_kind(index)
+    except ValueError:
+        # ??? why the heck is this erroring?
+        # Seems like it means the type in question is a template parameter from a parent?
+        templateArgs = target.spelling.split("<")[1][:-1].split(",")
+        return templateArgs[index].strip()
+        
+    if paramKind == clang.cindex.TemplateArgumentKind.TYPE:
+        paramType = cursor.get_template_argument_type(index)
+        return _make_FullyQualifiedTypePath(paramType)
+    else:
+        return str(cursor.get_template_argument_value(index))
+
+    # TODO is index absolute, or only based on how many of that param kind precede it?
+    #prev_kinds = [cursor.get_template_argument_kind(i) for i in range(index)]
+    #typed_index = 
+
+def _getTemplateParameters(target:Type) -> list[cx_ast.QualifiedType|str]:
+    if target.get_num_template_arguments() == -1: return None # Idiom for non-template
+    if "<" not in target.spelling or ">" not in target.spelling: return None # Template, but only via typedef
+    return [_getTemplateParameter(target, i) for i in range(target.get_num_template_arguments())]
+
 def _make_FullyQualifiedTypePath(target:Type):
     qualifiers = []
     if target.is_const_qualified   (): qualifiers.append("const")
     if target.is_volatile_qualified(): qualifiers.append("volatile")
     if target.is_restrict_qualified(): qualifiers.append("restrict")
-
+    
     if target.spelling in ["auto", "decltype(auto)"]:
         # Special case: Can't deduce auto, decltype(auto)
         return cx_ast.QualifiedType(
@@ -369,12 +394,14 @@ def _make_FullyQualifiedTypePath(target:Type):
             qualifiers=qualifiers,
             pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
         )
-    elif target.kind == TypeKind.ELABORATED:
-        # Plain old type
+    elif target.kind in [TypeKind.ELABORATED, TypeKind.RECORD]:
+        templateParams = _getTemplateParameters(target)
+        # Plain old type, or template parameter
         return cx_ast.QualifiedType(
             _make_FullyQualifiedPath(target.get_declaration()),
             qualifiers=qualifiers,
-            pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
+            pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE,
+            template_params=templateParams if templateParams!=None else []
         )
     else:
         assert False, f"Unknown type kind: {target.kind} {target.spelling}"

@@ -159,7 +159,7 @@ def _getAllParents(ty:cx_ast.TypeInfo):
 def render_type(ty:cx_ast.TypeInfo):
     # Don't write template types (for now)
     if any(isinstance(i, cx_ast.TemplateParameter) for i in ty.children): return None
-
+    
     preDecls :list[str] = []
     bodyDecls:list[str] = [f"TypeBuilder builder = TypeBuilder::create<{ty.path}>();"]
 

@@ -576,21 +576,26 @@ class TemplateParameter(ASTNode):
 
 class QualifiedType:
     class PointerSpec(str, Enum):
-        NONE = "{base} {qualifiers} {name}"
+        NONE = "{base}{template_params} {qualifiers} {name}"
         POINTER = "{base}* {qualifiers} {name}"
         FUNC_POINTER = "{return_type} ({name}* {qualifiers})({func_args})"
-        REFERENCE = "{base}& {name} {qualifiers}"
-        MOVE_REFERENCE = "{base}&& {name} {qualifiers}"
+        REFERENCE = "{base}{template_params}& {name} {qualifiers}"
+        MOVE_REFERENCE = "{base}{template_params}&& {name} {qualifiers}"
         MEM_FIELD_POINTER = "{base}::{name}* {qualifiers}"
         MEM_FUNC_POINTER = "{return_type} ({base}::{name}* {qualifiers})({func_args}) {this_obj_qualifiers}"
 
-    def __init__(this, base:"SymbolPath|QualifiedType|str", qualifiers:list[str]=[], pointer_spec:PointerSpec=PointerSpec.NONE, return_type:"QualifiedType"=None, this_obj_qualifiers:list[str]=[], func_args:"list[QualifiedType]"=[]):
+    def __init__(this, base:"SymbolPath|QualifiedType|str", qualifiers:list[str]=[], pointer_spec:PointerSpec=PointerSpec.NONE,
+                       func_args:"list[QualifiedType]"=[], # All callables
+                       return_type:"QualifiedType"=None, # Functions
+                       this_obj_qualifiers:list[str]=[], # Nonstatic member functions only
+                       template_params:"list[QualifiedType]"=[]): # Only valid if nonpointer
         this.base = base
         this.qualifiers = qualifiers
         this.pointer_spec = pointer_spec
         this.return_type = return_type
         this.this_obj_qualifiers = this_obj_qualifiers
         this.func_args = func_args
+        this.template_params = template_params
         
         this.qualifiers.sort()
         
@@ -605,6 +610,7 @@ class QualifiedType:
             "func_args": ", ".join(str(i) for i in this.func_args),
             "this_obj_qualifiers": "".join(" "+str(i) for i in this.this_obj_qualifiers),
             "name": "",
+            "template_params": "" if len(this.template_params)==0 else ("<" + ", ".join(str(i) for i in this.template_params) + ">"),
         }
 
     def __str__(this):
