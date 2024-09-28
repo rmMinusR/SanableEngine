@@ -237,8 +237,8 @@ def render_constructor(ctor:cx_ast.ConstructorInfo):
     if ctor.owner.isAbstract: return ("", f"//Skipping abstract constructor {ctor.path}")
     if ctor.deleted: return ("", f"//Skipping deleted constructor {ctor.path}")
 
-    paramNames = [i.displayName for i in ctor.parameters] # TODO implement name capture
-    paramTypes = ", ".join([i.typeName for i in ctor.parameters]) # Can't rely on template arg deduction in case of overloading
+    #paramNames = [i.displayName for i in ctor.parameters] # TODO implement name capture
+    paramTypes = ", ".join([str(i.typeName) for i in ctor.parameters]) # Can't rely on template arg deduction in case of overloading
     
     thunkUtilsInstance = f"thunk_utils<{ctor.owner.path}>"
     ctorThunkInstance = thunkUtilsInstance+f"::thunk_newInPlace<{paramTypes}>"
@@ -257,7 +257,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo):
         "key": pubCastKey,
         "TClass": func.path.parent,
         "returnType": func.returnTypeName,
-        "params": ", ".join([i.typeName for i in func.parameters]),
+        "params": ", ".join([str(i.typeName) for i in func.parameters]),
         "name": func.path.ownName.base,
         "this_qualifiers": (" const" if func.isThisObjConst else "") + (" volatile" if func.isThisObjVolatile else "")
     }
@@ -289,7 +289,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
         "key": pubCastKey,
         "TClass": func.path.parent,
         "returnType": func.returnTypeName,
-        "params": ", ".join([i.typeName for i in func.parameters]),
+        "params": ", ".join([str(i.typeName) for i in func.parameters]),
         "name": func.path.ownName.base
     }
     preDecl = "\n".join([
@@ -302,7 +302,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo):
     #    preDecl = f"//{func.path} is already public: no need for public_cast"
     #    pubReference = func.path
    
-    paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
+    #paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
     body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility});"
     # TODO handle template funcs
 
@@ -361,7 +361,7 @@ def ImageCaptureBackend(name:str):
 def __renderImageCapture_cdo(ty:cx_ast.TypeInfo):
     # Gather valid constructors
     ctors = [i for i in ty.children if isinstance(i, cx_ast.ConstructorInfo) and not i.deleted]
-    isGeneratorFnFriended = ty.isFriended(lambda i: "thunk_utils" in i.friendedSymbolName)
+    isGeneratorFnFriended = ty.isFriended(lambda i: i.friendedSymbolPath.startsWith(cx_ast.SymbolPath()+"thunk_utils"))
     if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == cx_ast.Member.Visibility.Public] # Filter to what we can see
     ctors.sort(key=lambda i: len(i.parameters))
         
@@ -375,14 +375,14 @@ def __renderImageCapture_cdo(ty:cx_ast.TypeInfo):
 def __renderImageCapture_disassembly(ty:cx_ast.TypeInfo):
     # Gather valid constructors
     ctors = [i for i in ty.children if isinstance(i, cx_ast.ConstructorInfo) and not i.deleted]
-    isGeneratorFnFriended = ty.isFriended(lambda i: "thunk_utils" in i.friendedSymbolName)
+    isGeneratorFnFriended = ty.isFriended(lambda i: i.friendedSymbolPath.startsWith(cx_ast.SymbolPath()+"thunk_utils"))
     if not isGeneratorFnFriended: ctors = [i for i in ctors if i.visibility == cx_ast.Member.Visibility.Public] # Filter to what we can see
     ctors.sort(key=lambda i: len(i.parameters))
 
     if len(ctors) == 0:
         return f"#error {ty.path} has no accessible Disassembly-compatible constructor, and cannot have its image snapshotted"
         
-    ctorParamArgs = [str(ty.path)] + [i.typeName for i in ctors[0].parameters]
+    ctorParamArgs = [str(ty.path)] + [str(i.typeName) for i in ctors[0].parameters]
     return f"builder.captureClassImage_v2<{ ', '.join(ctorParamArgs) }>();"
 
 

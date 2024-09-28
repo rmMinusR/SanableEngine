@@ -77,9 +77,14 @@ class SymbolPath:
     
     def __eq__(this, rhs):
         if not isinstance(rhs, SymbolPath): return False
-        if len(this.__parts) != len(rhs.__parts): return False
-        return all(this.__parts[i]==rhs.__parts[i] for i in range(len(this.__parts)))
+        return this.__parts == rhs.__parts
+        #if len(this.__parts) != len(rhs.__parts): return False
+        #return all(this.__parts[i]==rhs.__parts[i] for i in range(len(this.__parts)))
     
+    def startsWith(this, other:"SymbolPath"):
+        if len(other.__parts) > len(this.__parts): return False
+        return other.__parts == this.__parts[:len(other.__parts)]
+
     @cached_property
     def parent(this) -> "SymbolPath|None":
         if len(this.__parts) > 1:
@@ -387,7 +392,7 @@ class MaybeVirtual(Member):
         this.isOverride = None
         
     def latelink(this, module: Module):
-        this.inheritedVersion = this.owner.findInParents(this.path.ownName)
+        this.inheritedVersion = module.find(this.path.parent).findInParents(this.path.ownName)
         
         def __isVirtual (v:MaybeVirtual): return v.__isExplicitVirtual  or (__isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False)
         def __isOverride(v:MaybeVirtual): return v.__isExplicitOverride or (__isOverride(v.inheritedVersion) if v.inheritedVersion != None else False)
@@ -397,7 +402,7 @@ class MaybeVirtual(Member):
 
 class Callable(ASTNode):
     class Parameter(ASTNode):
-        def __init__(this, path:SymbolPath, location:SourceLocation, index:int, typeName:str):
+        def __init__(this, path:SymbolPath, location:SourceLocation, index:int, typeName:"QualifiedType"):
             ASTNode.__init__(this, path.parent+SymbolPath.Anonymous(location, _type=f"parameter #{index}: {typeName} {path.ownName}"), location, False)
             this.index = index
             this.typeName = typeName
