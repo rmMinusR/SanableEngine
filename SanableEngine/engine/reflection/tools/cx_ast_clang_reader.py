@@ -36,7 +36,11 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
             for cursor in ClangParseContext._getChildren(source.parse()):
                 # Only capture what's in the current file
                 cursorFilePath = cursor.location.file.name.replace(os.altsep, os.sep)
-                if source.path == cursorFilePath: this.__ingestCursor(None, cursor)
+                try:
+                    if source.path == cursorFilePath: this.__ingestCursor(None, cursor)
+                except:
+                    config.logger.critical(f"While parsing file {source.path}")
+                    raise
         
         this.module.linkAll()
 
@@ -61,19 +65,27 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
         # No need to check if it's ours: we're guaranteed it is, if a parent is
         kind = cursor.kind
         if kind in ClangParseContext.factories.keys():
-            if parent != None:
-                # Nested symbol
-                path = parent.path+cursor.spelling
-            elif cursor.semantic_parent.kind != CursorKind.TRANSLATION_UNIT:
-                # Namespaced globals/statics defined outside their
-                # container need to have their paths fixed
-                path = _make_FullyQualifiedPath(cursor)
-            else:
-                # Non-namespaced non-class-static global
-                path = cx_ast.SymbolPath()+cursor.spelling
+            try:
+                if parent != None:
+                    # Nested symbol
+                    path = parent.path+cursor.spelling
+                elif cursor.semantic_parent.kind != CursorKind.TRANSLATION_UNIT:
+                    # Namespaced globals/statics defined outside their
+                    # container need to have their paths fixed
+                    path = _make_FullyQualifiedPath(cursor)
+                else:
+                    # Non-namespaced non-class-static global
+                    path = cx_ast.SymbolPath()+cursor.spelling
+            except:
+                config.logger.critical(f"While detecting path for symbol {cursor.displayname} at {makeSourceLocation(cursor, this.project)}")
+                raise        
             
             # Try to parse node
-            result = ClangParseContext.factories[kind](path, cursor, parent, this.module, this.project)
+            try: result = ClangParseContext.factories[kind](path, cursor, parent, this.module, this.project)
+            except:
+                config.logger.critical(f"While ingesting symbol {path}")
+                raise
+
             if result != None:
                 # Recurse into children
                 for clang_child in ClangParseContext._getChildren(cursor):
@@ -101,7 +113,10 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                     #        _temp_fix_child_paths(i)
                     #_temp_fix_child_paths(result)
                 
-                this.module.register(result)
+                try: this.module.register(result)
+                except:
+                    config.logger.critical(f"While registering symbol {path}")
+                    raise
 
             return result
         else:

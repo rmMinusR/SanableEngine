@@ -256,7 +256,11 @@ class Module:
         for v in this.contents.values(): _reducing_invoke(v, _associate_owner_with_child)
         
         # Link explicit symbols
-        for v in this.contents.values(): _reducing_invoke(v, lambda o:o.link(this))
+        for v in this.contents.values():
+            try: _reducing_invoke(v, lambda o:o.link(this))
+            except:
+                config.logger.critical(f"While linking {v[0].path if isinstance(v, list) else v.path}")
+                raise
         
         # Link implicit symbols added in link()
         while len(this.__concurrentlyAdded) > 0:
@@ -270,10 +274,17 @@ class Module:
                 node.owner = parent
                 
             # Link
-            _reducing_invoke(node, lambda o:o.link(this))
+            try: _reducing_invoke(node, lambda o:o.link(this))
+            except:
+                config.logger.critical(f"While linking implicit symbol {node[0].path if isinstance(node, list) else node.path} generated during link step")
+                raise    
             
         # Late-link explicit symbols
-        for v in this.contents.values(): _reducing_invoke(v, lambda o:o.latelink(this))
+        for v in this.contents.values():
+            try: _reducing_invoke(v, lambda o:o.latelink(this))
+            except:
+                config.logger.critical(f"While late-linking {v[0].path if isinstance(v, list) else v.path}")
+                raise
         
         # Fully link implicit symbols added in latelink()
         while len(this.__concurrentlyAdded) > 0:
@@ -287,8 +298,16 @@ class Module:
                 node.owner = parent
                 
             # Link and late-link
-            _reducing_invoke(node, lambda o:o.link(this))
-            _reducing_invoke(node, lambda o:o.latelink(this))
+                
+            try: _reducing_invoke(node, lambda o:o.link(this))
+            except:
+                config.logger.critical(f"While linking {node[0].path if isinstance(node, list) else node.path} generated during late-link step")
+                raise
+            
+            try: _reducing_invoke(node, lambda o:o.latelink(this))
+            except:
+                config.logger.critical(f"While late-linking {node[0].path if isinstance(node, list) else node.path} generated during late-link step")
+                raise
         
         this.__linking = False
         
