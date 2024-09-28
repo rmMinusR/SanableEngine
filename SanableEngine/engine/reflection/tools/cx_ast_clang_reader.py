@@ -325,6 +325,12 @@ def factory_TemplateParam(path:cx_ast.SymbolPath, cursor:Cursor, parent:cx_ast.A
 
 # TODO probably slow, profile and rewrite
 
+def _dropLeading(val:str, to_drop:list[str]):
+    for i in to_drop:
+        if val.startswith(i):
+            return _dropLeading(val[len(i):].strip(), to_drop)
+    return val
+
 def _make_FullyQualifiedTypePath(target:Type):
     qualifiers = []
     if target.is_const_qualified   (): qualifiers.append("const")
@@ -334,7 +340,7 @@ def _make_FullyQualifiedTypePath(target:Type):
     if target.spelling in ["auto", "decltype(auto)"]:
         # Special case: Can't deduce auto, decltype(auto)
         return cx_ast.QualifiedType(
-            target.spelling,
+            _dropLeading(target.spelling, qualifiers),
             qualifiers=qualifiers,
             pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
         )
@@ -359,7 +365,7 @@ def _make_FullyQualifiedTypePath(target:Type):
     elif target.get_declaration().kind == CursorKind.NO_DECL_FOUND:
         # Template parameter or fundamental literal type
         return cx_ast.QualifiedType(
-            target.spelling,
+            _dropLeading(target.spelling, qualifiers),
             qualifiers=qualifiers,
             pointer_spec=cx_ast.QualifiedType.PointerSpec.NONE
         )
