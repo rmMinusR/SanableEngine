@@ -408,8 +408,8 @@ class MaybeVirtual(Member):
     
     def __init__(this, path:SymbolPath, location:SourceLocation, isDefinition:bool, visibility:Member.Visibility, isExplicitVirtual:bool, isExplicitOverride:bool):
         Member.__init__(this, path, location, isDefinition, visibility)
-        this.__isExplicitVirtual = isExplicitVirtual
-        this.__isExplicitOverride = isExplicitOverride
+        this.isExplicitVirtual = isExplicitVirtual
+        this.isExplicitOverride = isExplicitOverride
         this.inheritedFrom = None
         this.inheritedVersion = None
         this.isVirtual = None
@@ -418,8 +418,8 @@ class MaybeVirtual(Member):
     def latelink(this, module: Module):
         this.inheritedVersion = module.find(this.path.parent).findInParents(this.path.ownName)
         
-        def __isVirtual (v:MaybeVirtual): return v.__isExplicitVirtual  or (__isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False)
-        def __isOverride(v:MaybeVirtual): return v.__isExplicitOverride or (__isOverride(v.inheritedVersion) if v.inheritedVersion != None else False)
+        def __isVirtual (v:MaybeVirtual): return v.isExplicitVirtual  or (__isVirtual (v.inheritedVersion) if v.inheritedVersion != None else False)
+        def __isOverride(v:MaybeVirtual): return v.isExplicitOverride or (__isOverride(v.inheritedVersion) if v.inheritedVersion != None else False)
         this.isVirtual = __isVirtual(this)
         this.isOverride = __isOverride(this)
 
@@ -512,6 +512,19 @@ class DestructorInfo(MaybeVirtual, Callable):
                 deleted:bool, inline:bool):
         MaybeVirtual.__init__(this, path, location, isDefinition, visibility, isExplicitVirtual, isExplicitOverride)
         Callable    .__init__(this, path, location, isDefinition, None, deleted, inline)
+
+    def latelink(this, module: Module):
+        def __getAllDtors(ty:TypeInfo) -> list[DestructorInfo]:
+            out = []
+            for p in ty.children:
+                if isinstance(p, ParentInfo):
+                    dtor = next((i for i in p.parentType.children if isinstance(i, DestructorInfo)), None)
+                    if dtor != None: out.append(dtor)
+                    out += __getAllDtors(p.parentType)
+            return out
+        
+        this.isVirtual = this.isExplicitVirtual or any(i.isExplicitVirtual for i in __getAllDtors(this.owner))
+        this.isOverride = any(i.isExplicitVirtual for i in __getAllDtors(this.owner)[1:]) # Skip virtual check on self, only check if parents are virtual
 
 
 class GlobalVarInfo(ASTNode):
