@@ -34,7 +34,7 @@ stix::MemberFunction::~MemberFunction()
 #define STACK_ALLOC alloca
 #endif
 
-void stix::MemberFunction::invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const
+void stix::MemberFunction::invoke(SRef returnValue, const SRef& thisObj, const std::vector<SRef>& parameters) const
 {
 	assert(thisObj);
 
@@ -45,7 +45,7 @@ void stix::MemberFunction::invoke(SAnyRef returnValue, const SAnyRef& thisObj, c
 		size_t returnValSize = returnType.resolve()->layout.size;
 		void* tempReturnVal = STACK_ALLOC(returnValSize);
 		memset(tempReturnVal, 0, returnValSize);
-		returnValue = SAnyRef(tempReturnVal, returnType);
+		returnValue = SRef(tempReturnVal, returnType);
 	}
 	else if (returnsVoid) assert(!returnValue);
 
@@ -65,7 +65,7 @@ stix::StaticFunction::~StaticFunction()
 {
 }
 
-void stix::StaticFunction::invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const
+void stix::StaticFunction::invoke(SRef returnValue, const std::vector<SRef>& parameters) const
 {
 	bool returnsVoid = returnType==TypeName::create<void>();
 	if (!returnValue && !returnsVoid)
@@ -74,7 +74,7 @@ void stix::StaticFunction::invoke(SAnyRef returnValue, const std::vector<SAnyRef
 		size_t returnValSize = returnType.resolve()->layout.size;
 		void* tempReturnVal = STACK_ALLOC(returnValSize);
 		memset(tempReturnVal, 0, returnValSize);
-		returnValue = SAnyRef(tempReturnVal, returnType);
+		returnValue = SRef(tempReturnVal, returnType);
 	}
 	else if (returnsVoid) assert(!returnValue);
 

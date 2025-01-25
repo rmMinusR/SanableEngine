@@ -6,7 +6,7 @@
 #include <cassert>
 
 #include "TypeName.hpp"
-#include "SAny.hpp"
+#include "SRef.hpp"
 #include "CallableUtils.inl"
 
 namespace stix
@@ -27,7 +27,7 @@ namespace stix
 	{
 	public:
 		STIX_API virtual ~MemberFunction();
-		STIX_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
+		STIX_API void invoke(SRef returnValue, const SRef& thisObj, const std::vector<SRef>& parameters) const;
 	
 		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...)      ) { return make_internal(fn, false); }
 		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...) const) { return make_internal( (TReturn(TOwner::*)(TArgs...)) fn, true); }
@@ -54,7 +54,7 @@ namespace stix
 			return MemberFunction(TypeName::create<TOwner>(), ownerIsConst, TypeName::create<TReturn>(), parameters, eraser, reinterpreter._erased);
 		}
 
-		//All SAnyRefs guaranteed valid when called
+		//All SRefs guaranteed valid when called
 		TypeName owner;
 		bool ownerIsConst; //TODO safety check on invoke
 		detail::CallableUtils::Member::fully_erased_binder_t binder;
@@ -65,7 +65,7 @@ namespace stix
 	{
 	public:
 		STIX_API virtual ~StaticFunction();
-		STIX_API void invoke(SAnyRef returnValue, const std::vector<SAnyRef>& parameters) const;
+		STIX_API void invoke(SRef returnValue, const std::vector<SRef>& parameters) const;
 
 		template<typename TReturn, typename... TArgs>
 		static StaticFunction make(TReturn(*fn)(TArgs...))
@@ -85,7 +85,7 @@ namespace stix
 		STIX_API StaticFunction(const TypeName& returnType, const std::vector<TypeName>& parameters,
 			                           detail::CallableUtils::Static::fully_erased_binder_t binder, detail::CallableUtils::Static::erased_fp_t fn);
 
-		//All SAnyRefs guaranteed valid when called
+		//All SRefs guaranteed valid when called
 		detail::CallableUtils::Static::fully_erased_binder_t binder;
 		detail::CallableUtils::Static::erased_fp_t fn;
 	};

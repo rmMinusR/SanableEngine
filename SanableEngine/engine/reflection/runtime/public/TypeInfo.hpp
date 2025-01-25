@@ -102,13 +102,6 @@ public:
 		STIX_API void vptrJam(void* obj) const;
 
 		/// <summary>
-		/// Cast to a parent. Returns null if no parent found.
-		/// </summary>
-		/// <param name="obj">Object to cast</param>
-		STIX_API void* upcast(void* obj, const TypeName& parentTypeName) const;
-		STIX_API void* upcast(void* obj, const ParentInfo& parentType) const;
-
-		/// <summary>
 		/// Check if this type inherits from the given type
 		/// </summary>
 		/// <param name="type">Type to check against</param>
@@ -199,6 +192,20 @@ public:
 	/// </summary>
 	/// <returns>Whether a live copy was present</returns>
 	STIX_API bool tryRefresh();
+
+	/// <summary>
+	/// Get the offset when casting from one type to another. Requires EXACT types.
+	/// </summary>
+	/// <param name="base">Base type</param>
+	/// <param name="derived">Derived type</param>
+	STIX_API static std::optional<ptrdiff_t> getCastOffset(const TypeName& base, const TypeName& derived);
+
+	/// <summary>
+	/// Cast to a parent. Returns null if no parent found.
+	/// </summary>
+	/// <param name="obj">Object to cast</param>
+	STIX_API void* upcast(void* obj, const TypeName& parentTypeName) const;
+	STIX_API void* downcast(void* obj, const TypeName& derivedTypeName) const;
 
 	/// <summary>
 	/// Look up a parent by name

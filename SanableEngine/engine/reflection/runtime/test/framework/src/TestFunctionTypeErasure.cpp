@@ -63,7 +63,7 @@ TEST_CASE("Function type erasure")
 
 				MyCallable obj;
 				obj.canary = 0;
-				fn.invoke(stix::SAnyRef(), stix::SAnyRef::make(&obj), {});
+				fn.invoke(stix::SRef(), stix::SRef::make(&obj), {});
 
 				CHECK(obj.canary == 1);
 			}
@@ -75,7 +75,7 @@ TEST_CASE("Function type erasure")
 				MyCallable obj;
 				obj.canary = 0;
 				int result;
-				fn.invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&obj), {});
+				fn.invoke(stix::SRef::make(&result), stix::SRef::make(&obj), {});
 
 				CHECK(obj.canary == 1);
 				CHECK(result == 1);
@@ -88,7 +88,7 @@ TEST_CASE("Function type erasure")
 				MyCallable obj;
 				obj.canary = 0;
 				int val = 20;
-				fn.invoke(stix::SAnyRef(), stix::SAnyRef::make(&obj), { stix::SAnyRef::make(&val) });
+				fn.invoke(stix::SRef(), stix::SRef::make(&obj), { stix::SRef::make(&val) });
 
 				CHECK(obj.canary == val);
 			}
@@ -101,7 +101,7 @@ TEST_CASE("Function type erasure")
 				int result;
 				int a = 2;
 				int b = 3;
-				fn.invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&obj), { stix::SAnyRef::make(&a), stix::SAnyRef::make(&b) });
+				fn.invoke(stix::SRef::make(&result), stix::SRef::make(&obj), { stix::SRef::make(&a), stix::SRef::make(&b) });
 
 				CHECK(result == a+b);
 			}
@@ -116,7 +116,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objA;
 				MyCallable objB;
 				MyCallable* objB_ptr = &objB;
-				fn.invoke(stix::SAnyRef(), stix::SAnyRef::make(&objA), { stix::SAnyRef::make(&objB_ptr) });
+				fn.invoke(stix::SRef(), stix::SRef::make(&objA), { stix::SRef::make(&objB_ptr) });
 
 				CHECK(objA.ptrCanary == &objB);
 			}
@@ -127,7 +127,7 @@ TEST_CASE("Function type erasure")
 
 				MyCallable objA;
 				MyCallable objB;
-				fn.invoke(stix::SAnyRef(), stix::SAnyRef::make(&objA), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef(), stix::SRef::make(&objA), { stix::SRef::make(&objB) });
 
 				CHECK(objA.ptrCanary == &objB);
 			}
@@ -140,7 +140,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objB;
 				MyCallable* objB_ptr = &objB;
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), stix::SAnyRef::make(&objA), { stix::SAnyRef::make(&objB_ptr) });
+				fn.invoke(stix::SRef::make(&returnVal), stix::SRef::make(&objA), { stix::SRef::make(&objB_ptr) });
 
 				CHECK(objA.ptrCanary == &objB);
 			}
@@ -152,7 +152,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objA;
 				MyCallable objB;
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), stix::SAnyRef::make(&objA), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef::make(&returnVal), stix::SRef::make(&objA), { stix::SRef::make(&objB) });
 
 				CHECK(objA.ptrCanary == &objB);
 				CHECK(returnVal == &objB);
@@ -167,7 +167,7 @@ TEST_CASE("Function type erasure")
 				stix::MemberFunction fn = stix::MemberFunction::make(&MyCallable::returnStructPtr);
 
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), stix::SAnyRef::make(&objA), {});
+				fn.invoke(stix::SRef::make(&returnVal), stix::SRef::make(&objA), {});
 
 				CHECK(returnVal == objA.ptrCanary);
 			}
@@ -182,7 +182,7 @@ TEST_CASE("Function type erasure")
 				stix::MemberFunction fn = stix::MemberFunction::make(&MyCallable::returnStructRef);
 
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), stix::SAnyRef::make(&objA), {});
+				fn.invoke(stix::SRef::make(&returnVal), stix::SRef::make(&objA), {});
 
 				CHECK(returnVal->canary == objB.canary);
 			}
@@ -197,7 +197,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objA;
 				MyCallable objB;
 				objB.canary = 873;
-				fn.invoke(stix::SAnyRef(), stix::SAnyRef::make(&objA), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef(), stix::SRef::make(&objA), { stix::SRef::make(&objB) });
 
 				CHECK(objA.canary == objB.canary);
 			}
@@ -210,7 +210,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objB;
 				objB.canary = 873;
 				MyCallable result;
-				fn.invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&objA), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef::make(&result), stix::SRef::make(&objA), { stix::SRef::make(&objB) });
 
 				CHECK(objA.canary == objB.canary);
 				CHECK(result.canary == objB.canary);
@@ -225,7 +225,7 @@ TEST_CASE("Function type erasure")
 				objB.canary = 873;
 				objA.ptrCanary = &objB;
 				MyCallable result;
-				fn.invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&objA), {});
+				fn.invoke(stix::SRef::make(&result), stix::SRef::make(&objA), {});
 
 				CHECK(result.canary == objB.canary);
 			}
@@ -256,7 +256,7 @@ TEST_CASE("Function type erasure")
 			{
 				stix::StaticFunction fn = stix::StaticFunction::make(&MyCallable_Static::incCanary);
 
-				fn.invoke(stix::SAnyRef(), {});
+				fn.invoke(stix::SRef(), {});
 
 				CHECK(MyCallable_Static::canary == 1);
 			}
@@ -266,7 +266,7 @@ TEST_CASE("Function type erasure")
 				stix::StaticFunction fn = stix::StaticFunction::make(&MyCallable_Static::incCanary2);
 
 				int result;
-				fn.invoke(stix::SAnyRef::make(&result), {});
+				fn.invoke(stix::SRef::make(&result), {});
 
 				CHECK(MyCallable_Static::canary == 1);
 				CHECK(result == 1);
@@ -277,7 +277,7 @@ TEST_CASE("Function type erasure")
 				stix::StaticFunction fn = stix::StaticFunction::make(&MyCallable_Static::setCanary);
 
 				int val = 20;
-				fn.invoke(stix::SAnyRef(), { stix::SAnyRef::make(&val) });
+				fn.invoke(stix::SRef(), { stix::SRef::make(&val) });
 
 				CHECK(MyCallable_Static::canary == val);
 			}
@@ -289,7 +289,7 @@ TEST_CASE("Function type erasure")
 				int result;
 				int a = 2;
 				int b = 3;
-				fn.invoke(stix::SAnyRef::make(&result), { stix::SAnyRef::make(&a), stix::SAnyRef::make(&b) });
+				fn.invoke(stix::SRef::make(&result), { stix::SRef::make(&a), stix::SRef::make(&b) });
 
 				CHECK(result == a+b);
 			}
@@ -304,7 +304,7 @@ TEST_CASE("Function type erasure")
 
 				MyCallable objB;
 				MyCallable* objB_ptr = &objB;
-				fn.invoke(stix::SAnyRef(), { stix::SAnyRef::make(&objB_ptr) });
+				fn.invoke(stix::SRef(), { stix::SRef::make(&objB_ptr) });
 
 				CHECK(MyCallable_Static::ptrCanary == &objB);
 			}
@@ -314,7 +314,7 @@ TEST_CASE("Function type erasure")
 				stix::StaticFunction fn = stix::StaticFunction::make(&MyCallable_Static::passStructRef);
 
 				MyCallable objB;
-				fn.invoke(stix::SAnyRef(), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef(), { stix::SRef::make(&objB) });
 
 				CHECK(MyCallable_Static::ptrCanary == &objB);
 			}
@@ -326,7 +326,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objB;
 				MyCallable* objB_ptr = &objB;
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), { stix::SAnyRef::make(&objB_ptr) });
+				fn.invoke(stix::SRef::make(&returnVal), { stix::SRef::make(&objB_ptr) });
 
 				CHECK(MyCallable_Static::ptrCanary == &objB);
 				CHECK(returnVal == &objB);
@@ -338,7 +338,7 @@ TEST_CASE("Function type erasure")
 
 				MyCallable objB;
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef::make(&returnVal), { stix::SRef::make(&objB) });
 
 				CHECK(MyCallable_Static::ptrCanary == &objB);
 				CHECK(returnVal == &objB);
@@ -352,7 +352,7 @@ TEST_CASE("Function type erasure")
 				stix::StaticFunction fn = stix::StaticFunction::make(&MyCallable_Static::returnStructPtr);
 
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), {});
+				fn.invoke(stix::SRef::make(&returnVal), {});
 
 				CHECK(returnVal == MyCallable_Static::ptrCanary);
 			}
@@ -366,7 +366,7 @@ TEST_CASE("Function type erasure")
 				stix::StaticFunction fn = stix::StaticFunction::make(&MyCallable_Static::returnStructRef);
 
 				MyCallable* returnVal;
-				fn.invoke(stix::SAnyRef::make(&returnVal), {});
+				fn.invoke(stix::SRef::make(&returnVal), {});
 
 				CHECK(returnVal->canary == objB.canary);
 			}
@@ -380,7 +380,7 @@ TEST_CASE("Function type erasure")
 
 				MyCallable objB;
 				objB.canary = 873;
-				fn.invoke(stix::SAnyRef(), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef(), { stix::SRef::make(&objB) });
 
 				CHECK(MyCallable_Static::canary == objB.canary);
 			}
@@ -392,7 +392,7 @@ TEST_CASE("Function type erasure")
 				MyCallable objB;
 				objB.canary = 873;
 				MyCallable result;
-				fn.invoke(stix::SAnyRef::make(&result), { stix::SAnyRef::make(&objB) });
+				fn.invoke(stix::SRef::make(&result), { stix::SRef::make(&objB) });
 
 				CHECK(MyCallable_Static::canary == objB.canary);
 				CHECK(result.canary == objB.canary);
@@ -406,7 +406,7 @@ TEST_CASE("Function type erasure")
 				objB.canary = 873;
 				MyCallable_Static::ptrCanary = &objB;
 				MyCallable result;
-				fn.invoke(stix::SAnyRef::make(&result), {});
+				fn.invoke(stix::SRef::make(&result), {});
 
 				CHECK(result.canary == objB.canary);
 			}

@@ -28,7 +28,7 @@ TEST_CASE("Function capture")
 			CHECK(fn->returnType == TypeName::create<std::string>());
 
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), {});
+			fn->invoke(stix::SRef::make(&result), {});
 			CHECK(result == VirtualSharedBase::identify_s());
 		}
 
@@ -42,7 +42,7 @@ TEST_CASE("Function capture")
 			CHECK(fn->returnType == TypeName::create<std::string>());
 
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), {});
+			fn->invoke(stix::SRef::make(&result), {});
 			CHECK(result == VirtualInheritedA::identify_s());
 		}
 
@@ -57,7 +57,7 @@ TEST_CASE("Function capture")
 
 			VirtualInheritedB obj;
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), {});
+			fn->invoke(stix::SRef::make(&result), {});
 			CHECK(result == VirtualInheritedB::identify_s());
 		}
 		
@@ -72,7 +72,7 @@ TEST_CASE("Function capture")
 
 			VirtualDiamond obj;
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), {});
+			fn->invoke(stix::SRef::make(&result), {});
 			CHECK(result == VirtualDiamond::identify_s());
 		}
 	}
@@ -136,7 +136,7 @@ TEST_CASE("Function capture")
 
 			VirtualSharedBase obj;
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&obj), {});
+			fn->invoke(stix::SRef::make(&result), stix::SRef::make(&obj), {});
 			CHECK(result == obj.identify());
 		}
 
@@ -151,7 +151,7 @@ TEST_CASE("Function capture")
 
 			VirtualInheritedA obj;
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&obj), {});
+			fn->invoke(stix::SRef::make(&result), stix::SRef::make(&obj), {});
 			CHECK(result == obj.identify());
 		}
 
@@ -166,7 +166,7 @@ TEST_CASE("Function capture")
 
 			VirtualInheritedB obj;
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&obj), {});
+			fn->invoke(stix::SRef::make(&result), stix::SRef::make(&obj), {});
 			CHECK(result == obj.identify());
 		}
 		
@@ -181,7 +181,7 @@ TEST_CASE("Function capture")
 
 			VirtualDiamond obj;
 			std::string result;
-			fn->invoke(stix::SAnyRef::make(&result), stix::SAnyRef::make(&obj), {});
+			fn->invoke(stix::SRef::make(&result), stix::SRef::make(&obj), {});
 			CHECK(result == obj.identify());
 		}
 	}

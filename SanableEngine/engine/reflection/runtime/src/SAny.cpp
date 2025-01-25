@@ -2,44 +2,85 @@
 
 #include <cassert>
 
-void* stix::SAnyRef::get_internal(const TypeName& asType) const
-{
-	if (!data) return nullptr;
+#include "TypeInfo.hpp"
 
-	assert(asType == type);
-	return data;
-}
-
-stix::SAnyRef::SAnyRef(void* data, const TypeName& type) :
-	data(data),
-	type(type)
-{
-	assert(data);
-	assert(type.isValid());
-}
-
-stix::SAnyRef::SAnyRef() :
-	data(nullptr),
-	type()
+stix::_OwningRefImpl::_OwningRefImpl()
 {
 }
 
-stix::SAnyRef::~SAnyRef()
+stix::_OwningRefImpl::~_OwningRefImpl()
 {
+	clear();
 }
 
-TypeName stix::SAnyRef::getType() const
+void stix::_OwningRefImpl::clear()
 {
-	return type;
+	if (obj)
+	{
+		assert(deleter != nullptr);
+		deleter(obj);
+	}
+	obj = nullptr;
+	deleter = nullptr;
+
+	if (ownsTypeInfo && objType) delete objType;
+	objType = nullptr;
+	ownsTypeInfo = false;
 }
 
-stix::SAnyRef::operator bool() const
+void stix::_OwningRefImpl::put(void* obj, void(*deleter)(void*), const TypeInfo* typeInfo, bool ownsTypeInfo)
 {
-	return data;
+	if (this->obj) clear();
 
+	this->obj = obj;
+	this->deleter = deleter;
+	this->objType = typeInfo;
+	this->ownsTypeInfo = ownsTypeInfo;
 }
 
-bool stix::SAnyRef::has_value() const
+stix::_OwningRefImpl::_OwningRefImpl(_OwningRefImpl&& mov)
 {
-	return data;
+	*this = std::move(mov);
+}
+
+stix::_OwningRefImpl& stix::_OwningRefImpl::operator=(_OwningRefImpl&& mov)
+{
+	put(mov.obj, mov.deleter, mov.objType, mov.ownsTypeInfo);
+	mov.clear();
+
+	return *this;
+}
+
+stix::_OwningRefImpl::operator bool() const
+{
+	return valid();
+}
+
+bool stix::_OwningRefImpl::valid() const
+{
+	return obj != nullptr;
+}
+
+const TypeInfo* stix::_OwningRefImpl::type() const
+{
+	return objType;
+}
+
+void* stix::_OwningRefImpl::try_get_as(const TypeName& requestedTypeName)
+{
+	if (objType->name == requestedTypeName) return obj;
+
+	// Try upcast
+	void* out = objType->upcast(obj, requestedTypeName);
+	if (out) return out;
+
+	// Try downcast
+	const TypeInfo* requestedType = requestedTypeName.resolve();
+	if (requestedType)
+	{
+		return requestedType->downcast(obj, objType->name);
+	}
+
+	// FIXME should this fail loudly?
+	return nullptr;
 }

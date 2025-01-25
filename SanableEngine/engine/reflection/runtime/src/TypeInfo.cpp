@@ -221,13 +221,6 @@ void TypeInfo::Layout::vptrJam(void* obj) const
 	}
 }
 
-void* TypeInfo::Layout::upcast(void* obj, const TypeName& parentTypeName) const
-{
-	std::optional<ParentInfo> parent = getParent_internal(TypeName(), parentTypeName);
-	if (parent.has_value()) return upcast(obj, parent.value()); //Defer
-	else return nullptr; //Not a parent
-}
-
 bool TypeInfo::Layout::isDerivedFrom(const TypeName& type, bool grandparents) const
 {
 	//Check
@@ -245,10 +238,50 @@ bool TypeInfo::Layout::isDerivedFrom(const TypeName& type, bool grandparents) co
 	return false;
 }
 
-void* TypeInfo::Layout::upcast(void* obj, const ParentInfo& parentType) const
+std::optional<ptrdiff_t> TypeInfo::getCastOffset(const TypeName& base, const TypeName& derived)
 {
-	//assert(parentType.owner == this->name); //TODO re-add safety assert
-	return ((char*)obj)+parentType.offset;
+	// No-op
+	if (base == derived) return 0;
+
+	const TypeInfo* ty = derived.resolve();
+	if (!ty) return std::nullopt; // TODO should this hard error instead?
+
+	// First try virtual parents
+	for (const ParentInfo& p : ty->layout.parents)
+	{
+		if (p.virtualness != ParentInfo::Virtualness::NonVirtual)
+		{
+			std::optional<ptrdiff_t> match = getCastOffset(base, p.typeName);
+			if (match) return *match + p.offset;
+		}
+	}
+
+	// Then try non-virtual parents
+	for (const ParentInfo& p : ty->layout.parents)
+	{
+		if (p.virtualness == ParentInfo::Virtualness::NonVirtual)
+		{
+			std::optional<ptrdiff_t> match = getCastOffset(base, p.typeName);
+			if (match) return *match + p.offset;
+		}
+	}
+
+	// Didn't find anything
+	return std::nullopt;
+}
+
+void* TypeInfo::upcast(void* obj, const TypeName& parentTypeName) const
+{
+	std::optional<ptrdiff_t> offset = getCastOffset(parentTypeName, name);
+	if (offset) return reinterpret_cast<uint8_t*>(obj) + *offset;
+	else return nullptr; //Not a parent
+}
+
+void* TypeInfo::downcast(void* obj, const TypeName& derivedTypeName) const
+{
+	std::optional<ptrdiff_t> offset = getCastOffset(name, derivedTypeName);
+	if (offset) return reinterpret_cast<uint8_t*>(obj) - *offset;
+	else return nullptr; //Not a parent
 }
 
 bool TypeInfo::Layout::matchesExact(void* obj) const
@@ -333,7 +366,7 @@ void TypeInfo::doLateBinding(ModuleTypeRegistry* ownModule)
 	layout.ownModule = ownModule;
 	layout.walkFields(
 		[&](const FieldInfo& fi) {
-			ptrdiff_t root = fi.offset + (ptrdiff_t)this->layout.upcast(nullptr, fi.owner);
+			ptrdiff_t root = fi.offset + (ptrdiff_t)this->upcast(nullptr, fi.owner);
 			assert(layout.byteUsage[root] != Layout::ByteUsage::ImplicitConst && "Attempted to overwrite data (usage clobbering)");
 			memset(layout.byteUsage.data()+root, (uint8_t)Layout::ByteUsage::ExplicitField, fi.size);
 		},
