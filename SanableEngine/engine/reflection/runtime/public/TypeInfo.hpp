@@ -198,7 +198,7 @@ public:
 	/// </summary>
 	/// <param name="base">Base type</param>
 	/// <param name="derived">Derived type</param>
-	STIX_API static std::optional<ptrdiff_t> getCastOffset(const TypeName& base, const TypeName& derived);
+	STIX_API static std::optional<ptrdiff_t> getCastOffset(const TypeName& base, const TypeName& derived, bool isTrueBase = true);
 
 	/// <summary>
 	/// Cast to a parent. Returns null if no parent found.

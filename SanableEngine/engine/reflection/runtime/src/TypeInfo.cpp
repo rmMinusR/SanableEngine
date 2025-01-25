@@ -238,7 +238,7 @@ bool TypeInfo::Layout::isDerivedFrom(const TypeName& type, bool grandparents) co
 	return false;
 }
 
-std::optional<ptrdiff_t> TypeInfo::getCastOffset(const TypeName& base, const TypeName& derived)
+std::optional<ptrdiff_t> TypeInfo::getCastOffset(const TypeName& base, const TypeName& derived, bool isTrueBase)
 {
 	// No-op
 	if (base == derived) return 0;
@@ -247,12 +247,15 @@ std::optional<ptrdiff_t> TypeInfo::getCastOffset(const TypeName& base, const Typ
 	if (!ty) return std::nullopt; // TODO should this hard error instead?
 
 	// First try virtual parents
-	for (const ParentInfo& p : ty->layout.parents)
+	if (isTrueBase)
 	{
-		if (p.virtualness != ParentInfo::Virtualness::NonVirtual)
+		for (const ParentInfo& p : ty->layout.parents)
 		{
-			std::optional<ptrdiff_t> match = getCastOffset(base, p.typeName);
-			if (match) return *match + p.offset;
+			if (p.virtualness != ParentInfo::Virtualness::NonVirtual)
+			{
+				std::optional<ptrdiff_t> match = getCastOffset(base, p.typeName, false);
+				if (match) return *match + p.offset;
+			}
 		}
 	}
 
@@ -261,7 +264,7 @@ std::optional<ptrdiff_t> TypeInfo::getCastOffset(const TypeName& base, const Typ
 	{
 		if (p.virtualness == ParentInfo::Virtualness::NonVirtual)
 		{
-			std::optional<ptrdiff_t> match = getCastOffset(base, p.typeName);
+			std::optional<ptrdiff_t> match = getCastOffset(base, p.typeName, false);
 			if (match) return *match + p.offset;
 		}
 	}
