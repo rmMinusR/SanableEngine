@@ -66,7 +66,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         }
 
         shader = new ShaderProgram("resources/shaders/fresnel");
-        shader->load();
+        if (!shader->load()) assert(false);
         
         material = new Material(shader);
 

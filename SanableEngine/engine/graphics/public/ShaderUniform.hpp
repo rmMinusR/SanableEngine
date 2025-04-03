@@ -58,6 +58,7 @@ public:
 
 private:
 	ShaderProgram* owner;
+	int codeIndex;
 	int location;
 	std::string name;
 	GLint objSize;
@@ -67,7 +68,7 @@ private:
 
 public:
 	ENGINEGRAPHICS_API ShaderUniform();
-	ENGINEGRAPHICS_API ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int location);
+	ENGINEGRAPHICS_API ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int codeIndex);
 
 	ENGINEGRAPHICS_API ShaderProgram* getOwner() const;
 

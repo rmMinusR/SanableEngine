@@ -44,14 +44,14 @@ ShaderUniform::ShaderUniform() :
 {
 }
 
-ShaderUniform::ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int location) :
+ShaderUniform::ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int codeIndex) :
 	owner(owner),
-	location(location)
+	codeIndex(codeIndex)
 {
 	constexpr size_t bufSz = 256;
 	char buf[bufSz];
 	GLsizei nRead;
-	glGetActiveUniform(ownerHandle, location, bufSz, &nRead, &objSize, &dataType, buf);
+	glGetActiveUniform(ownerHandle, codeIndex, bufSz, &nRead, &objSize, &dataType, buf);
 	name = std::string(buf, nRead);
 	location = glGetUniformLocation(ownerHandle, buf);
 	detectBinding();
