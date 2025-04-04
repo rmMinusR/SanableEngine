@@ -49,6 +49,7 @@ public:
 
 	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* loadTexture(const std::filesystem::path& path) = 0;
 	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) = 0;
+	[[nodiscard]] ENGINEGRAPHICS_API virtual GMesh* newMesh(const CMesh& source) = 0;
 
 	ENGINEGRAPHICS_API virtual void errorCheck() const = 0;
 };
@@ -58,8 +59,8 @@ class OpenGlRenderer : public Renderer
 private:
 	SDL_GLContext context;
 
-	GMesh unitQuad;
-	GMesh dynQuad;
+	OpenGlMesh unitQuad;
+	OpenGlMesh dynQuad;
 	OpenGlTexture fallbackTexture;
 
 	void drawTextureInternal(const GTexture* tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor);
@@ -80,8 +81,9 @@ public:
 	ENGINEGRAPHICS_API virtual void setViewProjTranform(const glm::mat4&) override;
 	ENGINEGRAPHICS_API virtual void setModelTransform(const glm::mat4&) override;
 
-	[[nodiscard]] ENGINEGRAPHICS_API GTexture* loadTexture(const std::filesystem::path& path) override;
-	[[nodiscard]] ENGINEGRAPHICS_API GTexture* newTexture(int width, int height, int nChannels, void* data) override;
+	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* loadTexture(const std::filesystem::path& path) override;
+	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) override;
+	[[nodiscard]] ENGINEGRAPHICS_API virtual GMesh* newMesh(const CMesh& source) override;
 
 	ENGINEGRAPHICS_API virtual void errorCheck() const override;
 };

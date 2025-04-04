@@ -181,14 +181,15 @@ OpenGlTexture::~OpenGlTexture()
 	glDeleteTextures(1, &id);
 }
 
-OpenGlTexture::OpenGlTexture(OpenGlTexture&& mov)
+OpenGlTexture::OpenGlTexture(OpenGlTexture&& mov) :
+	OpenGlTexture()
 {
 	*this = std::move(mov);
 }
 
 GTexture& OpenGlTexture::operator=(GTexture&& mov)
 {
-	this->operator=(static_cast<GTexture&&>(mov));
+	*this = static_cast<GTexture&&>(mov);
 	return *this;
 }
 

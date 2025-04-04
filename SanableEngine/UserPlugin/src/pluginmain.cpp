@@ -2,6 +2,7 @@
 
 #include "application/PluginCore.hpp"
 #include "application/Plugin.hpp"
+#include "application/Window.hpp"
 
 #include <SDL.h>
 #include "game/Game.hpp"
@@ -48,6 +49,8 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
     if (firstRun) {
+        Renderer* renderer = application->getMainWindow()->getRenderer();
+
         camera = level->addGameObject();
         Camera* cc = camera->CreateComponent<Camera>();
         cc->zFar = 100;
@@ -62,7 +65,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         {
             //CMesh cmesh("resources/bunny.fbx");
             CMesh cmesh("resources/dragon.fbx");
-            mesh = new GMesh(cmesh);
+            mesh = renderer->newMesh(cmesh);
         }
 
         shader = new ShaderProgram("resources/shaders/fresnel");

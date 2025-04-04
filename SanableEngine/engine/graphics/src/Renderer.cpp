@@ -30,12 +30,21 @@ OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
 	Renderer(owner),
 	context(context)
 {
-	unitQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), false);
-	dynQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), true);
+	{
+		CMesh cUnitQuad = CMesh::createUnitQuad(Rect<float>::fromMinMax({ 0,0 }, { 1,1 }));
+		unitQuad = OpenGlMesh(cUnitQuad, false);
+		dynQuad = OpenGlMesh(cUnitQuad, true);
+	}
 
 	{
-		CTexture tmp(1, 1, 4);
-		memset(tmp.pixel(0, 0), 255, 4);
+		// Pink and black checkerboard
+		CTexture tmp(2, 2, 4);
+		constexpr uint8_t col_blk[4] = { 0, 0, 0, 255 };
+		constexpr uint8_t col_mag[4] = { 255, 0, 255, 255 };
+		memcpy(tmp.pixel(0, 0), &col_blk, 4);
+		memcpy(tmp.pixel(1, 0), &col_mag, 4);
+		memcpy(tmp.pixel(0, 1), &col_mag, 4);
+		memcpy(tmp.pixel(1, 1), &col_blk, 4);
 		fallbackTexture = OpenGlTexture(this, tmp);
 	}
 }
@@ -220,6 +229,11 @@ GTexture* OpenGlRenderer::newTexture(int width, int height, int nChannels, void*
 {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, nChannels);
 	return new OpenGlTexture(this, width, height, nChannels, data);
+}
+
+GMesh* OpenGlRenderer::newMesh(const CMesh& source)
+{
+	return new OpenGlMesh(source);
 }
 
 void OpenGlRenderer::errorCheck() const

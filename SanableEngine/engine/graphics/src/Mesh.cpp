@@ -166,15 +166,15 @@ CMesh CMesh::createUnitQuad(Rect<float> uvs)
 	return mesh;
 }
 
-GMesh::GMesh() :
-	VAO(0),
-	VBO(0),
-	EBO(0),
-	nTriangles(0)
+GMesh::GMesh()
 {
 }
 
-GMesh::GMesh(const CMesh& src, bool dynamic) :
+GMesh::~GMesh()
+{
+}
+
+OpenGlMesh::OpenGlMesh(const CMesh& src, bool dynamic) :
 	VAO(0),
 	VBO(0),
 	EBO(0),
@@ -208,19 +208,19 @@ GMesh::GMesh(const CMesh& src, bool dynamic) :
 	glBindVertexArray(0);
 }
 
-GMesh::~GMesh()
+OpenGlMesh::~OpenGlMesh()
 {
 	if (VAO) glDeleteVertexArrays(1, &VAO);
 	if (VBO) glDeleteBuffers(1, &VBO);
 	if (EBO) glDeleteBuffers(1, &EBO);
 }
 
-void GMesh::updateFrom(const CMesh& src)
+void OpenGlMesh::updateFrom(const CMesh& src)
 {
 	updateFrom(src, true, true);
 }
 
-void GMesh::updateFrom(const CMesh& src, bool vertices, bool triangles)
+void OpenGlMesh::updateFrom(const CMesh& src, bool vertices, bool triangles)
 {
 	assert(*this);
 
@@ -237,7 +237,7 @@ void GMesh::updateFrom(const CMesh& src, bool vertices, bool triangles)
 	}
 }
 
-void GMesh::renderImmediate() const
+void OpenGlMesh::renderImmediate() const
 {
 	assert(*this);
 
@@ -251,12 +251,26 @@ void GMesh::renderImmediate() const
 	glBindVertexArray(0);
 }
 
-GMesh::GMesh(GMesh&& mov)
+OpenGlMesh::OpenGlMesh() :
+	VAO(0),
+	VBO(0),
+	EBO(0)
+{
+}
+
+OpenGlMesh::OpenGlMesh(OpenGlMesh&& mov) :
+	OpenGlMesh()
 {
 	*this = std::move(mov); //Defer
 }
 
-GMesh& GMesh::operator=(GMesh&& mov)
+GMesh& OpenGlMesh::operator=(GMesh&& mov)
+{
+	*this = static_cast<OpenGlMesh&&>(mov);
+	return *this;
+}
+
+OpenGlMesh& OpenGlMesh::operator=(OpenGlMesh&& mov)
 {
 	this->VAO = mov.VAO;
 	this->VBO = mov.VBO;
@@ -271,7 +285,7 @@ GMesh& GMesh::operator=(GMesh&& mov)
 	return *this;
 }
 
-GMesh::operator bool() const
+OpenGlMesh::operator bool() const
 {
 	return VAO && VBO && EBO;
 }

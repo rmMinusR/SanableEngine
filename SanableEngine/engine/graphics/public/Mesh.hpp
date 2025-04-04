@@ -57,25 +57,43 @@ public:
 //GPU-sided mesh
 class GMesh : public Mesh
 {
+protected:
+	ENGINEGRAPHICS_API GMesh();
+public:
+	ENGINEGRAPHICS_API virtual ~GMesh();
+
+	ENGINEGRAPHICS_API virtual void updateFrom(const CMesh& src) = 0;
+	ENGINEGRAPHICS_API virtual void updateFrom(const CMesh& src, bool vertices, bool triangles) = 0;
+
+	GMesh(GMesh&& mov) = delete;
+	ENGINEGRAPHICS_API virtual GMesh& operator=(GMesh&& mov) = 0;
+	GMesh(const GMesh& cpy) = delete;
+	GMesh& operator=(const GMesh& cpy) = delete;
+
+	ENGINEGRAPHICS_API virtual operator bool() const = 0;
+};
+
+
+class OpenGlMesh : public GMesh
+{
 	GLuint VAO;
 	GLuint VBO;
 	GLuint EBO;
 	size_t nTriangles;
 
 public:
-	ENGINEGRAPHICS_API GMesh();
-	ENGINEGRAPHICS_API GMesh(const CMesh& src, bool dynamic = false);
-	ENGINEGRAPHICS_API virtual ~GMesh();
+	ENGINEGRAPHICS_API OpenGlMesh();
+	ENGINEGRAPHICS_API OpenGlMesh(const CMesh& src, bool dynamic = false);
+	ENGINEGRAPHICS_API virtual ~OpenGlMesh();
 
 	ENGINEGRAPHICS_API void updateFrom(const CMesh& src);
 	ENGINEGRAPHICS_API void updateFrom(const CMesh& src, bool vertices, bool triangles);
 
 	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
 
-	ENGINEGRAPHICS_API GMesh(GMesh&& mov);
-	ENGINEGRAPHICS_API GMesh& operator=(GMesh&& mov);
-	GMesh(const GMesh& cpy) = delete;
-	GMesh& operator=(const GMesh& cpy) = delete;
+	ENGINEGRAPHICS_API OpenGlMesh(OpenGlMesh&& mov);
+	ENGINEGRAPHICS_API virtual GMesh& operator=(GMesh&& mov) override;
+	ENGINEGRAPHICS_API OpenGlMesh& operator=(OpenGlMesh&& mov);
 
-	ENGINEGRAPHICS_API operator bool() const;
+	ENGINEGRAPHICS_API virtual operator bool() const override;
 };
