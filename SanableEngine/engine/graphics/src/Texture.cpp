@@ -118,21 +118,25 @@ const void* CTexture::pixel(int x, int y) const
 	return static_cast<const uint8_t*>(data) + nChannels * (x+y*width);
 }
 
-GTexture* GTexture::fromFile(const std::filesystem::path& path, Renderer* ctx)
-{
-	return new GTexture(ctx, CTexture::fromFile(path));
-}
-
 GTexture::GTexture() :
-	Texture(width, height, nChannels),
-	id(0)
+	Texture(0, 0, 0)
 {
 }
 
-GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* data) :
-	Texture(width, height, nChannels),
+GTexture::GTexture(int width, int height, int nChannels, const void* data) :
+	Texture(width, height, nChannels)
+{
+}
+
+GTexture::~GTexture()
+{
+}
+
+OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data) :
+	GTexture(width, height, nChannels, data),
 	id(0)
 {
+	ctx->activate();
 	Window::setActiveDrawTarget(ctx->getOwner());
 
 	glGenTextures(1, &id);
@@ -162,23 +166,28 @@ GTexture::GTexture(Renderer* ctx, int width, int height, int nChannels, void* da
 	ctx->errorCheck();
 }
 
-GTexture::GTexture(Renderer* ctx, const CTexture& tex) :
-	GTexture(ctx, tex.width, tex.height, tex.nChannels, tex.data)
+OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, const CTexture& tex) :
+	OpenGlTexture(ctx, tex.getWidth(), tex.getHeight(), tex.getNChannels(), tex.pixel(0, 0))
 {
 }
 
-GTexture::~GTexture()
+OpenGlTexture::~OpenGlTexture()
 {
 	glDeleteTextures(1, &id);
 }
 
-GTexture::GTexture(GTexture&& mov) :
-	Texture(0, 0, 0)
+OpenGlTexture::OpenGlTexture(OpenGlTexture&& mov)
 {
-	*this = std::move(mov); //Defer
+	*this = std::move(mov);
 }
 
-GTexture& GTexture::operator=(GTexture&& mov)
+GTexture& OpenGlTexture::operator=(GTexture&& mov)
+{
+	this->operator=(static_cast<GTexture&&>(mov));
+	return *this;
+}
+
+OpenGlTexture& OpenGlTexture::operator=(OpenGlTexture&& mov)
 {
 	if (this->id) glDeleteTextures(1, &id);
 
@@ -192,7 +201,7 @@ GTexture& GTexture::operator=(GTexture&& mov)
 	return *this;
 }
 
-GTexture::operator bool() const
+OpenGlTexture::operator bool() const
 {
 	return id != 0;
 }

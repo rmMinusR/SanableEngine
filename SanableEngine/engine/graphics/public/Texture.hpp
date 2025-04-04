@@ -8,7 +8,7 @@
 #include "dllapi.h"
 #include "math/Vector2.inl"
 
-class Renderer;
+class OpenGlRenderer;
 class GTexture;
 
 
@@ -34,8 +34,6 @@ public:
 //CPU-sided texture
 class CTexture : public Texture
 {
-	friend class GTexture;
-
 	void* data;
 
 	CTexture(int width, int height, int nChannels, void* data);
@@ -59,21 +57,32 @@ public:
 //GPU-sided texture
 class GTexture : public Texture
 {
-	friend class Renderer;
+protected:
+	ENGINEGRAPHICS_API GTexture();
+	ENGINEGRAPHICS_API GTexture(int width, int height, int nChannels, const void* data);
+public:
+	ENGINEGRAPHICS_API virtual ~GTexture();
 
+	GTexture(GTexture&& mov) = delete;
+	ENGINEGRAPHICS_API virtual GTexture& operator=(GTexture&& mov) = 0;
+	GTexture(const GTexture& cpy) = delete;
+	GTexture& operator=(const GTexture& cpy) = delete;
+};
+
+
+class OpenGlTexture : public GTexture
+{
 	GLuint id;
 
 public:
-	ENGINEGRAPHICS_API static GTexture* fromFile(const std::filesystem::path&, Renderer* ctx);
-	ENGINEGRAPHICS_API GTexture();
-	ENGINEGRAPHICS_API GTexture(Renderer* ctx, int width, int height, int nChannels, void* data);
-	ENGINEGRAPHICS_API GTexture(Renderer* ctx, const CTexture& tex);
-	ENGINEGRAPHICS_API ~GTexture();
+	ENGINEGRAPHICS_API OpenGlTexture();
+	ENGINEGRAPHICS_API OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data);
+	ENGINEGRAPHICS_API OpenGlTexture(OpenGlRenderer* ctx, const CTexture& tex);
+	ENGINEGRAPHICS_API virtual ~OpenGlTexture();
 
-	ENGINEGRAPHICS_API GTexture(GTexture&& mov);
-	ENGINEGRAPHICS_API GTexture& operator=(GTexture&& mov);
-	GTexture(const GTexture& cpy) = delete;
-	GTexture& operator=(const GTexture& cpy) = delete;
-
+	ENGINEGRAPHICS_API OpenGlTexture(OpenGlTexture&& mov);
+	ENGINEGRAPHICS_API virtual GTexture& operator=(GTexture&& mov) override;
+	ENGINEGRAPHICS_API OpenGlTexture& operator=(OpenGlTexture&& mov);
+	
 	ENGINEGRAPHICS_API virtual operator bool() const override;
 };
