@@ -132,12 +132,17 @@ GTexture::~GTexture()
 {
 }
 
+OpenGlTexture::OpenGlTexture() :
+	GTexture(),
+	id(0)
+{
+}
+
 OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data) :
 	GTexture(width, height, nChannels, data),
 	id(0)
 {
 	ctx->activate();
-	Window::setActiveDrawTarget(ctx->getOwner());
 
 	glGenTextures(1, &id);
 	assert(id);

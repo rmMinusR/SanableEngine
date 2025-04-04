@@ -17,14 +17,17 @@
 #include "Font.hpp"
 #include "Sprite.hpp"
 
-Renderer::Renderer() :
-	owner(nullptr),
-	context(nullptr)
+Renderer::Renderer(Window* owner) :
+	owner(owner)
 {
 }
 
-Renderer::Renderer(Window* owner, SDL_GLContext context) :
-	owner(owner),
+Renderer::~Renderer()
+{
+}
+
+OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
+	Renderer(owner),
 	context(context)
 {
 	unitQuad = GMesh(CMesh::createUnitQuad(Rect<float>::fromMinMax({0,0}, {1,1})), false);
@@ -33,11 +36,21 @@ Renderer::Renderer(Window* owner, SDL_GLContext context) :
 	{
 		CTexture tmp(1, 1, 4);
 		memset(tmp.pixel(0, 0), 255, 4);
-		fallbackTexture = GTexture(this, tmp);
+		fallbackTexture = OpenGlTexture(this, tmp);
 	}
 }
 
-void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
+OpenGlRenderer::~OpenGlRenderer()
+{
+	// TODO: Should we own the SDL_GLContext handle?
+}
+
+void OpenGlRenderer::activate() const
+{
+	Window::setActiveDrawTarget(getOwner());
+}
+
+void OpenGlRenderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
 {
 	ShaderProgram::clear();
 
@@ -50,7 +63,7 @@ void Renderer::drawRect(Vector3f center, float w, float h, const SDL_Color& colo
 	glEnd();
 }
 
-void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos)
+void OpenGlRenderer::drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos)
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -58,23 +71,24 @@ void Renderer::drawTextNonShadered(const Font& font, const std::wstring& text, V
 	for (int i = 0; i < text.length(); ++i)
 	{
 		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
+		const GTexture* glyphTex = glyph->getTexture();
 		
 		drawTexture(
-			glyph->texture,
+			glyphTex,
 			nullptr,
-			pos+Vector3f(glyph->bearingX, -glyph->bearingY, 0),
-			glyph->texture->width,
-			glyph->texture->height
+			pos+Vector3f(glyph->getBearingX(), -glyph->getBearingY(), 0),
+			glyphTex->getWidth(),
+			glyphTex->getHeight()
 		);
 		
 		//Advance position
-		pos.x += glyph->advance / 64.0f;
+		pos.x += glyph->getAdvance();
 	}
 
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color)
+void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color)
 {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -86,7 +100,7 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
-	glTranslatef(0, font.size, 0); //Text's default anchor is bottom-left of line; follow convention of using top-left corner to anchor
+	glTranslatef(0, font.getSize(), 0); //Text's default anchor is bottom-left of line; follow convention of using top-left corner to anchor
 	
 	Vector3f relpos;
 	for (int i = 0; i < text.length(); ++i)
@@ -99,9 +113,11 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 		const RenderedGlyph* glyph = font.getGlyph(text[i], this);
 		if (!glyph) glyph = font.getFallbackGlyph(this);
 		
-		glBindTexture(GL_TEXTURE_2D, glyph->texture->id);
-		glTranslatef(glyph->bearingX, -glyph->bearingY, 0); //Apply glyph's requested offset for texture
-		glScalef(glyph->texture->width, glyph->texture->height, 1); //Apply glyph's requested size
+		const OpenGlTexture* glyphTex = static_cast<const OpenGlTexture*>(glyph->getTexture());
+
+		glBindTexture(GL_TEXTURE_2D, glyphTex->id);
+		glTranslatef(glyph->getBearingX(), -glyph->getBearingY(), 0); //Apply glyph's requested offset for texture
+		glScalef(glyphTex->getWidth(), glyphTex->getHeight(), 1); //Apply glyph's requested size
 		mat.writeInstanceUniforms_generic(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
 
 		unitQuad.renderImmediate();
@@ -109,7 +125,7 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 		glPopMatrix();
 		
 		//Advance position
-		relpos.x += glyph->advance / 64.0f;
+		relpos.x += glyph->getAdvance();
 	}
 
 	glPopMatrix();
@@ -117,8 +133,9 @@ void Renderer::drawText(const Font& font, const Material& mat, const std::wstrin
 	glDisable(GL_BLEND);
 }
 
-void Renderer::drawTextureInternal(const GTexture* tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor)
+void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor)
 {
+	const OpenGlTexture* tex = static_cast<const OpenGlTexture*>(_tex);
 	assert(tex);
 	
 	errorCheck();
@@ -166,51 +183,46 @@ void Renderer::drawTextureInternal(const GTexture* tex, const Material* mat, Vec
 	errorCheck();
 }
 
-void Renderer::drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h)
+void OpenGlRenderer::drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h)
 {
 	if (!tex) tex = &fallbackTexture;
 	drawTextureInternal(tex, mat, pos, {w,h}, Rect<float>::fromMinMax({0,0}, {1,1}), {255,255,255,255});
 }
 
-void Renderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h)
+void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h)
 {
-	drawTextureInternal(spr->tex, mat, pos, {w,h}, spr->uvs, {255,255,255,255});
+	drawTextureInternal(spr->getTexture(), mat, pos, {w,h}, spr->getUVs(), {255,255,255,255});
 }
 
-void Renderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor)
+void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor)
 {
-	drawTextureInternal(spr->tex, mat, pos, {w,h}, spr->uvs, tintColor);
+	drawTextureInternal(spr->getTexture(), mat, pos, {w,h}, spr->getUVs(), tintColor);
 }
 
-void Renderer::loadTransform(const glm::mat4& mat)
+void OpenGlRenderer::setViewProjTranform(const glm::mat4& mat)
 {
+	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(glm::value_ptr(mat));
 }
 
-GTexture* Renderer::loadTexture(const std::filesystem::path& path)
+void OpenGlRenderer::setModelTransform(const glm::mat4& mat)
 {
-	return GTexture::fromFile(path, this);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(glm::value_ptr(mat));
 }
 
-GTexture* Renderer::newTexture(int width, int height, int nChannels, void* data)
+GTexture* OpenGlRenderer::loadTexture(const std::filesystem::path& path)
 {
-	return new GTexture(this, width, height, nChannels, data);
+	return new OpenGlTexture(this, CTexture::fromFile(path));
 }
 
-GTexture* Renderer::renderFontGlyph(const Font& font)
+GTexture* OpenGlRenderer::newTexture(int width, int height, int nChannels, void* data)
 {
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); //Disable byte-alignment restriction: OpenGL textures have 4-byte align and size, but here we're grayscale
-	GTexture* out = new GTexture(
-		this,
-		font.font->glyph->bitmap.width,
-		font.font->glyph->bitmap.rows,
-		1,
-		font.font->glyph->bitmap.buffer
-	);
-	return out;
+	glPixelStorei(GL_UNPACK_ALIGNMENT, nChannels);
+	return new OpenGlTexture(this, width, height, nChannels, data);
 }
 
-void Renderer::errorCheck()
+void OpenGlRenderer::errorCheck() const
 {
 	GLenum err = glGetError();
 	if (err != GL_NO_ERROR)

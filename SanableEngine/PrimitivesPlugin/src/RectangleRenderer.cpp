@@ -30,7 +30,7 @@ const Material* RectangleRenderer::getMaterial() const
 
 void RectangleRenderer::loadModelTransform(Renderer* renderer) const
 {
-	renderer->loadTransform(*gameObject->getTransform());
+	renderer->setModelTransform(*gameObject->getTransform());
 }
 
 void RectangleRenderer::renderImmediate(Renderer* renderer) const

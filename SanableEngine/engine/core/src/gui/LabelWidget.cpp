@@ -37,7 +37,7 @@ void LabelWidget::setText(const std::string& newText)
 void LabelWidget::loadModelTransform(Renderer* renderer) const
 {
 	Vector2f size = font->getRenderedSize(renderer, text);
-	renderer->loadTransform(
+	renderer->setModelTransform(
 		glm::translate<float, glm::packed_highp>(
 			(glm::mat4)*getTransform(),
 			Vector3f(align.calcAnchor(getTransform()->getLocalRect().size) + align.calcPivot(size), 0)

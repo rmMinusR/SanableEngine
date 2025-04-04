@@ -19,7 +19,7 @@ const Material* MeshRenderer::getMaterial() const
 
 void MeshRenderer::loadModelTransform(Renderer* renderer) const
 {
-	renderer->loadTransform(*gameObject->getTransform());
+	renderer->setModelTransform(*gameObject->getTransform());
 }
 
 void MeshRenderer::renderImmediate(Renderer* renderer) const

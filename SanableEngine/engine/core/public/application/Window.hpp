@@ -20,7 +20,7 @@ class Window
 private:
 	SDL_Window* handle;
 	SDL_GLContext context;
-	Renderer _interface;
+	Renderer* _interface;
 	WindowRenderPipeline* renderPipeline;
 	WindowInputProcessor* inputProcessor;
 
@@ -43,7 +43,7 @@ public:
 
 	ENGINEGRAPHICS_API void move(int x, int y);
 
-	inline Renderer* getRenderer() { return &_interface; }
+	inline Renderer* getRenderer() { return _interface; }
 	inline Application* getEngine() { return engine; }
 
 	ENGINEGRAPHICS_API int getWidth() const;

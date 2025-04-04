@@ -22,7 +22,7 @@ Window::Window(const std::string& name, int width, int height, const GLSettings&
     handle = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
     context = GLContext::create(handle, this);
     
-    _interface = Renderer(this, context);
+    _interface = new OpenGlRenderer(this, context);
     sdlID = SDL_GetWindowID(handle);
     
     printf("Window '%s' - OpenGL %s\n", name.c_str(), (char*)glGetString(GL_VERSION));
@@ -32,6 +32,12 @@ Window::~Window()
 {
     std::vector<Window*>& windows = engine->windows;
     windows.erase(std::find(windows.begin(), windows.end(), this));
+
+    if (_interface)
+    {
+        delete _interface;
+        _interface = nullptr;
+    }
 
     if (context)
     {

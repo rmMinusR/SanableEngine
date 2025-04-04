@@ -72,6 +72,7 @@ public:
 
 class OpenGlTexture : public GTexture
 {
+	friend class OpenGlRenderer;
 	GLuint id;
 
 public:

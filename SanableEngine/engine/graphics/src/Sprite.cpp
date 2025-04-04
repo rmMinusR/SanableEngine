@@ -25,3 +25,13 @@ void Sprite::setPixelRect(Rect<int> pixelCoords)
 		pixelCoords.size   .convert<float>() / texSize
 	});
 }
+
+const GTexture* Sprite::getTexture() const
+{
+	return tex;
+}
+
+Rect<float> Sprite::getUVs() const
+{
+	return uvs;
+}

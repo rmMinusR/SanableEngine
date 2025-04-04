@@ -19,4 +19,7 @@ public:
 
 	ENGINEGRAPHICS_API void setUVRect(Rect<float> uvs);
 	ENGINEGRAPHICS_API void setPixelRect(Rect<int> pixelCoords);
+
+	ENGINEGRAPHICS_API const GTexture* getTexture() const;
+	ENGINEGRAPHICS_API Rect<float> getUVs() const;
 };

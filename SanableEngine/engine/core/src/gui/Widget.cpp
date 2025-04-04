@@ -81,5 +81,5 @@ const ShaderProgram* Widget::getShader() const
 
 void Widget::loadModelTransform(Renderer* renderer) const
 {
-    renderer->loadTransform(*transform);
+    renderer->setModelTransform(*transform);
 }

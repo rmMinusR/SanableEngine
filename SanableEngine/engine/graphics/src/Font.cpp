@@ -73,6 +73,26 @@ RenderedGlyph::operator bool() const
 	return texture != nullptr;
 }
 
+const GTexture* RenderedGlyph::getTexture() const
+{
+	return texture;
+}
+
+int RenderedGlyph::getBearingX() const
+{
+	return bearingX;
+}
+
+int RenderedGlyph::getBearingY() const
+{
+	return bearingY;
+}
+
+float RenderedGlyph::getAdvance() const
+{
+	return advance / 64.0f;
+}
+
 RenderedGlyph::RenderedGlyph(RenderedGlyph&& mov) :
 	RenderedGlyph()
 {
@@ -99,7 +119,12 @@ RenderedGlyph const* Font::getGlyph(wchar_t data, Renderer* renderer) const
 	if (!activateGlyph(data, FT_LOAD_RENDER)) return nullptr;
 
 	RenderedGlyph glyph;
-	glyph.texture = renderer->renderFontGlyph(*this);
+	glyph.texture = renderer->newTexture(
+		font->glyph->bitmap.width,
+		font->glyph->bitmap.rows,
+		1,
+		font->glyph->bitmap.buffer
+	);
 	glyph.bearingX = font->glyph->bitmap_left;
 	glyph.bearingY = font->glyph->bitmap_top;
 	glyph.advance  = font->glyph->advance.x;
@@ -116,6 +141,11 @@ RenderedGlyph const* Font::getFallbackGlyph(Renderer* renderer) const
 	out = getGlyph(L'?'  , renderer); if (out) return out; //Basic ASCII question mark
 	assert(false && "No fallback glyph available!");
 	return nullptr;
+}
+
+int Font::getSize() const
+{
+	return size;
 }
 
 Font::Font(const std::filesystem::path& path, int size) :
