@@ -2,8 +2,8 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Camera.hpp"
-#include "MeshRenderer.hpp"
+#include "game/CameraComponent.hpp"
+#include "game/MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
 #include "gui/Widget.hpp"
 
@@ -126,7 +126,7 @@ void ShaderUniform::tryBindShared(Renderer* context) const
 		break;
 
 	case ValueBinding::CameraPosition:
-		write(Camera::getMain()->getGameObject()->getTransform()->getPosition());
+		write(CameraComponent::getMain()->getGameObject()->getTransform()->getPosition());
 		break;
 	}
 }

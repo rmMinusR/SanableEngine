@@ -5,7 +5,7 @@
 #include "game/Game.hpp"
 #include "game/Level.hpp"
 #include "application/Window.hpp"
-#include "Camera.hpp"
+#include "game/CameraComponent.hpp"
 #include "Material.hpp"
 #include "ShaderProgram.hpp"
 #include "MemoryRoot.hpp"
@@ -28,7 +28,12 @@ void GameWindowRenderPipeline::setup(Window* window)
 void GameWindowRenderPipeline::render(Rect<float> viewport)
 {
 	//Set projection matrix
-	if (Camera::getMain()) Camera::getMain()->beginFrame({ viewport.size.x, viewport.size.y, 0 });
+	CameraComponent* cam = CameraComponent::getMain();
+	if (cam)
+	{
+		const Transform* camTransform = cam->getGameObject()->getTransform();
+		cam->getConfig()->beginFrame({ viewport.size.x, viewport.size.y, 0 }, camTransform->getPosition(), camTransform->getRotation());
+	}
 	else printf("WARNING: No main camera!");
 
 	//Reset screen

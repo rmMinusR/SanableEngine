@@ -1,4 +1,4 @@
-#include "MeshRenderer.hpp"
+#include "game/MeshRenderer.hpp"
 
 #include "Mesh.hpp"
 #include "Renderer.hpp"

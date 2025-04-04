@@ -13,9 +13,9 @@
 #include "PlayerController.hpp"
 #include "ObjectSpinner.hpp"
 #include "ManualObjectRotator.hpp"
-#include "Camera.hpp"
+#include "game/CameraComponent.hpp"
 #include "Mesh.hpp"
-#include "MeshRenderer.hpp"
+#include "game/MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 #include "game/GameWindowRenderPipeline.hpp"
@@ -52,12 +52,12 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         Renderer* renderer = application->getMainWindow()->getRenderer();
 
         camera = level->addGameObject();
-        Camera* cc = camera->CreateComponent<Camera>();
-        cc->zFar = 100;
+        CameraComponent* cc = camera->CreateComponent<CameraComponent>();
+        cc->getConfig()->zFar = 100;
         //cc->setGUIProj();
         //cc->setOrtho(400);
         //cc->setOrtho(1);
-        cc->setPersp(90);
+        cc->getConfig()->setPersp(90);
         //camera->getTransform()->setRotation(glm::angleAxis(glm::radians(30.0f), glm::vec3(0, 0, 1)));
         camera->CreateComponent<PlayerController>(0.01f);
         camera->CreateComponent<ManualObjectRotator>();

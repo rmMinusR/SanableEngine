@@ -5,12 +5,10 @@
 #include <GL/glew.h>
 
 #include "math/Rect.inl"
-#include "Renderer.hpp"
-#include "game/Component.hpp"
+#include "math/Vector3.inl"
+#include "dllapi.h"
 
-#undef main
-
-class Camera : public Component
+class Camera
 {
 public:
 	enum Mode
@@ -32,8 +30,6 @@ private:
 
 	FramebufferData fb;
 
-	static Camera* main;
-
 
 public:
 	float zNear = 0.1f;
@@ -42,17 +38,14 @@ public:
 	ENGINEGRAPHICS_API Camera();
 	ENGINEGRAPHICS_API ~Camera();
 
-	ENGINEGRAPHICS_API static Camera* getMain();
-	ENGINEGRAPHICS_API void setMain();
-
 	//Mode setters
 	ENGINEGRAPHICS_API void setGUIProj();
 	ENGINEGRAPHICS_API void setOrtho(float cornerDist);
 	ENGINEGRAPHICS_API void setPersp(float fovDeg);
 
 	//Called by Renderer
-	ENGINEGRAPHICS_API void setProjectionMatrix(Vector3<float> viewportSize);
-	ENGINEGRAPHICS_API void beginFrame(Vector3<float> viewportSize);
+	ENGINEGRAPHICS_API void setProjectionMatrix(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot);
+	ENGINEGRAPHICS_API void beginFrame(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot);
 
 	ENGINEGRAPHICS_API Camera(Camera&& mov);
 	ENGINEGRAPHICS_API Camera& operator=(Camera&& mov);

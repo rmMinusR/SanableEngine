@@ -8,22 +8,8 @@
 #include "application/Window.hpp"
 
 
-Camera* Camera::main = nullptr;
-
-Camera* Camera::getMain()
-{
-	return main;
-}
-
-void Camera::setMain()
-{
-	main = this;
-}
-
 Camera::Camera()
 {
-	if (!main) main = this;
-
 	//glGenFramebuffers(1, &fb.handle);
 	//glBindFramebuffer(GL_FRAMEBUFFER, fb.handle);
 	//
@@ -36,8 +22,6 @@ Camera::Camera()
 
 Camera::~Camera()
 {
-	if (main == this) main = nullptr;
-
 	//if (fb.handle) glDeleteFramebuffers(1, &fb.handle);
 }
 
@@ -58,15 +42,12 @@ void Camera::setPersp(float fovDeg)
 	size = fovDeg;
 }
 
-void Camera::setProjectionMatrix(Vector3<float> viewportSize)
+void Camera::setProjectionMatrix(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot)
 {
 	float w = viewportSize.x;
 	float h = viewportSize.y;
 	float aspectRatio = w / h;
 	float diag = sqrtf(w*w + h*h);
-
-	Vector3<float> pos = gameObject->getTransform()->getPosition();
-	glm::quat rot = gameObject->getTransform()->getRotation();
 
 	//Main matrix
 	glMatrixMode(GL_PROJECTION);
@@ -97,12 +78,12 @@ void Camera::setProjectionMatrix(Vector3<float> viewportSize)
 	}
 }
 
-void Camera::beginFrame(Vector3<float> viewportSize)
+void Camera::beginFrame(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot)
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
 	
-	setProjectionMatrix(viewportSize);
+	setProjectionMatrix(viewportSize, pos, rot);
 }
 
 Camera::Camera(Camera&& mov)

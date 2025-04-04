@@ -13,7 +13,7 @@
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
-#include "MeshRenderer.hpp"
+#include "game/MeshRenderer.hpp"
 #include "Font.hpp"
 #include "Sprite.hpp"
 
