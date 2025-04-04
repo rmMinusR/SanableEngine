@@ -16,7 +16,7 @@ void TypeInfoView::refresh()
 	//Remove existing
 	for (int i = getTransform()->getChildrenCount() - 1; i >= 0; --i)
 	{
-		hud->removeWidget(getTransform()->getChild(i)->getWidget());
+		hud->destroyWidget(getTransform()->getChild(i)->getWidget());
 	}
 	
 	//Repopulate

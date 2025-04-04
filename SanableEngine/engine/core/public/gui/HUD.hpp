@@ -24,7 +24,7 @@ class HUD
 	void applyConcurrencyBuffers();
 
 	ENGINEGUI_API void addWidget_internal(Widget* widget);
-	ENGINEGUI_API void removeWidget_internal(Widget* widget);
+	ENGINEGUI_API void destroyWidget_internal(Widget* widget);
 public:
 	ENGINEGUI_API HUD(Application* application);
 	ENGINEGUI_API ~HUD();
@@ -51,10 +51,10 @@ public:
 	}
 
 	template<typename T>
-	inline void removeWidget(T* w)
+	inline void destroyWidget(T* w)
 	{
 		static_assert(std::is_base_of_v<Widget, T>);
-		removeWidget_internal(w);
+		destroyWidget_internal(w);
 		memory.destroy(w);
 	}
 

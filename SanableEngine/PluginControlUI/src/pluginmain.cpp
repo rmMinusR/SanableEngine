@@ -51,9 +51,9 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
-        ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
-        if (!imageShader->load()) assert(false);
-        Resources::imageMat = new Material(imageShader);
+        Resources::imageShader = new ShaderProgram("resources/ui/shaders/image");
+        if (!Resources::imageShader->load()) assert(false);
+        Resources::imageMat = new Material(Resources::imageShader);
         Resources::imageMat->setGroup(Material::Group::Transparent);
         Resources::buttonNormalTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal.png");
         Resources::buttonNormalSprite = new UISprite3x3(Resources::buttonNormalTexture);
@@ -71,9 +71,9 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         Resources::rttiParentSprite = new UISprite3x3(Resources::rttiParentTexture);
 
         //Ready resources: text
-        ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
-        if (!textShader->load()) assert(false);
-        Resources::textMat = new Material(textShader);
+        Resources::textShader = new ShaderProgram("resources/ui/shaders/font");
+        if (!Resources::textShader->load()) assert(false);
+        Resources::textMat = new Material(Resources::textShader);
         Resources::textMat->setGroup(Material::Group::Transparent);
         Resources::headerFont = new Font("resources/ui/fonts/arial.ttf", 48);
         Resources::labelFont = new Font("resources/ui/fonts/arial.ttf", 24);
@@ -96,8 +96,25 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        ctlGuiRoot->removeWidget(ui);
+        ctlGuiRoot->destroyWidget(ui);
         ui = nullptr;
+
+        delete Resources::headerFont;
+        delete Resources::labelFont;
+        delete Resources::textMat;
+        delete Resources::textShader;
+        delete Resources::imageMat;
+        delete Resources::imageShader;
+        delete Resources::buttonNormalSprite;
+        delete Resources::buttonNormalTexture;
+        delete Resources::buttonPressedSprite;
+        delete Resources::buttonPressedTexture;
+        delete Resources::buttonDisabledSprite;
+        delete Resources::buttonDisabledTexture;
+        delete Resources::rttiFieldSprite;
+        delete Resources::rttiFieldTexture;
+        delete Resources::rttiParentSprite;
+        delete Resources::rttiParentTexture;
 
         delete ctlWindow;
         ctlWindow = nullptr;

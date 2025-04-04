@@ -1,5 +1,6 @@
 #pragma once
 
+class ShaderProgram;
 class Material;
 class Font;
 class GTexture;
@@ -8,7 +9,9 @@ class UISprite3x3;
 #define FOREACH_RESOURCE() \
 	_X(Font*, headerFont) \
 	_X(Font*, labelFont) \
+	_X(ShaderProgram*, textShader) \
 	_X(Material*, textMat) \
+	_X(ShaderProgram*, imageShader) \
 	_X(Material*, imageMat) \
 	_X(GTexture*   , buttonNormalTexture) \
 	_X(UISprite3x3*, buttonNormalSprite) \

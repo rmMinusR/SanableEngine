@@ -42,7 +42,7 @@ void PluginManagerView::tick()
 	while (pluginViews.size() > plugins.size())
 	{
 		auto it = pluginViews.end()-1;
-		hud->removeWidget(*it);
+		hud->destroyWidget(*it);
 		pluginViews.erase(it);
 	}
 

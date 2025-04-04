@@ -22,7 +22,7 @@ void HUD::addWidget_internal(Widget* widget)
 	if (!widget->transform->getParent()) widget->transform->setParent(getRootTransform());
 }
 
-void HUD::removeWidget_internal(Widget* widget)
+void HUD::destroyWidget_internal(Widget* widget)
 {
 	removeQueue.push_back(widget);
 }
