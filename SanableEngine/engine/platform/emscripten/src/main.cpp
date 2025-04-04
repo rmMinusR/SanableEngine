@@ -22,9 +22,10 @@ int main(int argc, char* argv[])
     //Init
     {
         GLSettings glSettings;
-        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, new GameWindowRenderPipeline(&game));
-        mainWindow.setInputProcessor(new GameWindowInputProcessor(&game));
-        engine.init(&game, glSettings, mainWindow, system, nullptr);
+        WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
+        mainWindowSettings.renderPipeline = new GameWindowRenderPipeline(&game);
+        mainWindowSettings.inputProcessor = new GameWindowInputProcessor(&game);
+        engine.init(&game, glSettings, mainWindowSettings, system, nullptr);
     }
 
     //Loop

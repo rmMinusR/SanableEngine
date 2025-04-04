@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include "GLContext.hpp"
 #include "application/WindowRenderPipeline.hpp"
+#include "application/WindowInputProcessor.hpp"
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 

@@ -4,7 +4,6 @@
 #include "math/Rect.inl"
 
 class Window;
-class WindowBuilder;
 class Application;
 
 class WindowRenderPipeline
@@ -16,7 +15,8 @@ public:
 protected:
 	Window* window;
 	ENGINECORE_API virtual void setup(Window* window);
+	friend class Application;
+
 	virtual void render(Rect<float> viewport) = 0;
 	friend class Window;
-	friend class WindowBuilder;
 };

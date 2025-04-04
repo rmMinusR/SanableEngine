@@ -10,6 +10,7 @@
 #include "application/Window.hpp"
 #include "game/Game.hpp"
 #include "MemoryRoot.hpp"
+#include "application/WindowInputProcessor.hpp"
 
 void Application::processEvents()
 {
@@ -72,7 +73,7 @@ Application::~Application()
 
 void engine_reportTypes(ModuleTypeRegistry* registry);
 
-void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
+void Application::init(Game* game, const GLSettings& glSettings, WindowSettings& mainWindowSettings, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -97,7 +98,7 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     game->init(this);
 
     this->glSettings = glSettings;
-    mainWindow = mainWindowBuilder.build();
+    mainWindow = buildWindow(mainWindowSettings);
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
     std::cout << "Discovered " << pluginManager.plugins.size() << " plugins" << std::endl;
@@ -189,7 +190,16 @@ Window* Application::getMainWindow()
     return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
 }
 
-WindowBuilder Application::buildWindow(const std::string& name, int width, int height)
+Window* Application::buildWindow(WindowSettings& settings)
 {
-    return WindowBuilder(this, name, width, height, glSettings);
+    Window* window = new Window(settings.name, settings.size.x, settings.size.y, glSettings, this, settings.renderPipeline, settings.inputProcessor);
+	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
+	windows.push_back(window);
+	window->renderPipeline->setup(window);
+	if (window->inputProcessor) window->inputProcessor->setup(window);
+
+    settings.renderPipeline = nullptr;
+    settings.inputProcessor = nullptr;
+
+	return window;
 }

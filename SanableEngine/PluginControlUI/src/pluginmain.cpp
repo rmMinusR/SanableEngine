@@ -40,12 +40,12 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     if (firstRun)
     {
         {
-            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600);
+            WindowSettings windowSettings("Plugin Control", 800, 600);
             WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline(game->getApplication());
-            builder.setRenderPipeline(renderer);
+            windowSettings.renderPipeline = renderer;
             ctlGuiRoot = &renderer->hud;
-            builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot, 5));
-            ctlWindow = builder.build();
+            windowSettings.inputProcessor = new WindowGUIInputProcessor(ctlGuiRoot, 5);
+            ctlWindow = game->getApplication()->buildWindow(windowSettings);
         }
 
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)

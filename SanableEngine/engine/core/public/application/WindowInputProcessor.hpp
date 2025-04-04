@@ -6,6 +6,7 @@
 #include <SDL_events.h>
 
 class Window;
+class Application;
 
 class WindowInputProcessor
 {
@@ -18,7 +19,7 @@ public:
 protected:
 	Window* window;
 	ENGINECORE_API virtual void setup(Window* window);
-	friend class WindowBuilder;
+	friend class Application;
 
 	ENGINECORE_API virtual void handleEvent(SDL_Event& ev);
 	friend class Window;

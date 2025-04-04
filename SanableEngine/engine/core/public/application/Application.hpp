@@ -10,7 +10,8 @@
 #include "../dllapi.h"
 
 #include "application/PluginManager.hpp"
-#include "application/WindowBuilder.hpp"
+#include "application/WindowSettings.hpp"
+#include "GLSettings.hpp"
 
 namespace gpr460 { class System; }
 class Game;
@@ -30,7 +31,6 @@ private:
 
     GLSettings glSettings;
     std::vector<Window*> windows;
-    friend class WindowBuilder;
     friend class Window;
     Window* mainWindow = nullptr;
 
@@ -43,7 +43,7 @@ public:
     ENGINECORE_API ~Application();
 
     typedef void (*UserInitFunc)(Application*);
-    ENGINECORE_API void init(Game* game, const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& system, UserInitFunc userInitCallback);
+    ENGINECORE_API void init(Game* game, const GLSettings& glSettings, WindowSettings& mainWindowSettings, gpr460::System& system, UserInitFunc userInitCallback);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API void doMainLoop();
@@ -56,5 +56,5 @@ public:
     ENGINECORE_API PluginManager* getPluginManager();
     ENGINECORE_API Window* getMainWindow();
 
-    ENGINECORE_API WindowBuilder buildWindow(const std::string& name, int width, int height);
+    ENGINECORE_API Window* buildWindow(WindowSettings& settings);
 };

@@ -119,12 +119,11 @@ void PluginView::tryInit()
 				std::stringstream ss;
 				ss << name << ": " << initialInspectedType->name.as_str();
 
-				WindowBuilder wb = hud->getApplication()->buildWindow(ss.str(), 36 * 8, 36 * (int)std::ceil(initialInspectedType->layout.size / 8.0f)); //TODO remove magic numbers
+				WindowSettings windowSettings(ss.str(), 36 * 8, 36 * (int)std::ceil(initialInspectedType->layout.size / 8.0f)); //TODO remove magic numbers
 				WindowGUIRenderPipeline* renderPipeline = new WindowGUIRenderPipeline(hud->getApplication());
-				wb.setRenderPipeline(renderPipeline);
-				Window* window = wb.build();
-				window->setRenderPipeline(renderPipeline);
-				window->setInputProcessor(new WindowGUIInputProcessor(&renderPipeline->hud, 5));
+				windowSettings.renderPipeline = renderPipeline;
+				windowSettings.inputProcessor = new WindowGUIInputProcessor(&renderPipeline->hud, 5);
+				Window* window = hud->getApplication()->buildWindow(windowSettings);
 				
 				//FIXME use shared rendering context instead
 				GTexture* rttiFieldTexture = window->getRenderer()->loadTexture("resources/ui/textures/field.png");

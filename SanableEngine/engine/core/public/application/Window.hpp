@@ -10,7 +10,6 @@
 #include "Renderer.hpp"
 #include "WindowRenderPipeline.hpp"
 
-class WindowBuilder;
 class ModuleTypeRegistry;
 class WindowInputProcessor;
 struct GLSettings;
@@ -36,7 +35,7 @@ private:
 	static Window* currentFocus;
 
 	Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, WindowRenderPipeline* renderPipeline, WindowInputProcessor* inputProcessor);
-	friend class WindowBuilder;
+	friend class Application;
 	friend struct thunk_utils<Window>;
 public:
 	ENGINEGRAPHICS_API ~Window();
