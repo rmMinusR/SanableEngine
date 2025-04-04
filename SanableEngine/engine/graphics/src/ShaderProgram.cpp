@@ -1,27 +1,47 @@
 #include "ShaderProgram.hpp"
+#include "ShaderUniform.hpp"
 
 #include <cassert>
 
-const char* ShaderProgram::vertName = "vert.glsl";
-const char* ShaderProgram::fragName = "frag.glsl";
+const char* OpenGlShaderProgram::vertName = "vert.glsl";
+const char* OpenGlShaderProgram::fragName = "frag.glsl";
 
 ShaderProgram::ShaderProgram(const std::filesystem::path& basePath) :
-	basePath(basePath),
-	handle(0)
+	basePath(basePath)
+{
+}
+
+ShaderProgram::ShaderProgram()
 {
 }
 
 ShaderProgram::~ShaderProgram()
 {
+}
+
+OpenGlShaderProgram::OpenGlShaderProgram(const std::filesystem::path& basePath) :
+	ShaderProgram(basePath),
+	handle(0)
+{
+}
+
+OpenGlShaderProgram::~OpenGlShaderProgram()
+{
 	unload();
 }
 
-ShaderProgram::ShaderProgram(ShaderProgram&& mov)
+OpenGlShaderProgram::OpenGlShaderProgram(OpenGlShaderProgram&& mov)
 {
 	*this = std::move(mov);
 }
 
-ShaderProgram& ShaderProgram::operator=(ShaderProgram&& mov)
+ShaderProgram& OpenGlShaderProgram::operator=(ShaderProgram&& mov)
+{
+	*this = std::move(static_cast<OpenGlShaderProgram&&>(mov));
+	return *this;
+}
+
+OpenGlShaderProgram& OpenGlShaderProgram::operator=(OpenGlShaderProgram&& mov)
 {
 	if (this->handle) unload();
 	this->handle = mov.handle;
@@ -30,11 +50,11 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& mov)
 	return *this;
 }
 
-bool ShaderProgram::load()
+bool OpenGlShaderProgram::load()
 {
 	//Load dependencies
-	ShaderStage vertShader(basePath/vertName, ShaderStage::Type::Vertex);
-	ShaderStage fragShader(basePath/fragName, ShaderStage::Type::Fragment);
+	OpenGlShaderStage vertShader(basePath/vertName, OpenGlShaderStage::Type::Vertex);
+	OpenGlShaderStage fragShader(basePath/fragName, OpenGlShaderStage::Type::Fragment);
 	bool stageLoadSuccess = vertShader.load();
 	stageLoadSuccess &= fragShader.load();
 	if (!stageLoadSuccess) return false;
@@ -65,7 +85,7 @@ bool ShaderProgram::load()
 	return true;
 }
 
-void ShaderProgram::unload()
+void OpenGlShaderProgram::unload()
 {
 	if (handle)
 	{
@@ -74,18 +94,12 @@ void ShaderProgram::unload()
 	}
 }
 
-void ShaderProgram::activate() const
+size_t OpenGlShaderProgram::getNumUniforms() const
 {
-	assert(handle);
-	glUseProgram(handle);
+	return uniforms.size();
 }
 
-void ShaderProgram::clear()
+const ShaderUniform* OpenGlShaderProgram::getUniform(size_t index) const
 {
-	glUseProgram(0);
-}
-
-const std::vector<ShaderUniform>& ShaderProgram::getUniforms() const
-{
-	return uniforms;
+	return &uniforms[index];
 }

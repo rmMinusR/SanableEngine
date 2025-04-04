@@ -131,12 +131,12 @@ void PluginView::tryInit()
 				rttiFieldSprite->setPixel({ 1,1 }, { 7,6 });
 				rttiFieldSprite->setPixel({ 2,2 }, { 8,8 });
 
-				ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
+				ShaderProgram* imageShader = window->getRenderer()->loadShaderProgram("resources/ui/shaders/image");
 				if (!imageShader->load()) assert(false);
 				Material* imageMat = new Material(imageShader);
 				imageMat->setGroup(Material::Group::Transparent);
 
-				ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
+				ShaderProgram* textShader = window->getRenderer()->loadShaderProgram("resources/ui/shaders/font");
 				if (!textShader->load()) assert(false);
 				Material* textMat = new Material(textShader);
 				textMat->setGroup(Material::Group::Transparent);

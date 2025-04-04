@@ -58,9 +58,8 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 	Renderer* renderInterface = window->getRenderer();
 	for (const auto& shaderGroup : renderables)
 	{
-		//Activate shader
-		if (shaderGroup.first) shaderGroup.first->activate();
-		else ShaderProgram::clear();
+		//Activate (or clear) shader
+		renderInterface->setActiveShader(shaderGroup.first);
 
 		for (const auto& materialGroup : shaderGroup.second)
 		{

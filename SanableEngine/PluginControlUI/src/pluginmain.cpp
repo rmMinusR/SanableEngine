@@ -51,7 +51,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
-        Resources::imageShader = new ShaderProgram("resources/ui/shaders/image");
+        Resources::imageShader = ctlWindow->getRenderer()->loadShaderProgram("resources/ui/shaders/image");
         if (!Resources::imageShader->load()) assert(false);
         Resources::imageMat = new Material(Resources::imageShader);
         Resources::imageMat->setGroup(Material::Group::Transparent);
@@ -71,7 +71,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         Resources::rttiParentSprite = new UISprite3x3(Resources::rttiParentTexture);
 
         //Ready resources: text
-        Resources::textShader = new ShaderProgram("resources/ui/shaders/font");
+        Resources::textShader = ctlWindow->getRenderer()->loadShaderProgram("resources/ui/shaders/font");
         if (!Resources::textShader->load()) assert(false);
         Resources::textMat = new Material(Resources::textShader);
         Resources::textMat->setGroup(Material::Group::Transparent);

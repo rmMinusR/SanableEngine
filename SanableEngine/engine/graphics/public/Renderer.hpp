@@ -37,21 +37,23 @@ public:
 	inline Window* getOwner() const { return owner; }
 
 	//These all require that no shader is active to properly render
-	ENGINEGRAPHICS_API virtual void drawRect(Vector3f center, float w, float h, const SDL_Color& color) = 0;
-	ENGINEGRAPHICS_API virtual void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos) = 0; //Assumes you have no shader active
-	ENGINEGRAPHICS_API virtual void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color) = 0; //Assumes you've already activated the material and set model matrix value
-	ENGINEGRAPHICS_API virtual void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h) = 0;
-	ENGINEGRAPHICS_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h) = 0;
-	ENGINEGRAPHICS_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor) = 0;
+	virtual void drawRect(Vector3f center, float w, float h, const SDL_Color& color) = 0;
+	virtual void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos) = 0; //Assumes you have no shader active
+	virtual void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color) = 0; //Assumes you've already activated the material and set model matrix value
+	virtual void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h) = 0;
+	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h) = 0;
+	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor) = 0;
 
-	ENGINEGRAPHICS_API virtual void setViewProjTranform(const glm::mat4&) = 0;
-	ENGINEGRAPHICS_API virtual void setModelTransform(const glm::mat4&) = 0;
+	virtual void setViewProjTranform(const glm::mat4&) = 0;
+	virtual void setModelTransform(const glm::mat4&) = 0;
+	virtual void setActiveShader(const ShaderProgram* source) = 0;
 
-	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* loadTexture(const std::filesystem::path& path) = 0;
-	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) = 0;
-	[[nodiscard]] ENGINEGRAPHICS_API virtual GMesh* newMesh(const CMesh& source) = 0;
+	[[nodiscard]] virtual GTexture* loadTexture(const std::filesystem::path& path) = 0;
+	[[nodiscard]] virtual GTexture* newTexture(int width, int height, int nChannels, void* data) = 0;
+	[[nodiscard]] virtual GMesh* newMesh(const CMesh& source) = 0;
+	[[nodiscard]] virtual ShaderProgram* loadShaderProgram(const std::filesystem::path& path) = 0;
 
-	ENGINEGRAPHICS_API virtual void errorCheck() const = 0;
+	virtual void errorCheck() const = 0;
 };
 
 class OpenGlRenderer : public Renderer
@@ -80,10 +82,12 @@ public:
 	
 	ENGINEGRAPHICS_API virtual void setViewProjTranform(const glm::mat4&) override;
 	ENGINEGRAPHICS_API virtual void setModelTransform(const glm::mat4&) override;
+	ENGINEGRAPHICS_API virtual void setActiveShader(const ShaderProgram* source) override;
 
 	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* loadTexture(const std::filesystem::path& path) override;
 	[[nodiscard]] ENGINEGRAPHICS_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) override;
 	[[nodiscard]] ENGINEGRAPHICS_API virtual GMesh* newMesh(const CMesh& source) override;
+	[[nodiscard]] ENGINEGRAPHICS_API virtual ShaderProgram* loadShaderProgram(const std::filesystem::path& path) override;
 
 	ENGINEGRAPHICS_API virtual void errorCheck() const override;
 };

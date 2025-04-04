@@ -4,9 +4,9 @@
 #include <GL/glew.h>
 #include "dllapi.h"
 
-class ShaderProgram;
+class OpenGlShaderProgram;
 
-class ShaderStage
+class OpenGlShaderStage
 {
 public:
 	enum class Type
@@ -20,18 +20,18 @@ private:
 	std::filesystem::path path;
 	Type type;
 
-	friend class ShaderProgram;
+	friend class OpenGlShaderProgram;
 
-	ShaderStage();
+	OpenGlShaderStage();
 public:
-	ENGINEGRAPHICS_API ShaderStage(const std::filesystem::path& path, Type type);
-	ENGINEGRAPHICS_API ~ShaderStage();
+	ENGINEGRAPHICS_API OpenGlShaderStage(const std::filesystem::path& path, Type type);
+	ENGINEGRAPHICS_API ~OpenGlShaderStage();
 
 	ENGINEGRAPHICS_API bool load();
 	ENGINEGRAPHICS_API void unload();
 	
-	ENGINEGRAPHICS_API ShaderStage(ShaderStage&& mov);
-	ENGINEGRAPHICS_API ShaderStage& operator=(ShaderStage&& mov);
-	ShaderStage(const ShaderStage& cpy) = delete;
-	ShaderStage& operator=(const ShaderStage& cpy) = delete;
+	ENGINEGRAPHICS_API OpenGlShaderStage(OpenGlShaderStage&& mov);
+	ENGINEGRAPHICS_API OpenGlShaderStage& operator=(OpenGlShaderStage&& mov);
+	OpenGlShaderStage(const OpenGlShaderStage& cpy) = delete;
+	OpenGlShaderStage& operator=(const OpenGlShaderStage& cpy) = delete;
 };

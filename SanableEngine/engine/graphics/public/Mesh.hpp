@@ -86,8 +86,8 @@ public:
 	ENGINEGRAPHICS_API OpenGlMesh(const CMesh& src, bool dynamic = false);
 	ENGINEGRAPHICS_API virtual ~OpenGlMesh();
 
-	ENGINEGRAPHICS_API void updateFrom(const CMesh& src);
-	ENGINEGRAPHICS_API void updateFrom(const CMesh& src, bool vertices, bool triangles);
+	ENGINEGRAPHICS_API virtual void updateFrom(const CMesh& src) override;
+	ENGINEGRAPHICS_API virtual void updateFrom(const CMesh& src, bool vertices, bool triangles) override;
 
 	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
 

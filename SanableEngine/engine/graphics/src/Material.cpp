@@ -6,8 +6,9 @@ Material::Material(ShaderProgram* shader) :
 	shader(shader),
 	group(Group::Opaque)
 {
-	for (const ShaderUniform& uniform : shader->getUniforms())
+	for (size_t i = 0; i < shader->getNumUniforms(); ++i)
 	{
+		const ShaderUniform& uniform = *shader->getUniform(i);
 		switch (uniform.getBindingStage())
 		{
 		case ShaderUniform::BindingStage::BindShared:

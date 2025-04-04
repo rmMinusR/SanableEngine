@@ -37,14 +37,19 @@ OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
 	}
 
 	{
+		CTexture tmp(4, 4, 4);
+
 		// Pink and black checkerboard
-		CTexture tmp(2, 2, 4);
 		constexpr uint8_t col_blk[4] = { 0, 0, 0, 255 };
 		constexpr uint8_t col_mag[4] = { 255, 0, 255, 255 };
-		memcpy(tmp.pixel(0, 0), &col_blk, 4);
-		memcpy(tmp.pixel(1, 0), &col_mag, 4);
-		memcpy(tmp.pixel(0, 1), &col_mag, 4);
-		memcpy(tmp.pixel(1, 1), &col_blk, 4);
+		for (int x = 0; x < tmp.getWidth(); ++x)
+		{
+			for (int y = 0; y < tmp.getWidth(); ++y)
+			{
+				memcpy(tmp.pixel(x, y), (x^y) ? &col_blk : &col_mag, 4);
+			}
+		}
+
 		fallbackTexture = OpenGlTexture(this, tmp);
 	}
 }
@@ -61,7 +66,7 @@ void OpenGlRenderer::activate() const
 
 void OpenGlRenderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
 {
-	ShaderProgram::clear();
+	setActiveShader(nullptr);
 
 	glBegin(GL_QUADS);
 	glColor4f(color.r/255.0f, color.g/255.0f, color.b/255.0f, color.a/255.0f);
@@ -102,7 +107,7 @@ void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	mat.getShader()->activate();
+	setActiveShader(mat.getShader());
 	mat.writeSharedUniforms(this);
 	const ShaderUniform* uTextColor = mat.getUserUniform("textColor");
 	if (uTextColor) uTextColor->write(glm::vec3(color.r, color.g, color.b)/255.0f);
@@ -159,7 +164,7 @@ void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* m
 
 	if (mat)
 	{
-		mat->getShader()->activate();
+		setActiveShader(mat->getShader());
 
 		const ShaderUniform* uTintColor = mat->getUserUniform("tintColor");
 		if (uTintColor) uTintColor->write(glm::vec4(tintColor.r, tintColor.g, tintColor.b, tintColor.a)/255.0f);
@@ -220,6 +225,20 @@ void OpenGlRenderer::setModelTransform(const glm::mat4& mat)
 	glLoadMatrixf(glm::value_ptr(mat));
 }
 
+void OpenGlRenderer::setActiveShader(const ShaderProgram* sourceUntyped)
+{
+	if (sourceUntyped)
+	{
+		const OpenGlShaderProgram* source = static_cast<const OpenGlShaderProgram*>(sourceUntyped);
+		assert(source->handle);
+		glUseProgram(source->handle);
+	}
+	else
+	{
+		glUseProgram(0); // Clear active shader
+	}
+}
+
 GTexture* OpenGlRenderer::loadTexture(const std::filesystem::path& path)
 {
 	return new OpenGlTexture(this, CTexture::fromFile(path));
@@ -234,6 +253,11 @@ GTexture* OpenGlRenderer::newTexture(int width, int height, int nChannels, void*
 GMesh* OpenGlRenderer::newMesh(const CMesh& source)
 {
 	return new OpenGlMesh(source);
+}
+
+ShaderProgram* OpenGlRenderer::loadShaderProgram(const std::filesystem::path& path)
+{
+	return new OpenGlShaderProgram(path);
 }
 
 void OpenGlRenderer::errorCheck() const

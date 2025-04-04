@@ -3,21 +3,21 @@
 #include <fstream>
 #include <cassert>
 
-ShaderStage::ShaderStage():
+OpenGlShaderStage::OpenGlShaderStage():
 	handle(0),
 	path(""),
 	type((Type)0)
 {
 }
 
-ShaderStage::ShaderStage(const std::filesystem::path& path, Type type) :
+OpenGlShaderStage::OpenGlShaderStage(const std::filesystem::path& path, Type type) :
 	handle(0),
 	path(path),
 	type(type)
 {
 }
 
-bool ShaderStage::load()
+bool OpenGlShaderStage::load()
 {
 	std::ifstream fin(path);
 	if (!fin.good()) return false;
@@ -56,7 +56,7 @@ bool ShaderStage::load()
 	return true;
 }
 
-void ShaderStage::unload()
+void OpenGlShaderStage::unload()
 {
 	if (handle)
 	{
@@ -65,17 +65,17 @@ void ShaderStage::unload()
 	}
 }
 
-ShaderStage::~ShaderStage()
+OpenGlShaderStage::~OpenGlShaderStage()
 {
 	unload();
 }
 
-ShaderStage::ShaderStage(ShaderStage&& mov)
+OpenGlShaderStage::OpenGlShaderStage(OpenGlShaderStage&& mov)
 {
 	*this = std::move(mov);
 }
 
-ShaderStage& ShaderStage::operator=(ShaderStage&& mov)
+OpenGlShaderStage& OpenGlShaderStage::operator=(OpenGlShaderStage&& mov)
 {
 	if (this->handle) unload();
 

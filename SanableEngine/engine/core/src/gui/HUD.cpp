@@ -5,6 +5,7 @@
 
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
+#include "Renderer.hpp"
 
 void HUD::applyConcurrencyBuffers()
 {
@@ -116,14 +117,12 @@ void HUD::render(Renderer* renderer)
 	{
 		for (Widget* w : renderables[_class])
 		{
-			const ShaderProgram* shader = w->getShader();
-			const Material* mat = w->getMaterial();
-
 			//Activate shader
-			if (shader) shader->activate();
-			else ShaderProgram::clear();
+			renderer->setActiveShader(w->getShader());
 
 			//Activate material
+			const Material* mat = w->getMaterial();
+
 			if (mat) mat->writeSharedUniforms(renderer);
 
 			w->loadModelTransform(renderer);
