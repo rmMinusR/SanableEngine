@@ -6,6 +6,11 @@
 const char* OpenGlShaderProgram::vertName = "vert.glsl";
 const char* OpenGlShaderProgram::fragName = "frag.glsl";
 
+void ShaderProgram::updateUniformBackrefs()
+{
+	for (size_t i = 0; i < getNumUniforms(); ++i) getUniform(i)->owner = this;
+}
+
 ShaderProgram::ShaderProgram(const std::filesystem::path& basePath) :
 	basePath(basePath)
 {
@@ -46,6 +51,10 @@ OpenGlShaderProgram& OpenGlShaderProgram::operator=(OpenGlShaderProgram&& mov)
 	if (this->handle) unload();
 	this->handle = mov.handle;
 	mov.handle = 0;
+
+	this->uniforms = std::move(mov.uniforms);
+
+	updateUniformBackrefs();
 
 	return *this;
 }
@@ -100,6 +109,11 @@ size_t OpenGlShaderProgram::getNumUniforms() const
 }
 
 const ShaderUniform* OpenGlShaderProgram::getUniform(size_t index) const
+{
+	return &uniforms[index];
+}
+
+ShaderUniform* OpenGlShaderProgram::getUniform(size_t index)
 {
 	return &uniforms[index];
 }

@@ -7,6 +7,7 @@ class ShaderProgram
 {
 protected:
 	std::filesystem::path basePath;
+	ENGINEGRAPHICS_API void updateUniformBackrefs();
 
 	ENGINEGRAPHICS_API ShaderProgram(const std::filesystem::path& basePath);
 	ENGINEGRAPHICS_API ShaderProgram();
@@ -18,6 +19,7 @@ public:
 
 	virtual size_t getNumUniforms() const = 0;
 	virtual const ShaderUniform* getUniform(size_t index) const = 0;
+	virtual ShaderUniform* getUniform(size_t index) = 0;
 
 	ShaderProgram(ShaderProgram&& mov) = delete;
 	ENGINEGRAPHICS_API virtual ShaderProgram& operator=(ShaderProgram&& mov) = 0;
@@ -47,6 +49,7 @@ public:
 
 	ENGINEGRAPHICS_API virtual size_t getNumUniforms() const override;
 	ENGINEGRAPHICS_API virtual const ShaderUniform* getUniform(size_t index) const override;
+	ENGINEGRAPHICS_API virtual ShaderUniform* getUniform(size_t index) override;
 
 	ENGINEGRAPHICS_API OpenGlShaderProgram(OpenGlShaderProgram&& mov);
 	ENGINEGRAPHICS_API virtual ShaderProgram& operator=(ShaderProgram&& mov) override;

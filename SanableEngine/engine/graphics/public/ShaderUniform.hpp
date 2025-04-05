@@ -59,6 +59,7 @@ public:
 
 protected:
 	ShaderProgram* owner;
+	friend class ShaderProgram;
 	ValueBinding binding;
 
 	ENGINEGRAPHICS_API ShaderUniform();
