@@ -1,8 +1,7 @@
 #pragma once
 
 #include "ShaderStage.hpp"
-
-class ShaderUniform;
+#include "ShaderUniform.hpp"
 
 class ShaderProgram
 {
@@ -36,7 +35,7 @@ class OpenGlShaderProgram : public ShaderProgram
 	ENGINEGRAPHICS_API static const char* vertName;
 	ENGINEGRAPHICS_API static const char* fragName;
 
-	std::vector<ShaderUniform> uniforms;
+	std::vector<OpenGlShaderUniform> uniforms;
 
 	friend class OpenGlRenderer;
 	ENGINEGRAPHICS_API OpenGlShaderProgram(const std::filesystem::path& basePath);

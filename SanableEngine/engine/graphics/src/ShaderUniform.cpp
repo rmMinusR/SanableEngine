@@ -28,24 +28,56 @@ ShaderUniform::ValueBinding ShaderUniform::ValueBinding_fromName(const std::stri
 	return (ValueBinding)-1;
 }
 
-void ShaderUniform::detectBinding()
+ShaderUniform::BindingStage ShaderUniform::BindingStage_fromBinding(ValueBinding binding)
+{
+	if (binding == ValueBinding::Unbound) return BindingStage::Unbound;
+	else if ((int)ValueBinding::__BEGIN_SHARED < (int)binding && (int)binding < (int)ValueBinding::__END_SHARED) return BindingStage::BindShared;
+	else if ((int)ValueBinding::__BEGIN_INSTANCED < (int)binding && (int)binding < (int)ValueBinding::__END_INSTANCED) return BindingStage::BindInstanced;
+	else
+	{
+		assert(false);
+		return (BindingStage)-1;
+	}
+}
+
+ShaderUniform::ShaderUniform() :
+	owner(nullptr),
+	binding(ValueBinding::Invalid)
+{
+}
+
+ShaderUniform::ShaderUniform(ShaderProgram* owner) :
+	owner(owner),
+	binding(ValueBinding::Invalid)
+{
+}
+
+ShaderUniform::~ShaderUniform()
+{
+}
+
+ShaderUniform::ValueBinding ShaderUniform::getBinding() const
+{
+	return binding;
+}
+
+void OpenGlShaderUniform::detectBinding()
 {
 	binding = ShaderUniform::ValueBinding_fromName(name);
 	if (binding == ShaderUniform::ValueBinding::Invalid) binding = ShaderUniform::ValueBinding::Unbound;
 }
 
-ShaderUniform::ShaderUniform() :
-	owner(nullptr),
+OpenGlShaderUniform::OpenGlShaderUniform() :
+	ShaderUniform(),
 	location(-1),
-	name(""),
+	name(),
 	objSize(0),
-	dataType(0),
-	binding(ShaderUniform::ValueBinding::Invalid)
+	dataType(0)
 {
 }
 
-ShaderUniform::ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int codeIndex) :
-	owner(owner),
+OpenGlShaderUniform::OpenGlShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int codeIndex) :
+	ShaderUniform(owner),
 	codeIndex(codeIndex)
 {
 	constexpr size_t bufSz = 256;
@@ -57,59 +89,56 @@ ShaderUniform::ShaderUniform(ShaderProgram* owner, GLuint ownerHandle, int codeI
 	detectBinding();
 }
 
+OpenGlShaderUniform::~OpenGlShaderUniform()
+{
+}
+
+std::string_view OpenGlShaderUniform::getName() const
+{
+	return name;
+}
+
 ShaderProgram* ShaderUniform::getOwner() const
 {
 	return owner;
 }
 
-void ShaderUniform::write(float val) const
+void OpenGlShaderUniform::write(float val) const
 {
 	assert(dataType == GL_FLOAT); //Check data type
 	glUniform1f(location, val);
 }
 
-void ShaderUniform::write(glm::vec2 val) const
+void OpenGlShaderUniform::write(glm::vec2 val) const
 {
 	assert(dataType == GL_FLOAT_VEC2); //Check data type
 	glUniform2f(location, val.x, val.y);
 }
 
-void ShaderUniform::write(glm::vec3 val) const
+void OpenGlShaderUniform::write(glm::vec3 val) const
 {
 	assert(dataType == GL_FLOAT_VEC3); //Check data type
 	glUniform3f(location, val.x, val.y, val.z);
 }
 
-void ShaderUniform::write(glm::vec4 val) const
+void OpenGlShaderUniform::write(glm::vec4 val) const
 {
 	assert(dataType == GL_FLOAT_VEC4); //Check data type
 	glUniform4f(location, val[0], val[1], val[2], val[3]);
 }
 
-void ShaderUniform::write(glm::mat4 val) const
+void OpenGlShaderUniform::write(glm::mat4 val) const
 {
 	assert(dataType == GL_FLOAT_MAT4); //Check data type
 	glUniformMatrix4fv(location, 1, false, glm::value_ptr(val));
 }
 
-ShaderUniform::ValueBinding ShaderUniform::getBinding() const
-{
-	return binding;
-}
-
 ShaderUniform::BindingStage ShaderUniform::getBindingStage() const
 {
-	if (binding == ValueBinding::Unbound) return BindingStage::Unbound;
-	else if ((int)ValueBinding::__BEGIN_SHARED    < (int)binding && (int)binding < (int)ValueBinding::__END_SHARED   ) return BindingStage::BindShared;
-	else if ((int)ValueBinding::__BEGIN_INSTANCED < (int)binding && (int)binding < (int)ValueBinding::__END_INSTANCED) return BindingStage::BindInstanced;
-	else
-	{
-		assert(false);
-		return (BindingStage) -1;
-	}
+	return BindingStage_fromBinding(binding);
 }
 
-void ShaderUniform::tryBindShared(Renderer* context) const
+void OpenGlShaderUniform::tryBindShared(Renderer* context) const
 {
 	if (getBindingStage() != BindingStage::BindShared) return;
 
@@ -131,7 +160,7 @@ void ShaderUniform::tryBindShared(Renderer* context) const
 	}
 }
 
-void ShaderUniform::tryBindInstanced(Renderer* context, const I3DRenderable* target) const
+void OpenGlShaderUniform::tryBindInstanced(Renderer* context, const I3DRenderable* target) const
 {
 	if (getBindingStage() != BindingStage::BindInstanced) return;
 
@@ -145,7 +174,7 @@ void ShaderUniform::tryBindInstanced(Renderer* context, const I3DRenderable* tar
 	}
 }
 
-void ShaderUniform::tryBindInstanced(Renderer* context, const Widget* target) const
+void OpenGlShaderUniform::tryBindInstanced(Renderer* context, const Widget* target) const
 {
 	if (getBindingStage() != BindingStage::BindInstanced) return;
 
@@ -159,7 +188,7 @@ void ShaderUniform::tryBindInstanced(Renderer* context, const Widget* target) co
 	}
 }
 
-bool ShaderUniform::tryBindInstanced_generic(Renderer* context) const
+bool OpenGlShaderUniform::tryBindInstanced_generic(Renderer* context) const
 {
 	switch (binding)
 	{

@@ -8,8 +8,8 @@ Material::Material(ShaderProgram* shader) :
 {
 	for (size_t i = 0; i < shader->getNumUniforms(); ++i)
 	{
-		const ShaderUniform& uniform = *shader->getUniform(i);
-		switch (uniform.getBindingStage())
+		const ShaderUniform* uniform = shader->getUniform(i);
+		switch (uniform->getBindingStage())
 		{
 		case ShaderUniform::BindingStage::BindShared:
 			sharedUniforms.push_back(uniform);
@@ -44,7 +44,14 @@ const ShaderProgram* Material::getShader() const
 
 const ShaderUniform* Material::getUserUniform(const std::string& name) const
 {
-	for (const ShaderUniform& i : userConfigurable) if (i.name == name) return &i;
+	for (const ShaderUniform* i : userConfigurable) if (i->getName() == name) return i;
+	return nullptr;
+}
+
+const ShaderUniform* Material::getUniform(ShaderUniform::ValueBinding binding) const
+{
+	for (const ShaderUniform* i : sharedUniforms) if (i->getBinding() == binding) return i;
+	for (const ShaderUniform* i : instanceUniforms) if (i->getBinding() == binding) return i;
 	return nullptr;
 }
 
@@ -63,21 +70,16 @@ void Material::writeFlags(Renderer* context) const
 
 void Material::writeSharedUniforms(Renderer* context) const
 {
-	for (const ShaderUniform& uniform : sharedUniforms) uniform.tryBindShared(context);
-	for (const ShaderUniform& uniform : userConfigurable) uniform.tryBindShared(context);
+	for (const ShaderUniform* uniform : sharedUniforms) uniform->tryBindShared(context);
+	for (const ShaderUniform* uniform : userConfigurable) uniform->tryBindShared(context);
 }
 
 void Material::writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const
 {
-	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, target);
+	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, target);
 }
 
 void Material::writeInstanceUniforms(Renderer* context, const Widget* target) const
 {
-	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced(context, target);
-}
-
-void Material::writeInstanceUniforms_generic(Renderer* context) const
-{
-	for (const ShaderUniform& uniform : instanceUniforms) uniform.tryBindInstanced_generic(context);
+	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, target);
 }

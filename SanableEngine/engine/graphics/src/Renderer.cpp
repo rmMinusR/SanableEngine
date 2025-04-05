@@ -104,6 +104,8 @@ void OpenGlRenderer::drawTextNonShadered(const Font& font, const std::wstring& t
 
 void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color)
 {
+	errorCheck();
+
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -132,8 +134,14 @@ void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::
 		glBindTexture(GL_TEXTURE_2D, glyphTex->id);
 		glTranslatef(glyph->getBearingX(), -glyph->getBearingY(), 0); //Apply glyph's requested offset for texture
 		glScalef(glyphTex->getWidth(), glyphTex->getHeight(), 1); //Apply glyph's requested size
-		mat.writeInstanceUniforms_generic(this); //Refresh ModelView. TODO: inefficient, don't refresh everything else
-
+		const ShaderUniform* transformUniform = mat.getUniform(ShaderUniform::ValueBinding::GeometryTransform);
+		if (transformUniform)
+		{
+			glm::mat4 modelViewMatrix;
+			glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelViewMatrix));
+			transformUniform->write(modelViewMatrix); // Code smell...?
+		}
+		
 		unitQuad.renderImmediate();
 		
 		glPopMatrix();
@@ -145,6 +153,7 @@ void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::
 	glPopMatrix();
 
 	glDisable(GL_BLEND);
+	errorCheck();
 }
 
 void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor)
@@ -176,7 +185,14 @@ void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* m
 		if (uUvMax) uUvMax->write((glm::vec2)uvs.bottomRight());
 
 		mat->writeSharedUniforms(this);
-		mat->writeInstanceUniforms_generic(this);
+		const ShaderUniform* transformUniform = mat->getUniform(ShaderUniform::ValueBinding::GeometryTransform);
+		if (transformUniform)
+		{
+			glm::mat4 modelViewMatrix;
+			glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelViewMatrix));
+			transformUniform->write(modelViewMatrix); // Code smell...?
+		}
+
 		unitQuad.renderImmediate();
 	}
 	else
