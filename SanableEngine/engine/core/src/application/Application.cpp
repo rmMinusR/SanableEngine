@@ -192,7 +192,7 @@ Window* Application::getMainWindow()
 
 Window* Application::buildWindow(WindowSettings& settings)
 {
-    Window* window = new Window(settings.name, settings.size.x, settings.size.y, glSettings, this, settings.renderPipeline, settings.inputProcessor);
+    Window* window = new Window(settings, glSettings, this);
 	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
 	windows.push_back(window);
 	window->renderPipeline->setup(window);

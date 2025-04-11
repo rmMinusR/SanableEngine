@@ -10,9 +10,9 @@
 
 Window* Window::currentFocus = nullptr;
 
-Window::Window(const std::string& name, int width, int height, const GLSettings& glSettings, Application* engine, WindowRenderPipeline* renderPipeline, WindowInputProcessor* inputProcessor) :
-    renderPipeline(renderPipeline),
-    inputProcessor(inputProcessor),
+Window::Window(const WindowSettings& settings, const GLSettings& glSettings, Application* engine) :
+    renderPipeline(settings.renderPipeline),
+    inputProcessor(settings.inputProcessor),
     engine(engine),
     closeRequested(false)
 {
@@ -20,13 +20,20 @@ Window::Window(const std::string& name, int width, int height, const GLSettings&
 
     glSettings.apply();
 
-    handle = SDL_CreateWindow(name.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+    handle = SDL_CreateWindow(
+        settings.name.c_str(),
+        settings.position.has_value() ? settings.position->x : SDL_WINDOWPOS_UNDEFINED,
+        settings.position.has_value() ? settings.position->y : SDL_WINDOWPOS_UNDEFINED,
+        settings.size.x,
+        settings.size.y,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
+    );
     context = GLContext::create(handle, this);
     
     _interface = new OpenGlRenderer(this, context);
     sdlID = SDL_GetWindowID(handle);
     
-    printf("Window '%s' - OpenGL %s\n", name.c_str(), (char*)glGetString(GL_VERSION));
+    printf("Window '%s' - OpenGL %s\n", settings.name.c_str(), (char*)glGetString(GL_VERSION));
 }
 
 Window::~Window()
