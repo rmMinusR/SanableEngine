@@ -4,9 +4,9 @@
 #include <vector>
 #include <unordered_map>
 #include <filesystem>
-#include <SDL_video.h>
 #include <glm/glm.hpp>
 #include "dllapi.h"
+#include "Color.inl"
 #include "math/Vector3.inl"
 #include "math/Rect.inl"
 #include "gui/Anchor2D.inl"
@@ -21,8 +21,7 @@ class ShaderProgram;
 class MeshRenderer;
 class Sprite;
 class UISprite;
-
-struct SDL_Color;
+template<typename T> struct Color4;
 
 class Renderer
 {
@@ -37,12 +36,12 @@ public:
 	inline Window* getOwner() const { return owner; }
 
 	//These all require that no shader is active to properly render
-	virtual void drawRect(Vector3f center, float w, float h, const SDL_Color& color) = 0;
+	virtual void drawRect(Vector3f center, float w, float h, const Color4<uint8_t>& color) = 0;
 	virtual void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos) = 0; //Assumes you have no shader active
-	virtual void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color) = 0; //Assumes you've already activated the material and set model matrix value
+	virtual void drawText(const Font& font, const Material& mat, const std::wstring& text, const Color4<uint8_t>& color) = 0; //Assumes you've already activated the material and set model matrix value
 	virtual void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h) = 0;
 	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h) = 0;
-	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor) = 0;
+	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, Color4<uint8_t> tintColor) = 0;
 
 	virtual void setViewProjTranform(const glm::mat4&) = 0;
 	virtual void setModelTransform(const glm::mat4&) = 0;
@@ -65,7 +64,7 @@ private:
 	OpenGlMesh dynQuad;
 	OpenGlTexture fallbackTexture;
 
-	void drawTextureInternal(const GTexture* tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor);
+	void drawTextureInternal(const GTexture* tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, Color4<uint8_t> tintColor);
 public:
 	ENGINEGRAPHICS_API OpenGlRenderer(Window* owner, SDL_GLContext context);
 	ENGINEGRAPHICS_API virtual ~OpenGlRenderer();
@@ -73,12 +72,12 @@ public:
 	ENGINEGRAPHICS_API virtual void activate() const override; // This renderer is contextual
 	
 	//These all require that no shader is active to properly render
-	ENGINEGRAPHICS_API virtual void drawRect(Vector3f center, float w, float h, const SDL_Color& color) override;
+	ENGINEGRAPHICS_API virtual void drawRect(Vector3f center, float w, float h, const Color4<uint8_t>& color) override;
 	ENGINEGRAPHICS_API virtual void drawTextNonShadered(const Font& font, const std::wstring& text, Vector3f pos) override; //Assumes you have no shader active
-	ENGINEGRAPHICS_API virtual void drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color) override; //Assumes you've already activated the material and set model matrix value
+	ENGINEGRAPHICS_API virtual void drawText(const Font& font, const Material& mat, const std::wstring& text, const Color4<uint8_t>& color) override; //Assumes you've already activated the material and set model matrix value
 	ENGINEGRAPHICS_API virtual void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h) override;
 	ENGINEGRAPHICS_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h) override;
-	ENGINEGRAPHICS_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor) override;
+	ENGINEGRAPHICS_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, Color4<uint8_t> tintColor) override;
 	
 	ENGINEGRAPHICS_API virtual void setViewProjTranform(const glm::mat4&) override;
 	ENGINEGRAPHICS_API virtual void setModelTransform(const glm::mat4&) override;

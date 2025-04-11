@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL_pixels.h>
+#include "Color.inl"
 
 #include "Widget.hpp"
 
@@ -10,7 +10,7 @@ class ImageWidget : public Widget
 {
 	const Material* material;
 	const UISprite* sprite;
-	SDL_Color tintColor;
+	Color4<uint8_t> tintColor;
 public:
 	ENGINEGUI_API ImageWidget(HUD* hud, const Material* material, const UISprite* sprite);
 	ENGINEGUI_API virtual ~ImageWidget();

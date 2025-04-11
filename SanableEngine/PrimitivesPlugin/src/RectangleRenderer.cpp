@@ -6,7 +6,7 @@
 #include "game/GameObject.hpp"
 #include "Renderer.hpp"
 
-RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
+RectangleRenderer::RectangleRenderer(float w, float h, Color4<uint8_t> color) :
 	Component(),
 	w(w),
 	h(h),
@@ -18,7 +18,7 @@ RectangleRenderer::~RectangleRenderer()
 {
 }
 
-void RectangleRenderer::SetColor(SDL_Color newColor)
+void RectangleRenderer::SetColor(Color4<uint8_t> newColor)
 {
 	color = newColor;
 }

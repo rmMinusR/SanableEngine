@@ -25,7 +25,7 @@ void TypeInfoView::refresh()
 		{
 			size_t fieldHash = std::hash<std::string>{}(f.name) ^ std::hash<TypeName>{}(f.type) ^ std::hash<TypeName>{}(f.owner);
 			float hue = (fieldHash & 0xffffULL)/float(0xffffULL);
-			SDL_Color color {
+			Color4<uint8_t> color {
 				uint8_t(255*( 1-1.5f*std::min(abs(hue), abs(hue-1)) )),
 				uint8_t(255*( 1-1.5f*abs(hue-0.33f) )),
 				uint8_t(255*( 1-1.5f*abs(hue-0.66f) )),

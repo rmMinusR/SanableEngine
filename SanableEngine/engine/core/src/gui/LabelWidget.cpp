@@ -6,11 +6,11 @@
 #include "Font.hpp"
 
 LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font) :
-	LabelWidget(hud, material, font, SDL_Color{ 255, 255, 255, 255 })
+	LabelWidget(hud, material, font, Color4<uint8_t>{ 255, 255, 255, 255 })
 {
 }
 
-LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font, const SDL_Color& color) :
+LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font, const Color4<uint8_t>& color) :
 	Widget(hud),
 	material(material),
 	font(font),

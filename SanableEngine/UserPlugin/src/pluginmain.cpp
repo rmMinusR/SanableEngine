@@ -4,7 +4,6 @@
 #include "application/Plugin.hpp"
 #include "application/Window.hpp"
 
-#include <SDL.h>
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
 #include "RectangleRenderer.hpp"
@@ -98,17 +97,17 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         player->getTransform()->setPosition(Vector3<float>(50, 50, -10));
         //player->CreateComponent<PlayerController>(1);
         player->CreateComponent<RectangleCollider>(10, 10);
-        player->CreateComponent<RectangleRenderer>(10, 10, SDL_Color{ 255, 0, 0, 255 });
-        player->CreateComponent<ColliderColorChanger>(SDL_Color{ 255, 0, 0, 255 }, SDL_Color{ 0, 0, 255, 255 });
+        player->CreateComponent<RectangleRenderer>(10, 10, Color4<uint8_t>{ 255, 0, 0, 255 });
+        player->CreateComponent<ColliderColorChanger>(Color4<uint8_t>{ 255, 0, 0, 255 }, Color4<uint8_t>{ 0, 0, 255, 255 });
 
         staticObj = level->addGameObject();
         staticObj->getTransform()->setPosition(Vector3<float>(350, 210, -20));
-        staticObj->CreateComponent<RectangleRenderer>(510, 120, SDL_Color{ 0, 127, 0, 255 });
+        staticObj->CreateComponent<RectangleRenderer>(510, 120, Color4<uint8_t>{ 0, 127, 0, 255 });
 
         obstacle = level->addGameObject();
         obstacle->getTransform()->setPosition(Vector3<float>(225, 225, -15));
         obstacle->CreateComponent<RectangleCollider>(50, 50);
-        obstacle->CreateComponent<RectangleRenderer>(50, 50, SDL_Color{ 127, 63, 0, 255 });
+        obstacle->CreateComponent<RectangleRenderer>(50, 50, Color4<uint8_t>{ 127, 63, 0, 255 });
     }
 
     return true;

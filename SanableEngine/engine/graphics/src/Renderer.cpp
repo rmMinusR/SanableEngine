@@ -1,7 +1,6 @@
 #include "Renderer.hpp"
 
 #include <SDL_render.h>
-#include <SDL_pixels.h>
 #include <GL/glew.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <ft2build.h>
@@ -64,7 +63,7 @@ void OpenGlRenderer::activate() const
 	Window::setActiveDrawTarget(getOwner());
 }
 
-void OpenGlRenderer::drawRect(Vector3f center, float w, float h, const SDL_Color& color)
+void OpenGlRenderer::drawRect(Vector3f center, float w, float h, const Color4<uint8_t>& color)
 {
 	setActiveShader(nullptr);
 
@@ -102,7 +101,7 @@ void OpenGlRenderer::drawTextNonShadered(const Font& font, const std::wstring& t
 	glDisable(GL_BLEND);
 }
 
-void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::wstring& text, const SDL_Color& color)
+void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::wstring& text, const Color4<uint8_t>& color)
 {
 	errorCheck();
 
@@ -156,7 +155,7 @@ void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::
 	errorCheck();
 }
 
-void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, SDL_Color tintColor)
+void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, Color4<uint8_t> tintColor)
 {
 	const OpenGlTexture* tex = static_cast<const OpenGlTexture*>(_tex);
 	assert(tex);
@@ -224,7 +223,7 @@ void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f
 	drawTextureInternal(spr->getTexture(), mat, pos, {w,h}, spr->getUVs(), {255,255,255,255});
 }
 
-void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, SDL_Color tintColor)
+void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, Color4<uint8_t> tintColor)
 {
 	drawTextureInternal(spr->getTexture(), mat, pos, {w,h}, spr->getUVs(), tintColor);
 }

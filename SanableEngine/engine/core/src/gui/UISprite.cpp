@@ -41,7 +41,7 @@ Sprite UISprite3x3::get(Vector2<int> index) const
 	return out;
 }
 
-void UISprite3x3::renderImmediate(Renderer* renderer, const Material* mat, Vector3f pos, Vector2f size, SDL_Color tintColor) const
+void UISprite3x3::renderImmediate(Renderer* renderer, const Material* mat, Vector3f pos, Vector2f size, Color4<uint8_t> tintColor) const
 {
 	//Calc corners
 	Vector2f locs[4];
@@ -97,7 +97,7 @@ Sprite UISpriteSparse::get(Vector2<int> index) const
 	return out;
 }
 
-void UISpriteSparse::renderImmediate(Renderer* renderer, const Material* mat, Vector3f pos, Vector2f size, SDL_Color tintColor) const
+void UISpriteSparse::renderImmediate(Renderer* renderer, const Material* mat, Vector3f pos, Vector2f size, Color4<uint8_t> tintColor) const
 {
 	assert(false && "TODO implement");
 }

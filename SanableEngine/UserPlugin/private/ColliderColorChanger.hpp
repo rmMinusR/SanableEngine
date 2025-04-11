@@ -1,7 +1,6 @@
 #pragma once
 
-#include <SDL_pixels.h>
-
+#include "Color.inl"
 #include "game/Component.hpp"
 
 class RectangleCollider;
@@ -12,8 +11,8 @@ class ColliderColorChanger :
 	public IUpdatable
 {
 private:
-	SDL_Color normalColor;
-	SDL_Color overlapColor;
+	Color4<uint8_t> normalColor;
+	Color4<uint8_t> overlapColor;
 
 	RectangleCollider* collider;
 	RectangleRenderer* renderer;
@@ -23,7 +22,7 @@ protected:
 	void BindToGameObject(GameObject* obj) override;
 
 public:
-	ColliderColorChanger(SDL_Color normalColor, SDL_Color overlapColor);
+	ColliderColorChanger(Color4<uint8_t> normalColor, Color4<uint8_t> overlapColor);
 	~ColliderColorChanger();
 
 	void Update() override;
