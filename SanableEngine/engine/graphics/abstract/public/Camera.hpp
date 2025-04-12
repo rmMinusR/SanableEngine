@@ -44,8 +44,8 @@ public:
 	ENGINEGRAPHICS_API void setPersp(float fovDeg);
 
 	//Called by Renderer
-	ENGINEGRAPHICS_API void setProjectionMatrix(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot);
-	ENGINEGRAPHICS_API void beginFrame(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot);
+	ENGINEGRAPHICS_API glm::mat4 getMatrix(Rect<float> viewport) const;
+	ENGINEGRAPHICS_API Mode getMode() const;
 
 	ENGINEGRAPHICS_API Camera(Camera&& mov);
 	ENGINEGRAPHICS_API Camera& operator=(Camera&& mov);

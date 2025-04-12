@@ -4,6 +4,7 @@
 #include <vector>
 #include <unordered_map>
 #include <filesystem>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/glm.hpp>
 #include "dllapi.h"
 #include "Color.inl"
@@ -11,10 +12,12 @@
 #include "math/Rect.inl"
 #include "Mesh.hpp"
 #include "Texture.hpp"
+#include "ShaderUniform.hpp"
 
 class Application;
 class Window;
 class Font;
+class Camera;
 class Material;
 class ShaderProgram;
 class MeshRenderer;
@@ -44,7 +47,14 @@ public:
 
 	virtual void setViewProjTranform(const glm::mat4&) = 0;
 	virtual void setModelTransform(const glm::mat4&) = 0;
+	virtual glm::mat4 getViewProjTranform() const = 0;
+	virtual glm::mat4 getModelTransform() const = 0;
+	virtual ShaderUniform::GlobalData getCurGlobalData() const = 0;
+
 	virtual void setActiveShader(const ShaderProgram* source) = 0;
+
+	virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) = 0;
+	virtual void endFrame() = 0;
 
 	[[nodiscard]] virtual GTexture* loadTexture(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual GTexture* newTexture(int width, int height, int nChannels, void* data) = 0;

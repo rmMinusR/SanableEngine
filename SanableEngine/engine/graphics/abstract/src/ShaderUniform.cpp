@@ -2,10 +2,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-#include "game/CameraComponent.hpp"
-#include "game/MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
-#include "gui/Widget.hpp"
 
 const char* ShaderUniform::ValueBinding_getName(ValueBinding binding)
 {

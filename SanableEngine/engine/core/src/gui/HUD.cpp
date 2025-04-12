@@ -123,7 +123,9 @@ void HUD::render(Renderer* renderer)
 			//Activate material
 			const Material* mat = w->getMaterial();
 
-			if (mat) mat->writeSharedUniforms(renderer);
+			if (mat) mat->getShader()->writeSharedUniforms(renderer, renderer->getCurGlobalData());
+			
+			// FIXME user uniforms
 
 			w->loadModelTransform(renderer);
 			if (mat) mat->writeInstanceUniforms(renderer, w);

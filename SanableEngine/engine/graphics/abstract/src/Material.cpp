@@ -68,18 +68,12 @@ void Material::writeFlags(Renderer* context) const
 	}
 }
 
-void Material::writeSharedUniforms(Renderer* context) const
-{
-	for (const ShaderUniform* uniform : sharedUniforms) uniform->tryBindShared(context);
-	for (const ShaderUniform* uniform : userConfigurable) uniform->tryBindShared(context);
-}
+//void Material::writeUserUniforms(Renderer* context, const std::function<>& lookup) const
+//{
+//	for (const ShaderUniform* uniform : userConfigurable) uniform->tryBindShared(context, lookup);
+//}
 
-void Material::writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const
+void Material::writeInstanceUniforms(Renderer* context, const ShaderUniform::ObjectData* data) const
 {
-	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, target);
-}
-
-void Material::writeInstanceUniforms(Renderer* context, const Widget* target) const
-{
-	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, target);
+	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, data);
 }

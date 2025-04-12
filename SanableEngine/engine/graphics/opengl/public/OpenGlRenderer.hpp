@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/gtc/quaternion.hpp>
 #include "Renderer.hpp"
 #include "dllapi.h"
 #include "OpenGlMesh.hpp"
@@ -13,6 +14,9 @@ private:
 	OpenGlMesh unitQuad;
 	OpenGlMesh dynQuad;
 	OpenGlTexture fallbackTexture;
+
+	Vector3f curCamPos;
+	glm::quat curCamRot;
 
 	void drawTextureInternal(const GTexture* tex, const Material* mat, Vector3f pos, Vector2f size, Rect<float> uvs, Color4<uint8_t> tintColor);
 public:
@@ -31,7 +35,14 @@ public:
 	
 	ENGINEOPENGL_API virtual void setViewProjTranform(const glm::mat4&) override;
 	ENGINEOPENGL_API virtual void setModelTransform(const glm::mat4&) override;
+	ENGINEOPENGL_API virtual glm::mat4 getViewProjTranform() const override;
+	ENGINEOPENGL_API virtual glm::mat4 getModelTransform() const override;
+	ENGINEOPENGL_API virtual ShaderUniform::GlobalData getCurGlobalData() const override;
+
 	ENGINEOPENGL_API virtual void setActiveShader(const ShaderProgram* source) override;
+
+	ENGINEOPENGL_API virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) override;
+	ENGINEOPENGL_API virtual void endFrame() override;
 
 	[[nodiscard]] ENGINEOPENGL_API virtual GTexture* loadTexture(const std::filesystem::path& path) override;
 	[[nodiscard]] ENGINEOPENGL_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) override;

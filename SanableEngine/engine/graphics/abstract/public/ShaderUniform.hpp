@@ -57,6 +57,17 @@ public:
 	};
 	ENGINEGRAPHICS_API static BindingStage BindingStage_fromBinding(ValueBinding binding);
 
+	struct GlobalData
+	{
+		glm::vec3 CameraPosition;
+		glm::mat4 ViewProjection;
+	};
+
+	struct ObjectData
+	{
+		glm::mat4 GeometryTransform;
+	};
+
 protected:
 	ShaderProgram* owner;
 	friend class ShaderProgram;
@@ -80,7 +91,6 @@ public:
 	virtual void write(glm::vec4 val) const = 0;
 	virtual void write(glm::mat4 val) const = 0;
 
-	virtual void tryBindShared(Renderer* context) const = 0;
-	virtual void tryBindInstanced(Renderer* context, const I3DRenderable* target) const = 0;
-	virtual void tryBindInstanced(Renderer* context, const Widget* target) const = 0;
+	virtual void tryBindShared(Renderer* renderer, const GlobalData* shared) const = 0;
+	virtual void tryBindInstanced(Renderer* renderer, const ObjectData* object) const = 0;
 };

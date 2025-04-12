@@ -10,7 +10,7 @@ target_include_directories("engine-graphics-opengl" PRIVATE "${CMAKE_CURRENT_LIS
 
 # Declare imports
 target_include_directories("engine-graphics-opengl" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-graphics-opengl" PUBLIC engine-graphics-abstract ${OPENGL_gl_LIBRARY} glew)
+target_link_libraries("engine-graphics-opengl" PUBLIC engine-graphics-abstract engine-platform-abstract {OPENGL_gl_LIBRARY} glew)
 
 # Declare exports
 target_include_directories("engine-graphics-opengl" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")

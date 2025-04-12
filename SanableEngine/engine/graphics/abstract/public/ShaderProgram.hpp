@@ -21,6 +21,8 @@ public:
 	virtual const ShaderUniform* getUniform(size_t index) const = 0;
 	virtual ShaderUniform* getUniform(size_t index) = 0;
 
+	ENGINEGRAPHICS_API virtual void writeSharedUniforms(Renderer* context, const ShaderUniform::GlobalData& shared) const;
+
 	ShaderProgram(ShaderProgram&& mov) = delete;
 	ENGINEGRAPHICS_API virtual ShaderProgram& operator=(ShaderProgram&& mov) = 0;
 	ShaderProgram(const ShaderProgram& cpy) = delete;

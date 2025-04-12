@@ -38,48 +38,53 @@ void Camera::setPersp(float fovDeg)
 	size = fovDeg;
 }
 
-void Camera::setProjectionMatrix(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot)
+glm::mat4 Camera::getMatrix(Rect<float> viewport) const
 {
-	float w = viewportSize.x;
-	float h = viewportSize.y;
+	float w = viewport.size.x;
+	float h = viewport.size.y;
 	float aspectRatio = w / h;
-	float diag = sqrtf(w*w + h*h);
+	float diag = sqrtf(w * w + h * h);
 
-	//Main matrix
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
 	if (mode == Mode::GUI)
 	{
-		glOrtho(0, w, h, 0, 0, zFar); //+Y is down
+		return glm::ortho<float>(
+			viewport.topLeft.x, viewport.topLeft.x + w,
+			viewport.topLeft.y + h, viewport.topLeft.y, //+Y is down
+			0, zFar
+		);
+		
 	}
 	else if (mode == Mode::Ortho)
 	{
 		float scl = size / diag;
 		w *= scl / 2;
 		h *= scl / 2;
-		glOrtho(-w, w, -h, h, 0, zFar); //+Y is up
+		return glm::ortho<float>(
+			-w, w,
+			-h, h, //+Y is up
+			0, zFar
+		);
 	}
 	else if (mode == Mode::Persp)
 	{
-		float v = tanf(size/2) * zNear;
-		glFrustum(-v*aspectRatio, v*aspectRatio, -v, v, zNear, zFar); //+Y is up
+		float v = tanf(size / 2) * zNear;
+		return glm::frustum<float>(
+			-v * aspectRatio, v * aspectRatio,
+			-v, v, //+Y is up
+			zNear, zFar
+		);
+		
 	}
-	else assert(false);
-
-	//Transform unless GUI
-	if (mode != Mode::GUI)
+	else
 	{
-		glMultMatrixf(glm::value_ptr(glm::mat4_cast(rot)));
-		glTranslatef(-pos.x, -pos.y, -pos.z);
+		assert(false);
+		return glm::identity<glm::mat4>();
 	}
 }
 
-void Camera::beginFrame(Vector3<float> viewportSize, Vector3<float> pos, glm::quat rot)
+Camera::Mode Camera::getMode() const
 {
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	
-	setProjectionMatrix(viewportSize, pos, rot);
+	return mode;
 }
 
 Camera::Camera(Camera&& mov)

@@ -20,3 +20,15 @@ ShaderProgram::ShaderProgram()
 ShaderProgram::~ShaderProgram()
 {
 }
+
+void ShaderProgram::writeSharedUniforms(Renderer* context, const ShaderUniform::GlobalData& shared) const
+{
+	for (size_t i = 0; i < getNumUniforms(); ++i)
+	{
+		const ShaderUniform* uniform = getUniform(i);
+		if (uniform->getBindingStage() == ShaderUniform::BindingStage::BindShared)
+		{
+			uniform->tryBindShared(context, &shared);
+		}
+	}
+}

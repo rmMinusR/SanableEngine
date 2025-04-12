@@ -28,12 +28,14 @@ void GameWindowRenderPipeline::setup(Window* window)
 
 void GameWindowRenderPipeline::render(Rect<float> viewport)
 {
+	Renderer* renderInterface = window->getRenderer();
+
 	//Set projection matrix
 	CameraComponent* cam = CameraComponent::getMain();
 	if (cam)
 	{
 		const Transform* camTransform = cam->getGameObject()->getTransform();
-		cam->getConfig()->beginFrame({ viewport.size.x, viewport.size.y, 0 }, camTransform->getPosition(), camTransform->getRotation());
+		renderInterface->beginFrame(*cam->getConfig(), viewport, camTransform->getPosition(), camTransform->getRotation());
 	}
 	else printf("WARNING: No main camera!");
 
@@ -55,17 +57,19 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 
+	ShaderUniform::GlobalData globalUniformData = renderInterface->getCurGlobalData();
+
 	//Process buffer
-	Renderer* renderInterface = window->getRenderer();
 	for (const auto& shaderGroup : renderables)
 	{
-		//Activate (or clear) shader
+		//Activate (or clear) shader and write global uniforms
 		renderInterface->setActiveShader(shaderGroup.first);
+		if(shaderGroup.first) shaderGroup.first->writeSharedUniforms(renderInterface, globalUniformData);
 
 		for (const auto& materialGroup : shaderGroup.second)
 		{
 			//Activate material
-			if (materialGroup.first) materialGroup.first->writeSharedUniforms(renderInterface);
+			//if (materialGroup.first) materialGroup.first->writeUserSharedUniforms(renderInterface, userUniformLookup); // FIXME re-implement user uniforms
 			assert(materialGroup.first == nullptr || materialGroup.first->getShader() == shaderGroup.first);
 
 			for (const I3DRenderable* r : materialGroup.second)

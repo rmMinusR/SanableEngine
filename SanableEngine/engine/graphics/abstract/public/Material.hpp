@@ -39,7 +39,5 @@ public:
 	ENGINEGRAPHICS_API const ShaderUniform* getUniform(ShaderUniform::ValueBinding binding) const;
 
 	ENGINEGRAPHICS_API void writeFlags(Renderer* context) const; //Typically need to run this after activating the shader
-	ENGINEGRAPHICS_API void writeSharedUniforms(Renderer* context) const;
-	ENGINEGRAPHICS_API void writeInstanceUniforms(Renderer* context, const I3DRenderable* target) const;
-	ENGINEGRAPHICS_API void writeInstanceUniforms(Renderer* context, const Widget* target) const;
+	ENGINEGRAPHICS_API void writeInstanceUniforms(Renderer* context, const ShaderUniform::ObjectData* data) const;
 };

@@ -3,6 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "OpenGlShaderProgram.hpp"
+#include "OpenGlRenderer.hpp"
 
 void OpenGlShaderUniform::detectBinding()
 {
@@ -71,7 +72,9 @@ void OpenGlShaderUniform::write(glm::mat4 val) const
 	glUniformMatrix4fv(location, 1, false, glm::value_ptr(val));
 }
 
-void OpenGlShaderUniform::tryBindShared(Renderer* context) const
+#define _X(name) case ValueBinding::name: write(shared->name); break;
+
+void OpenGlShaderUniform::tryBindShared(Renderer* renderer, const GlobalData* shared) const
 {
 	if (getBindingStage() != BindingStage::BindShared) return;
 
@@ -81,56 +84,20 @@ void OpenGlShaderUniform::tryBindShared(Renderer* context) const
 		assert(false);
 		break;
 
-	case ValueBinding::ViewProjection:
-		glm::mat4 proj;
-		glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(proj));
-		write(proj);
-		break;
-
-	case ValueBinding::CameraPosition:
-		write(CameraComponent::getMain()->getGameObject()->getTransform()->getPosition());
-		break;
+		ValueBinding_VALUES_SHARED
 	}
 }
 
-void OpenGlShaderUniform::tryBindInstanced(Renderer* context, const I3DRenderable* target) const
+void OpenGlShaderUniform::tryBindInstanced(Renderer* renderer, const ObjectData* shared) const
 {
 	if (getBindingStage() != BindingStage::BindInstanced) return;
-
-	if (tryBindInstanced_generic(context)) return;
 
 	switch (binding)
 	{
 	default: //Unhandled binding
 		assert(false);
 		break;
-	}
-}
 
-void OpenGlShaderUniform::tryBindInstanced(Renderer* context, const Widget* target) const
-{
-	if (getBindingStage() != BindingStage::BindInstanced) return;
-
-	if (tryBindInstanced_generic(context)) return;
-
-	switch (binding)
-	{
-	default: //Unhandled binding
-		assert(false);
-		break;
-	}
-}
-
-bool OpenGlShaderUniform::tryBindInstanced_generic(Renderer* context) const
-{
-	switch (binding)
-	{
-	case ValueBinding::GeometryTransform:
-		glm::mat4 mat; //Should we be using GL matrices instead of GLM? Does it matter?
-		glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(mat));
-		write(mat);
-		return true;
-
-	default: return false;
+		ValueBinding_VALUES_INSTANCED
 	}
 }

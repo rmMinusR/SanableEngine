@@ -13,6 +13,7 @@
 #include "OpenGlTexture.hpp"
 #include "OpenGlShaderProgram.hpp"
 #include "OpenGlMesh.hpp"
+#include "Window.hpp"
 
 OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
 	Renderer(owner),
@@ -50,6 +51,14 @@ OpenGlRenderer::~OpenGlRenderer()
 void OpenGlRenderer::activate() const
 {
 	owner->setActiveDrawTarget();
+}
+
+ShaderUniform::GlobalData OpenGlRenderer::getCurGlobalData() const
+{
+	ShaderUniform::GlobalData data;
+	data.CameraPosition = curCamPos;
+	data.ViewProjection = getViewProjTranform();
+	return data;
 }
 
 void OpenGlRenderer::drawRect(Vector3f center, float w, float h, const Color4<uint8_t>& color)
@@ -98,7 +107,7 @@ void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	setActiveShader(mat.getShader());
-	mat.writeSharedUniforms(this);
+	mat.getShader()->writeSharedUniforms(this, getCurGlobalData());
 	const ShaderUniform* uTextColor = mat.getUserUniform("textColor");
 	if (uTextColor) uTextColor->write(glm::vec3(color.r, color.g, color.b)/255.0f);
 
@@ -172,7 +181,7 @@ void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* m
 		const ShaderUniform* uUvMax = mat->getUserUniform("uvMax");
 		if (uUvMax) uUvMax->write((glm::vec2)uvs.bottomRight());
 
-		mat->writeSharedUniforms(this);
+		mat->getShader()->writeSharedUniforms(this, getCurGlobalData());
 		const ShaderUniform* transformUniform = mat->getUniform(ShaderUniform::ValueBinding::GeometryTransform);
 		if (transformUniform)
 		{
@@ -229,6 +238,20 @@ void OpenGlRenderer::setModelTransform(const glm::mat4& mat)
 	glLoadMatrixf(glm::value_ptr(mat));
 }
 
+glm::mat4 OpenGlRenderer::getViewProjTranform() const
+{
+	glm::mat4 mat;
+	glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(mat));
+	return mat;
+}
+
+glm::mat4 OpenGlRenderer::getModelTransform() const
+{
+	glm::mat4 mat;
+	glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(mat));
+	return mat;
+}
+
 void OpenGlRenderer::setActiveShader(const ShaderProgram* sourceUntyped)
 {
 	if (sourceUntyped)
@@ -241,6 +264,33 @@ void OpenGlRenderer::setActiveShader(const ShaderProgram* sourceUntyped)
 	{
 		glUseProgram(0); // Clear active shader
 	}
+}
+
+void OpenGlRenderer::beginFrame(const Camera& cam, Rect<float> viewport, Vector3<float> pos, glm::quat rot)
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
+
+	curCamPos = pos;
+	curCamRot = rot;
+
+	glm::mat4 projMat = cam.getMatrix(viewport);
+	glm::mat4 viewMat = glm::identity<glm::mat4>();
+
+	//Transform unless GUI - TODO move?
+	if (cam.getMode() != Camera::Mode::GUI)
+	{
+		viewMat *= glm::mat4_cast(rot);
+		viewMat = glm::translate(viewMat, (glm::vec3)-pos);
+	}
+
+	setViewProjTranform(viewMat * projMat);
+}
+
+void OpenGlRenderer::endFrame()
+{
+	// Nothing to do
+	// Don't flip buffers, in case we're rendering to a texture
 }
 
 GTexture* OpenGlRenderer::loadTexture(const std::filesystem::path& path)

@@ -30,10 +30,6 @@ public:
 	ENGINEOPENGL_API virtual void write(glm::vec4 val) const override;
 	ENGINEOPENGL_API virtual void write(glm::mat4 val) const override;
 
-	ENGINEOPENGL_API virtual void tryBindShared(Renderer* context) const override;
-	ENGINEOPENGL_API virtual void tryBindInstanced(Renderer* context, const I3DRenderable* target) const override;
-	ENGINEOPENGL_API virtual void tryBindInstanced(Renderer* context, const Widget* target) const override;
-private:
-	bool tryBindInstanced_generic(Renderer* context) const; //Handles stuff common to both 3D objects and UI Widgets. Returns true if handled.
-	friend class Material;
+	ENGINEOPENGL_API virtual void tryBindShared(Renderer* renderer, const GlobalData* shared) const override;
+	ENGINEOPENGL_API virtual void tryBindInstanced(Renderer* renderer, const ObjectData* object) const override;
 };
