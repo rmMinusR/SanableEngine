@@ -22,6 +22,11 @@ void MeshRenderer::loadModelTransform(Renderer* renderer) const
 	renderer->setModelTransform(*gameObject->getTransform());
 }
 
+ShaderUniform::ObjectData MeshRenderer::getRenderedInstanceUniforms() const
+{
+	return gameObject->getRenderedInstanceUniforms();
+}
+
 void MeshRenderer::renderImmediate(Renderer* renderer) const
 {
 	//Assumes correct material and shader have already been set up.

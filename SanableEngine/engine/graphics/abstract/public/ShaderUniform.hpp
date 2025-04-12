@@ -50,6 +50,7 @@ public:
 
 	enum class BindingStage
 	{
+		Invalid = -1,
 		Unbound = 0,
 
 		BindShared,
@@ -72,6 +73,7 @@ protected:
 	ShaderProgram* owner;
 	friend class ShaderProgram;
 	ValueBinding binding;
+	BindingStage bindingStage;
 
 	ENGINEGRAPHICS_API ShaderUniform();
 	ENGINEGRAPHICS_API ShaderUniform(ShaderProgram* owner);

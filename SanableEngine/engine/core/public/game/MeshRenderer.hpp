@@ -18,5 +18,6 @@ public:
 	ENGINECORE_API const Material* getMaterial() const override;
 protected:
 	ENGINECORE_API virtual void loadModelTransform(Renderer* renderer) const override;
+	ENGINECORE_API virtual ShaderUniform::ObjectData getRenderedInstanceUniforms() const override;
 	ENGINECORE_API virtual void renderImmediate(Renderer* renderer) const override;
 };

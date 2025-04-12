@@ -40,8 +40,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 	else printf("WARNING: No main camera!");
 
 	//Reset screen
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	renderInterface->clear({ 0, 0, 0, 255 });
 
 	//Collect objects to buffer
 	std::unordered_map<
@@ -53,10 +52,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 	> renderables; //Note: No need for a CallBatcher here, we're guaranteed renderables will be grouped by level, then type since our data source is a CallBatcher
 	auto registerRenderable = [&](const I3DRenderable* r) { renderables[r->getShader()][r->getMaterial()].push_back(r); };
 	game->visitLevels([&](Level* level) { level->get3DRenderables()->staticCall(registerRenderable); });
-
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
+	
 	ShaderUniform::GlobalData globalUniformData = renderInterface->getCurGlobalData();
 
 	//Process buffer
@@ -76,7 +72,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			{
 				r->loadModelTransform(renderInterface);
 
-				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderInterface, r);
+				if (materialGroup.first) materialGroup.first->writeInstanceUniforms(renderInterface, r->getRenderedInstanceUniforms());
 
 				assert(r->getMaterial() == materialGroup.first);
 				assert(r->getMaterial() == nullptr || r->getMaterial()->getShader() == shaderGroup.first);
@@ -84,9 +80,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			}
 		}
 	}
-
-	glPopMatrix();
-
+	
 	hud.refreshLayout(viewport);
 	hud.tick(); //FIXME logic shouldn't be in render, move elsewhere
 	hud.render(renderInterface);

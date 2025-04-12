@@ -293,6 +293,12 @@ void OpenGlRenderer::endFrame()
 	// Don't flip buffers, in case we're rendering to a texture
 }
 
+void OpenGlRenderer::clear(Color4<float> color)
+{
+	glClearColor(color.r, color.g, color.b, color.a);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 GTexture* OpenGlRenderer::loadTexture(const std::filesystem::path& path)
 {
 	return new OpenGlTexture(this, CTexture::fromFile(path));

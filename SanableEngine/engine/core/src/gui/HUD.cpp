@@ -109,9 +109,6 @@ void HUD::render(Renderer* renderer)
 		}
 	}
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
 	//Process buffer
 	auto processMaterialClass = [&](Material::Group _class)
 	{
@@ -128,7 +125,7 @@ void HUD::render(Renderer* renderer)
 			// FIXME user uniforms
 
 			w->loadModelTransform(renderer);
-			if (mat) mat->writeInstanceUniforms(renderer, w);
+			if (mat) mat->writeInstanceUniforms(renderer, w->getRenderedInstanceUniforms());
 
 			w->renderImmediate(renderer);
 		}
@@ -164,8 +161,6 @@ void HUD::render(Renderer* renderer)
 	}
 	glColor4f(1, 1, 1, 1);
 	// */
-
-	glPopMatrix();
 }
 
 void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const

@@ -79,6 +79,13 @@ const ShaderProgram* Widget::getShader() const
     return material ? material->getShader() : nullptr;
 }
 
+ShaderUniform::ObjectData Widget::getRenderedInstanceUniforms() const
+{
+    ShaderUniform::ObjectData data;
+    data.GeometryTransform = *transform;
+    return data;
+}
+
 void Widget::loadModelTransform(Renderer* renderer) const
 {
     renderer->setModelTransform(*transform);

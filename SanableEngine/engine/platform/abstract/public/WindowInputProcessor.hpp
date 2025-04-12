@@ -1,8 +1,8 @@
 #pragma once
 
-#include "math/Vector2.inl"
+#include "SDL_events.h"
 
-union SDL_Event;
+#include "math/Vector2.inl"
 
 class Window;
 class Application;

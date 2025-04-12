@@ -56,6 +56,8 @@ public:
 	virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) = 0;
 	virtual void endFrame() = 0;
 
+	virtual void clear(Color4<float> color) = 0;
+
 	[[nodiscard]] virtual GTexture* loadTexture(const std::filesystem::path& path) = 0;
 	[[nodiscard]] virtual GTexture* newTexture(int width, int height, int nChannels, void* data) = 0;
 	[[nodiscard]] virtual GMesh* newMesh(const CMesh& source) = 0;

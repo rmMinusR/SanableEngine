@@ -8,6 +8,7 @@
 #include "MemoryHeap.hpp"
 #include "application/Application.hpp"
 #include "Transform.hpp"
+#include "ShaderUniform.hpp"
 
 class ModuleTypeRegistry;
 class Component;
@@ -28,12 +29,13 @@ protected:
     void InvokeStart();
 
 public:
-    GameObject(Level* level);
-    ~GameObject();
+    ENGINECORE_API GameObject(Level* level);
+    ENGINECORE_API ~GameObject();
 
     inline Level* getLevel() { return level; }
 
     inline Transform* getTransform() { return &transform; }
+    ENGINECORE_API virtual ShaderUniform::ObjectData getRenderedInstanceUniforms() const;
 
     template<typename T, typename... TCtorArgs>
     inline T* CreateComponent(const TCtorArgs&... ctorArgs)

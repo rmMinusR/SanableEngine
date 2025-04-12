@@ -3,6 +3,8 @@
 #include <vector>
 #include <optional>
 
+#include "SDL_events.h"
+
 #include <ReflectionSpec.hpp>
 #include "MemoryHeap.hpp"
 #include "StackAllocator.hpp"
@@ -12,7 +14,6 @@
 #include "WindowSettings.hpp"
 #include "application/PluginManager.hpp"
 
-union SDL_Event;
 namespace gpr460 { class System; }
 class Game;
 class Window;

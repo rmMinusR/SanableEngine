@@ -9,6 +9,7 @@ void OpenGlShaderUniform::detectBinding()
 {
 	binding = ShaderUniform::ValueBinding_fromName(name);
 	if (binding == ShaderUniform::ValueBinding::Invalid) binding = ShaderUniform::ValueBinding::Unbound;
+	bindingStage = ShaderUniform::BindingStage_fromBinding(binding);
 }
 
 OpenGlShaderUniform::OpenGlShaderUniform() :

@@ -39,13 +39,15 @@ ShaderUniform::BindingStage ShaderUniform::BindingStage_fromBinding(ValueBinding
 
 ShaderUniform::ShaderUniform() :
 	owner(nullptr),
-	binding(ValueBinding::Invalid)
+	binding(ValueBinding::Invalid),
+	bindingStage(BindingStage::Invalid)
 {
 }
 
 ShaderUniform::ShaderUniform(ShaderProgram* owner) :
 	owner(owner),
-	binding(ValueBinding::Invalid)
+	binding(ValueBinding::Invalid),
+	bindingStage(BindingStage::Invalid)
 {
 }
 
@@ -61,4 +63,9 @@ ShaderUniform::ValueBinding ShaderUniform::getBinding() const
 ShaderProgram* ShaderUniform::getOwner() const
 {
 	return owner;
+}
+
+ShaderUniform::BindingStage ShaderUniform::getBindingStage() const
+{
+	return bindingStage;
 }

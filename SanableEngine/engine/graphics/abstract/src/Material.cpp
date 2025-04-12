@@ -55,25 +55,12 @@ const ShaderUniform* Material::getUniform(ShaderUniform::ValueBinding binding) c
 	return nullptr;
 }
 
-void Material::writeFlags(Renderer* context) const
-{
-	if (group == Group::Transparent)
-	{
-		glEnable(GL_BLEND);
-		//TODO set blend func
-	}
-	else
-	{
-		glDisable(GL_BLEND);
-	}
-}
-
 //void Material::writeUserUniforms(Renderer* context, const std::function<>& lookup) const
 //{
 //	for (const ShaderUniform* uniform : userConfigurable) uniform->tryBindShared(context, lookup);
 //}
 
-void Material::writeInstanceUniforms(Renderer* context, const ShaderUniform::ObjectData* data) const
+void Material::writeInstanceUniforms(Renderer* context, const ShaderUniform::ObjectData& data) const
 {
-	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, data);
+	for (const ShaderUniform* uniform : instanceUniforms) uniform->tryBindInstanced(context, &data);
 }
