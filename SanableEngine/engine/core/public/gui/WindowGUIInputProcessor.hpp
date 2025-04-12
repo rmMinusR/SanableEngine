@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include "application/WindowInputProcessor.hpp"
+#include "WindowInputProcessor.hpp"
 #include "dllapi.h"
 
 class HUD;

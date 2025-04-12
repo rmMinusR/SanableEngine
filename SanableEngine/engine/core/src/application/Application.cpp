@@ -5,12 +5,13 @@
 
 #include <SDL.h>
 
-#include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include "application/Window.hpp"
+#include "System.hpp"
+#include "Window.hpp"
+#include "WindowInputProcessor.hpp"
+#include "WindowRenderPipeline.hpp"
 #include "game/Game.hpp"
 #include "MemoryRoot.hpp"
-#include "application/WindowInputProcessor.hpp"
 
 void Application::processEvents()
 {
@@ -73,7 +74,7 @@ Application::~Application()
 
 void engine_reportTypes(ModuleTypeRegistry* registry);
 
-void Application::init(Game* game, const GLSettings& glSettings, WindowSettings& mainWindowSettings, gpr460::System& _system, UserInitFunc userInitCallback)
+void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -97,7 +98,6 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowSettings&
     this->game = game;
     game->init(this);
 
-    this->glSettings = glSettings;
     mainWindow = buildWindow(mainWindowSettings);
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
@@ -192,7 +192,7 @@ Window* Application::getMainWindow()
 
 Window* Application::buildWindow(WindowSettings& settings)
 {
-    Window* window = new Window(settings, glSettings, this);
+    Window* window = system->createWindow(settings, this);
 	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
 	windows.push_back(window);
 	window->renderPipeline->setup(window);

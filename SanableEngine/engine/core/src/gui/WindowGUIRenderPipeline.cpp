@@ -1,7 +1,7 @@
 #include "gui/WindowGUIRenderPipeline.hpp"
 
 #include <GL/glew.h>
-#include "application/Window.hpp"
+#include "Window.hpp"
 
 WindowGUIRenderPipeline::WindowGUIRenderPipeline(Application* application) :
 	hud(application)

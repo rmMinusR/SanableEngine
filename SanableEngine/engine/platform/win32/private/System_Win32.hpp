@@ -30,6 +30,8 @@ namespace gpr460
 		HANDLE logFile;
 		const std::wstring logFileName = L"GameErrors.txt";
 
+		Window* currentFocus = nullptr;
+
 		friend class ::Application;
 #ifdef _DEBUG
 		_CrtMemState checkpoint;
@@ -42,6 +44,9 @@ namespace gpr460
 	public:
 		System_Win32();
 		~System_Win32();
+
+		bool isFocused(const Window*) override;
+		Window* createWindow(const WindowSettings& settings, Application* engine) override;
 
 		void DebugPause() override;
 

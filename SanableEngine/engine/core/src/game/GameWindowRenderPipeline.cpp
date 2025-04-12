@@ -2,10 +2,11 @@
 
 #include <unordered_map>
 #include <GL/glew.h>
+#include "Window.hpp"
 #include "game/Game.hpp"
 #include "game/Level.hpp"
-#include "application/Window.hpp"
 #include "game/CameraComponent.hpp"
+#include "Renderer.hpp"
 #include "Material.hpp"
 #include "ShaderProgram.hpp"
 #include "MemoryRoot.hpp"

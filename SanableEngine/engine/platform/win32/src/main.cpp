@@ -8,23 +8,24 @@
 #include "game/GameWindowRenderPipeline.hpp"
 #include "game/GameWindowInputProcessor.hpp"
 #include "System_Win32.hpp"
+#include "GLSettings.hpp"
 
 int main(int argc, char* argv[])
 {
     const int WIDTH = 640;
     const int HEIGHT = 480;
 
-    gpr460::System_Win32 system;
+    GLSettings glSettings;
+    gpr460::System_Win32 system(glSettings);
     Application engine;
     Game game;
 
     //Init
     {
-        GLSettings glSettings;
         WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
         mainWindowSettings.renderPipeline = new GameWindowRenderPipeline(&game);
         mainWindowSettings.inputProcessor = new GameWindowInputProcessor(&game);
-        engine.init(&game, glSettings, mainWindowSettings, system, nullptr);
+        engine.init(&game, mainWindowSettings, system, nullptr);
     }
 
     //Loop

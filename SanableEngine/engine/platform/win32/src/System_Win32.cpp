@@ -11,6 +11,8 @@
 #include <chrono>
 #include <thread>
 
+#include "Window.hpp"
+#include "WindowSettings.hpp"
 #include "application/Application.hpp"
 
 gpr460::System_Win32::System_Win32()
@@ -162,4 +164,30 @@ std::filesystem::path gpr460::System_Win32::GetBaseDir() const
 	buf[found] = L'\0';
 
 	return std::wstring(buf);
+}
+
+bool gpr460::System_Win32::isFocused(const Window* window)
+{
+	return window == currentFocus;
+}
+
+Window* gpr460::System_Win32::createWindow(const WindowSettings& settings, Application* engine)
+{
+	SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
+
+	glSettings.apply();
+
+	SDL_Window* handle = SDL_CreateWindow(
+		settings.name.c_str(),
+		settings.position.has_value() ? settings.position->x : SDL_WINDOWPOS_UNDEFINED,
+		settings.position.has_value() ? settings.position->y : SDL_WINDOWPOS_UNDEFINED,
+		settings.width,
+		settings.height,
+		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
+	);
+
+	_interface = new OpenGlRenderer(this, GLContext::create(handle, this));
+	int sdlID = SDL_GetWindowID(handle);
+
+	printf("Window '%s' - OpenGL %s\n", settings.name.c_str(), (char*)glGetString(GL_VERSION));
 }
