@@ -13,49 +13,15 @@
 #include "game/Game.hpp"
 #include "MemoryRoot.hpp"
 
-void Application::processEvents()
+void Application::processEvent(SDL_Event& event)
 {
-    assert(isAlive);
-    
-    SDL_Event event;
+    //Old testing stuff, should prob be refactored
+    if (event.type == SDL_QUIT) quit = true;
 
-    //Utility functions
-    auto forwardToWindow = [&](SDL_Window* windowHandle)
+    if (event.type == SDL_KEYDOWN)
     {
-        auto it = std::find_if(windows.begin(), windows.end(), [=](Window* w) { return w->handle == windowHandle; });
-        if (it != windows.end()) (*it)->handleEvent(event);
-    };
-
-    while (SDL_PollEvent(&event))
-    {
-        //Old testing stuff, should prob be refactored
-        if (event.type == SDL_QUIT) quit = true;
-
-        if (event.type == SDL_KEYDOWN)
-        {
-            if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
-            if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
-        }
-
-        //Foward events to appropriate windows
-        switch (event.type)
-        {
-        case SDL_WINDOWEVENT:
-            forwardToWindow(SDL_GetWindowFromID(event.window.windowID));
-            break;
-
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-            forwardToWindow(SDL_GetKeyboardFocus());
-            break;
-
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEMOTION:
-            forwardToWindow(SDL_GetMouseFocus());
-            break;
-
-        }
+        if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
+        if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
     }
 }
 
@@ -148,7 +114,7 @@ void Application::frameStep(void* arg)
     engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
 
     engine->game->refreshCallBatchers(false);
-    engine->processEvents();
+    engine->system->pumpEvents();
     engine->game->refreshCallBatchers(false);
     engine->game->tick();
     engine->game->refreshCallBatchers(false);

@@ -36,6 +36,7 @@ namespace gpr460
 
 		virtual bool isFocused(const Window*) = 0;
 		virtual Window* createWindow(const WindowSettings& settings, Application* engine) = 0;
+		virtual void destroyWindow(Window* window) = 0;
 
 		virtual void DebugPause() = 0;
 

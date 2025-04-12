@@ -12,6 +12,7 @@
 #include "WindowSettings.hpp"
 #include "application/PluginManager.hpp"
 
+union SDL_Event;
 namespace gpr460 { class System; }
 class Game;
 class Window;
@@ -32,8 +33,6 @@ private:
     std::vector<Window*> windows;
     friend class Window;
     Window* mainWindow = nullptr;
-
-    void processEvents();
 
 public:
     bool quit = false;
@@ -56,4 +55,7 @@ public:
     ENGINECORE_API Window* getMainWindow();
 
     ENGINECORE_API Window* buildWindow(WindowSettings& settings);
+
+    // INTERNAL USE ONLY
+    ENGINECORE_API void processEvent(SDL_Event& event);
 };

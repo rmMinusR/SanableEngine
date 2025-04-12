@@ -6,12 +6,10 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "Window.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "Font.hpp"
 #include "Sprite.hpp"
-#include "game/MeshRenderer.hpp"
 #include "OpenGlTexture.hpp"
 #include "OpenGlShaderProgram.hpp"
 #include "OpenGlMesh.hpp"

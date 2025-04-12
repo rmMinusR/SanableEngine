@@ -2,6 +2,7 @@
 
 #include <string>
 #include <memory>
+#include "math/Vector2.inl"
 
 union SDL_Event;
 struct SDL_Window;
@@ -24,9 +25,9 @@ protected:
 
 	gpr460::System* system;
 	void* context; // Application
-	void draw() const;
+	virtual void draw() const = 0;
 
-	virtual void handleEvent(SDL_Event& ev) = 0;
+	virtual void handleEvent(SDL_Event& ev);
 	friend class Application;
 	
 	Window(const WindowSettings& settings, gpr460::System* system, void* context);
@@ -40,11 +41,12 @@ public:
 
 	bool isFocused() const;
 	virtual Renderer* getRenderer() = 0;
-	virtual void setActiveDrawTarget() = 0;
+	virtual void setActiveDrawTarget() const = 0;
 
 	virtual void move(int x, int y) = 0;
 	virtual int getWidth() const = 0;
 	virtual int getHeight() const = 0;
+	virtual Vector2<int> getSize() const = 0;
 	virtual bool wasCloseRequested() const = 0;
 
 	virtual void setRenderPipeline(WindowRenderPipeline* v) = 0; //Note: Does NOT destroy old render pipeline, if it exists

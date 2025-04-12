@@ -2,6 +2,13 @@
 
 #include "System.hpp"
 #include "WindowSettings.hpp"
+#include "WindowInputProcessor.hpp"
+#include "WindowRenderPipeline.hpp"
+
+void Window::handleEvent(SDL_Event& ev)
+{
+	if (inputProcessor) inputProcessor->handleEvent(ev);
+}
 
 Window::Window(const WindowSettings& settings, gpr460::System* system, void* context) :
 	system(system),
@@ -29,4 +36,12 @@ WindowInputProcessor* Window::getInputProcessor()
 bool Window::isFocused() const
 {
 	return system->isFocused(this);
+}
+
+void Window::draw() const
+{
+	if (renderPipeline)
+	{
+		renderPipeline->render({ Vector2f(0,0), (Vector2f)getSize() });
+	}
 }
