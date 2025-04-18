@@ -52,6 +52,7 @@ public:
 	virtual ShaderUniform::GlobalData getCurGlobalData() const = 0;
 
 	virtual void setActiveShader(const ShaderProgram* source) = 0;
+	virtual void setMaterialFlags(const Material& material) = 0;
 
 	virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) = 0;
 	virtual void endFrame() = 0;

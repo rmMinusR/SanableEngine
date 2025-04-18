@@ -39,3 +39,8 @@ void RectangleRenderer::renderImmediate(Renderer* renderer) const
 
 	renderer->drawRect(pos, w, h, color);
 }
+
+ShaderUniform::ObjectData RectangleRenderer::getRenderedInstanceUniforms() const
+{
+	return gameObject->getRenderedInstanceUniforms();
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "WindowInputProcessor.hpp"
+#include "dllapi.h"
 
 class Game;
 
@@ -9,7 +10,7 @@ class GameWindowInputProcessor : public WindowInputProcessor
 	Game* game;
 
 public:
-	GameWindowInputProcessor(Game* game);
+	ENGINECORE_API GameWindowInputProcessor(Game* game);
 	virtual ~GameWindowInputProcessor();
 
 protected:

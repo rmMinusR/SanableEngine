@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <SDL_video.h>
+#include "dllapi.h"
 
 class GLContext
 {
@@ -9,6 +10,6 @@ class GLContext
 	static bool glewGood;
 
 public:
-	static SDL_GLContext create(SDL_Window* window, void* who);
-	static void release(SDL_GLContext ctx, void* who);
+	ENGINEOPENGL_API static SDL_GLContext create(SDL_Window* window, void* who);
+	ENGINEOPENGL_API static void release(SDL_GLContext ctx, void* who);
 };

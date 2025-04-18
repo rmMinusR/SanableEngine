@@ -49,6 +49,6 @@ public:
 	virtual Vector2<int> getSize() const = 0;
 	virtual bool wasCloseRequested() const = 0;
 
-	virtual void setRenderPipeline(WindowRenderPipeline* v) = 0; //Note: Does NOT destroy old render pipeline, if it exists
-	virtual void setInputProcessor(WindowInputProcessor* v) = 0; //Note: Does NOT destroy old input processor, if it exists
+	virtual void setRenderPipeline(WindowRenderPipeline* v); //Note: Does NOT destroy old render pipeline, if it exists
+	virtual void setInputProcessor(WindowInputProcessor* v); //Note: Does NOT destroy old input processor, if it exists
 };

@@ -19,8 +19,6 @@ private:
 	int sdlID;
 	friend class WindowInputProcessor;
 
-	virtual void handleEvent(SDL_Event& ev) override;
-
 	Window_Win32(const WindowSettings& settings, Application* engine, SDL_Window* handle);
 	virtual ~Window_Win32();
 	friend class gpr460::System_Win32;
@@ -35,7 +33,4 @@ public:
 	virtual int getHeight() const override;
 	virtual Vector2<int> getSize() const override;
 	virtual bool wasCloseRequested() const override;
-
-	virtual void setRenderPipeline(WindowRenderPipeline* v) override; //Note: Does NOT destroy old render pipeline, if it exists
-	virtual void setInputProcessor(WindowInputProcessor* v) override; //Note: Does NOT destroy old input processor, if it exists
 };

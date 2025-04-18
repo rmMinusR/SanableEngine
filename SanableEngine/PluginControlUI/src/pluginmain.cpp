@@ -7,7 +7,9 @@
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
-#include "application/Window.hpp"
+#include "System.hpp"
+#include "Window.hpp"
+#include "Renderer.hpp"
 #include "PluginManagerView.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
@@ -84,7 +86,7 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin
-        Window::setActiveDrawTarget(game->getApplication()->getMainWindow());
+        game->getApplication()->getMainWindow()->setActiveDrawTarget();
     }
 
     return true;
@@ -116,7 +118,7 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
         delete Resources::rttiParentSprite;
         delete Resources::rttiParentTexture;
 
-        delete ctlWindow;
+        game->getApplication()->getSystem()->destroyWindow(ctlWindow);
         ctlWindow = nullptr;
     }
 }

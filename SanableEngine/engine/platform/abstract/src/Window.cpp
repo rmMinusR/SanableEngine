@@ -33,6 +33,18 @@ WindowInputProcessor* Window::getInputProcessor()
 	return inputProcessor;
 }
 
+void Window::setRenderPipeline(WindowRenderPipeline* v)
+{
+	if (renderPipeline) delete renderPipeline;
+	renderPipeline = v;
+}
+
+void Window::setInputProcessor(WindowInputProcessor* v)
+{
+	if (inputProcessor) delete inputProcessor;
+	inputProcessor = v;
+}
+
 bool Window::isFocused() const
 {
 	return system->isFocused(this);

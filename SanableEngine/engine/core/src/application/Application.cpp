@@ -39,6 +39,7 @@ Application::~Application()
 }
 
 void engine_reportTypes(ModuleTypeRegistry* registry);
+//API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
 void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& _system, UserInitFunc userInitCallback)
 {
@@ -57,6 +58,11 @@ void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::S
         engine_reportTypes(&m);
         GlobalTypeRegistry::loadModule("Application", m);
     }
+    //{
+    //    ModuleTypeRegistry m;
+    //    graphics_abstract_reportTypes(&m);
+    //    GlobalTypeRegistry::loadModule("GraphicsAbstract", m);
+    //}
 
     heap.emplace();
     heap.value().getSpecificPool<Level>(true);

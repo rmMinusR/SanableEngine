@@ -8,6 +8,8 @@ aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_graphics_opengl_sour
 declare_dll("engine-graphics-opengl" "" engine_graphics_opengl_sources)
 target_include_directories("engine-graphics-opengl" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 
+target_compile_definitions("engine-graphics-opengl" PRIVATE engine_graphics_IMPLEMENTATION) # Render interface symbols get bundled in with implementation
+
 # Declare imports
 target_include_directories("engine-graphics-opengl" PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries("engine-graphics-opengl" PUBLIC engine-graphics-abstract engine-platform-abstract ${OPENGL_gl_LIBRARY} glew)

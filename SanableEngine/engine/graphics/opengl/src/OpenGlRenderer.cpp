@@ -266,6 +266,19 @@ void OpenGlRenderer::setActiveShader(const ShaderProgram* sourceUntyped)
 	}
 }
 
+void OpenGlRenderer::setMaterialFlags(const Material& material)
+{
+	if (material.getGroup() == Material::Group::Transparent)
+	{
+		glEnable(GL_BLEND);
+		//TODO set blend func
+	}
+	else
+	{
+		glDisable(GL_BLEND);
+	}
+}
+
 void OpenGlRenderer::beginFrame(const Camera& cam, Rect<float> viewport, Vector3<float> pos, glm::quat rot)
 {
 	glEnable(GL_DEPTH_TEST);

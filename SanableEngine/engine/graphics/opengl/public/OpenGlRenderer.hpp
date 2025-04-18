@@ -39,12 +39,13 @@ public:
 	ENGINEOPENGL_API virtual glm::mat4 getModelTransform() const override;
 	ENGINEOPENGL_API virtual ShaderUniform::GlobalData getCurGlobalData() const override;
 
-	ENGINEOPENGL_API virtual void setActiveShader(const ShaderProgram* source) override;
+	ENGINEOPENGL_API virtual void setActiveShader(const ShaderProgram*) override;
+	ENGINEOPENGL_API virtual void setMaterialFlags(const Material& material) override;
 
 	ENGINEOPENGL_API virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) override;
 	ENGINEOPENGL_API virtual void endFrame() override;
 
-	ENGINEOPENGL_API virtual void clear(Color4<float> color);
+	ENGINEOPENGL_API virtual void clear(Color4<float> color) override;
 
 	[[nodiscard]] ENGINEOPENGL_API virtual GTexture* loadTexture(const std::filesystem::path& path) override;
 	[[nodiscard]] ENGINEOPENGL_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) override;

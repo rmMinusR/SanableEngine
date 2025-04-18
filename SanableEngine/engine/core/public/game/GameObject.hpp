@@ -30,7 +30,7 @@ protected:
 
 public:
     ENGINECORE_API GameObject(Level* level);
-    ENGINECORE_API ~GameObject();
+    ENGINECORE_API virtual ~GameObject();
 
     inline Level* getLevel() { return level; }
 

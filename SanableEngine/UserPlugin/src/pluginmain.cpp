@@ -2,7 +2,8 @@
 
 #include "application/PluginCore.hpp"
 #include "application/Plugin.hpp"
-#include "application/Window.hpp"
+#include "Window.hpp"
+#include "Renderer.hpp"
 
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"

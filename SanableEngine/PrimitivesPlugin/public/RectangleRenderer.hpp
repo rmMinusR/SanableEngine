@@ -23,4 +23,5 @@ public:
 protected:
 	PRIMITIVES_API virtual void loadModelTransform(Renderer*) const override;
 	PRIMITIVES_API virtual void renderImmediate(Renderer*) const override;
+	PRIMITIVES_API virtual ShaderUniform::ObjectData getRenderedInstanceUniforms() const override;
 };
