@@ -260,7 +260,9 @@ Window* gpr460::System_Win32::createWindow(const WindowSettings& settings, Appli
 		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
 	);
 
-	return new Window_Win32(settings, engine, handle);
+	Window_Win32* w = new Window_Win32(settings, engine, handle);
+	windows.push_back(w);
+	return w;
 }
 
 void gpr460::System_Win32::destroyWindow(Window* _window)
