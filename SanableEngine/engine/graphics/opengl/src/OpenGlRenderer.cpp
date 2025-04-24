@@ -10,15 +10,18 @@
 #include "Material.hpp"
 #include "Font.hpp"
 #include "Sprite.hpp"
+#include "Window.hpp"
 #include "OpenGlTexture.hpp"
 #include "OpenGlShaderProgram.hpp"
 #include "OpenGlMesh.hpp"
-#include "Window.hpp"
+#include "GLContext.hpp"
 
 OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
 	Renderer(owner),
-	context(context)
+	sdlContext(context)
 {
+	activate();
+
 	{
 		CMesh cUnitQuad = CMesh::createUnitQuad(Rect<float>::fromMinMax({ 0,0 }, { 1,1 }));
 		unitQuad = OpenGlMesh(cUnitQuad, false);
@@ -45,7 +48,11 @@ OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
 
 OpenGlRenderer::~OpenGlRenderer()
 {
-	// TODO: Should we own the SDL_GLContext handle?
+	if (sdlContext)
+	{
+		GLContext::release(sdlContext, this);
+		sdlContext = nullptr;
+	}
 }
 
 void OpenGlRenderer::activate() const
@@ -341,4 +348,9 @@ void OpenGlRenderer::errorCheck() const
 		printf("GL error (code %u): %s\n", err, glewGetErrorString(err));
 		assert(false);
 	}
+}
+
+SDL_GLContext OpenGlRenderer::sdlHandle() const
+{
+	return sdlContext;
 }

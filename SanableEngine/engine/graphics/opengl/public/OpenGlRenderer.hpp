@@ -9,7 +9,7 @@
 class OpenGlRenderer : public Renderer
 {
 private:
-	SDL_GLContext context;
+	SDL_GLContext sdlContext;
 
 	OpenGlMesh unitQuad;
 	OpenGlMesh dynQuad;
@@ -53,4 +53,7 @@ public:
 	[[nodiscard]] ENGINEOPENGL_API virtual ShaderProgram* loadShaderProgram(const std::filesystem::path& path) override;
 
 	ENGINEOPENGL_API virtual void errorCheck() const override;
+
+	// Implementation-specific
+	ENGINEOPENGL_API SDL_GLContext sdlHandle() const;
 };

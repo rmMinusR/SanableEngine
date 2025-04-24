@@ -1,6 +1,7 @@
 #include "Material.hpp"
 
 #include "ShaderProgram.hpp"
+#include "Renderer.hpp"
 
 Material::Material(ShaderProgram* shader) :
 	shader(shader),
@@ -59,6 +60,12 @@ const ShaderUniform* Material::getUniform(ShaderUniform::ValueBinding binding) c
 //{
 //	for (const ShaderUniform* uniform : userConfigurable) uniform->tryBindShared(context, lookup);
 //}
+
+void Material::writeFlags(Renderer* context) const
+{
+	// Defer to main implementation
+	context->setMaterialFlags(*this);
+}
 
 void Material::writeInstanceUniforms(Renderer* context, const ShaderUniform::ObjectData& data) const
 {

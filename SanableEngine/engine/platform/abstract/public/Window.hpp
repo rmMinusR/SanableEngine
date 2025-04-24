@@ -19,7 +19,6 @@ class Window
 protected:
 	WindowRenderPipeline* renderPipeline;
 	WindowInputProcessor* inputProcessor;
-	SDL_Window* handle;
 
 	bool closeRequested;
 

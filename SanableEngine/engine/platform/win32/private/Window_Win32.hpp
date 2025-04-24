@@ -12,7 +12,7 @@ namespace gpr460 { class System_Win32; }
 class Window_Win32 : public Window
 {
 private:
-	SDL_GLContext context;
+	SDL_Window* sdlHandle;
 	OpenGlRenderer renderer;
 	void draw() const override;
 

@@ -186,7 +186,7 @@ void gpr460::System_Win32::pumpEvents()
 	//Utility functions
 	auto lookupWindow = [&](SDL_Window* windowHandle)
 	{
-		auto it = std::find_if(windows.begin(), windows.end(), [=](Window_Win32* w) { return w->handle == windowHandle; });
+		auto it = std::find_if(windows.begin(), windows.end(), [=](Window_Win32* w) { return w->sdlHandle == windowHandle; });
 		if (it != windows.end()) return *it;
 		else return (Window_Win32*)nullptr;
 	};
