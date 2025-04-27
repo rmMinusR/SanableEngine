@@ -304,7 +304,7 @@ void OpenGlRenderer::beginFrame(const Camera& cam, Rect<float> viewport, Vector3
 		viewMat = glm::translate(viewMat, (glm::vec3)-pos);
 	}
 
-	setViewProjTranform(viewMat * projMat);
+	setViewProjTranform(projMat * viewMat);
 }
 
 void OpenGlRenderer::endFrame()

@@ -15,11 +15,11 @@ struct WindowSettings
 	//Required
 	std::string name;
 	Vector2<int> size;
-	WindowRenderPipeline* renderPipeline; //Owned by self, nulled on build, NOT nulled on destroy!
+	WindowRenderPipeline* renderPipeline = nullptr; //Owned by self, nulled on build, NOT nulled on destroy!
 
 	//Optional
 	std::optional<Vector2<int>> position;
-	WindowInputProcessor* inputProcessor; //Owned by self, nulled on build, NOT nulled on destroy!
+	WindowInputProcessor* inputProcessor = nullptr; //Owned by self, nulled on build, NOT nulled on destroy!
 	
 	WindowSettings(const std::string& name, int width, int height);
 	~WindowSettings();

@@ -94,7 +94,11 @@ void Application::shutdown()
     game->cleanup();
 
     //If any plugins didn't clean up their window, do it for them
-    while (!windows.empty()) delete windows[windows.size()-1]; //Destructor will automatically erase the tail
+    while (!windows.empty())
+    {
+        delete windows[windows.size() - 1]; //Destructor will automatically erase the tail
+        windows.pop_back();
+    }
     mainWindow = nullptr;
     
     heap.value().destroyPool<GameObject>(); //Clean up memory, GameObject pool first so remaining components are released

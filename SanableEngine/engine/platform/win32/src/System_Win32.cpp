@@ -219,20 +219,22 @@ void gpr460::System_Win32::pumpEvents()
 			//Window focus management
 		case SDL_WINDOWEVENT:
 		{
+			Window_Win32* window = lookupWindow(SDL_GetWindowFromID(event.window.windowID));
 			switch (event.window.event)
 			{
 			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				currentFocus = lookupWindow(SDL_GetWindowFromID(event.window.windowID));
+				currentFocus = window;
 				break;
 
 			case SDL_WINDOWEVENT_FOCUS_LOST:
-				currentFocus = nullptr; // FIXME race condition?
+				if (currentFocus == window) currentFocus = nullptr;
 				break;
 
 			case SDL_WINDOWEVENT_CLOSE:
-				lookupWindow(SDL_GetWindowFromID(event.window.windowID))->closeRequested = true;
+				window->closeRequested = true;
 				break;
 			}
+			window->handleEvent(event);
 			break;
 		}
 

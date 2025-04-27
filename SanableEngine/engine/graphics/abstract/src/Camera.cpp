@@ -73,7 +73,6 @@ glm::mat4 Camera::getMatrix(Rect<float> viewport) const
 			-v, v, //+Y is up
 			zNear, zFar
 		);
-		
 	}
 	else
 	{
