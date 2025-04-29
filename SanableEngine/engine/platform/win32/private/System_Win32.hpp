@@ -56,6 +56,8 @@ namespace gpr460
 		bool isFocused(const Window*) override;
 		Window* createWindow(const WindowSettings& settings, Application* engine) override;
 		void destroyWindow(Window* window) override;
+		size_t getNumWindows() const override;
+		Window* getWindow(size_t which) override;
 
 		void DebugPause() override;
 

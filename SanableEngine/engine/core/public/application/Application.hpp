@@ -31,8 +31,6 @@ private:
     PluginManager pluginManager;
     friend class PluginManager;
 
-    std::vector<Window*> windows;
-    friend class Window;
     Window* mainWindow = nullptr;
 
 public:

@@ -94,10 +94,10 @@ void Application::shutdown()
     game->cleanup();
 
     //If any plugins didn't clean up their window, do it for them
-    while (!windows.empty())
+    while (system->getNumWindows() != 0)
     {
-        delete windows[windows.size() - 1]; //Destructor will automatically erase the tail
-        windows.pop_back();
+        Window* w = system->getWindow(system->getNumWindows() - 1);
+        system->destroyWindow(w);
     }
     mainWindow = nullptr;
     
@@ -128,7 +128,7 @@ void Application::frameStep(void* arg)
     engine->game->refreshCallBatchers(false);
     engine->game->tick();
     engine->game->refreshCallBatchers(false);
-    for (Window* w : engine->windows) w->draw();
+    for (size_t i = 0; i < engine->system->getNumWindows(); ++i) engine->system->getWindow(i)->draw();
 
     if (engine->pluginManager.executeCommandBuffer() != 0)
     {
@@ -163,14 +163,13 @@ PluginManager* Application::getPluginManager()
 
 Window* Application::getMainWindow()
 {
-    return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
+    return mainWindow;
 }
 
 Window* Application::buildWindow(WindowSettings& settings)
 {
     Window* window = system->createWindow(settings, this);
 	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
-	windows.push_back(window);
 	window->renderPipeline->setup(window);
 	if (window->inputProcessor) window->inputProcessor->setup(window);
 

@@ -30,7 +30,7 @@ protected:
 	friend class Application;
 	
 	Window(const WindowSettings& settings, gpr460::System* system, void* context);
-	virtual ~Window();
+	virtual ~Window(); // Only System may call this
 	friend struct thunk_utils<Window>;
 public:
 	virtual WindowRenderPipeline* getRenderPipeline();

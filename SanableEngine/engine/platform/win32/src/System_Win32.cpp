@@ -77,10 +77,8 @@ void gpr460::System_Win32::Shutdown()
 	assert(isAlive);
 	isAlive = false;
 
-	for (int i = windows.size(); i >= 0; --i)
-	{
-		delete windows[i];
-	}
+	for (auto w = windows.rbegin(); w != windows.rend(); ++w) delete *w;
+	windows.clear();
 
 	//Close console redirection
 	fclose(consolePsuedofile);
@@ -276,4 +274,14 @@ void gpr460::System_Win32::destroyWindow(Window* _window)
 	auto it = std::find(windows.begin(), windows.end(), window);
 	assert(it != windows.end());
 	windows.erase(it);
+}
+
+size_t gpr460::System_Win32::getNumWindows() const
+{
+	return windows.size();
+}
+
+Window* gpr460::System_Win32::getWindow(size_t which)
+{
+	return windows[which];
 }
