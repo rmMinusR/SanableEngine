@@ -87,8 +87,11 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                 # Non-namespaced non-class-static global
                 return cx_ast.SymbolPath()+cursor.spelling
         except:
-            config.logger.critical(f"While detecting path for symbol {cursor.displayname} at {makeSourceLocation(cursor, this.project)}")
-            raise        
+            if not isinstance(cursor, type(None)):
+                config.logger.critical(f"While detecting path for symbol {cursor.displayname} at {makeSourceLocation(cursor, this.project)}")
+            else:
+                config.logger.critical(f"While detecting path for symbol=None")
+            raise
 
     def __ingestCursor(this, parent:cx_ast.ASTNode, cursor:Cursor) -> cx_ast.ASTNode|None:
         # No need to check if it's ours: we're guaranteed it is, if a parent is
@@ -177,12 +180,16 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
 
         # Check panic condition: can't locate (probably in system libs)
         if longestKnownPath not in this.module.externals.keys():
-            if pathRequested.startsWith( cx_ast.SymbolPath()+"std" ): # Raise warning if (probably) outside standard library
+            if len(pathRequested) > 0 and not pathRequested.startsWith( cx_ast.SymbolPath()+"std" ): # Raise warning if (probably) outside standard library
                 config.logger.warning(f"Could not locate external(?) symbol: {pathRequested}")
             return None
 
         # Expand each candidate
         for ext in this.module.externals[longestKnownPath]:
+            # Skip already-expanded (ie, previously expanded and unpickled) externals
+            if ext.expanded:
+                continue
+
             ext.expanded = True
                 
             # Try to parse node

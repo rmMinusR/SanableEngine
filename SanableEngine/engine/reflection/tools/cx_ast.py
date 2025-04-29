@@ -292,11 +292,16 @@ class Module:
                 for i in obj: op(i)
             else: op(obj)
         
-        # Nasty hack to prevent symbol duplication
+        # Nasty hack to prevent symbol duplication or parent un-linking on unpickle
         for v in this.contents.values(): _reducing_invoke(v, lambda o: setattr(o, "children", []))
-        def _associate_owner_with_child(o):
-            if o.owner != None: o.owner.children.append(o)
-        for v in this.contents.values(): _reducing_invoke(v, _associate_owner_with_child)
+        def _rebuild_links(o:ASTNode):
+            if o.owner == None and o.path.parent != None:
+                rebuiltOwner = this.find(o.path.parent)
+                if isinstance(rebuiltOwner, ASTNode):
+                    o.owner = rebuiltOwner
+            if o.owner != None and o not in o.owner.children:
+                o.owner.children.append(o)
+        for v in this.contents.values(): _reducing_invoke(v, _rebuild_links)
         
         # Link explicit symbols
         for v in this.contents.values():
@@ -641,7 +646,6 @@ class DestructorInfo(MaybeVirtual, Callable):
                     if dtor != None: out.append(dtor)
                     out += __getAllDtors(p.parentType)
             return out
-        
         this.isVirtual = this.isExplicitVirtual or any(i.isExplicitVirtual for i in __getAllDtors(this.owner))
         this.isOverride = any(i.isExplicitVirtual for i in __getAllDtors(this.owner)[1:]) # Skip virtual check on self, only check if parents are virtual
 
