@@ -11,9 +11,16 @@
 #include <chrono>
 #include <thread>
 
-#include "application/Application.hpp"
+#include <SDL.h>
 
-gpr460::System_Win32::System_Win32()
+#include "GLContext.hpp"
+
+#include "WindowSettings.hpp"
+#include "application/Application.hpp"
+#include "Window_Win32.hpp"
+
+gpr460::System_Win32::System_Win32(GLSettings glSettings) :
+	glSettings(glSettings)
 {
 	consolePsuedofile = nullptr;
 	logFile = nullptr;
@@ -25,6 +32,7 @@ gpr460::System_Win32::System_Win32()
 gpr460::System_Win32::~System_Win32()
 {
 	assert(!isAlive);
+	assert(windows.empty());
 }
 
 void gpr460::System_Win32::Init(Application* engine)
@@ -68,6 +76,9 @@ void gpr460::System_Win32::Shutdown()
 {
 	assert(isAlive);
 	isAlive = false;
+
+	for (auto w = windows.rbegin(); w != windows.rend(); ++w) delete *w;
+	windows.clear();
 
 	//Close console redirection
 	fclose(consolePsuedofile);
@@ -162,4 +173,115 @@ std::filesystem::path gpr460::System_Win32::GetBaseDir() const
 	buf[found] = L'\0';
 
 	return std::wstring(buf);
+}
+
+void gpr460::System_Win32::pumpEvents()
+{
+	assert(isAlive);
+
+	SDL_Event event;
+
+	//Utility functions
+	auto lookupWindow = [&](SDL_Window* windowHandle)
+	{
+		auto it = std::find_if(windows.begin(), windows.end(), [=](Window_Win32* w) { return w->sdlHandle == windowHandle; });
+		if (it != windows.end()) return *it;
+		else return (Window_Win32*)nullptr;
+	};
+	auto forwardToWindow = [&](SDL_Window* windowHandle)
+	{
+		Window_Win32* w = lookupWindow(windowHandle);
+		if (w) (w)->handleEvent(event);
+	};
+
+	while (SDL_PollEvent(&event))
+	{
+		//Forward to application and system-wide listeners
+		engine->processEvent(event);
+
+		//Forward events to appropriate windows
+		switch (event.type)
+		{
+			// Passthrough input
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			forwardToWindow(SDL_GetKeyboardFocus());
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEMOTION:
+			forwardToWindow(SDL_GetMouseFocus());
+			break;
+
+			//Window focus management
+		case SDL_WINDOWEVENT:
+		{
+			Window_Win32* window = lookupWindow(SDL_GetWindowFromID(event.window.windowID));
+			switch (event.window.event)
+			{
+			case SDL_WINDOWEVENT_FOCUS_GAINED:
+				currentFocus = window;
+				break;
+
+			case SDL_WINDOWEVENT_FOCUS_LOST:
+				if (currentFocus == window) currentFocus = nullptr;
+				break;
+
+			case SDL_WINDOWEVENT_CLOSE:
+				window->closeRequested = true;
+				break;
+			}
+			window->handleEvent(event);
+			break;
+		}
+
+		}
+	}
+}
+
+bool gpr460::System_Win32::isFocused(const Window* window)
+{
+	return window == currentFocus;
+}
+
+Window* gpr460::System_Win32::createWindow(const WindowSettings& settings, Application* engine)
+{
+	SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
+
+	glSettings.apply();
+
+	SDL_Window* handle = SDL_CreateWindow(
+		settings.name.c_str(),
+		settings.position.has_value() ? settings.position->x : SDL_WINDOWPOS_UNDEFINED,
+		settings.position.has_value() ? settings.position->y : SDL_WINDOWPOS_UNDEFINED,
+		settings.size.x,
+		settings.size.y,
+		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
+	);
+
+	Window_Win32* w = new Window_Win32(settings, engine, handle);
+	windows.push_back(w);
+	return w;
+}
+
+void gpr460::System_Win32::destroyWindow(Window* _window)
+{
+	Window_Win32* window = static_cast<Window_Win32*>(_window);
+
+	delete window;
+
+	auto it = std::find(windows.begin(), windows.end(), window);
+	assert(it != windows.end());
+	windows.erase(it);
+}
+
+size_t gpr460::System_Win32::getNumWindows() const
+{
+	return windows.size();
+}
+
+Window* gpr460::System_Win32::getWindow(size_t which)
+{
+	return windows[which];
 }

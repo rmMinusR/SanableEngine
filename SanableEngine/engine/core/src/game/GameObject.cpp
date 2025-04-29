@@ -36,3 +36,10 @@ GameObject::~GameObject()
 		components.clear();
 	}
 }
+
+ShaderUniform::ObjectData GameObject::getRenderedInstanceUniforms() const
+{
+	ShaderUniform::ObjectData data;
+	data.GeometryTransform = transform;
+	return data;
+}

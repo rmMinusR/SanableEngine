@@ -1,6 +1,5 @@
 //Deliberately no include guards
 
-
 #if _WIN32
 #define API_EXPORT __declspec(dllexport)
 #define API_IMPORT __declspec(dllimport)

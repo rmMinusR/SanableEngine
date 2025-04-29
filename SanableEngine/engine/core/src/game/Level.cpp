@@ -1,6 +1,6 @@
 #include "game/Level.hpp"
 
-#include "MeshRenderer.hpp"
+#include "game/MeshRenderer.hpp"
 #include "Camera.hpp"
 
 void Level::applyConcurrencyBuffers()

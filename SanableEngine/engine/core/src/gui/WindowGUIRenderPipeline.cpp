@@ -1,7 +1,9 @@
 #include "gui/WindowGUIRenderPipeline.hpp"
 
 #include <GL/glew.h>
-#include "application/Window.hpp"
+#include "Window.hpp"
+#include "Renderer.hpp"
+#include "Camera.hpp"
 
 WindowGUIRenderPipeline::WindowGUIRenderPipeline(Application* application) :
 	hud(application)
@@ -14,18 +16,13 @@ WindowGUIRenderPipeline::~WindowGUIRenderPipeline()
 
 void WindowGUIRenderPipeline::render(Rect<float> viewport)
 {
-	//Set flags
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
+	Renderer* renderer = window->getRenderer();
 
-	//Setup matrix
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, viewport.size.x, viewport.size.y, 0, zNear, zFar); //+Y is down
+	Camera cam;
+	cam.setGUIProj();
+	renderer->beginFrame(cam, viewport, {0,0,0}, glm::identity<glm::quat>());
 
-	//Clear screen
-	glClearColor(0, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	renderer->clear({0, 0, 0, 1});
 
 	//Tick and render GUI
 	hud.refreshLayout(viewport);

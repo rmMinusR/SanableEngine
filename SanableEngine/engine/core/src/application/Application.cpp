@@ -5,55 +5,23 @@
 
 #include <SDL.h>
 
-#include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include "application/Window.hpp"
+#include "System.hpp"
+#include "Window.hpp"
+#include "WindowInputProcessor.hpp"
+#include "WindowRenderPipeline.hpp"
 #include "game/Game.hpp"
 #include "MemoryRoot.hpp"
 
-void Application::processEvents()
+void Application::processEvent(SDL_Event& event)
 {
-    assert(isAlive);
-    
-    SDL_Event event;
+    //Old testing stuff, should prob be refactored
+    if (event.type == SDL_QUIT) quit = true;
 
-    //Utility functions
-    auto forwardToWindow = [&](SDL_Window* windowHandle)
+    if (event.type == SDL_KEYDOWN)
     {
-        auto it = std::find_if(windows.begin(), windows.end(), [=](Window* w) { return w->handle == windowHandle; });
-        if (it != windows.end()) (*it)->handleEvent(event);
-    };
-
-    while (SDL_PollEvent(&event))
-    {
-        //Old testing stuff, should prob be refactored
-        if (event.type == SDL_QUIT) quit = true;
-
-        if (event.type == SDL_KEYDOWN)
-        {
-            if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
-            if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
-        }
-
-        //Foward events to appropriate windows
-        switch (event.type)
-        {
-        case SDL_WINDOWEVENT:
-            forwardToWindow(SDL_GetWindowFromID(event.window.windowID));
-            break;
-
-        case SDL_KEYDOWN:
-        case SDL_KEYUP:
-            forwardToWindow(SDL_GetKeyboardFocus());
-            break;
-
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
-        case SDL_MOUSEMOTION:
-            forwardToWindow(SDL_GetMouseFocus());
-            break;
-
-        }
+        if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
+        if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
     }
 }
 
@@ -71,8 +39,9 @@ Application::~Application()
 }
 
 void engine_reportTypes(ModuleTypeRegistry* registry);
+//API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& mainWindowBuilder, gpr460::System& _system, UserInitFunc userInitCallback)
+void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& _system, UserInitFunc userInitCallback)
 {
     assert(!isAlive);
     isAlive = true;
@@ -89,6 +58,11 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
         engine_reportTypes(&m);
         GlobalTypeRegistry::loadModule("Application", m);
     }
+    //{
+    //    ModuleTypeRegistry m;
+    //    graphics_abstract_reportTypes(&m);
+    //    GlobalTypeRegistry::loadModule("GraphicsAbstract", m);
+    //}
 
     heap.emplace();
     heap.value().getSpecificPool<Level>(true);
@@ -96,8 +70,7 @@ void Application::init(Game* game, const GLSettings& glSettings, WindowBuilder& 
     this->game = game;
     game->init(this);
 
-    this->glSettings = glSettings;
-    mainWindow = mainWindowBuilder.build();
+    mainWindow = buildWindow(mainWindowSettings);
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
     std::cout << "Discovered " << pluginManager.plugins.size() << " plugins" << std::endl;
@@ -121,7 +94,11 @@ void Application::shutdown()
     game->cleanup();
 
     //If any plugins didn't clean up their window, do it for them
-    while (!windows.empty()) delete windows[windows.size()-1]; //Destructor will automatically erase the tail
+    while (system->getNumWindows() != 0)
+    {
+        Window* w = system->getWindow(system->getNumWindows() - 1);
+        system->destroyWindow(w);
+    }
     mainWindow = nullptr;
     
     heap.value().destroyPool<GameObject>(); //Clean up memory, GameObject pool first so remaining components are released
@@ -147,11 +124,11 @@ void Application::frameStep(void* arg)
     engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
 
     engine->game->refreshCallBatchers(false);
-    engine->processEvents();
+    engine->system->pumpEvents();
     engine->game->refreshCallBatchers(false);
     engine->game->tick();
     engine->game->refreshCallBatchers(false);
-    for (Window* w : engine->windows) w->draw();
+    for (size_t i = 0; i < engine->system->getNumWindows(); ++i) engine->system->getWindow(i)->draw();
 
     if (engine->pluginManager.executeCommandBuffer() != 0)
     {
@@ -186,10 +163,18 @@ PluginManager* Application::getPluginManager()
 
 Window* Application::getMainWindow()
 {
-    return !windows.empty() ? windows[0] : nullptr; //FIXME hacky
+    return mainWindow;
 }
 
-WindowBuilder Application::buildWindow(const std::string& name, int width, int height)
+Window* Application::buildWindow(WindowSettings& settings)
 {
-    return WindowBuilder(this, name, width, height, glSettings);
+    Window* window = system->createWindow(settings, this);
+	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
+	window->renderPipeline->setup(window);
+	if (window->inputProcessor) window->inputProcessor->setup(window);
+
+    settings.renderPipeline = nullptr;
+    settings.inputProcessor = nullptr;
+
+	return window;
 }

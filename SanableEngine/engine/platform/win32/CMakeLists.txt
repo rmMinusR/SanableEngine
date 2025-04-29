@@ -14,7 +14,7 @@ export_dll(SDL2_image::SDL2_image engine-win32)
 #export_dll(SDL2_ttf::SDL2_ttf engine-win32)
 
 # Declare imports
-target_link_libraries("engine-win32" "engine-core")
+target_link_libraries("engine-win32" engine-core engine-graphics-opengl)
 
 function(package_assets)
 	#Nothing to do, plugins are responsible for copying their assets to their output directory

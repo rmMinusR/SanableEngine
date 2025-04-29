@@ -6,7 +6,7 @@
 #include "game/GameObject.hpp"
 #include "Renderer.hpp"
 
-RectangleRenderer::RectangleRenderer(float w, float h, SDL_Color color) :
+RectangleRenderer::RectangleRenderer(float w, float h, Color4<uint8_t> color) :
 	Component(),
 	w(w),
 	h(h),
@@ -18,7 +18,7 @@ RectangleRenderer::~RectangleRenderer()
 {
 }
 
-void RectangleRenderer::SetColor(SDL_Color newColor)
+void RectangleRenderer::SetColor(Color4<uint8_t> newColor)
 {
 	color = newColor;
 }
@@ -30,7 +30,7 @@ const Material* RectangleRenderer::getMaterial() const
 
 void RectangleRenderer::loadModelTransform(Renderer* renderer) const
 {
-	renderer->loadTransform(*gameObject->getTransform());
+	renderer->setModelTransform(*gameObject->getTransform());
 }
 
 void RectangleRenderer::renderImmediate(Renderer* renderer) const
@@ -38,4 +38,9 @@ void RectangleRenderer::renderImmediate(Renderer* renderer) const
 	Vector3<float> pos = getGameObject()->getTransform()->getPosition();
 
 	renderer->drawRect(pos, w, h, color);
+}
+
+ShaderUniform::ObjectData RectangleRenderer::getRenderedInstanceUniforms() const
+{
+	return gameObject->getRenderedInstanceUniforms();
 }

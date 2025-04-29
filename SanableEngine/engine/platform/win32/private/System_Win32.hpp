@@ -18,7 +18,10 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 
+#include "GLSettings.hpp"
+
 class Application;
+class Window_Win32;
 
 namespace gpr460
 {
@@ -30,6 +33,11 @@ namespace gpr460
 		HANDLE logFile;
 		const std::wstring logFileName = L"GameErrors.txt";
 
+		GLSettings glSettings;
+
+		Window_Win32* currentFocus = nullptr;
+		std::vector<Window_Win32*> windows;
+
 		friend class ::Application;
 #ifdef _DEBUG
 		_CrtMemState checkpoint;
@@ -40,8 +48,16 @@ namespace gpr460
 		void Shutdown() override;
 
 	public:
-		System_Win32();
+		System_Win32(GLSettings);
 		~System_Win32();
+
+		virtual void pumpEvents() override;
+
+		bool isFocused(const Window*) override;
+		Window* createWindow(const WindowSettings& settings, Application* engine) override;
+		void destroyWindow(Window* window) override;
+		size_t getNumWindows() const override;
+		Window* getWindow(size_t which) override;
 
 		void DebugPause() override;
 

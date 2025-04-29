@@ -1,9 +1,7 @@
 #pragma once
 
 #include "dllapi.h"
-
-#include <SDL_pixels.h>
-
+#include "Color.inl"
 #include "game/Component.hpp"
 
 class RectangleRenderer :
@@ -13,16 +11,17 @@ class RectangleRenderer :
 	PRIMITIVES_API RectangleRenderer() = default;
 private:
 	float w, h;
-	SDL_Color color;
+	Color4<uint8_t> color;
 
 public:
-	PRIMITIVES_API RectangleRenderer(float w, float h, SDL_Color color);
+	PRIMITIVES_API RectangleRenderer(float w, float h, Color4<uint8_t> color);
 	PRIMITIVES_API ~RectangleRenderer();
 
-	PRIMITIVES_API void SetColor(SDL_Color newColor);
+	PRIMITIVES_API void SetColor(Color4<uint8_t> newColor);
 
 	PRIMITIVES_API virtual const Material* getMaterial() const override;
 protected:
 	PRIMITIVES_API virtual void loadModelTransform(Renderer*) const override;
 	PRIMITIVES_API virtual void renderImmediate(Renderer*) const override;
+	PRIMITIVES_API virtual ShaderUniform::ObjectData getRenderedInstanceUniforms() const override;
 };

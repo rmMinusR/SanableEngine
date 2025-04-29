@@ -6,11 +6,11 @@
 #include "Font.hpp"
 
 LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font) :
-	LabelWidget(hud, material, font, SDL_Color{ 255, 255, 255, 255 })
+	LabelWidget(hud, material, font, Color4<uint8_t>{ 255, 255, 255, 255 })
 {
 }
 
-LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font, const SDL_Color& color) :
+LabelWidget::LabelWidget(HUD* hud, const Material* material, const Font* font, const Color4<uint8_t>& color) :
 	Widget(hud),
 	material(material),
 	font(font),
@@ -37,7 +37,7 @@ void LabelWidget::setText(const std::string& newText)
 void LabelWidget::loadModelTransform(Renderer* renderer) const
 {
 	Vector2f size = font->getRenderedSize(renderer, text);
-	renderer->loadTransform(
+	renderer->setModelTransform(
 		glm::translate<float, glm::packed_highp>(
 			(glm::mat4)*getTransform(),
 			Vector3f(align.calcAnchor(getTransform()->getLocalRect().size) + align.calcPivot(size), 0)

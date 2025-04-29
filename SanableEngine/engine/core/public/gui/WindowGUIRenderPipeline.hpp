@@ -1,6 +1,6 @@
 #pragma once
 
-#include "application/WindowRenderPipeline.hpp"
+#include "WindowRenderPipeline.hpp"
 #include "HUD.hpp"
 
 class Application;

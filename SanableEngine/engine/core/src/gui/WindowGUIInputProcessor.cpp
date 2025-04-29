@@ -1,8 +1,10 @@
 #include "gui/WindowGUIInputProcessor.hpp"
 
+#include <SDL_events.h>
+
 #include "math/Vector2.inl"
 #include "gui/HUD.hpp"
-#include "application/Window.hpp"
+#include "Window.hpp"
 
 WindowGUIInputProcessor::WindowGUIInputProcessor(HUD* hud, float minDragDistance) :
 	hud(hud),

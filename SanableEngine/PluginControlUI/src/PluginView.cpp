@@ -16,7 +16,8 @@
 #include "application/PluginManager.hpp"
 #include "TypeLayoutView.hpp"
 #include "application/Application.hpp"
-#include "application/Window.hpp"
+#include "Window.hpp"
+#include "Renderer.hpp"
 #include "gui/WindowGUIInputProcessor.hpp"
 #include "gui/WindowGUIRenderPipeline.hpp"
 #include "TypeLayoutView.hpp"
@@ -73,7 +74,7 @@ void PluginView::tryInit()
 		ButtonWidget::SpriteSet buttonSprites = { Resources::buttonNormalSprite, Resources::buttonPressedSprite, Resources::buttonDisabledSprite };
 
 		imgToggleLoadedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
+		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
 		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, buttonSprites);
 		btnToggleLoaded->getTransform()->setParent(statusLine->getTransform());
@@ -87,7 +88,7 @@ void PluginView::tryInit()
 		);
 
 		imgToggleHookedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
+		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
 		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, buttonSprites);
 		btnToggleHooked->getTransform()->setParent(statusLine->getTransform());
@@ -101,7 +102,7 @@ void PluginView::tryInit()
 		);
 
 		imgInspectTypesBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, SDL_Color{ 0, 0, 0, 255 });
+		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
 		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
 		lblInspectTypes->setText(L"View types");
 		btnInspectTypes = hud->addWidget<ButtonWidget>(imgInspectTypesBg, buttonSprites);
@@ -119,12 +120,11 @@ void PluginView::tryInit()
 				std::stringstream ss;
 				ss << name << ": " << initialInspectedType->name.as_str();
 
-				WindowBuilder wb = hud->getApplication()->buildWindow(ss.str(), 36 * 8, 36 * (int)std::ceil(initialInspectedType->layout.size / 8.0f)); //TODO remove magic numbers
+				WindowSettings windowSettings(ss.str(), 36 * 8, 36 * (int)std::ceil(initialInspectedType->layout.size / 8.0f)); //TODO remove magic numbers
 				WindowGUIRenderPipeline* renderPipeline = new WindowGUIRenderPipeline(hud->getApplication());
-				wb.setRenderPipeline(renderPipeline);
-				Window* window = wb.build();
-				window->setRenderPipeline(renderPipeline);
-				window->setInputProcessor(new WindowGUIInputProcessor(&renderPipeline->hud, 5));
+				windowSettings.renderPipeline = renderPipeline;
+				windowSettings.inputProcessor = new WindowGUIInputProcessor(&renderPipeline->hud, 5);
+				Window* window = hud->getApplication()->buildWindow(windowSettings);
 				
 				//FIXME use shared rendering context instead
 				GTexture* rttiFieldTexture = window->getRenderer()->loadTexture("resources/ui/textures/field.png");
@@ -132,12 +132,12 @@ void PluginView::tryInit()
 				rttiFieldSprite->setPixel({ 1,1 }, { 7,6 });
 				rttiFieldSprite->setPixel({ 2,2 }, { 8,8 });
 
-				ShaderProgram* imageShader = new ShaderProgram("resources/ui/shaders/image");
+				ShaderProgram* imageShader = window->getRenderer()->loadShaderProgram("resources/ui/shaders/image");
 				if (!imageShader->load()) assert(false);
 				Material* imageMat = new Material(imageShader);
 				imageMat->setGroup(Material::Group::Transparent);
 
-				ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
+				ShaderProgram* textShader = window->getRenderer()->loadShaderProgram("resources/ui/shaders/font");
 				if (!textShader->load()) assert(false);
 				Material* textMat = new Material(textShader);
 				textMat->setGroup(Material::Group::Transparent);

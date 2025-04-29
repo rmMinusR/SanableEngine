@@ -5,6 +5,7 @@
 
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
+#include "Renderer.hpp"
 
 void HUD::applyConcurrencyBuffers()
 {
@@ -22,7 +23,7 @@ void HUD::addWidget_internal(Widget* widget)
 	if (!widget->transform->getParent()) widget->transform->setParent(getRootTransform());
 }
 
-void HUD::removeWidget_internal(Widget* widget)
+void HUD::destroyWidget_internal(Widget* widget)
 {
 	removeQueue.push_back(widget);
 }
@@ -108,26 +109,23 @@ void HUD::render(Renderer* renderer)
 		}
 	}
 
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-
 	//Process buffer
 	auto processMaterialClass = [&](Material::Group _class)
 	{
 		for (Widget* w : renderables[_class])
 		{
-			const ShaderProgram* shader = w->getShader();
-			const Material* mat = w->getMaterial();
-
 			//Activate shader
-			if (shader) shader->activate();
-			else ShaderProgram::clear();
+			renderer->setActiveShader(w->getShader());
 
 			//Activate material
-			if (mat) mat->writeSharedUniforms(renderer);
+			const Material* mat = w->getMaterial();
+
+			if (mat) mat->getShader()->writeSharedUniforms(renderer, renderer->getCurGlobalData());
+			
+			// FIXME user uniforms
 
 			w->loadModelTransform(renderer);
-			if (mat) mat->writeInstanceUniforms(renderer, w);
+			if (mat) mat->writeInstanceUniforms(renderer, w->getRenderedInstanceUniforms());
 
 			w->renderImmediate(renderer);
 		}
@@ -163,8 +161,6 @@ void HUD::render(Renderer* renderer)
 	}
 	glColor4f(1, 1, 1, 1);
 	// */
-
-	glPopMatrix();
 }
 
 void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const

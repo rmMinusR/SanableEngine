@@ -14,4 +14,5 @@ aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_platform_abstract_so
 add_library("engine-platform-abstract" STATIC ${engine_platform_abstract_sources})
 target_include_directories("engine-platform-abstract" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 target_include_directories("engine-platform-abstract" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
+target_link_libraries("engine-platform-abstract" PUBLIC engine-common SDL2::SDL2) # TODO remove SDL2
 target_link_libraries("engine-platform-abstract" PRIVATE glew)

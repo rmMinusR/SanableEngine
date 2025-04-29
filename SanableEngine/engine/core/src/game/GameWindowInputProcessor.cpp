@@ -1,5 +1,7 @@
 #include "game/GameWindowInputProcessor.hpp"
 
+#include <SDL_events.h>
+
 #include "application/Application.hpp"
 #include "game/Game.hpp"
 #include "game/InputSystem.hpp"
