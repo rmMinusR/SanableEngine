@@ -41,7 +41,7 @@ Application::~Application()
 void engine_reportTypes(ModuleTypeRegistry* registry);
 //API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& _system, UserInitFunc userInitCallback)
+void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& _system)
 {
     assert(!isAlive);
     isAlive = true;
@@ -78,7 +78,6 @@ void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::S
     pluginManager.loadAll();
     pluginManager.hookAll();
 
-    if (userInitCallback) (*userInitCallback)(this);
     heap.value().ensureFresh();
     game->refreshCallBatchers();
 }

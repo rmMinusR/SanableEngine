@@ -39,8 +39,7 @@ public:
     ENGINECORE_API Application();
     ENGINECORE_API ~Application();
 
-    typedef void (*UserInitFunc)(Application*);
-    ENGINECORE_API void init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& system, UserInitFunc userInitCallback);
+    ENGINECORE_API void init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& system);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API void doMainLoop();
