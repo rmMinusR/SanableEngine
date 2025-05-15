@@ -23,7 +23,7 @@ protected:
     friend class Level;
     friend class Component;
 
-    Level* level;
+    Level* level = nullptr;
 
     void BindComponent(Component* c);
     void InvokeStart();

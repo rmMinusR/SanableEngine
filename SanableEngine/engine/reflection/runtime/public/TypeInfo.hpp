@@ -213,6 +213,18 @@ public:
 											bool makeComplete = true) const;
 
 	/// <summary>
+	/// Is this type a class, struct, or union?
+	/// </summary>
+	/// <returns></returns>
+	STIX_API bool isComposite() const;
+
+	/// <summary>
+	/// Is this a fundamental type?
+	/// </summary>
+	/// <returns></returns>
+	STIX_API bool isFundamental() const;
+
+	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
 	/// </summary>
 	STIX_INTERNAL( void doLateBinding(ModuleTypeRegistry* ownModule); )

@@ -31,7 +31,7 @@ TypeName GenericTypedMemoryPool::getContentsTypeName() const
 	return contentsType.name;
 }
 
-void GenericTypedMemoryPool::refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper)
+void GenericTypedMemoryPool::refreshObjects(const TypeInfo& newTypeData, ObjectRelocator* remapper)
 {
 	assert(newTypeData.name == contentsType.name); //Ensure same type
 		

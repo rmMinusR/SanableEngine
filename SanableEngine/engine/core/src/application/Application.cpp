@@ -64,9 +64,8 @@ void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::S
     //    GlobalTypeRegistry::loadModule("GraphicsAbstract", m);
     //}
 
-    heap.emplace();
-    heap.value().getSpecificPool<Level>(true);
-    
+    heap.emplace().getSpecificPool<Level>(true);
+
     this->game = game;
     game->init(this);
 

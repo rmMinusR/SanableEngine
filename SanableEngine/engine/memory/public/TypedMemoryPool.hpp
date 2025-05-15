@@ -100,5 +100,5 @@ public:
 	}
 
 	//INTERNAL USE ONLY
-	ENGINEMEM_API void refreshObjects(const TypeInfo& newTypeData, MemoryMapper* remapper);
+	ENGINEMEM_API void refreshObjects(const TypeInfo& newTypeData, ObjectRelocator* remapper);
 };

@@ -2,6 +2,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <set>
 #include <functional>
 #include "GlobalTypeRegistry.hpp"
 #include "TypedMemoryPool.hpp"
@@ -11,6 +12,7 @@ class Application;
 struct TypeInfo;
 class PluginManager;
 class _PoolCallBatcherBase;
+class MemoryRoot;
 
 class MemoryHeap
 {
@@ -25,6 +27,11 @@ private:
 public:
 	ENGINEMEM_API MemoryHeap();
 	ENGINEMEM_API ~MemoryHeap();
+	
+	MemoryHeap(const MemoryHeap& cpy) = delete;
+	MemoryHeap(MemoryHeap&& mov) = delete;
+	MemoryHeap& operator=(const MemoryHeap& cpy) = delete;
+	MemoryHeap& operator=(MemoryHeap&& mov) = delete;
 
 	ENGINEMEM_API GenericTypedMemoryPool* getSpecificPool(const TypeName& type);
 	template<typename TObj>
@@ -43,13 +50,12 @@ public:
 	template<typename TObj>
 	inline void destroyPool() { destroyPool(TypeName::create<TObj>()); }
 
-	ENGINEMEM_API void ensureFresh(); //USE WITH CAUTION.
+	ENGINEMEM_API void ensureFresh(bool selfOnly = false); //If selfOnly = false, this calls updatePointers on ALL heaps and external objects - USE WITH EXTREME CAUTION.
+	ENGINEMEM_API void updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord); //USE WITH CAUTION.
 
 private:
 	friend class Application;
 	friend class PluginManager;
-
-	ENGINEMEM_API void updatePointers(const MemoryMapper& remapper);
 
 	friend class _PoolCallBatcherBase;
 	ENGINEMEM_API uint64_t getPoolStateHash() const;

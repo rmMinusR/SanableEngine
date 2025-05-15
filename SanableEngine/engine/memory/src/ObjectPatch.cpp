@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-void ObjectPatch::apply(void* target, MemoryMapper* remapLog) const
+void ObjectPatch::apply(void* target, ObjectRelocator* remapLog) const
 {
 	if (oldData.isValid() && newData.isValid())
 	{

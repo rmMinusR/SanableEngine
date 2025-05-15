@@ -62,9 +62,9 @@ MemoryHeap::~MemoryHeap()
 	pools.clear();
 }
 
-void MemoryHeap::ensureFresh()
+void MemoryHeap::ensureFresh(bool selfOnly)
 {
-	MemoryMapper remapper;
+	ObjectRelocator remapper;
 
 	//Fix new pools that haven't received their complete TypeInfo yet
 	for (GenericTypedMemoryPool* p : pools)
@@ -94,12 +94,21 @@ void MemoryHeap::ensureFresh()
 	}
 
 	//Finalize
-	updatePointers(remapper);
+	std::set<void*> visitRecord;
+	if (selfOnly) updatePointers(remapper, visitRecord);
+	else MemoryRoot::get()->updatePointers(remapper, visitRecord);
 }
 
-void MemoryHeap::updatePointers(const MemoryMapper& remapper)
+void MemoryHeap::updatePointers(const ObjectRelocator& remapper, std::set<void*>& visitRecord)
 {
-	//TODO implement
+	for (GenericTypedMemoryPool* p : pools)
+	{
+		//const TypeInfo* ty = p->getContentsType(); //TODO switch to this for better performance, avoiding lookups
+		for (auto it = p->cbegin(); it != p->cend(); ++it)
+		{
+			remapper.transformObjectAddresses(*it, p->getContentsTypeName(), true, &visitRecord);
+		}
+	}
 }
 
 uint64_t MemoryHeap::getPoolStateHash() const

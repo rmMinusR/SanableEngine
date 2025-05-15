@@ -65,6 +65,9 @@ public:
 
 	STIX_API std::optional<TypeName> cvUnwrap() const;
 	STIX_API std::optional<TypeName> dereference() const;
+	STIX_API bool isComposite() const;
+	STIX_API bool isFundamental() const;
+	STIX_API bool isDataPtr() const;
 
 	STIX_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.
 	STIX_API TypeInfo const* resolve(ModuleTypeRegistry* moduleHint = nullptr) const;
