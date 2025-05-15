@@ -5,6 +5,8 @@
 
 InputSystem::InputSystem()
 {
+	int sz;
+	keyboardState = SDL_GetKeyboardState(&sz); //Managed by SDL, do not free
 }
 
 InputSystem::~InputSystem()
@@ -14,22 +16,17 @@ InputSystem::~InputSystem()
 void InputSystem::onGainFocus()
 {
 	focused++;
-	printf("Gained focus (now %i)", focused);
 	assert(focused <= 2);
 }
 
 void InputSystem::onLoseFocus()
 {
 	focused--;
-	printf("Lost focus (now %i)", focused);
 	assert(focused >= 0);
 }
 
 void InputSystem::onTick()
 {
-	int sz;
-	keyboardState = SDL_GetKeyboardState(&sz); //Managed by SDL, do not free
-
 	Vector3<int> oldMousePos = mousePos;
 	mouseButtonState = SDL_GetMouseState(&mousePos.x, &mousePos.y);
 	mouseDelta = mousePos-oldMousePos;

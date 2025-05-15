@@ -1,6 +1,7 @@
 #pragma once
 
-#include "application/WindowInputProcessor.hpp"
+#include "WindowInputProcessor.hpp"
+#include "dllapi.h"
 
 class Game;
 
@@ -10,8 +11,8 @@ class GameWindowInputProcessor : public WindowInputProcessor
 
 public:
 	ENGINECORE_API GameWindowInputProcessor(Game* game);
-	ENGINECORE_API virtual ~GameWindowInputProcessor();
+	virtual ~GameWindowInputProcessor();
 
 protected:
-	ENGINECORE_API virtual void handleEvent(SDL_Event& ev) override;
+	virtual void handleEvent(SDL_Event& ev) override;
 };

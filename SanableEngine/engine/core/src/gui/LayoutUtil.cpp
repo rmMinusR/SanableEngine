@@ -1,117 +1,47 @@
 #include "gui/LayoutUtil.hpp"
 
+#include <algorithm>
+#include "math/Linear.inl"
 #include "gui/WidgetTransform.hpp"
 
-void LayoutUtil::Stretch::vertical(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets, Padding padding)
+void LayoutUtil::linear(float val_min, float val_max, size_t count, const LinearElementView* elementViews, float* locs_out, float* sizes_out)
 {
-	//Retrieve only weights
-	std::vector<float> weights;
-	weights.reserve(widgets.size());
-	for (const auto& p : widgets) weights.push_back(p.second);
+	float totalSpace = val_max-val_min;
 
-	//Defer
-	std::vector<UIRect> rects = vertical(container, weights, padding);
+	//Calc space requirements
+	float totalMinSize, totalPreferredSize, totalMaxSize, totalFlexWeight;
+	linearCalcSpace(count, elementViews, &totalMinSize, &totalPreferredSize, &totalMaxSize, &totalFlexWeight);
+	
+	float preferredAvailableRatio = std::clamp<float>(invlerp(totalSpace, totalMinSize, totalPreferredSize), 0, 1);
+	float maxFlexSpaceAvailable   = std::max(0.0f, totalSpace-totalPreferredSize); //Flat pixel size
 
-	//Apply
-	for (int i = 0; i < rects.size(); ++i) widgets[i].first->setRectByOffsets(rects[i]);
-}
-
-void LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<std::pair<WidgetTransform*, float>>& widgets, Padding padding)
-{
-	//Retrieve only weights
-	std::vector<float> weights;
-	weights.reserve(widgets.size());
-	for (const auto& p : widgets) weights.push_back(p.second);
-
-	//Defer
-	std::vector<UIRect> rects = horizontal(container, weights, padding);
-
-	//Apply
-	for (int i = 0; i < rects.size(); ++i) widgets[i].first->setRectByOffsets(rects[i]);
-}
-
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::vertical(UIRect container, const std::vector<float>& weights)
-{
-	float weightSum = 0;
-	for (float w : weights) weightSum += w;
-
-	Vector2f cursor = container.topLeft;
-
-	std::vector<UIRect> out;
-	out.reserve(weights.size());
-	for (float w : weights)
+	//Write values
+	float cursor = val_min;
+	for (size_t i = 0; i < count; ++i)
 	{
-		float elementHeight = container.size.y * (w/weightSum);
-		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(container.size.x, elementHeight)) ); //Output rect
-		cursor.y += elementHeight; //Advance cursor
-	}
+		float elementSize = elementViews[i].minSize 
+			         + (elementViews[i].preferredSize-elementViews[i].minSize) * preferredAvailableRatio
+			         + maxFlexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
 
-	return out;
+		if (locs_out) locs_out[i] = cursor;
+		if (sizes_out) sizes_out[i] = elementSize;
+
+		cursor += elementSize;
+	}
 }
 
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<float>& weights)
+void LayoutUtil::linearCalcSpace(size_t count, const LinearElementView* elementViews, float* minSize_out, float* preferredSize_out, float* maxSize_out, float* flexWeight_out)
 {
-	float weightSum = 0;
-	for (float w : weights) weightSum += w;
+	*minSize_out       = 0;
+	*preferredSize_out = 0;
+	*maxSize_out       = 0;
+	*flexWeight_out    = 0;
 
-	Vector2f cursor = container.topLeft;
-
-	std::vector<UIRect> out;
-	out.reserve(weights.size());
-	for (float w : weights)
+	for (size_t i = 0; i < count; ++i)
 	{
-		float elementWidth = container.size.x * (w/weightSum);
-		out.push_back( UIRect::fromMinMax(cursor, cursor+Vector2f(elementWidth, container.size.y)) ); //Output rect
-		cursor.x += elementWidth; //Advance cursor
+		*minSize_out       += elementViews[i].minSize;
+		*preferredSize_out += elementViews[i].preferredSize;
+		*maxSize_out       += elementViews[i].maxSize;
+		*flexWeight_out    += elementViews[i].flexWeight;
 	}
-
-	return out;
-}
-
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::vertical(UIRect container, const std::vector<float>& weights, Padding padding)
-{
-	//Calc inner rect
-	UIRect containerWithOuterPadding = UIRect::fromMinMax(
-		container.topLeft       + Vector2f(padding.left , padding.top   ),
-		container.bottomRight()	- Vector2f(padding.right, padding.bottom)
-	);
-
-	//Defer
-	std::vector<LayoutUtil::UIRect> out = vertical(
-		UIRect::fromMinMax(
-			containerWithOuterPadding.topLeft,
-			containerWithOuterPadding.bottomRight() - Vector2f(0, (weights.size()-1)*padding.betweenElements)
-		),
-		weights
-	);
-
-	//Adjust for padding between elements
-	for (int i = 0; i < out.size(); ++i) out[i].topLeft.y += i*padding.betweenElements;
-
-	//Done
-	return out;
-}
-
-std::vector<LayoutUtil::UIRect> LayoutUtil::Stretch::horizontal(UIRect container, const std::vector<float>& weights, Padding padding)
-{
-	//Calc inner rect
-	UIRect containerWithOuterPadding = UIRect::fromMinMax(
-		container.topLeft       + Vector2f(padding.left , padding.top   ),
-		container.bottomRight()	- Vector2f(padding.right, padding.bottom)
-	);
-
-	//Defer
-	std::vector<LayoutUtil::UIRect> out = horizontal(
-		UIRect::fromMinMax(
-			containerWithOuterPadding.topLeft,
-			containerWithOuterPadding.bottomRight() - Vector2f((weights.size()-1)*padding.betweenElements, 0)
-		),
-		weights
-	);
-
-	//Adjust for padding between elements
-	for (int i = 0; i < out.size(); ++i) out[i].topLeft.x += i*padding.betweenElements;
-
-	//Done
-	return out;
 }

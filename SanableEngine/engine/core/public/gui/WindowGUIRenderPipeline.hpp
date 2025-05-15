@@ -1,7 +1,9 @@
 #pragma once
 
-#include "application/WindowRenderPipeline.hpp"
+#include "WindowRenderPipeline.hpp"
 #include "HUD.hpp"
+
+class Application;
 
 /// <summary>
 /// For rendering only a GUI in a window
@@ -9,7 +11,7 @@
 class WindowGUIRenderPipeline : public WindowRenderPipeline
 {
 public:
-	ENGINECORE_API WindowGUIRenderPipeline();
+	ENGINECORE_API WindowGUIRenderPipeline(Application* application);
 	ENGINECORE_API virtual ~WindowGUIRenderPipeline();
 
 	HUD hud;

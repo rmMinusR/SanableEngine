@@ -4,10 +4,11 @@
 #include <sstream>
 
 #include "GlobalTypeRegistry.hpp"
+#include "ModuleTypeRegistry.hpp"
 
-TypeInfo::TypeInfo()
+TypeInfo::TypeInfo() :
+	hash(0)
 {
-
 }
 
 TypeInfo::~TypeInfo()
@@ -29,6 +30,7 @@ TypeInfo& TypeInfo::operator=(const TypeInfo & cpy)
 	this->name         = cpy.name;
 	this->layout       = cpy.layout;
 	this->capabilities = cpy.capabilities;
+	this->hash         = cpy.hash;
 
 	return *this;
 }
@@ -38,6 +40,7 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& mov)
 	this->name         = std::move(mov.name);
 	this->layout       = std::move(mov.layout);
 	this->capabilities = std::move(mov.capabilities);
+	this->hash         = mov.hash;
 
 	return *this;
 }
@@ -78,7 +81,7 @@ const FieldInfo* TypeInfo::Layout::getField(const std::string& name, MemberVisib
 		{
 			if ((int)parent.visibility & (int)visibilityFlags)
 			{
-				const FieldInfo* out = parent.typeName.resolve()->layout.getField(name, visibilityFlags, true);
+				const FieldInfo* out = parent.typeName.resolve(ownModule)->layout.getField(name, visibilityFlags, true);
 				if (out) return out;
 			}
 		}
@@ -96,7 +99,7 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent_internal(const TypeName& o
 	//Check immediate parents first
 	for (const ParentInfo& parent : parents)
 	{
-		if (parent.typeName == name) return parent;
+		if (parent.typeName == name) return std::make_optional<ParentInfo>(parent);
 	}
 
 	//Recurse if allowed
@@ -104,7 +107,7 @@ std::optional<ParentInfo> TypeInfo::Layout::getParent_internal(const TypeName& o
 	{
 		for (const ParentInfo& parent : parents)
 		{
-			const TypeInfo* ti = parent.typeName.resolve();
+			const TypeInfo* ti = parent.typeName.resolve(ownModule);
 			if (ti)
 			{
 				std::optional<ParentInfo> baseOfVbase = ti->getParent(name, visibilityFlags, includeInherited);
@@ -130,6 +133,16 @@ std::optional<ParentInfo> TypeInfo::getParent(const TypeName& name, MemberVisibi
 	return layout.getParent_internal(this->name, name, visibilityFlags, includeInherited, makeComplete);
 }
 
+bool TypeInfo::isComposite() const
+{
+	return !layout.fields.empty() || name.isComposite();
+}
+
+bool TypeInfo::isFundamental() const
+{
+	return layout.fields.empty() && name.isFundamental();
+}
+
 void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor, MemberVisibility visibilityFlags, bool includeInherited) const
 {
 	//Recurse into parents first
@@ -140,7 +153,8 @@ void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor,
 		{
 			if ((int)parent.visibility & (int)visibilityFlags)
 			{
-				const TypeInfo* parentType = parent.typeName.resolve();
+				const TypeInfo* parentType = parent.typeName.resolve(ownModule);
+
 				if (parentType)
 				{
 					//Can't walk what isn't loaded
@@ -165,6 +179,42 @@ void TypeInfo::Layout::walkFields(std::function<void(const FieldInfo&)> visitor,
 		{
 			visitor(field);
 		}
+	}
+}
+
+void TypeInfo::Layout::walkImplicits(std::function<void(const ImplicitInfo&)> visitor) const
+{
+	size_t begin = 0;
+
+	for (size_t i = 1; i < size; ++i)
+	{
+		//When we hit a border
+		if (byteUsage[i] != byteUsage[begin])
+		{
+			if (byteUsage[begin] != ByteUsage::ExplicitField) //If we should emit
+			{
+				ImplicitInfo ii;
+				ii.offset = begin;
+				ii.size = i-begin;
+				ii.data = byteUsage[begin]==ByteUsage::ImplicitConst ? (uint8_t*)&implicitValues[begin] : nullptr;
+
+				visitor(ii);
+			}
+
+			//Advance marker
+			begin = i;
+		}
+	}
+
+	//Same thing, in case there is a trailing vptr
+	if (byteUsage[begin] != ByteUsage::ExplicitField)
+	{
+		ImplicitInfo ii;
+		ii.offset = begin;
+		ii.size = size-begin;
+		ii.data = byteUsage[begin]==ByteUsage::ImplicitConst ? (uint8_t*)&implicitValues[begin] : nullptr;
+
+		visitor(ii);
 	}
 }
 
@@ -198,7 +248,7 @@ bool TypeInfo::Layout::isDerivedFrom(const TypeName& type, bool grandparents) co
 	{
 		for (const ParentInfo& p : parents)
 		{
-			if (p.typeName.resolve()->layout.isDerivedFrom(type, grandparents)) return true;
+			if (p.typeName.resolve(ownModule)->layout.isDerivedFrom(type, grandparents)) return true;
 		}
 	}
 
@@ -284,10 +334,11 @@ const stix::StaticFunction* TypeInfo::Capabilities::getStaticFunction(const std:
 	return nullptr;
 }
 
-void TypeInfo::doLateBinding()
+void TypeInfo::doLateBinding(ModuleTypeRegistry* ownModule)
 {
 	//Deferred from captureCDO: Mark all fields as used
 	assert(!layout.byteUsage.empty());
+	layout.ownModule = ownModule;
 	layout.walkFields(
 		[&](const FieldInfo& fi) {
 			ptrdiff_t root = fi.offset + (ptrdiff_t)this->layout.upcast(nullptr, fi.owner);
@@ -303,4 +354,9 @@ void TypeInfo::create_internalFinalize()
 {
 	layout.byteUsage.resize(layout.size);
 	memset(layout.byteUsage.data(), (uint8_t)Layout::ByteUsage::Unknown, layout.size);
+}
+
+bool TypeInfo::isDummy() const
+{
+	return hash == 0;
 }

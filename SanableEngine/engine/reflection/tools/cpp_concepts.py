@@ -3,18 +3,21 @@ import zlib
 import itertools
 import os
 from types import NoneType
-from typing import Generator
+from typing import Generator, Iterator
 import typing
 from clang.cindex import AccessSpecifier
 from clang.cindex import *
 from textwrap import indent
 import copy
 import abc
-import pickle
+import timings
 
 import config
-from source_discovery import SourceFile
+from source_discovery import *
 
+
+def _getChildren(cursor: Cursor) -> Iterator[Cursor]:
+    return timings.timeScoped(lambda: cursor.get_children(), timings.TASK_ID_WALK_AST_EXTERNAL)
 
 def _getAbsName(target: Cursor) -> str:
     if type(target) == type(None) or target.kind == CursorKind.TRANSLATION_UNIT:
@@ -177,7 +180,7 @@ class Annotations:
     def getOwn(cursor: Cursor) -> dict[str, str|None]:
         """Detect annotations passed by clang::annotate, on given cursor only"""
         annotations: dict[str, object] = dict()
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             if i.kind == CursorKind.ANNOTATE_ATTR:
                 text: str = i.displayname
                 if text.startswith("stix::"):
@@ -214,7 +217,7 @@ class Symbol:
         this.relReferenceableName = cursor.spelling
         this.absReferenceableName = this.absName[:-len(this.relName)] + this.relReferenceableName
         this.isDefinition = cursor.is_definition()
-        this.sourceFile = SourceFile(cursor.location.file.name)
+        this.sourceFile = SourceFile(cursor.location.file.name, None) # FIXME replace with actual source file later, or pass via a temp field on Module
 
         # Detect annotations passed by clang::annotate
         this.annotations = Annotations.getAll(cursor)
@@ -281,7 +284,7 @@ class Virtualizable(Member):
         
         # Cache simple checks: search for keywords
         this.__isExplicitVirtual = cursor.is_virtual_method() or cursor.is_pure_virtual_method()
-        this.__isExplicitOverride = any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in cursor.get_children()])
+        this.__isExplicitOverride = any([i.kind == CursorKind.CXX_OVERRIDE_ATTR for i in _getChildren(cursor)])
     
     def getParent(this):
         # Try cached version first
@@ -328,7 +331,7 @@ class Virtualizable(Member):
 class Callable:
     def __init__(this, module: "Module", cursor: Cursor):
         this.parameters: list[ParameterInfo] = []
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             if ParameterInfo.matches(i):
                 this.parameters.append(ParameterInfo(module, i))
 
@@ -361,7 +364,7 @@ class GlobalFuncInfo(Symbol):
         assert GlobalFuncInfo.matches(cursor), f"{cursor.kind} {this.absName} is not a function"
         
         this.__parameters = []
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             if ParameterInfo.matches(i):
                 this.__parameters.append(ParameterInfo(module, i))
 
@@ -559,7 +562,7 @@ class ParentInfo(Member):
 class FriendInfo(Member):
     def __init__(this, module: "Module", cursor: Cursor, owner):
         Member.__init__(this, module, cursor, owner)
-        this.targetName = _getAbsName([i for i in cursor.get_children()][0]) # Select friend name
+        this.targetName = _getAbsName([i for i in _getChildren(cursor)][0]) # Select friend name
 
     @staticmethod
     def matches(cursor: Cursor):
@@ -578,7 +581,7 @@ class TypeInfo(Symbol):
         this.__contents: list[Member] = list()
         
         # Recurse into children
-        for i in cursor.get_children():
+        for i in _getChildren(cursor):
             matchedType = next((t for t in allowedMemberSymbols if t.matches(i)), None)
             if matchedType != None:
                 this.register(matchedType(module, i, this))
@@ -748,43 +751,37 @@ class TypeInfo(Symbol):
 
 class Module:
     def __init__(this, defaultImageCaptureStatus="enabled", defaultImageCaptureBackend="disassembly"):
-        this.__symbols: dict[str, Symbol] = dict()
+        this.symbols: dict[str, Symbol] = dict()
         this.__sourceFiles: set[SourceFile] = set()
-        with open(__file__, "r") as thisFile:
-            thisFileContent = "".join(thisFile.readlines())
-            this.version = zlib.adler32(thisFileContent.encode("utf-8"))
-            del thisFileContent
         this.defaultImageCaptureStatus  = defaultImageCaptureStatus
         this.defaultImageCaptureBackend = defaultImageCaptureBackend
     
-    def configMatches(this, other):
-        if this.version != other.version: return False
+    def configMatches(this, other: "Module"):
+        if not isinstance(other, Module): return False
         return this.defaultImageCaptureStatus  == other.defaultImageCaptureStatus \
            and this.defaultImageCaptureBackend == other.defaultImageCaptureBackend
 
-    def parseTU(this, sources: list[SourceFile]):
-        isUpToDate = lambda file: next(filter(lambda i: i == file, this.__sourceFiles), None).contentsHash == file.contentsHash
+    def parseTU(this, prev_project: Project|None, live_project: Project):
+        diff = ProjectDiff(prev_project, live_project)
+        config.logger.log(config.LOG_USER_LEVEL, str(diff))
         
-        upToDate = [i for i in sources if i in this.__sourceFiles and isUpToDate(i)]
-        outdated = [i for i in sources if i in this.__sourceFiles and not isUpToDate(i)]
-        new = [i for i in sources if i not in this.__sourceFiles]
-        removed = [i for i in this.__sourceFiles if i not in sources]
+        timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
 
-        config.logger.log(100, f"{len(upToDate)} up-to-date | {len(outdated)} outdated | {len(new)} new | {len(removed)} deleted")
-        
-        for source in outdated+removed:
+        for source in diff.outdated+diff.removed:
             # Do removal
-            symbolsToRemove = [i for i in this.__symbols.values() if i.sourceFile == source]
+            symbolsToRemove = [i for i in this.symbols.values() if i.sourceFile == source]
             for i in symbolsToRemove:
-                del this.__symbols[i.absName]
+                del this.symbols[i.absName]
 
-        for source in outdated+new:
+        for source in diff.outdated+diff.new:
             # Do parsing
             this.__sourceFiles.add(source)
             config.logger.info(f"Parsing {source}")
-            for cursor in source.parse().get_children():
+            for cursor in _getChildren(source.parse()):
                 # Only capture what's in the current file
                 if cursor.location.file.name.replace(os.altsep, os.sep) == source.path: this.parseGlobalCursor(cursor)
+        
+        return len(diff.outdated) + len(diff.removed) + len(diff.new)
          
     def parseGlobalCursor(this, cursor: Cursor):
         # Stop early if we already have a definition for this symbol
@@ -794,7 +791,7 @@ class Module:
 
         # Special case for namespaces: Just walk children
         if cursor.kind == CursorKind.NAMESPACE:
-            for i in cursor.get_children():
+            for i in _getChildren(cursor):
                 this.parseGlobalCursor(i)
             return
 
@@ -819,41 +816,45 @@ class Module:
 
         # Do actual registration
         config.logger.debug(f"Registering global symbol {obj.absName} of type {obj.astKind}")
-        this.__symbols[obj.absName] = obj
+        this.symbols[obj.absName] = obj
 
     def lookup(this, key: str | Cursor):
         if isinstance(key, Cursor):
             key = _getAbsName(key)
-        return this.__symbols.get(key)
+        return this.symbols.get(key)
 
     def owns(this, obj: Symbol):
         return obj.sourceFile in this.__sourceFiles
 
     @property
     def types(this) -> Generator[TypeInfo, None, None]:
-        for i in this.__symbols.values():
+        for i in this.symbols.values():
             if isinstance(i, TypeInfo):
                 yield i
                 
     def finalize(this):
-        undefined = [i for i in this.__symbols.values() if not i.isDefinition]
+        undefined = [i for i in this.symbols.values() if not i.isDefinition]
         if len(undefined) > 0:
             config.logger.error(f"Detected {len(undefined)} declared global symbols missing definitions: {undefined}")
-        for i in this.__symbols.values(): i.finalize()
+        for i in this.symbols.values(): i.finalize()
 
     def renderBody(this) -> str:
-        renders = [v.renderMain() for v in this.__symbols.values() if this.owns(v)]
+        keys = list(this.symbols.keys())
+        keys.sort()
+        renders = [this.symbols[k].renderMain() for k in keys if this.owns(this.symbols[k])]
         out = "\n\n".join([indent(v, ' '*4) for v in renders if v != None])
         return out
 
     def renderPreDecls(this) -> str:
         out = []
-        for i in this.__symbols.values():
-            if this.owns(i):
-                out.extend(i.renderPreDecls())
+        keys = list(this.symbols.keys())
+        keys.sort()
+        for k in keys:
+            if this.owns(this.symbols[k]):
+                out.extend(this.symbols[k].renderPreDecls())
         return "\n".join(out)
 
-    def renderIncludes(this) -> set[str]:
+    def renderIncludes(this) -> list[str]:
         out = set()
         for i in this.types:
             if this.owns(i):
@@ -865,25 +866,10 @@ class Module:
                         config.logger.debug(f" - {typeName} @ {match.sourceFile.path}")
                     else:
                         config.logger.debug(f" - {typeName} @ (Failed to locate definition)")
+        out = list(out)
+        out.sort()
         return out
-            
-    def save(this, cachePath: str):
-        cacheDir = cachePath[:-len(os.path.basename(cachePath))]
-        os.makedirs(cacheDir, exist_ok=True)
-        with open(cachePath, "wb") as file:
-            file.write(pickle.dumps(this))
-
-    def load(cachePath: str) -> "Module":
-        if not os.path.exists(cachePath): return Module()
         
-        with open(cachePath, "rb") as file: cacheFileRepr = file.read()
-        
-        try: out = pickle.loads(cacheFileRepr)
-        except EOFError: pass # Only happens when we have a blank file. Mundane, safe to ignore.
-        
-        config.logger.info(f"Loaded {len(out.__symbols)} symbols from cache")
-
-        return out
 
         
 ignoredSymbols = [

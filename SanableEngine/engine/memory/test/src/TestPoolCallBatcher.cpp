@@ -5,7 +5,7 @@
 #include "TypeBuilder.hpp"
 #include "ThunkUtils.hpp"
 
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 #include "PoolCallBatcher.hpp"
 
 class MyCallable
@@ -57,7 +57,7 @@ TEST_CASE("PoolCallBatcher")
 		GlobalTypeRegistry::loadModule("PoolCallBatcher dummies", m);
 	}
 
-	MemoryManager memory;
+	MemoryHeap memory;
 	MyCallable* c1 = memory.create<MyCallable>();
 	MyCallable* c2 = memory.create<MyCallable>();
 	ChildCallable* c3 = memory.create<ChildCallable>();

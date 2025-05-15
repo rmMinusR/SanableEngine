@@ -2,7 +2,10 @@
 #include <emscripten.h>
 
 #include <SDL.h>
+
+#include "MemoryRoot.hpp"
 #include "application/Application.hpp"
+#include "game/Game.hpp"
 #include "game/GameWindowRenderPipeline.hpp"
 #include "game/GameWindowInputProcessor.hpp"
 #include "System_Emscripten.hpp"
@@ -19,9 +22,10 @@ int main(int argc, char* argv[])
     //Init
     {
         GLSettings glSettings;
-        WindowBuilder mainWindow = engine.buildWindow("Sanable Engine", WIDTH, HEIGHT, new GameWindowRenderPipeline(&game));
-        mainWindow.setInputProcessor(new GameWindowInputProcessor(&game));
-        engine.init(&game, glSettings, mainWindow, system, nullptr);
+        WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
+        mainWindowSettings.renderPipeline = new GameWindowRenderPipeline(&game);
+        mainWindowSettings.inputProcessor = new GameWindowInputProcessor(&game);
+        engine.init(&game, glSettings, mainWindowSettings, system);
     }
 
     //Loop
@@ -33,6 +37,7 @@ int main(int argc, char* argv[])
     //Shutdown
     engine.shutdown();
     SDL_Quit();
+    MemoryRoot::cleanup();
 
     return 0;
 }

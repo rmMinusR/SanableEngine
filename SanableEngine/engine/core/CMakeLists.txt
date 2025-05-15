@@ -15,7 +15,7 @@ target_include_directories("engine-core" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/priv
 
 # Declare imports
 target_include_directories("engine-core" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} engine-memory engine-platform-abstract glm::glm)
+target_link_libraries("engine-core" PUBLIC ${SDL2_LIBRARIES} glew engine-memory engine-graphics-abstract engine-platform-abstract) # TODO remove glew
 
 # Declare exports
 target_include_directories("engine-core" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
@@ -26,4 +26,5 @@ install_dll("engine-core" ".")
 
 stix_use_template(engine-core "${CMAKE_CURRENT_LIST_DIR}/rtti.template.cpp")
 stix_default_image_capture_status(engine-core disabled)
-stix_generate_reflection(engine-core ${CMAKE_CURRENT_LIST_DIR})
+stix_extract_ast(engine-core ${CMAKE_CURRENT_LIST_DIR})
+stix_generate_reflection(engine-core)

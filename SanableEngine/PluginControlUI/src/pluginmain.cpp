@@ -7,13 +7,17 @@
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
-#include "application/Window.hpp"
+#include "System.hpp"
+#include "Window.hpp"
+#include "Renderer.hpp"
 #include "PluginManagerView.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 #include "Texture.hpp"
+#include "Sprite.hpp"
 #include "Font.hpp"
 #include "Resources.hpp"
+#include "gui/UISprite.hpp"
 
 Game* game;
 PluginManagerView* ui;
@@ -38,36 +42,51 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     if (firstRun)
     {
         {
-            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline();
-            WindowBuilder builder = game->getApplication()->buildWindow("Plugin Control", 800, 600, renderer);
+            WindowSettings windowSettings("Plugin Control", 800, 600);
+            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline(game->getApplication());
+            windowSettings.renderPipeline = renderer;
             ctlGuiRoot = &renderer->hud;
-            builder.setInputProcessor(new WindowGUIInputProcessor(ctlGuiRoot));
-            ctlWindow = builder.build();
+            windowSettings.inputProcessor = new WindowGUIInputProcessor(ctlGuiRoot, 5);
+            ctlWindow = game->getApplication()->buildWindow(windowSettings);
         }
 
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)
 
         //Ready resources: images
-        //ShaderProgram* imgShader = new ShaderProgram("resources/ui/shaders/image");
-        //if (!imgShader->load()) assert(false);
-        //Resources::imageMat = new Material(imgShader);
-        Resources::buttonBackground = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/grey_panel.png");
-        assert(*Resources::buttonBackground);
+        Resources::imageShader = ctlWindow->getRenderer()->loadShaderProgram("resources/ui/shaders/image");
+        if (!Resources::imageShader->load()) assert(false);
+        Resources::imageMat = new Material(Resources::imageShader);
+        Resources::imageMat->setGroup(Material::Group::Transparent);
+        Resources::buttonNormalTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal.png");
+        Resources::buttonNormalSprite = new UISprite3x3(Resources::buttonNormalTexture);
+        Resources::buttonPressedTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/normal_pressed.png");
+        Resources::buttonPressedSprite = new UISprite3x3(Resources::buttonPressedTexture);
+        Resources::buttonDisabledTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/button/disabled.png");
+        Resources::buttonDisabledSprite = new UISprite3x3(Resources::buttonDisabledTexture);
+
+        Resources::rttiFieldTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/field.png");
+        Resources::rttiFieldSprite = new UISprite3x3(Resources::rttiFieldTexture);
+        Resources::rttiFieldSprite->setPixel({1,1}, {7,6});
+        Resources::rttiFieldSprite->setPixel({2,2}, {8,8});
+
+        Resources::rttiParentTexture = ctlWindow->getRenderer()->loadTexture("resources/ui/textures/parent.png");
+        Resources::rttiParentSprite = new UISprite3x3(Resources::rttiParentTexture);
 
         //Ready resources: text
-        ShaderProgram* textShader = new ShaderProgram("resources/ui/shaders/font");
-        if (!textShader->load()) assert(false);
-        Resources::textMat = new Material(textShader);
+        Resources::textShader = ctlWindow->getRenderer()->loadShaderProgram("resources/ui/shaders/font");
+        if (!Resources::textShader->load()) assert(false);
+        Resources::textMat = new Material(Resources::textShader);
+        Resources::textMat->setGroup(Material::Group::Transparent);
         Resources::headerFont = new Font("resources/ui/fonts/arial.ttf", 48);
         Resources::labelFont = new Font("resources/ui/fonts/arial.ttf", 24);
 
         //Init UI elements
         ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), nullptr);
-        ui->transform.fillParent();
+        ui->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
         
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin
-        Window::setActiveDrawTarget(game->getApplication()->getMainWindow());
+        game->getApplication()->getMainWindow()->setActiveDrawTarget();
     }
 
     return true;
@@ -79,10 +98,27 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
 
     if (shutdown)
     {
-        ctlGuiRoot->removeWidget(ui);
+        ctlGuiRoot->destroyWidget(ui);
         ui = nullptr;
 
-        delete ctlWindow;
+        delete Resources::headerFont;
+        delete Resources::labelFont;
+        delete Resources::textMat;
+        delete Resources::textShader;
+        delete Resources::imageMat;
+        delete Resources::imageShader;
+        delete Resources::buttonNormalSprite;
+        delete Resources::buttonNormalTexture;
+        delete Resources::buttonPressedSprite;
+        delete Resources::buttonPressedTexture;
+        delete Resources::buttonDisabledSprite;
+        delete Resources::buttonDisabledTexture;
+        delete Resources::rttiFieldSprite;
+        delete Resources::rttiFieldTexture;
+        delete Resources::rttiParentSprite;
+        delete Resources::rttiParentTexture;
+
+        game->getApplication()->getSystem()->destroyWindow(ctlWindow);
         ctlWindow = nullptr;
     }
 }

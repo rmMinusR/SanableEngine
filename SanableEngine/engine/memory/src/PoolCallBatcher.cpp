@@ -1,6 +1,6 @@
 #include "PoolCallBatcher.hpp"
 
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 
 _PoolCallBatcherBase::_PoolCallBatcherBase(const TypeName& baseType, bool skipUnloaded) :
 	baseTypeName(baseType),
@@ -23,9 +23,9 @@ size_t _PoolCallBatcherBase::count() const
 	return cachedPoolList.size();
 }
 
-void _PoolCallBatcherBase::ensureFresh(MemoryManager* src, bool force)
+void _PoolCallBatcherBase::ensureFresh(MemoryHeap* src, bool force)
 {
-	uint64_t newHash = src->getPoolStateHash();
+	uint64_t newHash = src->getPoolStateHash() ^ std::hash<GlobalTypeRegistry::Snapshot>{}(GlobalTypeRegistry::makeSnapshot());
 	if (force || cachedStateHash != newHash)
 	{
 		cachedStateHash = newHash;

@@ -2,144 +2,97 @@
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include "gui/Widget.hpp"
 
-WidgetTransform::WidgetTransform()
+#include "gui/Widget.hpp"
+#include "gui/HUD.hpp"
+
+void WidgetTransform::refresh() const
 {
+	assert(!refreshing && "Cannot call functions dependent on updated layout while refreshing that layout");
+	refreshing = true;
+	
+	//Ensure parent is up to date
+	if (parent && parent->dirty) parent->refresh();
+
+	//Run positioning strategy, if present
+	if (positioningStrategy) positioningStrategy->evaluate(&localRect, this);
+
+	//Calculate globals from locals
+	rect.topLeft = localRect.topLeft;
+	if (parent) rect.topLeft += parent->rect.topLeft;
+	rect.size = localRect.size;
+
+	renderDepth = relativeRenderDepth;
+	if (parent) renderDepth += parent->getRenderDepth();
+
+	//Sanity check
+	if (parent) assert(parent->rect.contains(rect.topLeft) && parent->rect.contains(rect.bottomRight()));
+
+	dirty = false;
+	refreshing = false;
+}
+
+void WidgetTransform::markDirty() const
+{
+	//Any non-dirty transforms will always have non-dirty parents all the way to the root
+	//So if this node is dirty, we can guarantee all children are also still dirty
+	if (dirty) return;
+
+	dirty = true;
+	for (const WidgetTransform* w : children)
+	{
+		if (!w->isDirty()) //If a transform is dirty, we are guaranteed all its children are also dirty. If a transform is up-to-date, we are guaranteed all its parents are up-to-date.
+		{
+			w->markDirty();
+		}
+	}
+}
+
+WidgetTransform::WidgetTransform(Widget* widget, HUD* hud)
+{
+	this->hud = hud;
+	this->widget = widget;
 	parent = nullptr;
-	minCorner = UIAnchor::centered();
-	minCorner.offset -= Vector2f(50, 50);
-	maxCorner = UIAnchor::centered();
-	minCorner.offset += Vector2f(50, 50);
+
+	dirty = true;
+	refreshing = false;
+
+	positioningStrategy = nullptr;
+	setPositioningStrategy<AnchoredPositioning>();
 }
 
 WidgetTransform::~WidgetTransform()
 {
-}
-
-void WidgetTransform::fillParent(float padding)
-{
-	fillParentX(padding);
-	fillParentY(padding);
-}
-
-void WidgetTransform::fillParentX(float padding)
-{
-	minCorner.ratio .x = 0;
-	maxCorner.ratio .x = 1;
-	minCorner.offset.x =  padding;
-	maxCorner.offset.x = -padding;
-}
-
-void WidgetTransform::fillParentY(float padding)
-{
-	minCorner.ratio .y = 0;
-	maxCorner.ratio .y = 1;
-	minCorner.offset.y = padding;
-	maxCorner.offset.y = -padding;
-}
-
-void WidgetTransform::snapToCorner(Vector2f corner, std::optional<Vector2f> size)
-{
-	Vector2f targetSize = size.value_or(getLocalRect().size);
-	setMinCornerRatio(corner);
-	setMaxCornerRatio(corner);
-	setMinCornerOffset(targetSize * -corner);
-	setMaxCornerOffset(targetSize * (Vector2f(1,1)-corner) );
-}
-
-void WidgetTransform::setSizeByOffsets(Vector2f size, std::optional<Vector2f> _pivot)
-{
-	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
-	setMinCornerOffset(size * pivot);
-	setMaxCornerOffset(size * (Vector2f(1,1)-pivot) );
-}
-
-void WidgetTransform::setCenterByOffsets(Vector2f pos, std::optional<Vector2f> _pivot)
-{
-	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
-	Vector2f invPivot = Vector2f(1, 1)-pivot;
-	Vector2f curPos = minCorner.offset*invPivot + maxCorner.offset*pivot;
-	minCorner.offset += pos-curPos;
-	maxCorner.offset += pos-curPos;
-}
-
-void WidgetTransform::setMinCornerRatio(const Vector2f& val, bool keepPosition)
-{
-	if (!keepPosition) minCorner.ratio = val;
-	else minCorner.setRatioKeepingPosition(val, parent->getLocalRect().size);
-}
-
-void WidgetTransform::setMaxCornerRatio(const Vector2f& val, bool keepPosition)
-{
-	if (!keepPosition) maxCorner.ratio = val;
-	else maxCorner.setRatioKeepingPosition(val, parent->getLocalRect().size);
-}
-
-void WidgetTransform::setMinCornerOffset(const Vector2f& val, bool keepPosition)
-{
-	if (!keepPosition) minCorner.offset = val;
-	else minCorner.setOffsetKeepingPosition(val, parent->getLocalRect().size);
-}
-
-void WidgetTransform::setMaxCornerOffset(const Vector2f& val, bool keepPosition)
-{
-	if (!keepPosition) maxCorner.offset = val;
-	else maxCorner.setOffsetKeepingPosition(val, parent->getLocalRect().size);
+	//FIXME what to do with children?
+	if (positioningStrategy) hud->getMemory()->destroy(positioningStrategy);
 }
 
 Rect<float> WidgetTransform::getRect() const
 {
-	Rect rect = getLocalRect();
-	if (parent) rect.topLeft += parent->getRect().topLeft;
+	if (dirty) refresh();
 	return rect;
-}
-
-void WidgetTransform::setRectByOffsets(Rect<float> rect)
-{
-	if (parent) rect.topLeft -= parent->getRect().topLeft;
-	setLocalRectByOffsets(rect);
 }
 
 Rect<float> WidgetTransform::getLocalRect() const
 {
-	Vector2f parentSize = parent ? parent->getLocalRect().size : Vector2f(0,0);
-	Vector2f localMin = minCorner.calcAnchor(parentSize);
-	Vector2f localMax = maxCorner.calcAnchor(parentSize);
-	return Rect<float>::fromMinMax(localMin, localMax);
+	if (dirty) refresh();
+	return localRect;
 }
 
-void WidgetTransform::setLocalRectByOffsets(const Rect<float>& rect)
+PositioningStrategy* WidgetTransform::getPositioningStrategy() const
 {
-	minCorner.offset.zero();
-	maxCorner.offset.zero();
-	Vector2f parentSize = parent ? parent->getLocalRect().size : Vector2f(0,0);
-	minCorner.offset = rect.topLeft       - minCorner.calcAnchor(parentSize);
-	maxCorner.offset = rect.bottomRight() - maxCorner.calcAnchor(parentSize);
+	return positioningStrategy;
 }
 
-/*
-float WidgetTransform::getScale() const
+void WidgetTransform::setPositioningStrategy_internal(PositioningStrategy* _new)
 {
-	if (parent) return localScale * parent->getScale();
-	else return localScale;
+	assert(!_new || _new != positioningStrategy);
+	
+	markDirty();
+	if (positioningStrategy) hud->getMemory()->destroy(positioningStrategy);
+	positioningStrategy = _new;
 }
-
-void WidgetTransform::setScale(float val)
-{
-	localScale = val;
-	if (parent) localScale /= parent->getScale();
-}
-
-float WidgetTransform::getLocalScale() const
-{
-	return localScale;
-}
-
-void WidgetTransform::setLocalScale(float val)
-{
-	localScale = val;
-}
-*/
 
 WidgetTransform* WidgetTransform::getParent() const
 {
@@ -148,9 +101,11 @@ WidgetTransform* WidgetTransform::getParent() const
 
 void WidgetTransform::setParent(WidgetTransform* parent)
 {
+	if (this->parent == parent) return;
+
 	//Sanity check: can't cause loops
 	{
-		WidgetTransform const* i = this->parent;
+		WidgetTransform const* i = parent;
 		while (i)
 		{
 			assert(i != this);
@@ -159,20 +114,27 @@ void WidgetTransform::setParent(WidgetTransform* parent)
 	}
 
 	//Remove self from parent's children list
-	if (this->parent)
+	if (parent)
 	{
-		auto it = std::find(this->parent->children.begin(), this->parent->children.end(), this);
-		if (it != this->parent->children.end()) this->parent->children.erase(it);
+		auto it = std::find(parent->children.begin(), parent->children.end(), this);
+		if (it != parent->children.end()) parent->children.erase(it);
 	}
 
 	this->parent = parent;
+	markDirty();
 
 	//Add self to parent's children list
 	if (parent)
 	{
 		assert(std::find(parent->children.begin(), parent->children.end(), this) == parent->children.end());
+		childIndex = parent->children.size();
 		parent->children.push_back(this);
 	}
+}
+
+size_t WidgetTransform::getChildIndex() const
+{
+	return parent ? childIndex : -1;
 }
 
 size_t WidgetTransform::getChildrenCount() const
@@ -197,23 +159,39 @@ void WidgetTransform::visitChildren(const std::function<void(WidgetTransform*)>&
 void WidgetTransform::setRenderDepth(depth_t depth)
 {
 	relativeRenderDepth = depth;
-	if (parent) relativeRenderDepth -= parent->getRelativeRenderDepth();
+	if (parent) relativeRenderDepth -= parent->getRenderDepth(); //Implicitly refreshes parent
 }
 
 WidgetTransform::depth_t WidgetTransform::getRenderDepth() const
 {
-	if (parent) return relativeRenderDepth + parent->getRenderDepth();
-	return relativeRenderDepth;
+	if (dirty) refresh();
+	return renderDepth;
 }
 
 void WidgetTransform::setRelativeRenderDepth(depth_t depth)
 {
 	relativeRenderDepth = depth;
+	dirty = true;
 }
 
 WidgetTransform::depth_t WidgetTransform::getRelativeRenderDepth() const
 {
 	return relativeRenderDepth;
+}
+
+Widget* WidgetTransform::getWidget() const
+{
+	return widget;
+}
+
+HUD* WidgetTransform::getHUD() const
+{
+	return hud;
+}
+
+bool WidgetTransform::isDirty() const
+{
+	return dirty;
 }
 
 WidgetTransform::operator glm::mat4() const
@@ -225,4 +203,137 @@ WidgetTransform::operator glm::mat4() const
 		);
 		//TODO rotation component goes here
 		//* glm::scale(glm::identity<glm::mat4>(), glm::vec3(getScale())); //TODO scale component goes here
+}
+
+WidgetSocket::WidgetSocket(HUD* hud, Widget* owner)
+{
+	transform = hud->getMemory()->create<WidgetTransform>(owner, hud);
+	transform->setParent(owner->getTransform());
+}
+
+WidgetSocket::~WidgetSocket()
+{
+	transform->getHUD()->getMemory()->destroy(transform);
+}
+
+void WidgetSocket::put(Widget* w)
+{
+	//Remove old content, if present
+	clear();
+
+	//Set up new content
+	w->getTransform()->setParent(transform);
+	w->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+}
+
+void WidgetSocket::clear()
+{
+	Widget* old = get();
+	if (old) transform->getHUD()->getMemory()->destroy(old);
+}
+
+Widget* WidgetSocket::get() const
+{
+	return transform->getChildrenCount()!=0
+		? transform->getChild(0)->getWidget()
+		: nullptr;
+}
+
+void WidgetSocket::setRelativeRenderDepth(WidgetTransform::depth_t depth)
+{
+	transform->setRelativeRenderDepth(depth);
+}
+
+WidgetTransform::depth_t WidgetSocket::getRelativeRenderDepth() const
+{
+	return transform->getRelativeRenderDepth();
+}
+
+PositioningStrategy::PositioningStrategy()
+{
+}
+
+PositioningStrategy::~PositioningStrategy()
+{
+}
+
+AnchoredPositioning::AnchoredPositioning()
+{
+	minCorner = UIAnchor::centered();
+	minCorner.offset -= Vector2f(50, 50);
+	maxCorner = UIAnchor::centered();
+	minCorner.offset += Vector2f(50, 50);
+}
+
+AnchoredPositioning::~AnchoredPositioning()
+{
+}
+
+void AnchoredPositioning::evaluate(Rect<float>* localRect_out, const WidgetTransform* transform)
+{
+	if (!transform->getParent()) return;
+
+	Rect<float> parentRect = transform->getParent()->getRect();
+	*localRect_out = Rect<float>::fromMinMax(minCorner.calcAnchor(parentRect.size), maxCorner.calcAnchor(parentRect.size));
+}
+
+void AnchoredPositioning::fillParent(float padding)
+{
+	fillParentX(padding);
+	fillParentY(padding);
+}
+
+void AnchoredPositioning::fillParentX(float padding)
+{
+	minCorner.ratio .x = 0;
+	maxCorner.ratio .x = 1;
+	minCorner.offset.x =  padding;
+	maxCorner.offset.x = -padding;
+}
+
+void AnchoredPositioning::fillParentY(float padding)
+{
+	minCorner.ratio .y = 0;
+	maxCorner.ratio .y = 1;
+	minCorner.offset.y = padding;
+	maxCorner.offset.y = -padding;
+}
+
+void AnchoredPositioning::snapToCorner(Vector2f corner, Vector2f size)
+{
+	minCorner.ratio = corner;
+	maxCorner.ratio = corner;
+	minCorner.offset = size * -corner;
+	maxCorner.offset = size * (Vector2f(1,1)-corner);
+}
+
+void AnchoredPositioning::setSizeByOffsets(Vector2f size, std::optional<Vector2f> _pivot)
+{
+	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
+	minCorner.offset = size * pivot;
+	maxCorner.offset = size * (Vector2f(1,1)-pivot);
+}
+
+void AnchoredPositioning::setCenterByOffsets(Vector2f pos, std::optional<Vector2f> _pivot)
+{
+	Vector2f pivot = _pivot.value_or( (minCorner.ratio+maxCorner.ratio)/2 );
+	Vector2f invPivot = Vector2f(1, 1)-pivot;
+	Vector2f curPos = minCorner.offset*invPivot + maxCorner.offset*pivot;
+	minCorner.offset += pos-curPos;
+	maxCorner.offset += pos-curPos;
+}
+
+void AnchoredPositioning::setRectByOffsets(Rect<float> rect, WidgetTransform* parent)
+{
+	if (parent) rect.topLeft -= parent->getRect().topLeft;
+	setLocalRectByOffsets(rect, parent);
+}
+
+void AnchoredPositioning::setLocalRectByOffsets(const Rect<float>& rect, WidgetTransform* parent)
+{
+	minCorner.offset.zero();
+	maxCorner.offset.zero();
+	Vector2f parentSize = parent ? parent->getLocalRect().size : Vector2f(0, 0);
+	minCorner.offset = rect.topLeft - minCorner.calcAnchor(parentSize);
+	maxCorner.offset = rect.bottomRight() - maxCorner.calcAnchor(parentSize);
 }

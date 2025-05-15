@@ -12,7 +12,7 @@ target_include_directories("engine-win32" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/pri
 export_dll(SDL2::SDL2 engine-win32)
 
 # Declare imports
-target_link_libraries("engine-win32" "engine-core")
+target_link_libraries("engine-win32" engine-core engine-graphics-opengl)
 
 function(package_assets)
 	#Nothing to do, plugins are responsible for copying their assets to their output directory

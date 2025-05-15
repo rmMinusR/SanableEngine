@@ -1,16 +1,22 @@
 #pragma once
 
+#include "Color.inl"
+
 #include "Widget.hpp"
 
-class Texture;
+class UISprite;
 
 class ImageWidget : public Widget
 {
-	Material* material;
-	Texture* texture;
+	const Material* material;
+	const UISprite* sprite;
+	Color4<uint8_t> tintColor;
 public:
-	ENGINEGUI_API ImageWidget(HUD* hud, Material* material, Texture* texture);
+	ENGINEGUI_API ImageWidget(HUD* hud, const Material* material, const UISprite* sprite);
 	ENGINEGUI_API virtual ~ImageWidget();
+
+	ENGINEGUI_API void setSprite(const UISprite* newSprite);
+	ENGINEGUI_API void setTintColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 	ENGINEGUI_API virtual const Material* getMaterial() const override;
 	ENGINEGUI_API virtual void renderImmediate(Renderer* renderer) override;

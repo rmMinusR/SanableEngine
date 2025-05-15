@@ -3,7 +3,7 @@
 #include "dllapi.h"
 #include <unordered_set>
 
-class MemoryManager;
+class MemoryHeap;
 class AssetUser;
 
 class Asset

@@ -3,7 +3,8 @@
 #include "application/Application.hpp"
 #include "application/PluginCore.hpp"
 #include "GlobalTypeRegistry.hpp"
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
+#include "MemoryRoot.hpp"
 
 #if __EMSCRIPTEN__
 #include <dlfcn.h>
@@ -60,6 +61,11 @@ bool Plugin::isCodeLoaded() const
 bool Plugin::isHooked() const
 {
 	return status >= Status::Hooked;
+}
+
+const ModuleTypeRegistry* Plugin::getRTTI() const
+{
+	return GlobalTypeRegistry::getModule(reportedData->name);
 }
 
 bool Plugin::load(Application const* context)
@@ -123,11 +129,14 @@ bool Plugin::load(Application const* context)
 	if (wasEverLoaded)
 	{
 		ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
-		for (const TypeInfo& i : types->getTypes())
+		MemoryRoot::get()->visitHeaps([&](MemoryHeap* heap)
 		{
-			GenericTypedMemoryPool* pool = ((Application*)context)->getMemoryManager()->getSpecificPool(i.name);
-			pool->releaseHook = i.capabilities.rawDtor;
-		}
+			for (const TypeInfo& i : types->getTypes())
+			{
+				GenericTypedMemoryPool* pool = heap->getSpecificPool(i.name);
+				if (pool) pool->releaseHook = i.capabilities.rawDtor;
+			}
+		});
 	}
 
 	status = Status::Registered;
@@ -174,11 +183,14 @@ void Plugin::unload(Application* context)
 	assert(isCodeLoaded());
 
 	ModuleTypeRegistry const* types = GlobalTypeRegistry::getModule(reportedData->name);
-	for (const TypeInfo& i : types->getTypes())
+	MemoryRoot::get()->visitHeaps([&](MemoryHeap* heap)
 	{
-		GenericTypedMemoryPool* pool = context->getMemoryManager()->getSpecificPool(i.name);
-		if (pool) pool->releaseHook = tryFreeWarnUnloaded;
-	}
+		for (const TypeInfo& i : types->getTypes())
+		{
+			GenericTypedMemoryPool* pool = heap->getSpecificPool(i.name);
+			if (pool) pool->releaseHook = tryFreeWarnUnloaded;
+		}
+	});
 	GlobalTypeRegistry::unloadModule(reportedData->name);
 
 #ifdef _WIN32

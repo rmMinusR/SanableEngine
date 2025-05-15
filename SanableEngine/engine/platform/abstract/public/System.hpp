@@ -5,6 +5,8 @@
 
 class Application;
 class PluginManager;
+class Window;
+struct WindowSettings;
 
 namespace gpr460
 {
@@ -29,6 +31,14 @@ namespace gpr460
 	public:
 		System();
 		virtual ~System();
+
+		virtual void pumpEvents() = 0;
+
+		virtual bool isFocused(const Window*) = 0;
+		virtual Window* createWindow(const WindowSettings& settings, Application* engine) = 0;
+		virtual void destroyWindow(Window* window) = 0;
+		virtual size_t getNumWindows() const = 0;
+		virtual Window* getWindow(size_t which) = 0;
 
 		virtual void DebugPause() = 0;
 

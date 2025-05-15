@@ -17,7 +17,7 @@ void ColliderColorChanger::BindToGameObject(GameObject* obj)
 	assert(renderer);
 }
 
-ColliderColorChanger::ColliderColorChanger(SDL_Color normalColor, SDL_Color overlapColor) :
+ColliderColorChanger::ColliderColorChanger(Color4<uint8_t> normalColor, Color4<uint8_t> overlapColor) :
 	Component(),
 	normalColor(normalColor),
 	overlapColor(overlapColor),

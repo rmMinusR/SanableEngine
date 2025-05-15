@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <string>
 
-#include "MemoryMapper.hpp"
+#include "ObjectRelocator.hpp"
 
 //Void pointers of a given max size (not recommended)
 class RawMemoryPool
@@ -36,11 +36,11 @@ public:
 
 	//Resizes individual allocations, moving them as appropriate.
 	//This will break any existing pointers, unless a mapper is used to fix them.
-	ENGINEMEM_API void resizeObjects(size_t newSize, size_t newAlign, MemoryMapper* mapper = nullptr);
+	ENGINEMEM_API void resizeObjects(size_t newSize, size_t newAlign, ObjectRelocator* mapper = nullptr);
 
 	//Changes the maximum object count.
 	//This will break any existing pointers, unless a mapper is used to fix them.
-	ENGINEMEM_API void setMaxNumObjects(size_t newCount, MemoryMapper* mapper = nullptr);
+	ENGINEMEM_API void setMaxNumObjects(size_t newCount, ObjectRelocator* mapper = nullptr);
 
 	typedef void (*hook_t)(void*);
 
@@ -91,6 +91,8 @@ public:
 		ENGINEMEM_API void* operator*() const;
 
 		ENGINEMEM_API const_iterator operator++();
+		ENGINEMEM_API const_iterator operator+=(size_t offset);
+		ENGINEMEM_API const_iterator operator+(size_t offset) const;
 
 		ENGINEMEM_API inline bool operator!=(const const_iterator& other) const { return pool == other.pool && index != other.index; }
 		ENGINEMEM_API inline bool operator==(const const_iterator& other) const { return pool == other.pool && index == other.index; }

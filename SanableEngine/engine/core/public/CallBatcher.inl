@@ -26,6 +26,12 @@ public:
 		for (TObj* o : objects) (o->*func)(funcArgs...);
 	}
 
+	template<typename... TArgs>
+	void memberCall(void (TObj::*func)(TArgs...) const, TArgs... funcArgs) const
+	{
+		for (TObj* o : objects) (o->*func)(funcArgs...);
+	}
+
 	template<typename TFunc, typename... TArgs>
 	void staticCall(TFunc func, TArgs... funcArgs) const
 	{

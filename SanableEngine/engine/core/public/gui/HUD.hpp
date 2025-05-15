@@ -4,33 +4,39 @@
 
 #include "CallBatcher.inl"
 #include "Widget.hpp"
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
+#include "PoolCallBatcher.hpp"
+
+class Application;
 
 class HUD
 {
-private:
-	CallBatcher<Widget> widgets;
-	MemoryManager memory; //TODO reload safety
-	WidgetTransform root;
+	TypedMemoryPool<WidgetTransform>* transforms;
+	PoolCallBatcher<Widget> widgets;
+	MemoryHeap memory; //TODO reload safety
+	WidgetTransform* root;
 	
+	Application* application;
+
 	//Concurrency buffers
 	std::vector<Widget*> addQueue;
 	std::vector<Widget*> removeQueue;
 	void applyConcurrencyBuffers();
 
 	ENGINEGUI_API void addWidget_internal(Widget* widget);
-	ENGINEGUI_API void removeWidget_internal(Widget* widget);
+	ENGINEGUI_API void destroyWidget_internal(Widget* widget);
 public:
-	ENGINEGUI_API HUD();
+	ENGINEGUI_API HUD(Application* application);
 	ENGINEGUI_API ~HUD();
 
-	ENGINEGUI_API MemoryManager* getMemory();
+	ENGINEGUI_API MemoryHeap* getMemory();
 	
 	ENGINEGUI_API void refreshLayout(Rect<float> viewport);
 	ENGINEGUI_API void tick();
-	ENGINEGUI_API void render(Rect<float> viewport, Renderer* renderer);
+	ENGINEGUI_API void render(Renderer* renderer);
 
-	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(Widget*)>& visitor) const;
+	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact = true) const;
+	ENGINEGUI_API Widget* raycastClosest(Vector2f pos, bool exact = true) const;
 
 	ENGINEGUI_API WidgetTransform const* getRootTransform() const;
 	ENGINEGUI_API WidgetTransform* getRootTransform();
@@ -45,11 +51,12 @@ public:
 	}
 
 	template<typename T>
-	inline void removeWidget(T* w)
+	inline void destroyWidget(T* w)
 	{
 		static_assert(std::is_base_of_v<Widget, T>);
-		removeWidget_internal(w);
+		destroyWidget_internal(w);
 		memory.destroy(w);
 	}
 
+	ENGINEGUI_API Application* getApplication() const;
 };

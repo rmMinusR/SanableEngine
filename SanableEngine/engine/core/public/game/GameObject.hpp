@@ -5,13 +5,14 @@
 #include <vector>
 #include <cassert>
 
-#include "MemoryManager.hpp"
+#include "MemoryHeap.hpp"
 #include "application/Application.hpp"
 #include "Transform.hpp"
+#include "ShaderUniform.hpp"
 
 class ModuleTypeRegistry;
 class Component;
-class Game;
+class Level;
 
 class GameObject
 {
@@ -19,29 +20,30 @@ protected:
     Transform transform;
 
     std::vector<Component*> components;
-    friend class Game;
+    friend class Level;
     friend class Component;
 
-    Game* const engine;
+    Level* level = nullptr;
 
     void BindComponent(Component* c);
     void InvokeStart();
 
 public:
-    GameObject(Game* engine);
-    ~GameObject();
+    ENGINECORE_API GameObject(Level* level);
+    ENGINECORE_API virtual ~GameObject();
 
-    inline Game* getContext() { return engine; }
+    inline Level* getLevel() { return level; }
 
     inline Transform* getTransform() { return &transform; }
+    ENGINECORE_API virtual ShaderUniform::ObjectData getRenderedInstanceUniforms() const;
 
     template<typename T, typename... TCtorArgs>
     inline T* CreateComponent(const TCtorArgs&... ctorArgs)
     {
         T* component;
         assert((component = GetComponent<T>()) == nullptr);
-        component = engine->getApplication()->getMemoryManager()->create<T>(ctorArgs...);
-        engine->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
+        component = level->getHeap()->create<T>(ctorArgs...);
+        level->componentAddBuffer.push_back(std::pair<Component*, GameObject*>(component, this));
         return component;
     }
 

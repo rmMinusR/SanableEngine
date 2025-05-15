@@ -23,8 +23,8 @@ void GameObject::InvokeStart()
 	for (Component* c : components) c->onStart();
 }
 
-GameObject::GameObject(Game* engine) :
-	engine(engine)
+GameObject::GameObject(Level* level) :
+	level(level)
 {
 }
 
@@ -32,7 +32,14 @@ GameObject::~GameObject()
 {
 	if (components.size() != 0)
 	{
-		for (Component* c : components) engine->getApplication()->getMemoryManager()->destroy(c);
+		for (Component* c : components) level->getHeap()->destroy(c);
 		components.clear();
 	}
+}
+
+ShaderUniform::ObjectData GameObject::getRenderedInstanceUniforms() const
+{
+	ShaderUniform::ObjectData data;
+	data.GeometryTransform = transform;
+	return data;
 }

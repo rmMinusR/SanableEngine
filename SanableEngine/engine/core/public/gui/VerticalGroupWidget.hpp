@@ -9,5 +9,6 @@ public:
 	ENGINEGUI_API VerticalGroupWidget(HUD* hud);
 	ENGINEGUI_API virtual ~VerticalGroupWidget();
 
+protected:
 	ENGINEGUI_API virtual void refreshLayout() override;
 };
