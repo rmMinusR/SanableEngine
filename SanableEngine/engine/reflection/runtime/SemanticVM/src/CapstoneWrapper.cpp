@@ -68,7 +68,7 @@ void foreachSubFunction(void(*fn)(), const std::function<void( void(*)() )>& vis
 	cs_insn* insn = cs_malloc(capstone_get_instance());
 	
 	const uint8_t* cursor = (uint8_t*)fn;
-	uint_addr_t addr = (uint_addr_t)cursor;
+	uint64_t addr = (uint64_t)cursor;
 
 	while (true)
 	{

@@ -21,19 +21,10 @@ public:
 
 	//Allocates memory and creates an object.
 	template<typename... TCtorArgs>
-	TObj* emplace(TCtorArgs... ctorArgs)
-	{
-		//Allocate memory
-		TObj* pObj = (TObj*) impl->allocate();
-		
-		//Construct object
-		if (pObj) new (pObj) TObj(ctorArgs...);
-
-		return pObj;
-	}
+	TObj* emplace(TCtorArgs... ctorArgs);
 
 	//Pass through
-	inline void release(TObj* obj) { impl->release(obj); }
+	void release(TObj* obj);
 
 	inline GenericTypedMemoryPool* asGeneric() { return impl; }
 	inline GenericTypedMemoryPool const* asGeneric() const { return impl; }
@@ -58,8 +49,8 @@ public:
 		inline bool operator==(const const_iterator& other) const { return inner == other.inner; }
 	};
 
-	inline const_iterator cbegin() const { return const_iterator(impl->cbegin()); }
-	inline const_iterator cend  () const { return const_iterator(impl->cend  ()); }
+	const_iterator cbegin() const;
+	const_iterator cend() const;
 
 protected:
 	TypedMemoryPool(TypedMemoryPool&&) = delete;
@@ -102,3 +93,35 @@ public:
 	//INTERNAL USE ONLY
 	ENGINEMEM_API void refreshObjects(const TypeInfo& newTypeData, ObjectRelocator* remapper);
 };
+
+
+template<typename TObj>
+template<typename... TCtorArgs>
+TObj* TypedMemoryPool<TObj>::emplace(TCtorArgs... ctorArgs)
+{
+	//Allocate memory
+	TObj* pObj = (TObj*)impl->allocate();
+
+	//Construct object
+	if (pObj) new (pObj) TObj(ctorArgs...);
+
+	return pObj;
+}
+
+template<typename TObj>
+inline void TypedMemoryPool<TObj>::release(TObj* obj)
+{
+	impl->release(obj);
+}
+
+template<typename TObj>
+inline TypedMemoryPool<TObj>::const_iterator TypedMemoryPool<TObj>::cbegin() const
+{
+	return const_iterator(impl->cbegin());
+}
+
+template<typename TObj>
+inline TypedMemoryPool<TObj>::const_iterator TypedMemoryPool<TObj>::cend() const
+{
+	return const_iterator(impl->cend());
+}

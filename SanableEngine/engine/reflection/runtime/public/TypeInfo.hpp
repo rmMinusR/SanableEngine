@@ -227,7 +227,7 @@ public:
 	/// <summary>
 	/// INTERNAL USE ONLY. Currently used to finalize byteUsage, since we need to be able to look up our parents' fields.
 	/// </summary>
-	STIX_INTERNAL( void doLateBinding(ModuleTypeRegistry* ownModule); )
+	void doLateBinding(ModuleTypeRegistry* ownModule);
 
 private:
 	/// <summary>
