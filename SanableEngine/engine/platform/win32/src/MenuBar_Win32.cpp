@@ -3,7 +3,6 @@
 #include <SDL_video.h>
 
 #include "Window_Win32.hpp"
-#include "MenuBarButton_Win32.hpp"
 #include "MenuButton_Win32.hpp"
 #include "MenuDivider_Win32.hpp"
 
@@ -14,7 +13,7 @@ MenuBar_Win32::MenuBar_Win32(Window_Win32* window) :
 	SetMenu(window->getNativeHandle(), nativeHandle);
 	DrawMenuBar(window->getNativeHandle());
 
-	// TODO register items for WM_COMMAND
+	// TODO register items for WM_COMMAND?
 }
 
 MenuBar_Win32::~MenuBar_Win32()
@@ -24,8 +23,8 @@ MenuBar_Win32::~MenuBar_Win32()
 
 MenuButton* MenuBar_Win32::addButton(std::wstring text, size_t index)
 {
-	MenuBarButton_Win32* item = new MenuBarButton_Win32(this, text);
-	addItem(item, index);
+	MenuButton_Win32* item = new MenuButton_Win32(this, index, text);
+	registerItem(item, index);
 	return item;
 }
 

@@ -52,7 +52,7 @@ const MenuItem* MenuItem::getChild(size_t which) const
 	return children[which];
 }
 
-void MenuItem::addItem(MenuItem* item, size_t index)
+void MenuItem::registerItem(MenuItem* item, size_t index)
 {
 	assert(!item->parent);
 	item->parent = this;

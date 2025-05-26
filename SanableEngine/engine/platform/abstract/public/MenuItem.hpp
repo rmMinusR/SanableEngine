@@ -13,7 +13,7 @@ protected:
 	MenuItem* parent = nullptr;
 	std::vector<MenuItem*> children;
 
-	virtual void addItem(MenuItem* item, size_t index); // Internal helper
+	virtual void registerItem(MenuItem* item, size_t index); // Internal helper
 
 	MenuItem();
 public:
