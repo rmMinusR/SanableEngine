@@ -1,4 +1,4 @@
-#include "MenuDivider.hpp"
+#include "menu/MenuDivider.hpp"
 
 MenuDivider::MenuDivider()
 {

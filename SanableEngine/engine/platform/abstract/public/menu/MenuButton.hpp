@@ -13,7 +13,7 @@ protected:
 	MenuButton(std::wstring text);
 
 public:
-	virtual ~MenuButton() = default;
+	virtual ~MenuButton();
 
 	virtual void setEnabled(bool) = 0;
 	virtual bool isEnabled() const = 0;

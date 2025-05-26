@@ -13,7 +13,7 @@ class WindowRenderPipeline;
 struct WindowSettings;
 template<typename T> struct thunk_utils;
 namespace gpr460 { class System; }
-class MenuItem;
+class MenuBar;
 
 class Window
 {
@@ -49,8 +49,8 @@ public:
 	virtual Vector2<int> getSize() const = 0;
 	virtual bool wasCloseRequested() const = 0;
 
-	virtual MenuItem* getMenuBar(bool create = false) = 0;
-	virtual const MenuItem* getMenuBar() const = 0;
+	virtual MenuBar* getMenuBar(bool create = false) = 0;
+	virtual const MenuBar* getMenuBar() const = 0;
 
 	virtual void setRenderPipeline(WindowRenderPipeline* v); //Note: Does NOT destroy old render pipeline, if it exists
 	virtual void setInputProcessor(WindowInputProcessor* v); //Note: Does NOT destroy old input processor, if it exists

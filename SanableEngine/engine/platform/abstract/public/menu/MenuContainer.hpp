@@ -3,31 +3,30 @@
 #include <vector>
 #include <string>
 
+
+class MenuItem;
 class MenuButton;
 class MenuDivider;
-class MenuItem;
+class Submenu;
 
-class MenuItem
+
+class MenuContainer
 {
 protected:
-	MenuItem* parent = nullptr;
 	std::vector<MenuItem*> children;
+	MenuContainer();
 
 	virtual void registerItem(MenuItem* item, size_t index); // Internal helper
 
-	MenuItem();
 public:
-	virtual ~MenuItem();
-
-	size_t getIndexInParent() const;
-	MenuItem* getParent();
-	const MenuItem* getParent() const;
+	virtual ~MenuContainer();
 
 	virtual size_t getNumChildren() const;
 	virtual MenuItem* getChild(size_t which);
 	virtual const MenuItem* getChild(size_t which) const;
 
 	virtual MenuButton* addButton(std::wstring text, size_t index = 0) = 0;
+	virtual Submenu* addSubmenu(std::wstring text, size_t index = 0) = 0;
 	virtual MenuDivider* addDivider(size_t index = 0) = 0;
 
 	virtual void* getNativeHandle() = 0;
