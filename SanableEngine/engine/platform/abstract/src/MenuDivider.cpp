@@ -1,7 +1,6 @@
 #include "MenuDivider.hpp"
 
-MenuDivider::MenuDivider() :
-	MenuItem(nullptr)
+MenuDivider::MenuDivider()
 {
 }
 

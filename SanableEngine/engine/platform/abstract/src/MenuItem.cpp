@@ -5,8 +5,7 @@
 #include "MenuButton.hpp"
 #include "MenuDivider.hpp"
 
-MenuItem::MenuItem(MenuItemFactory* itemFactory) :
-	itemFactory(itemFactory)
+MenuItem::MenuItem()
 {
 }
 
@@ -58,18 +57,4 @@ void MenuItem::addItem(MenuItem* item, size_t index)
 	assert(!item->parent);
 	item->parent = this;
 	children.insert(children.begin()+index, item);
-}
-
-MenuButton* MenuItem::addButton(std::wstring text, size_t index)
-{
-	MenuButton* item = itemFactory->addButton(this, text, index);
-	addItem(item, index);
-	return item;
-}
-
-MenuDivider* MenuItem::addDivider(size_t index)
-{
-	MenuDivider* item = itemFactory->addDivider(this, index);
-	addItem(item, index);
-	return item;
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Windows.h>
+
 #include <SDL_video.h>
 #include "Window.hpp"
 #include "OpenGlRenderer.hpp"
@@ -8,6 +10,7 @@ class WindowInputProcessor;
 struct GLSettings;
 template<typename T> struct thunk_utils;
 namespace gpr460 { class System_Win32; }
+class MenuBar_Win32;
 
 class Window_Win32 : public Window
 {
@@ -15,6 +18,7 @@ private:
 	SDL_Window* sdlHandle;
 	OpenGlRenderer renderer;
 	void draw() const override;
+	MenuBar_Win32* menuBar = nullptr;
 
 	int sdlID;
 	friend class WindowInputProcessor;
@@ -33,4 +37,11 @@ public:
 	virtual int getHeight() const override;
 	virtual Vector2<int> getSize() const override;
 	virtual bool wasCloseRequested() const override;
+
+	virtual MenuItem* getMenuBar(bool create = false) override;
+	virtual const MenuItem* getMenuBar() const override;
+
+	// PLATFORM SPECIFIC
+
+	HWND getNativeHandle();
 };

@@ -1,10 +1,12 @@
 #include "Window_Win32.hpp"
 
 #include <SDL.h>
+#include <SDL_syswm.h>
 #include "WindowRenderPipeline.hpp"
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 #include "GLContext.hpp"
+#include "MenuBar_Win32.hpp"
 
 Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, SDL_Window* handle) :
     Window(settings, engine->getSystem(), engine),
@@ -18,6 +20,12 @@ Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, 
 
 Window_Win32::~Window_Win32()
 {
+    if (menuBar)
+    {
+        delete menuBar;
+        menuBar = nullptr;
+    }
+    
     if (sdlHandle)
     {
         SDL_DestroyWindow(sdlHandle);
@@ -77,4 +85,26 @@ void Window_Win32::draw() const
 
     //Swap back buffer
     SDL_GL_SwapWindow(sdlHandle);
+}
+
+MenuItem* Window_Win32::getMenuBar(bool create)
+{
+    if (create && !menuBar)
+    {
+        menuBar = new MenuBar_Win32(this);
+    }
+    return menuBar;
+}
+
+const MenuItem* Window_Win32::getMenuBar() const
+{
+    return menuBar;
+}
+
+HWND Window_Win32::getNativeHandle()
+{
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(sdlHandle, &wmInfo);
+    return wmInfo.info.win.window;
 }

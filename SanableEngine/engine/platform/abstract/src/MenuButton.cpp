@@ -1,7 +1,6 @@
 #include "MenuButton.hpp"
 
-MenuButton::MenuButton(MenuItemFactory* itemFactory, std::wstring text) :
-	MenuItem(itemFactory),
+MenuButton::MenuButton(std::wstring text) :
 	text(text)
 {
 }
