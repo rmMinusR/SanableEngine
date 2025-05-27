@@ -25,12 +25,12 @@ size_t MenuItem::getIndexInParent() const
 	return std::distance(parent->children.begin(), it);
 }
 
-MenuItem* MenuItem::getParent()
+MenuContainer* MenuItem::getParent()
 {
 	return parent;
 }
 
-const MenuItem* MenuItem::getParent() const
+const MenuContainer* MenuItem::getParent() const
 {
 	return parent;
 }

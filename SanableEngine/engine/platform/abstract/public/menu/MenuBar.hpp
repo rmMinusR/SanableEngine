@@ -2,6 +2,8 @@
 
 #include "menu/MenuItem.hpp"
 
+class Window;
+
 class MenuBar : public MenuContainer
 {
 protected:

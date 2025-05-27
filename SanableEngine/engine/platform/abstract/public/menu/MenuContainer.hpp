@@ -13,7 +13,9 @@ class Submenu;
 class MenuContainer
 {
 protected:
+	friend class MenuItem;
 	std::vector<MenuItem*> children;
+
 	MenuContainer();
 
 	virtual void registerItem(MenuItem* item, size_t index); // Internal helper
@@ -26,9 +28,6 @@ public:
 	virtual const MenuItem* getChild(size_t which) const;
 
 	virtual MenuButton* addButton(std::wstring text, size_t index = 0) = 0;
-	virtual Submenu* addSubmenu(std::wstring text, size_t index = 0) = 0;
 	virtual MenuDivider* addDivider(size_t index = 0) = 0;
-
-	virtual void* getNativeHandle() = 0;
-	virtual const void* getNativeHandle() const = 0;
+	virtual Submenu* addSubmenu(std::wstring text, size_t index = 0) = 0;
 };

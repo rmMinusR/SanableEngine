@@ -6,7 +6,7 @@
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 #include "GLContext.hpp"
-#include "MenuBar_Win32.hpp"
+#include "menu/MenuBar_Win32.hpp"
 
 Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, SDL_Window* handle) :
     Window(settings, engine->getSystem(), engine),
@@ -87,7 +87,7 @@ void Window_Win32::draw() const
     SDL_GL_SwapWindow(sdlHandle);
 }
 
-MenuItem* Window_Win32::getMenuBar(bool create)
+MenuBar* Window_Win32::getMenuBar(bool create)
 {
     if (create && !menuBar)
     {
@@ -96,7 +96,7 @@ MenuItem* Window_Win32::getMenuBar(bool create)
     return menuBar;
 }
 
-const MenuItem* Window_Win32::getMenuBar() const
+const MenuBar* Window_Win32::getMenuBar() const
 {
     return menuBar;
 }

@@ -1,12 +1,14 @@
-#include "MenuBar_Win32.hpp"
+#include "menu/MenuBar_Win32.hpp"
 
 #include <SDL_video.h>
 
 #include "Window_Win32.hpp"
-#include "MenuButton_Win32.hpp"
-#include "MenuDivider_Win32.hpp"
+#include "menu/MenuButton_Win32.hpp"
+#include "menu/MenuDivider_Win32.hpp"
+#include "menu/Submenu_Win32.hpp"
 
 MenuBar_Win32::MenuBar_Win32(Window_Win32* window) :
+	MenuBar(window),
 	window(window)
 {
 	nativeHandle = CreateMenu();
@@ -33,12 +35,9 @@ MenuDivider* MenuBar_Win32::addDivider(size_t index)
 	return nullptr; // Not allowed. Maybe in future we can support spacers?
 }
 
-void* MenuBar_Win32::getNativeHandle()
+Submenu* MenuBar_Win32::addSubmenu(std::wstring text, size_t index)
 {
-	return nativeHandle;
-}
-
-const void* MenuBar_Win32::getNativeHandle() const
-{
-	return nativeHandle;
+	Submenu_Win32* item = new Submenu_Win32(this, index, text);
+	registerItem(item, index);
+	return item;
 }

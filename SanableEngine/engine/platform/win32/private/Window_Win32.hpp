@@ -38,8 +38,8 @@ public:
 	virtual Vector2<int> getSize() const override;
 	virtual bool wasCloseRequested() const override;
 
-	virtual MenuItem* getMenuBar(bool create = false) override;
-	virtual const MenuItem* getMenuBar() const override;
+	virtual MenuBar* getMenuBar(bool create = false) override;
+	virtual const MenuBar* getMenuBar() const override;
 
 	// PLATFORM SPECIFIC
 

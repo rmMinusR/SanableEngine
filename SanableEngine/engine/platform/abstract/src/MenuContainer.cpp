@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "menu/MenuItem.hpp"
+
 MenuContainer::MenuContainer()
 {
 }

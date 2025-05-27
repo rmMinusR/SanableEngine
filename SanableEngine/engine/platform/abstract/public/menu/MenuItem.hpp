@@ -2,16 +2,17 @@
 
 #include "MenuContainer.hpp"
 
-class MenuItem : public MenuContainer
+class MenuItem
 {
 protected:
-	MenuItem* parent = nullptr;
+	friend class MenuContainer;
+	MenuContainer* parent = nullptr;
 
 	MenuItem();
 public:
 	virtual ~MenuItem();
 
 	size_t getIndexInParent() const;
-	MenuItem* getParent();
-	const MenuItem* getParent() const;
+	MenuContainer* getParent();
+	const MenuContainer* getParent() const;
 };
