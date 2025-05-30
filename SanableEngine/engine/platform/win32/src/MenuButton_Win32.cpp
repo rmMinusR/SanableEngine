@@ -1,25 +1,48 @@
 #include "menu/MenuButton_Win32.hpp"
 
+#include <cassert>
 #include "menu/MenuDivider_Win32.hpp"
 
-MenuButton_Win32::MenuButton_Win32(MenuContainer* parent, size_t index, std::wstring text) :
+UINT MenuButton_Win32::native_id() const
+{
+	return static_cast<UINT>(reinterpret_cast<ULONG_PTR>(this));
+}
+
+MenuButton_Win32::MenuButton_Win32(HMENU root, MenuContainer* parent, size_t index, std::wstring text) :
 	MenuButton(text)
 {
 	this->parent = parent;
-
-	nativeHandle = CreateMenu();
+	this->root = root;
 
 	MENUITEMINFOW info;
 	info.cbSize = sizeof(MENUITEMINFOW);
-	info.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_STRING;
+	info.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_STRING | MIIM_ID;
 	info.dwItemData = reinterpret_cast<ULONG_PTR>(this);
 	info.fType = MFT_STRING;
 	info.dwTypeData = this->text.data();
 	info.cch = this->text.size();
-	InsertMenuItemW(nativeHandle, index, TRUE, &info);
+	info.wID = native_id();
+	bool ok = InsertMenuItemW(root, index, TRUE, &info);
+	assert(ok);
 }
 
 MenuButton_Win32::~MenuButton_Win32()
 {
-	DestroyMenu(nativeHandle);
+	bool ok = RemoveMenu(root, native_id(), MF_BYCOMMAND);
+	assert(ok);
+}
+
+void MenuButton_Win32::setEnabled(bool enable)
+{
+	EnableMenuItem(root, native_id(), MF_BYCOMMAND | (enable ? MF_ENABLED : MF_DISABLED));
+}
+
+bool MenuButton_Win32::isEnabled() const
+{
+	MENUITEMINFOW info;
+	info.cbSize = sizeof(MENUITEMINFOW);
+	info.fMask = MIIM_STATE;
+	GetMenuItemInfoW(root, native_id(), FALSE, &info);
+
+	return !(info.fState & MFS_DISABLED);
 }

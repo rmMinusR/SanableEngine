@@ -6,8 +6,9 @@
 
 class MenuDivider_Win32 : public MenuDivider
 {
-	HMENU nativeHandle;
+	HMENU root;
+	UINT native_id() const;
 public:
-	MenuDivider_Win32(MenuContainer* parent, size_t index);
+	MenuDivider_Win32(HMENU root, MenuContainer* parent, size_t index);
 	virtual ~MenuDivider_Win32();
 };

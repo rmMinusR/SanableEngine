@@ -6,12 +6,12 @@
 
 class MenuButton_Win32 : public MenuButton
 {
-	HMENU nativeHandle;
+	HMENU root;
+	UINT native_id() const;
 public:
-	MenuButton_Win32(MenuContainer* parent, size_t index, std::wstring text);
+	MenuButton_Win32(HMENU root, MenuContainer* parent, size_t index, std::wstring text);
 	virtual ~MenuButton_Win32();
 
-	virtual void setEnabled(bool) override;
+	virtual void setEnabled(bool enable) override;
 	virtual bool isEnabled() const override;
-	virtual void setCallback(std::function<void()> callback) override;
 };

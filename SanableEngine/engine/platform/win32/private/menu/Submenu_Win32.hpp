@@ -5,10 +5,12 @@
 
 class Submenu_Win32 : public Submenu
 {
-	HMENU nativeHandle;
+	HMENU root;
+	UINT native_id() const;
+	HMENU submenuHandle;
 
 public:
-	Submenu_Win32(MenuContainer* parent, size_t index, std::wstring text);
+	Submenu_Win32(HMENU root, MenuContainer* parent, size_t index, std::wstring text);
 	virtual ~Submenu_Win32();
 
 	virtual MenuButton* addButton(std::wstring text, size_t index = 0);

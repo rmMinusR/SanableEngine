@@ -8,3 +8,8 @@ MenuButton::MenuButton(std::wstring text) :
 MenuButton::~MenuButton()
 {
 }
+
+void MenuButton::setCallback(std::function<void()> callback)
+{
+	this->callback = callback;
+}

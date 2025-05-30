@@ -18,5 +18,5 @@ public:
 	virtual void setEnabled(bool) = 0;
 	virtual bool isEnabled() const = 0;
 
-	virtual void setCallback(std::function<void()> callback) = 0;
+	virtual void setCallback(std::function<void()> callback);
 };

@@ -25,7 +25,7 @@ MenuBar_Win32::~MenuBar_Win32()
 
 MenuButton* MenuBar_Win32::addButton(std::wstring text, size_t index)
 {
-	MenuButton_Win32* item = new MenuButton_Win32(this, index, text);
+	MenuButton_Win32* item = new MenuButton_Win32(nativeHandle, this, index, text);
 	registerItem(item, index);
 	return item;
 }
@@ -37,7 +37,7 @@ MenuDivider* MenuBar_Win32::addDivider(size_t index)
 
 Submenu* MenuBar_Win32::addSubmenu(std::wstring text, size_t index)
 {
-	Submenu_Win32* item = new Submenu_Win32(this, index, text);
+	Submenu_Win32* item = new Submenu_Win32(nativeHandle, this, index, text);
 	registerItem(item, index);
 	return item;
 }
