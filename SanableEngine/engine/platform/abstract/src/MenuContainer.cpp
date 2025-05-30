@@ -33,7 +33,6 @@ const MenuItem* MenuContainer::getChild(size_t which) const
 
 void MenuContainer::registerItem(MenuItem* item, size_t index)
 {
-	assert(!item->parent);
-	item->parent = this;
+	assert( item->parent == this && std::find(children.begin(), children.end(), item) == children.end() );
 	children.insert(children.begin() + index, item);
 }

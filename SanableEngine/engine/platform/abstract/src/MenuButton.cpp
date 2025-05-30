@@ -16,5 +16,5 @@ void MenuButton::setCallback(std::function<void()> callback)
 
 void MenuButton::onClick() const
 {
-	callback();
+	if(callback) callback();
 }

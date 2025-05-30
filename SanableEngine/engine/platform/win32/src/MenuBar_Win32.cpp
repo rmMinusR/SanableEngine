@@ -20,8 +20,6 @@ MenuBar_Win32::MenuBar_Win32(Window_Win32* window) :
 
 	SetMenu(window->getNativeHandle(), nativeHandle);
 	DrawMenuBar(window->getNativeHandle());
-
-	// TODO register items for WM_COMMAND?
 }
 
 MenuBar_Win32::~MenuBar_Win32()

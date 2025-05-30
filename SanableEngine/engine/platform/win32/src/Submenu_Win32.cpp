@@ -37,9 +37,13 @@ Submenu_Win32::Submenu_Win32(HMENU root, MenuContainer* parent, size_t index, st
 
 Submenu_Win32::~Submenu_Win32()
 {
-	bool ok = RemoveMenu(root, native_id(), MF_BYCOMMAND);
-	assert(ok);
-	ok = DestroyMenu(submenuHandle);
+	while (!children.empty())
+	{
+		delete children.back();
+		// MenuItem erases itself from parent container
+	}
+
+	bool ok = RemoveMenu(root, native_id(), MF_BYCOMMAND); // Implies DestroyMenu(submenuHandle)
 	assert(ok);
 }
 
