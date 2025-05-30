@@ -19,6 +19,11 @@ MenuBar_Win32::MenuBar_Win32(Window_Win32* window) :
 	SetMenuInfo(nativeHandle, &options);
 
 	SetMenu(window->getNativeHandle(), nativeHandle);
+	redraw();
+}
+
+void MenuBar_Win32::redraw() const
+{
 	DrawMenuBar(window->getNativeHandle());
 }
 

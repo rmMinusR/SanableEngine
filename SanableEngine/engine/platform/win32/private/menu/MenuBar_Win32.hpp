@@ -19,4 +19,6 @@ public:
 	virtual MenuButton* addButton(std::wstring text, size_t index = 0) override;
 	virtual MenuDivider* addDivider(size_t index = 0) override;
 	virtual Submenu* addSubmenu(std::wstring text, size_t index = 0) override;
+
+	virtual void redraw() const override;
 };

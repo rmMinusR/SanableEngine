@@ -11,4 +11,6 @@ protected:
 	MenuBar(Window* window);
 public:
 	virtual ~MenuBar();
+
+	virtual void redraw() const = 0;
 };
