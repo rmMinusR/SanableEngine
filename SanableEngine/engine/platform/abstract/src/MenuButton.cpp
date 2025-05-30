@@ -13,3 +13,8 @@ void MenuButton::setCallback(std::function<void()> callback)
 {
 	this->callback = callback;
 }
+
+void MenuButton::onClick() const
+{
+	callback();
+}

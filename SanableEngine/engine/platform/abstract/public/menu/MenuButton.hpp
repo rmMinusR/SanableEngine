@@ -19,4 +19,5 @@ public:
 	virtual bool isEnabled() const = 0;
 
 	virtual void setCallback(std::function<void()> callback);
+	virtual void onClick() const;
 };

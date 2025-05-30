@@ -18,9 +18,14 @@ Submenu_Win32::Submenu_Win32(HMENU root, MenuContainer* parent, size_t index, st
 	this->root = root;
 
 	submenuHandle = CreatePopupMenu();
+	MENUINFO submenuOptions;
+	submenuOptions.cbSize = sizeof(submenuOptions);
+	submenuOptions.fMask = MIM_STYLE;
+	submenuOptions.dwStyle = MNS_NOTIFYBYPOS;
+	SetMenuInfo(submenuHandle, &submenuOptions);
 
 	MENUITEMINFOW info;
-	info.cbSize = sizeof(MENUITEMINFOW);
+	info.cbSize = sizeof(info);
 	info.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID | MIIM_SUBMENU;
 	info.fType = MFT_STRING;
 	info.dwTypeData = this->text.data();

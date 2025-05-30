@@ -44,4 +44,6 @@ public:
 	// PLATFORM SPECIFIC
 
 	HWND getNativeHandle();
+private:
+	void handleNativeEvent(UINT uMsg, WPARAM wParam, LPARAM lParam);
 };

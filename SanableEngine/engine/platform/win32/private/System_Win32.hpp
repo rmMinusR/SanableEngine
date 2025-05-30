@@ -66,6 +66,9 @@ namespace gpr460
 
 		std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
 		std::filesystem::path GetBaseDir() const override;
+
+	protected:
+		void handleNativeEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	};
 
 }

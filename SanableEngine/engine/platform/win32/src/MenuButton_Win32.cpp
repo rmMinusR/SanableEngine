@@ -15,9 +15,9 @@ MenuButton_Win32::MenuButton_Win32(HMENU root, MenuContainer* parent, size_t ind
 	this->root = root;
 
 	MENUITEMINFOW info;
-	info.cbSize = sizeof(MENUITEMINFOW);
+	info.cbSize = sizeof(info);
 	info.fMask = MIIM_DATA | MIIM_FTYPE | MIIM_STRING | MIIM_ID;
-	info.dwItemData = reinterpret_cast<ULONG_PTR>(this);
+	info.dwItemData = reinterpret_cast<ULONG_PTR>(static_cast<MenuItem*>(this));
 	info.fType = MFT_STRING;
 	info.dwTypeData = this->text.data();
 	info.cch = this->text.size();
@@ -40,7 +40,7 @@ void MenuButton_Win32::setEnabled(bool enable)
 bool MenuButton_Win32::isEnabled() const
 {
 	MENUITEMINFOW info;
-	info.cbSize = sizeof(MENUITEMINFOW);
+	info.cbSize = sizeof(info);
 	info.fMask = MIIM_STATE;
 	GetMenuItemInfoW(root, native_id(), FALSE, &info);
 

@@ -248,6 +248,13 @@ bool gpr460::System_Win32::isFocused(const Window* window)
 Window* gpr460::System_Win32::createWindow(const WindowSettings& settings, Application* engine)
 {
 	SDL_InitSubSystem(SDL_INIT_VIDEO); //Internally refcounted, no checks necessary
+	SDL_SetWindowsMessageHook(
+		+[](void* userdata, void* hWnd, unsigned int message, Uint64 wParam, Sint64 lParam)
+		{
+			static_cast<System_Win32*>(userdata)->handleNativeEvent((HWND)hWnd, message, wParam, lParam);
+		},
+		this
+	);
 
 	glSettings.apply();
 
@@ -284,4 +291,12 @@ size_t gpr460::System_Win32::getNumWindows() const
 Window* gpr460::System_Win32::getWindow(size_t which)
 {
 	return windows[which];
+}
+
+void gpr460::System_Win32::handleNativeEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	for (Window_Win32* w : windows)
+	{
+		if (w->getNativeHandle() == hwnd) w->handleNativeEvent(uMsg, wParam, lParam);
+	}
 }

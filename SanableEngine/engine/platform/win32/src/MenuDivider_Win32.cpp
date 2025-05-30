@@ -13,7 +13,7 @@ MenuDivider_Win32::MenuDivider_Win32(HMENU root, MenuContainer* parent, size_t i
 	this->root = root;
 
 	MENUITEMINFOW info;
-	info.cbSize = sizeof(MENUITEMINFOW);
+	info.cbSize = sizeof(info);
 	info.fMask = MIIM_FTYPE;
 	info.fType = MFT_MENUBREAK;
 	bool ok = InsertMenuItemW(root, index, TRUE, &info);

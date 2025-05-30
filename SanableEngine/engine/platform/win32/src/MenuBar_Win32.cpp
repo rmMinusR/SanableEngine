@@ -12,6 +12,12 @@ MenuBar_Win32::MenuBar_Win32(Window_Win32* window) :
 	window(window)
 {
 	nativeHandle = CreateMenu();
+	MENUINFO options;
+	options.cbSize = sizeof(options);
+	options.fMask = MIM_STYLE;
+	options.dwStyle = MNS_NOTIFYBYPOS;
+	SetMenuInfo(nativeHandle, &options);
+
 	SetMenu(window->getNativeHandle(), nativeHandle);
 	DrawMenuBar(window->getNativeHandle());
 

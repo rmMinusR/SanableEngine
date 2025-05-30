@@ -7,6 +7,7 @@
 #include "GLSettings.hpp"
 #include "GLContext.hpp"
 #include "menu/MenuBar_Win32.hpp"
+#include "menu/MenuButton.hpp"
 
 Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, SDL_Window* handle) :
     Window(settings, engine->getSystem(), engine),
@@ -107,4 +108,24 @@ HWND Window_Win32::getNativeHandle()
     SDL_VERSION(&wmInfo.version);
     SDL_GetWindowWMInfo(sdlHandle, &wmInfo);
     return wmInfo.info.win.window;
+}
+
+void Window_Win32::handleNativeEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_MENUCOMMAND)
+    {
+        // wParam = index, lParam = owning menu handle
+        MENUITEMINFOW info;
+        info.cbSize = sizeof(info);
+        info.fMask = MIIM_DATA;
+
+        bool ok = GetMenuItemInfoW((HMENU)lParam, wParam, TRUE, &info);
+        assert(ok);
+
+        MenuItem* clicked = (MenuItem*)info.dwItemData;
+        if (MenuButton* btn = dynamic_cast<MenuButton*>(clicked))
+        {
+            btn->onClick();
+        }
+    }
 }
