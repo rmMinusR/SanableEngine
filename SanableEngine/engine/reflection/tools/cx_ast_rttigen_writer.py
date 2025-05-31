@@ -59,9 +59,18 @@ class RttiGenerator(cx_ast_tooling.ASTConsumer):
                     .replace("GENERATED_RTTI", indent(renderedBody, ' '*4)) \
                     .replace("PUBLIC_CAST_DECLS", renderedPreDecls) \
                     .replace("INCLUDE_DEPENDENCIES", this.__renderIncludes())
+
+        shouldWrite = True
+        if os.path.exists(this.args_output):
+            with open(this.args_output, "r") as f:
+                prevGenerated = f.read()
+                shouldWrite = (prevGenerated != generated)
         
-        config.logger.user(f"Writing to {this.args_output}")
-        with open(this.args_output, "wt") as outputFile: outputFile.write(generated)
+        if shouldWrite:
+            config.logger.user(f"Writing to {this.args_output}")
+            with open(this.args_output, "wt") as outputFile: outputFile.write(generated)
+        else:
+            config.logger.user(f"Skipping write: same content for {this.args_output}")
 
     def __renderBody(this):
         forwardDecls = []
