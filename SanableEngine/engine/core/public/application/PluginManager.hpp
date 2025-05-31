@@ -53,7 +53,7 @@ public:
 	ENGINECORE_API void enumeratePlugins(const std::function<void(Plugin*)>& visitor);
 	ENGINECORE_API Plugin const* getPlugin(const std::wstring& name);
 	
-	ENGINECORE_API Plugin* discover(const std::filesystem::path& dllPath);
+	ENGINECORE_API Plugin* discover(const std::filesystem::path& pluginDir);
 
 	//These go to the command buffer
 	ENGINECORE_API void load(Plugin* plugin);

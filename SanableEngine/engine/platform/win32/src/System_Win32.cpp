@@ -6,7 +6,6 @@
 #include <crtdbg.h>
 
 #include <cassert>
-#include <sstream>
 #include <iostream>
 #include <chrono>
 #include <thread>
@@ -144,9 +143,7 @@ std::vector<std::filesystem::path> gpr460::System_Win32::ListPlugins(std::filesy
 
 	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
 	{
-		std::ostringstream joiner;
-		joiner << entry.filename().string() << ".dll"; //Build DLL name
-		contents.push_back(entry / joiner.str());
+		contents.push_back(entry);
 	}
 
 	return contents;

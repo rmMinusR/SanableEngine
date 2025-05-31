@@ -12,9 +12,10 @@
 
 #include <cassert>
 
-Plugin::Plugin(const std::filesystem::path& path) :
+Plugin::Plugin(const std::filesystem::path& path, SerialFile const* manifest) :
 	status(Status::NotLoaded),
 	reportedData(nullptr),
+	manifest(manifest),
 	path(path)
 {
 	dll = InvalidLibHandle;

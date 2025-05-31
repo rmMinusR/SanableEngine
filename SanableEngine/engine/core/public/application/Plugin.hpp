@@ -26,6 +26,7 @@ typedef void* LibHandle;
 class ModuleTypeRegistry;
 class Application;
 class PluginManager;
+class SerialFile;
 
 struct Plugin
 {
@@ -42,8 +43,9 @@ public:
 	} status;
 
 	PluginReportedData* reportedData;
+	SerialFile const* manifest; // Owned by PluginManager
 
-	Plugin(const std::filesystem::path& path);
+	Plugin(const std::filesystem::path& path, SerialFile const* manifest);
 	~Plugin();
 
 	Plugin(const Plugin& cpy) = delete;
