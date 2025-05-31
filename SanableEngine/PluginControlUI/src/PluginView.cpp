@@ -180,8 +180,7 @@ void PluginView::tick()
 {
 	if (!plugin) return;
 
-	std::filesystem::path relPath = std::filesystem::relative(plugin->getPath());
-	path->setText(relPath.wstring());
+	path->setText(std::filesystem::relative(plugin->getPluginDir()).wstring());
 
 	name->setText(plugin->reportedData ? plugin->reportedData->name : L"<unloaded>");
 

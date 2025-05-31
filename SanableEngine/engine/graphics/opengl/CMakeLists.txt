@@ -18,7 +18,7 @@ target_link_libraries("engine-graphics-opengl" PUBLIC engine-graphics-abstract e
 target_include_directories("engine-graphics-opengl" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 stix_extract_ast(engine-graphics-opengl ${CMAKE_CURRENT_LIST_DIR})
 
-export_resource(engine-graphics-opengl resources/ui/shaders/font/frag.glsl)
-export_resource(engine-graphics-opengl resources/ui/shaders/font/vert.glsl)
-export_resource(engine-graphics-opengl resources/ui/shaders/image/frag.glsl)
-export_resource(engine-graphics-opengl resources/ui/shaders/image/vert.glsl)
+export_resource(engine-graphics-opengl "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/shaders/font/frag.glsl)
+export_resource(engine-graphics-opengl "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/shaders/font/vert.glsl)
+export_resource(engine-graphics-opengl "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/shaders/image/frag.glsl)
+export_resource(engine-graphics-opengl "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/shaders/image/vert.glsl)

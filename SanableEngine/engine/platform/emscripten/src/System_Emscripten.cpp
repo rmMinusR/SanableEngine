@@ -6,7 +6,6 @@
 
 #include <iostream>
 #include <cassert>
-#include <sstream>
 
 #include "Application.hpp"
 
@@ -80,10 +79,7 @@ std::vector<std::filesystem::path> gpr460::System_Emscripten::ListPlugins(std::f
 
 	for (const std::filesystem::path& entry : std::filesystem::directory_iterator(path))
 	{
-		std::ostringstream joiner;
-		std::cout << "Found " << entry.string() << "\n";
-		joiner << entry.filename().string() << PLATFORM_DLL_EXTENSION; //Build DLL name
-		contents.push_back(entry / joiner.str());
+		contents.push_back(entry);
 	}
 
 	return contents;

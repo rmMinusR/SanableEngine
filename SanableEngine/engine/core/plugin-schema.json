@@ -1,0 +1,28 @@
+{
+    "$id": "https://rmMinusR.com/Sanable/plugin-schema.json",
+    "description": "A SanableEngine plugin",
+    "type": "object",
+    "properties": {
+
+        // Required:
+        "name": { "type": "string" },
+        "version": { "type": "string", "description": "Must follow semantic versioning" },
+
+        // Optional:
+        "description": { "type": "string" },
+        "dependencies": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": { "type": "string" },
+                    "minVersion": { "type": "string" },
+                    "maxVersion": { "type": "string" }
+                },
+                "required": [ "name", "minVersion" ]
+            }
+        }
+
+    },
+    "required": [ "name", "version" ]
+}

@@ -93,19 +93,28 @@ SET(sanableAllPlugins "")
 function(declare_plugin name sources_var)
     declare_dll(${name} "plugins/${name}" ${sources_var})
     install_dll(${name} "plugins/${name}")
+    export_resource(${name} "${CMAKE_CURRENT_LIST_DIR}" "plugins/${name}" "plugin.json")
     SET(sanableAllPlugins ${sanableAllPlugins} ${name} PARENT_SCOPE)
 
     stix_extract_ast(${name} ${CMAKE_CURRENT_LIST_DIR})
     stix_generate_reflection(${name})
 endfunction()
 
-function(export_resource libTarget fileRelPath)
+function(export_resource_ex target sourceAbsPath destRelPath)
     add_custom_command(
-        TARGET ${libTarget} POST_BUILD
+        TARGET ${target} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
-                ${CMAKE_CURRENT_LIST_DIR}/${fileRelPath}
-                ${CMAKE_CURRENT_BINARY_DIR}/${fileRelPath}
-        BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/${fileRelPath}
+                "${sourceAbsPath}"
+                "${CMAKE_CURRENT_BINARY_DIR}/${destRelPath}"
+        BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${destRelPath}"
     )
-    install(FILES "${CMAKE_CURRENT_LIST_DIR}/${fileRelPath}" DESTINATION "${fileRelPath}")
+    install(FILES "${sourceAbsPath}" DESTINATION "${destRelPath}")
+endfunction()
+
+function(export_resource target sourcePrefix destPrefix commonPath)
+    export_resource_ex(${target} "${sourcePrefix}/${commonPath}" "${destPrefix}/${commonPath}")
+endfunction()
+
+function(export_plugin_resource target sourcePrefix destPrefix commonPath)
+    export_resource_ex(${target} "${sourcePrefix}/${commonPath}" "plugins/${target}/${destPrefix}/${commonPath}")
 endfunction()

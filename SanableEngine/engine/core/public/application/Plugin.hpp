@@ -26,6 +26,7 @@ typedef void* LibHandle;
 class ModuleTypeRegistry;
 class Application;
 class PluginManager;
+class SerialFile;
 
 struct Plugin
 {
@@ -42,15 +43,18 @@ public:
 	} status;
 
 	PluginReportedData* reportedData;
+	SerialFile const* manifest; // Owned by PluginManager
 
-	Plugin(const std::filesystem::path& path);
+	Plugin(const std::filesystem::path& pluginDir, const std::wstring& dllSubpath, SerialFile const* manifest);
 	~Plugin();
 
 	Plugin(const Plugin& cpy) = delete;
 	Plugin(Plugin&& mov) noexcept;
 
 	ENGINECORE_API void* getSymbol(const char* name) const;
-	ENGINECORE_API std::filesystem::path getPath() const;
+	ENGINECORE_API std::filesystem::path getPluginDir() const;
+	ENGINECORE_API std::filesystem::path getDllPath() const;
+	ENGINECORE_API std::wstring getName() const;
 
 	ENGINECORE_API bool isCodeLoaded() const;
 	ENGINECORE_API bool isHooked() const;
@@ -66,7 +70,8 @@ public:
 private:
 	friend class PluginManager;
 
-	std::filesystem::path path;
+	std::filesystem::path pluginDir;
+	std::wstring dllSubpath;
 	LibHandle dll;
 	bool wasEverLoaded = false;
 	bool wasEverHooked = false;

@@ -10,6 +10,7 @@
 #include "System.hpp"
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
+#include "data/SerialFile.hpp"
 #include "MemoryRoot.hpp"
 #include "MemoryHeap.hpp"
 
@@ -32,12 +33,30 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 	}
 }
 
-Plugin* PluginManager::discover(const std::filesystem::path& dllPath)
+Plugin* PluginManager::discover(const std::filesystem::path& pluginDir)
 {
-	//Prevent double loads
-	assert(std::find_if(plugins.begin(), plugins.end(), [&](Plugin* i) { return i->getPath() == dllPath; }) == plugins.end());
+	// Build paths
+	std::wostringstream dllFilename;
+	dllFilename << pluginDir.filename().wstring() << PLATFORM_DLL_EXTENSION; // FIXME move to system
+	std::filesystem::path manifestPath = pluginDir / "plugin.json";
+	std::filesystem::path dllPath = pluginDir / dllFilename.str();
+
+	// Check paths exist
+	if (!std::filesystem::exists(manifestPath)) return nullptr; // Require manifest
+	SerialFile* manifest = new SerialFile(manifestPath);
+
+	// Prevent double loads
+	for (Plugin* p : plugins)
+	{
+		if (p->getPluginDir() == pluginDir)
+		{
+			assert(false && "Plugin would be double loaded");
+			return nullptr;
+		}
+	}
 	
-	Plugin* p = new Plugin(dllPath);
+	// Init and register
+	Plugin* p = new Plugin(pluginDir, dllFilename.str(), manifest);
 	plugins.push_back(p);
 	return p;
 }
@@ -65,7 +84,11 @@ void PluginManager::unhookAll(bool shutdown)
 
 void PluginManager::forgetAll()
 {
-	for (Plugin* p : plugins) delete p;
+	for (Plugin* p : plugins)
+	{
+		delete p->manifest;
+		delete p;
+	}
 	plugins.clear();
 }
 
@@ -146,7 +169,7 @@ Plugin const* PluginManager::getPlugin(const std::wstring& name)
 {
 	for (Plugin* p : plugins)
 	{
-		if (p->path == name) return p;
+		if (p->getName() == name) return p;
 		if (p->reportedData && p->reportedData->name == name) return p;
 	}
 	return nullptr;

@@ -12,10 +12,12 @@
 
 #include <cassert>
 
-Plugin::Plugin(const std::filesystem::path& path) :
+Plugin::Plugin(const std::filesystem::path& pluginDir, const std::wstring& dllSubpath, SerialFile const* manifest) :
 	status(Status::NotLoaded),
 	reportedData(nullptr),
-	path(path)
+	manifest(manifest),
+	pluginDir(pluginDir),
+	dllSubpath(dllSubpath)
 {
 	dll = InvalidLibHandle;
 }
@@ -28,11 +30,13 @@ Plugin::~Plugin()
 
 Plugin::Plugin(Plugin&& mov) noexcept
 {
-	path   = mov.path;
+	pluginDir = mov.pluginDir;
+	dllSubpath = mov.dllSubpath;
 	dll    = mov.dll;
 	status = mov.status;
 
-	mov.path.clear();
+	mov.pluginDir.clear();
+	mov.dllSubpath.clear();
 	mov.dll = InvalidLibHandle;
 	mov.status = Status::NotLoaded;
 }
@@ -48,9 +52,21 @@ void* Plugin::getSymbol(const char* name) const
 #endif
 }
 
-std::filesystem::path Plugin::getPath() const
+std::filesystem::path Plugin::getPluginDir() const
 {
-	return path;
+	return pluginDir;
+}
+
+std::filesystem::path Plugin::getDllPath() const
+{
+	return pluginDir/dllSubpath;
+}
+
+std::wstring Plugin::getName() const
+{
+	size_t sepIdx = dllSubpath.rfind(L'.');
+	if (sepIdx == std::wstring::npos) return dllSubpath;
+	else return dllSubpath.substr(0, sepIdx);
 }
 
 bool Plugin::isCodeLoaded() const
@@ -75,10 +91,10 @@ bool Plugin::load(Application const* context)
 
 	//Load code
 #ifdef _WIN32
-	dll = LoadLibraryW(path.c_str());
+	dll = LoadLibraryW(getDllPath().c_str());
 #endif
 #ifdef __EMSCRIPTEN__
-	dll = dlopen(path.c_str(), RTLD_LAZY);
+	dll = dlopen(getDllPath().c_str(), RTLD_LAZY);
 #endif
 
 	//If load failed, abort
@@ -105,12 +121,12 @@ bool Plugin::load(Application const* context)
 	//Validate
 	if (!entryPoints.report || !entryPoints.reportTypes)
 	{
-		wprintf(L"ERROR: Plugin %s is missing report points\n", path.filename().c_str());
+		wprintf(L"ERROR: Plugin %s is missing report points\n", dllSubpath.c_str());
 		return false;
 	}
 	if ((entryPoints.init==nullptr) != (entryPoints.cleanup==nullptr))
 	{
-		wprintf(L"ERROR: Plugin %s has mismatched hook points\n", path.filename().c_str());
+		wprintf(L"ERROR: Plugin %s has mismatched hook points\n", dllSubpath.c_str());
 		return false;
 	}
 	
@@ -123,7 +139,7 @@ bool Plugin::load(Application const* context)
 	ModuleTypeRegistry r;
 	entryPoints.reportTypes(&r);
 	GlobalTypeRegistry::loadModule(reportedData->name, r);
-	wprintf(L"Loaded RTTI for %u types from plugin %s\n", r.getTypes().size(), path.filename().c_str());
+	wprintf(L"Loaded RTTI for %u types from plugin %s\n", r.getTypes().size(), dllSubpath.c_str());
 	
 	//If reloading, set release hooks
 	if (wasEverLoaded)
