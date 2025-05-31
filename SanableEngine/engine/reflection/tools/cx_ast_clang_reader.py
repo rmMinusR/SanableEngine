@@ -605,12 +605,15 @@ if __name__ == "__main__":
     config.logger.info("Loading cache")
     cx_parser.configure()
     cx_parser.loadPrevOutput()
+    
     config.logger.user(str(cx_parser.diff))
+    if len(cx_parser.diff.outdated) == 0 and len(cx_parser.diff.new) == 0 and len(cx_parser.diff.removed) == 0:
+        config.logger.user("Skipping parsing: no changes have been made")
+    else:
+        config.logger.user("Parsing")
+        timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
+        cx_parser.ingest()
     
-    config.logger.user("Parsing")
-    timings.switchTask(timings.TASK_ID_WALK_AST_INTERNAL)
-    cx_parser.ingest()
-    
-    config.logger.info("Finalizing")
-    timings.switchTask(timings.TASK_ID_FINALIZE)
-    cx_parser.saveOutput()
+        config.logger.info("Finalizing")
+        timings.switchTask(timings.TASK_ID_FINALIZE)
+        cx_parser.saveOutput()
