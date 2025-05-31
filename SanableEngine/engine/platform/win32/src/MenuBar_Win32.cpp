@@ -29,6 +29,7 @@ void MenuBar_Win32::redraw() const
 
 MenuBar_Win32::~MenuBar_Win32()
 {
+	MenuContainer::clear();
 	DestroyMenu(nativeHandle);
 }
 

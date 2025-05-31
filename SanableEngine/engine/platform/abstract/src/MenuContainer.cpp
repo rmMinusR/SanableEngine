@@ -36,3 +36,13 @@ void MenuContainer::registerItem(MenuItem* item, size_t index)
 	assert( item->parent == this && std::find(children.begin(), children.end(), item) == children.end() );
 	children.insert(children.begin() + index, item);
 }
+
+void MenuContainer::clear()
+{
+	for (int i = children.size(); i > 0; --i)
+	{
+		delete children[i-1];
+		// MenuItem erases itself from parent container
+	}
+	assert(children.empty());
+}

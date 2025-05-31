@@ -14,8 +14,9 @@ MenuDivider_Win32::MenuDivider_Win32(HMENU root, MenuContainer* parent, size_t i
 
 	MENUITEMINFOW info;
 	info.cbSize = sizeof(info);
-	info.fMask = MIIM_FTYPE;
+	info.fMask = MIIM_FTYPE | MIIM_ID;
 	info.fType = MFT_MENUBREAK;
+	info.wID = native_id();
 	bool ok = InsertMenuItemW(root, index, TRUE, &info);
 	assert(ok);
 }

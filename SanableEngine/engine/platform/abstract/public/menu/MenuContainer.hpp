@@ -19,6 +19,7 @@ protected:
 	MenuContainer();
 
 	virtual void registerItem(MenuItem* item, size_t index); // Internal helper
+	virtual void clear();
 
 public:
 	virtual ~MenuContainer();
