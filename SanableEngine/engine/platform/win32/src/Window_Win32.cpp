@@ -1,9 +1,12 @@
 #include "Window_Win32.hpp"
 
 #include <SDL.h>
+#include <SDL_syswm.h>
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 #include "GLContext.hpp"
+#include "menu/MenuBar_Win32.hpp"
+#include "menu/MenuButton.hpp"
 
 Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, SDL_Window* handle) :
     Window(settings, engine->getSystem(), engine),
@@ -17,6 +20,12 @@ Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, 
 
 Window_Win32::~Window_Win32()
 {
+    if (menuBar)
+    {
+        delete menuBar;
+        menuBar = nullptr;
+    }
+    
     if (sdlHandle)
     {
         SDL_DestroyWindow(sdlHandle);
@@ -76,4 +85,46 @@ void Window_Win32::draw() const
 
     //Swap back buffer
     SDL_GL_SwapWindow(sdlHandle);
+}
+
+MenuBar* Window_Win32::getMenuBar(bool create)
+{
+    if (create && !menuBar)
+    {
+        menuBar = new MenuBar_Win32(this);
+    }
+    return menuBar;
+}
+
+const MenuBar* Window_Win32::getMenuBar() const
+{
+    return menuBar;
+}
+
+HWND Window_Win32::getNativeHandle()
+{
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    SDL_GetWindowWMInfo(sdlHandle, &wmInfo);
+    return wmInfo.info.win.window;
+}
+
+void Window_Win32::handleNativeEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    if (uMsg == WM_MENUCOMMAND)
+    {
+        // wParam = index, lParam = owning menu handle
+        MENUITEMINFOW info;
+        info.cbSize = sizeof(info);
+        info.fMask = MIIM_DATA;
+
+        bool ok = GetMenuItemInfoW((HMENU)lParam, wParam, TRUE, &info);
+        assert(ok);
+
+        MenuItem* clicked = (MenuItem*)info.dwItemData;
+        if (MenuButton* btn = dynamic_cast<MenuButton*>(clicked))
+        {
+            btn->onClick();
+        }
+    }
 }
