@@ -1,32 +1,45 @@
-#include "game/GameWindowRenderPipeline.hpp"
+#include "game/GameWindowDispatcher.hpp"
 
-#include <unordered_map>
-#include <GL/glew.h>
+#include <SDL_events.h>
+
 #include "Window.hpp"
+#include "application/Application.hpp"
 #include "game/Game.hpp"
-#include "game/Level.hpp"
 #include "game/CameraComponent.hpp"
+#include "game/InputSystem.hpp"
 #include "Renderer.hpp"
 #include "Material.hpp"
 #include "ShaderProgram.hpp"
-#include "MemoryRoot.hpp"
 
-GameWindowRenderPipeline::GameWindowRenderPipeline(Game* game) :
+GameWindowDispatcher::GameWindowDispatcher(Game* game) :
 	game(game),
 	hud(game->getApplication())
 {
 }
 
-GameWindowRenderPipeline::~GameWindowRenderPipeline()
+GameWindowDispatcher::~GameWindowDispatcher()
 {
 }
 
-void GameWindowRenderPipeline::setup(Window* window)
+void GameWindowDispatcher::handleEvent(SDL_Event& ev)
 {
-	WindowRenderPipeline::setup(window);
-}
+	if (ev.type == SDL_WINDOWEVENT)
+	{
+		switch (ev.window.event)
+		{
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			game->getInput()->onGainFocus();
+			break;
 
-void GameWindowRenderPipeline::render(Rect<float> viewport)
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+			game->getInput()->onLoseFocus();
+			break;
+		}
+	}
+
+	//game->getInput()->handleEvent(ev);
+}
+void GameWindowDispatcher::render(Rect<float> viewport)
 {
 	Renderer* renderInterface = window->getRenderer();
 
@@ -46,13 +59,13 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 	std::unordered_map<
 		const ShaderProgram*, //Group by shader
 		std::unordered_map<
-			const Material*, //Then by material
-			std::vector<const I3DRenderable*>
+		const Material*, //Then by material
+		std::vector<const I3DRenderable*>
 		>
 	> renderables; //Note: No need for a CallBatcher here, we're guaranteed renderables will be grouped by level, then type since our data source is a CallBatcher
 	auto registerRenderable = [&](const I3DRenderable* r) { renderables[r->getShader()][r->getMaterial()].push_back(r); };
 	game->visitLevels([&](Level* level) { level->get3DRenderables()->staticCall(registerRenderable); });
-	
+
 	ShaderUniform::GlobalData globalUniformData = renderInterface->getCurGlobalData();
 
 	//Process buffer
@@ -60,7 +73,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 	{
 		//Activate (or clear) shader and write global uniforms
 		renderInterface->setActiveShader(shaderGroup.first);
-		if(shaderGroup.first) shaderGroup.first->writeSharedUniforms(renderInterface, globalUniformData);
+		if (shaderGroup.first) shaderGroup.first->writeSharedUniforms(renderInterface, globalUniformData);
 
 		for (const auto& materialGroup : shaderGroup.second)
 		{
@@ -80,7 +93,7 @@ void GameWindowRenderPipeline::render(Rect<float> viewport)
 			}
 		}
 	}
-	
+
 	hud.refreshLayout(viewport);
 	hud.tick(); //FIXME logic shouldn't be in render, move elsewhere
 	hud.render(renderInterface);

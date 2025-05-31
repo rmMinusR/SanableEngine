@@ -5,8 +5,7 @@
 #include "MemoryRoot.hpp"
 #include "application/Application.hpp"
 #include "game/Game.hpp"
-#include "game/GameWindowRenderPipeline.hpp"
-#include "game/GameWindowInputProcessor.hpp"
+#include "game/GameWindowDispatcher.hpp"
 #include "System_Win32.hpp"
 #include "GLSettings.hpp"
 
@@ -26,8 +25,7 @@ int main(int argc, char* argv[])
     //Init
     {
         WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
-        mainWindowSettings.renderPipeline = new GameWindowRenderPipeline(&game);
-        mainWindowSettings.inputProcessor = new GameWindowInputProcessor(&game);
+        mainWindowSettings.userLogic = new GameWindowDispatcher(&game);
         engine.init(&game, mainWindowSettings, system);
     }
 

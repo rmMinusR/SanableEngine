@@ -2,8 +2,7 @@
 
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
-#include "gui/WindowGUIRenderPipeline.hpp"
-#include "gui/WindowGUIInputProcessor.hpp"
+#include "gui/GUIWindowDispatcher.hpp"
 #include "gui/ImageWidget.hpp"
 #include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
@@ -43,11 +42,10 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     {
         {
             WindowSettings windowSettings("Plugin Control", 800, 600);
-            WindowGUIRenderPipeline* renderer = new WindowGUIRenderPipeline(game->getApplication());
-            windowSettings.renderPipeline = renderer;
-            ctlGuiRoot = &renderer->hud;
-            windowSettings.inputProcessor = new WindowGUIInputProcessor(ctlGuiRoot, 5);
+            GUIWindowDispatcher* windowLogic = new GUIWindowDispatcher(game->getApplication(), 5);
+            windowSettings.userLogic = windowLogic;
             ctlWindow = game->getApplication()->buildWindow(windowSettings);
+            ctlGuiRoot = &windowLogic->hud;
         }
 
         //Resource loading must be done after creating Window or we get code 1282 (invalid operation)

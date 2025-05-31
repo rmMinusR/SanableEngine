@@ -1,7 +1,6 @@
 #include "Window_Win32.hpp"
 
 #include <SDL.h>
-#include "WindowRenderPipeline.hpp"
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 #include "GLContext.hpp"

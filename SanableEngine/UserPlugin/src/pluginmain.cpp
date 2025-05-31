@@ -18,7 +18,6 @@
 #include "game/MeshRenderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
-#include "game/GameWindowRenderPipeline.hpp"
 
 Application* application;
 Level* level;

@@ -4,7 +4,6 @@
 #include "Window.hpp"
 #include "OpenGlRenderer.hpp"
 
-class WindowInputProcessor;
 struct GLSettings;
 template<typename T> struct thunk_utils;
 namespace gpr460 { class System_Win32; }
@@ -17,7 +16,6 @@ private:
 	void draw() const override;
 
 	int sdlID;
-	friend class WindowInputProcessor;
 
 	Window_Win32(const WindowSettings& settings, Application* engine, SDL_Window* handle);
 	virtual ~Window_Win32();

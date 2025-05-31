@@ -18,8 +18,7 @@
 #include "application/Application.hpp"
 #include "Window.hpp"
 #include "Renderer.hpp"
-#include "gui/WindowGUIInputProcessor.hpp"
-#include "gui/WindowGUIRenderPipeline.hpp"
+#include "gui/GUIWindowDispatcher.hpp"
 #include "TypeLayoutView.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
@@ -121,9 +120,8 @@ void PluginView::tryInit()
 				ss << name << ": " << initialInspectedType->name.as_str();
 
 				WindowSettings windowSettings(ss.str(), 36 * 8, 36 * (int)std::ceil(initialInspectedType->layout.size / 8.0f)); //TODO remove magic numbers
-				WindowGUIRenderPipeline* renderPipeline = new WindowGUIRenderPipeline(hud->getApplication());
-				windowSettings.renderPipeline = renderPipeline;
-				windowSettings.inputProcessor = new WindowGUIInputProcessor(&renderPipeline->hud, 5);
+				GUIWindowDispatcher* windowLogic = new GUIWindowDispatcher(hud->getApplication(), 5);
+				windowSettings.userLogic = windowLogic;
 				Window* window = hud->getApplication()->buildWindow(windowSettings);
 				
 				//FIXME use shared rendering context instead
@@ -144,7 +142,7 @@ void PluginView::tryInit()
 				Font* fieldFont = new Font("resources/ui/fonts/arial.ttf", 12);
 				
 				//TODO add dropdown selector for types
-				TypeInfoView* v = renderPipeline->hud.addWidget<TypeInfoView>(initialInspectedType, imageMat, rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
+				TypeInfoView* v = windowLogic->hud.addWidget<TypeInfoView>(initialInspectedType, imageMat, rttiFieldSprite, rttiFieldSprite, textMat, fieldFont);
 				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);

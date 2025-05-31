@@ -5,13 +5,11 @@
 WindowSettings::WindowSettings(const std::string& name, int width, int height) :
 	name(name),
 	size(width, height),
-	renderPipeline(nullptr),
-	inputProcessor(nullptr)
+	userLogic(nullptr)
 {
 }
 
 WindowSettings::~WindowSettings()
 {
-	assert(!renderPipeline && "Resource leak!");
-	assert(!inputProcessor && "Resource leak!");
+	assert(!userLogic && "Resource leak!");
 }

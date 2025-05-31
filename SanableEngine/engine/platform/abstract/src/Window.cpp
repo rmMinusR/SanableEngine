@@ -2,19 +2,17 @@
 
 #include "System.hpp"
 #include "WindowSettings.hpp"
-#include "WindowInputProcessor.hpp"
-#include "WindowRenderPipeline.hpp"
+#include "WindowUserLogic.hpp"
 
 void Window::handleEvent(SDL_Event& ev)
 {
-	if (inputProcessor) inputProcessor->handleEvent(ev);
+	if (userLogic) userLogic->handleEvent(ev);
 }
 
 Window::Window(const WindowSettings& settings, gpr460::System* system, void* context) :
 	system(system),
 	context(context),
-	renderPipeline(settings.renderPipeline),
-	inputProcessor(settings.inputProcessor),
+	userLogic(settings.userLogic),
 	closeRequested(false)
 {
 }
@@ -23,26 +21,15 @@ Window::~Window()
 {
 }
 
-WindowRenderPipeline* Window::getRenderPipeline()
+WindowUserLogic* Window::getUserLogic()
 {
-	return renderPipeline;
+	return userLogic;
 }
 
-WindowInputProcessor* Window::getInputProcessor()
+void Window::setUserLogic(WindowUserLogic* v)
 {
-	return inputProcessor;
-}
-
-void Window::setRenderPipeline(WindowRenderPipeline* v)
-{
-	if (renderPipeline) delete renderPipeline;
-	renderPipeline = v;
-}
-
-void Window::setInputProcessor(WindowInputProcessor* v)
-{
-	if (inputProcessor) delete inputProcessor;
-	inputProcessor = v;
+	if (userLogic) delete userLogic;
+	userLogic = v;
 }
 
 bool Window::isFocused() const
@@ -52,8 +39,8 @@ bool Window::isFocused() const
 
 void Window::draw() const
 {
-	if (renderPipeline)
+	if (userLogic)
 	{
-		renderPipeline->render({ Vector2f(0,0), (Vector2f)getSize() });
+		userLogic->render({ Vector2f(0,0), (Vector2f)getSize() });
 	}
 }

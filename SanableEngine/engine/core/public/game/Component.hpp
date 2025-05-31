@@ -42,7 +42,7 @@ public:
 
 class Material;
 class ShaderProgram;
-class GameWindowRenderPipeline;
+class GameWindowDispatcher;
 class Renderer;
 class I3DRenderable
 {
@@ -53,7 +53,7 @@ protected:
 	virtual void loadModelTransform(Renderer* renderer) const = 0;
 	virtual ShaderUniform::ObjectData getRenderedInstanceUniforms() const = 0;
 	virtual void renderImmediate(Renderer*) const = 0;
-	friend class GameWindowRenderPipeline;
+	friend class GameWindowDispatcher;
 public:
 	ENGINECORE_API virtual ~I3DRenderable();
 };

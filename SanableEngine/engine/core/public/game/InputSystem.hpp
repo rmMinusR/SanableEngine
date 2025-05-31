@@ -4,12 +4,12 @@
 #include "../dllapi.h"
 #include "math/Vector3.inl"
 
-class GameWindowInputProcessor;
+class GameWindowDispatcher;
 class Game;
 
 class InputSystem
 {
-	friend class GameWindowInputProcessor;
+	friend class GameWindowDispatcher;
 	void onGainFocus();
 	void onLoseFocus();
 	char focused = 0;

@@ -8,8 +8,7 @@
 #include "GlobalTypeRegistry.hpp"
 #include "System.hpp"
 #include "Window.hpp"
-#include "WindowInputProcessor.hpp"
-#include "WindowRenderPipeline.hpp"
+#include "WindowUserLogic.hpp"
 #include "game/Game.hpp"
 #include "MemoryRoot.hpp"
 
@@ -168,11 +167,9 @@ Window* Application::buildWindow(WindowSettings& settings)
 {
     Window* window = system->createWindow(settings, this);
 	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
-	window->renderPipeline->setup(window);
-	if (window->inputProcessor) window->inputProcessor->setup(window);
+	window->userLogic->setup(window);
 
-    settings.renderPipeline = nullptr;
-    settings.inputProcessor = nullptr;
+    settings.userLogic = nullptr;
 
 	return window;
 }

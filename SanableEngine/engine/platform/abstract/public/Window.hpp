@@ -8,8 +8,7 @@ union SDL_Event;
 struct SDL_Window;
 
 class Renderer;
-class WindowInputProcessor;
-class WindowRenderPipeline;
+class WindowUserLogic;
 struct WindowSettings;
 template<typename T> struct thunk_utils;
 namespace gpr460 { class System; }
@@ -17,8 +16,7 @@ namespace gpr460 { class System; }
 class Window
 {
 protected:
-	WindowRenderPipeline* renderPipeline;
-	WindowInputProcessor* inputProcessor;
+	WindowUserLogic* userLogic;
 
 	bool closeRequested;
 
@@ -33,8 +31,7 @@ protected:
 	virtual ~Window(); // Only System may call this
 	friend struct thunk_utils<Window>;
 public:
-	virtual WindowRenderPipeline* getRenderPipeline();
-	virtual WindowInputProcessor* getInputProcessor();
+	virtual WindowUserLogic* getUserLogic();
 	void* getContext() { return context; }
 	gpr460::System* getSystem() { return system; }
 
@@ -48,6 +45,5 @@ public:
 	virtual Vector2<int> getSize() const = 0;
 	virtual bool wasCloseRequested() const = 0;
 
-	virtual void setRenderPipeline(WindowRenderPipeline* v); //Note: Does NOT destroy old render pipeline, if it exists
-	virtual void setInputProcessor(WindowInputProcessor* v); //Note: Does NOT destroy old input processor, if it exists
+	virtual void setUserLogic(WindowUserLogic* v); //Note: Destroys old handler, if it exists
 };

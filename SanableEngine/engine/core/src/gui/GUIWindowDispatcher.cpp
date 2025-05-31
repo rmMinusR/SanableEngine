@@ -1,13 +1,14 @@
-#include "gui/WindowGUIInputProcessor.hpp"
+#include "gui/GUIWindowDispatcher.hpp"
 
 #include <SDL_events.h>
 
 #include "math/Vector2.inl"
-#include "gui/HUD.hpp"
 #include "Window.hpp"
+#include "Camera.hpp"
+#include "Renderer.hpp"
 
-WindowGUIInputProcessor::WindowGUIInputProcessor(HUD* hud, float minDragDistance) :
-	hud(hud),
+GUIWindowDispatcher::GUIWindowDispatcher(Application* application, float minDragDistance) :
+	hud(application),
 	currentlyHovered(nullptr),
 	mouseDownWidget(nullptr),
 	mouseDownPos(),
@@ -16,21 +17,24 @@ WindowGUIInputProcessor::WindowGUIInputProcessor(HUD* hud, float minDragDistance
 {
 }
 
-WindowGUIInputProcessor::~WindowGUIInputProcessor()
+GUIWindowDispatcher::~GUIWindowDispatcher()
 {
 }
 
-void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
+void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
 {
-	WindowInputProcessor::handleEvent(ev);
+	if (ev.type == SDL_EventType::SDL_MOUSEMOTION)
+	{
+		lastKnownMousePos.set(ev.motion.x, ev.motion.y);
+	}
 
-	Vector2f mousePos = getMousePos();
+	Vector2f mousePos = lastKnownMousePos;
 
 	//Update currently-hovered widget
 	//Only perform if event is in mouse family, or window focus
 	if (ev.type == SDL_EventType::SDL_MOUSEMOTION || ev.type == SDL_EventType::SDL_WINDOWEVENT)
 	{
-		Widget* _newHover = hud->raycastClosest(mousePos);
+		Widget* _newHover = hud.raycastClosest(mousePos);
 		if (currentlyHovered != _newHover)
 		{
 			if (currentlyHovered) currentlyHovered->onMouseExit(mousePos);
@@ -106,7 +110,23 @@ void WindowGUIInputProcessor::handleEvent(SDL_Event& ev)
 	}
 }
 
-void WindowGUIInputProcessor::setPassthrough(std::unique_ptr<WindowInputProcessor>&& newPassthrough)
+void GUIWindowDispatcher::setEventPassthrough(std::unique_ptr<WindowUserLogic>&& newPassthrough)
 {
 	passthrough = std::move(newPassthrough);
+}
+
+void GUIWindowDispatcher::render(Rect<float> viewport)
+{
+	Renderer* renderer = window->getRenderer();
+
+	Camera cam;
+	cam.setGUIProj();
+	renderer->beginFrame(cam, viewport, { 0,0,0 }, glm::identity<glm::quat>());
+
+	renderer->clear({ 0, 0, 0, 1 });
+
+	//Tick and render GUI
+	hud.refreshLayout(viewport);
+	hud.tick();
+	hud.render(window->getRenderer());
 }
