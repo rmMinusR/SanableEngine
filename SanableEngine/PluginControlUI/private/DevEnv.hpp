@@ -1,9 +1,11 @@
 #pragma once
 
 #include <string>
+#include <future>
 
 namespace DevEnv
 {
 	bool detect();
-	void build(const std::wstring& targetName);
+	bool build(const std::wstring& targetName);
+	std::future<bool> buildAsync(const std::wstring& targetName);
 }
