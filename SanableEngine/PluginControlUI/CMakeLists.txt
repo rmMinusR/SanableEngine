@@ -21,3 +21,15 @@ export_plugin_resource(PluginControlUI "${CMAKE_CURRENT_LIST_DIR}" "" resources/
 export_plugin_resource(PluginControlUI "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/field.png)
 export_plugin_resource(PluginControlUI "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/parent.png)
 export_plugin_resource(PluginControlUI "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/fonts/arial.ttf)
+
+# Export dev manifest
+option(ENABLE_DEV_ENV "Enable development environment integrations" TRUE)
+if(ENABLE_DEV_ENV)
+	get_target_property(installLoc PluginControlUI RUNTIME_OUTPUT_DIRECTORY)
+	file(WRITE "${installLoc}/dev_env.json"
+"{
+	\"sourcePath\": \"${CMAKE_SOURCE_DIR}\",
+	\"buildPath\": \"${CMAKE_BINARY_DIR}\"
+}"
+	)
+endif()

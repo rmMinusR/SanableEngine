@@ -11,18 +11,19 @@
 #include "gui/UISprite.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/VerticalGroupWidget.hpp"
-#include "Resources.hpp"
 #include "application/Plugin.hpp"
 #include "application/PluginManager.hpp"
-#include "TypeLayoutView.hpp"
 #include "application/Application.hpp"
 #include "Window.hpp"
 #include "Renderer.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
-#include "TypeLayoutView.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 #include "Font.hpp"
+
+#include "TypeLayoutView.hpp"
+#include "Resources.hpp"
+#include "DevEnv.hpp"
 
 void PluginView::tryInit()
 {
@@ -71,6 +72,23 @@ void PluginView::tryInit()
 
 
 		ButtonWidget::SpriteSet buttonSprites = { Resources::buttonNormalSprite, Resources::buttonPressedSprite, Resources::buttonDisabledSprite };
+
+		if (DevEnv::detect())
+		{
+			imgDevRebuildBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
+			lblDevRebuild = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
+			lblDevRebuild->setText("Build");
+			lblDevRebuild->align = Vector2f(0.5f, 0.5f);
+			btnDevRebuild = hud->addWidget<ButtonWidget>(imgDevRebuildBg, buttonSprites);
+			btnDevRebuild->getTransform()->setParent(statusLine->getTransform());
+			btnDevRebuild->getContentSocket()->put(lblDevRebuild);
+			btnDevRebuild->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight = 3;
+			btnDevRebuild->setCallback(
+				[&]() {
+					DevEnv::build(plugin->getName());
+				}
+			);
+		}
 
 		imgToggleLoadedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
 		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
@@ -150,17 +168,7 @@ void PluginView::tryInit()
 }
 
 PluginView::PluginView(HUD* hud) :
-	Widget(hud),
-	plugin(nullptr),
-	path(nullptr),
-	name(nullptr),
-	status(nullptr),
-	btnToggleLoaded(nullptr),
-	btnToggleHooked(nullptr),
-	imgToggleLoadedBg(nullptr),
-	imgToggleHookedBg(nullptr),
-	lblToggleLoaded(nullptr),
-	lblToggleHooked(nullptr)
+	Widget(hud)
 {	
 }
 
@@ -196,6 +204,8 @@ void PluginView::tick()
 
 			default: assert(false); break;
 		}
+
+		if(btnDevRebuild) btnDevRebuild->setState(plugin->status < Plugin::Status::DllLoaded ? UIState::Normal : UIState::Disabled);
 
 		btnToggleLoaded->setState(plugin->status != Plugin::Status::Hooked ? UIState::Normal : UIState::Disabled);
 		btnToggleHooked->setState(plugin->status >= Plugin::Status::Registered ? UIState::Normal : UIState::Disabled);

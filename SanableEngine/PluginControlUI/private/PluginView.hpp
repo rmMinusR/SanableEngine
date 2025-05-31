@@ -11,25 +11,29 @@ class ImageWidget;
 
 class PluginView : public Widget
 {
-	PluginManager* mgr;
-	Plugin* plugin;
+	PluginManager* mgr = nullptr;
+	Plugin* plugin = nullptr;
 	Plugin::Status lastKnownStatus;
 
-	LabelWidget* path;
-	LabelWidget* name;
-	LabelWidget* status;
-	
-	ButtonWidget* btnToggleLoaded;
-	ImageWidget* imgToggleLoadedBg;
-	LabelWidget* lblToggleLoaded;
+	LabelWidget* path = nullptr;
+	LabelWidget* name = nullptr;
+	LabelWidget* status = nullptr;
 
-	ButtonWidget* btnToggleHooked;
-	ImageWidget* imgToggleHookedBg;
-	LabelWidget* lblToggleHooked;
+	ButtonWidget* btnDevRebuild = nullptr;
+	ImageWidget* imgDevRebuildBg = nullptr;
+	LabelWidget* lblDevRebuild = nullptr;
 	
-	ButtonWidget* btnInspectTypes;
-	ImageWidget* imgInspectTypesBg;
-	LabelWidget* lblInspectTypes;
+	ButtonWidget* btnToggleLoaded = nullptr;
+	ImageWidget* imgToggleLoadedBg = nullptr;
+	LabelWidget* lblToggleLoaded = nullptr;
+
+	ButtonWidget* btnToggleHooked = nullptr;
+	ImageWidget* imgToggleHookedBg = nullptr;
+	LabelWidget* lblToggleHooked = nullptr;
+	
+	ButtonWidget* btnInspectTypes = nullptr;
+	ImageWidget* imgInspectTypesBg = nullptr;
+	LabelWidget* lblInspectTypes = nullptr;
 
 	//TODO RTTI status + details button
 
