@@ -7,6 +7,8 @@
 #include "application/Plugin.hpp"
 #include "game/Game.hpp"
 #include "System.hpp"
+#include "data/SerialFile.hpp"
+#include "data/SerialNode.hpp"
 
 // FIXME move to System
 
@@ -22,27 +24,30 @@ bool DevEnv::detect()
 
 std::future<bool> DevEnv::buildAsync(const std::wstring& targetName)
 {
-	return std::async(build, targetName);
+	// Force a copy to persist while the process runs, otherwise we risk a dangling reference
+	return std::async(+[](std::wstring targetName) { return build(targetName); }, targetName);
 }
 
 bool DevEnv::build(const std::wstring& targetName)
 {
-	STARTUPINFOW startup;
+	SerialFile env(plugin->getPluginDir() / "dev_env.json");
+
+	std::wstring cmakePath = static_cast<const SerialString*>( static_cast<const SerialObject*>(env.getRootNode())->get(L"cmakePath") )->value();
+	std::wstring cmakeArgs = (std::wostringstream() << "--build . --target " << targetName).str();
+	std::wstring workDir = game->getApplication()->getSystem()->GetBaseDir().wstring();
+
+	STARTUPINFOW startup = { 0 };
 	startup.cb = sizeof(startup);
-
-	std::wostringstream cliExpr;
-	cliExpr << L"cmake --build . -t \"" << targetName << L'"';
-
-	PROCESS_INFORMATION proc;
+	
+	PROCESS_INFORMATION proc = { 0 };
 	bool ok = CreateProcessW(
-		cliExpr.str().c_str(),
-		NULL,
-		NULL, // proc security
-		NULL, // thread security
+		cmakePath.c_str(),
+		cmakeArgs.data(),
+		NULL, NULL, // proc/thread security
 		FALSE,
-		NORMAL_PRIORITY_CLASS | CREATE_NEW_CONSOLE,
+		NORMAL_PRIORITY_CLASS,
 		NULL, // env vars
-		game->getApplication()->getSystem()->GetBaseDir().wstring().c_str(),
+		workDir.c_str(),
 		&startup,
 		&proc
 	);
@@ -73,7 +78,7 @@ bool DevEnv::build(const std::wstring& targetName)
 		assert(false);
 		return false;
 	}
-
+	
 	return exitCode == 0;
 }
 

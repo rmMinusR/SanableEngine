@@ -83,7 +83,7 @@ public:
 	ENGINEMEM_API TypeName getContentsTypeName() const;
 
 	template<typename TObj>
-	[[nodiscard]] static GenericTypedMemoryPool* create(size_t maxNumObjects = 64)
+	[[nodiscard]] static GenericTypedMemoryPool* create(size_t maxNumObjects = 128)
 	{
 		const TypeInfo* existing = GlobalTypeRegistry::lookupType(TypeName::create<TObj>());
 		return new GenericTypedMemoryPool(

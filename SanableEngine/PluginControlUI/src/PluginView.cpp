@@ -85,6 +85,7 @@ void PluginView::tryInit()
 			btnDevRebuild->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight = 3;
 			btnDevRebuild->setCallback(
 				[&]() {
+					wprintf(L"Rebuilding '%s'", plugin->getName().c_str());
 					DevEnv::build(plugin->getName());
 				}
 			);

@@ -90,6 +90,11 @@ SerialString* SerialString::parseJson(std::wistream& in)
 	return new SerialString(jsonCaptureString(in));
 }
 
+const std::wstring& SerialString::value() const
+{
+	return contents;
+}
+
 SerialNumber::SerialNumber(contents_t contents) :
 	contents(contents)
 {
@@ -120,6 +125,16 @@ readNext:
 	if (isDecimal) out = std::stof(buf.str());
 	else		   out = std::stoi(buf.str());
 	return new SerialNumber(out);
+}
+
+const float* SerialNumber::floatValue() const
+{
+	return std::get_if<float>(&contents);
+}
+
+const int* SerialNumber::intValue() const
+{
+	return std::get_if<int>(&contents);
 }
 
 SerialObject::SerialObject(contents_t contents) :
@@ -166,6 +181,15 @@ parseNext:
 	return new SerialObject(contents);
 }
 
+const SerialNode* SerialObject::get(const std::wstring& key) const
+{
+	for (const auto& kv : contents)
+	{
+		if (kv.first == key) return kv.second;
+	}
+	return nullptr;
+}
+
 SerialArray::SerialArray(contents_t contents) :
 	contents(contents)
 {
@@ -201,4 +225,15 @@ parseNext:
 		assert(false);
 		return nullptr;
 	}
+}
+
+const SerialNode* SerialArray::get(size_t key) const
+{
+	assert(key < contents.size());
+	return contents[key];
+}
+
+size_t SerialArray::size() const
+{
+	return contents.size();
 }

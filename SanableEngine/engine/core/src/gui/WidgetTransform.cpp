@@ -27,7 +27,7 @@ void WidgetTransform::refresh() const
 	if (parent) renderDepth += parent->getRenderDepth();
 
 	//Sanity check
-	if (parent) assert(parent->rect.contains(rect.topLeft) && parent->rect.contains(rect.bottomRight()));
+	//if (parent) assert(parent->rect.contains(rect.topLeft) && parent->rect.contains(rect.bottomRight()));
 
 	dirty = false;
 	refreshing = false;

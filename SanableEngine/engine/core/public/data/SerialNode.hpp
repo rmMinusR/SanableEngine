@@ -43,6 +43,8 @@ public:
 	ENGINEDATA_API SerialString(contents_t contents);
 	ENGINEDATA_API virtual ~SerialString();
 	ENGINEDATA_API static SerialString* parseJson(std::wistream& in);
+
+	ENGINEDATA_API const contents_t& value() const;
 };
 
 class SerialNumber : public SerialNode
@@ -57,6 +59,9 @@ public:
 	ENGINEDATA_API SerialNumber(contents_t contents);
 	ENGINEDATA_API virtual ~SerialNumber();
 	ENGINEDATA_API static SerialNumber* parseJson(std::wistream& in);
+
+	ENGINEDATA_API const float* floatValue() const;
+	ENGINEDATA_API const int* intValue() const;
 };
 
 class SerialObject : public SerialNode
@@ -71,6 +76,9 @@ public:
 	ENGINEDATA_API SerialObject(contents_t contents);
 	ENGINEDATA_API virtual ~SerialObject();
 	ENGINEDATA_API static SerialObject* parseJson(std::wistream& in);
+
+	ENGINEDATA_API const SerialNode* get(const std::wstring& key) const;
+	// TODO: add key list getter
 };
 
 class SerialArray : public SerialNode
@@ -85,4 +93,7 @@ public:
 	ENGINEDATA_API SerialArray(contents_t contents);
 	ENGINEDATA_API virtual ~SerialArray();
 	ENGINEDATA_API static SerialArray* parseJson(std::wistream& in);
+
+	ENGINEDATA_API const SerialNode* get(size_t key) const;
+	ENGINEDATA_API size_t size() const;
 };

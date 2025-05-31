@@ -29,7 +29,8 @@ if(ENABLE_DEV_ENV)
 	file(WRITE "${installLoc}/dev_env.json"
 "{
 	\"sourcePath\": \"${CMAKE_SOURCE_DIR}\",
-	\"buildPath\": \"${CMAKE_BINARY_DIR}\"
+	\"buildPath\": \"${CMAKE_BINARY_DIR}\",
+	\"cmakePath\": \"${CMAKE_COMMAND}\"
 }"
 	)
 endif()
