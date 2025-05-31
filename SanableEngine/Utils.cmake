@@ -114,3 +114,7 @@ endfunction()
 function(export_resource target sourcePrefix destPrefix commonPath)
     export_resource_ex(${target} "${sourcePrefix}/${commonPath}" "${destPrefix}/${commonPath}")
 endfunction()
+
+function(export_plugin_resource target sourcePrefix destPrefix commonPath)
+    export_resource_ex(${target} "${sourcePrefix}/${commonPath}" "plugins/${target}/${destPrefix}/${commonPath}")
+endfunction()

@@ -72,7 +72,7 @@ void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::S
 
     pluginManager.discoverAll(system->GetBaseDir()/"plugins");
     std::cout << "Discovered " << pluginManager.plugins.size() << " plugins" << std::endl;
-    for (Plugin const* p : pluginManager.plugins) std::cout << " - " << std::filesystem::relative( p->getPath(), system->GetBaseDir() ).string() << std::endl;
+    for (Plugin const* p : pluginManager.plugins) std::cout << " - " << std::filesystem::relative( p->getPluginDir(), system->GetBaseDir() ).string() << std::endl;
     pluginManager.loadAll();
     pluginManager.hookAll();
 

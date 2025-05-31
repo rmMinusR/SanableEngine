@@ -5,6 +5,7 @@
 #include "Window.hpp"
 #include "Renderer.hpp"
 
+#include "application/Plugin.hpp"
 #include "game/Game.hpp"
 #include "game/GameObject.hpp"
 #include "RectangleRenderer.hpp"
@@ -21,6 +22,7 @@
 
 Application* application;
 Level* level;
+Plugin const* plugin;
 
 PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
 {
@@ -30,6 +32,7 @@ PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* repo
 
     ::application = (Application*)application; //FIXME bad practice
     ::level = application->getGame()->addLevel(); //FIXME this should be in platform main, probably
+    ::plugin = context;
 
     return true;
 }
@@ -62,12 +65,12 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
         camera->CreateComponent<ManualObjectRotator>();
 
         {
-            //CMesh cmesh("resources/bunny.fbx");
-            CMesh cmesh("resources/dragon.fbx");
+            //CMesh cmesh(plugin->getPluginDir() / "resources/bunny.fbx");
+            CMesh cmesh(plugin->getPluginDir() / "resources/dragon.fbx");
             mesh = renderer->newMesh(cmesh);
         }
 
-        shader = renderer->loadShaderProgram("resources/shaders/fresnel");
+        shader = renderer->loadShaderProgram(plugin->getPluginDir() / "resources/shaders/fresnel");
         if (!shader->load()) assert(false);
         
         material = new Material(shader);

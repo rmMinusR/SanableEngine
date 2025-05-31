@@ -36,8 +36,8 @@ void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
 Plugin* PluginManager::discover(const std::filesystem::path& pluginDir)
 {
 	// Build paths
-	std::ostringstream dllFilename;
-	dllFilename << pluginDir.filename().string() << PLATFORM_DLL_EXTENSION; // FIXME move to system
+	std::wostringstream dllFilename;
+	dllFilename << pluginDir.filename().wstring() << PLATFORM_DLL_EXTENSION; // FIXME move to system
 	std::filesystem::path manifestPath = pluginDir / "plugin.json";
 	std::filesystem::path dllPath = pluginDir / dllFilename.str();
 
@@ -48,7 +48,7 @@ Plugin* PluginManager::discover(const std::filesystem::path& pluginDir)
 	// Prevent double loads
 	for (Plugin* p : plugins)
 	{
-		if (p->getPath() == dllPath)
+		if (p->getPluginDir() == pluginDir)
 		{
 			assert(false && "Plugin would be double loaded");
 			return nullptr;
@@ -56,7 +56,7 @@ Plugin* PluginManager::discover(const std::filesystem::path& pluginDir)
 	}
 	
 	// Init and register
-	Plugin* p = new Plugin(pluginDir / dllFilename.str(), manifest);
+	Plugin* p = new Plugin(pluginDir, dllFilename.str(), manifest);
 	plugins.push_back(p);
 	return p;
 }
@@ -169,7 +169,7 @@ Plugin const* PluginManager::getPlugin(const std::wstring& name)
 {
 	for (Plugin* p : plugins)
 	{
-		if (p->path == name) return p;
+		if (p->getName() == name) return p;
 		if (p->reportedData && p->reportedData->name == name) return p;
 	}
 	return nullptr;
