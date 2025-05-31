@@ -2,8 +2,6 @@
 
 #include <variant>
 
-#include <GL/glew.h>
-
 #include "math/Rect.inl"
 #include "math/Vector3.inl"
 #include "dllapi.h"
@@ -18,17 +16,17 @@ public:
 		Persp
 	};
 
-	struct FramebufferData
-	{
-		GLuint handle = 0;
-		GLuint texColor = 0;
-		GLuint texDepth = 0;
-	};
+	//struct FramebufferData
+	//{
+	//	GLuint handle = 0;
+	//	GLuint texColor = 0;
+	//	GLuint texDepth = 0;
+	//};
 private:
 	float size; //Distance in ortho mode, or FOV angle in persp
 	Mode mode;
 
-	FramebufferData fb;
+	//FramebufferData fb;
 
 
 public:

@@ -44,6 +44,7 @@ public:
 	virtual void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h) = 0;
 	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h) = 0;
 	virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, Color4<uint8_t> tintColor) = 0;
+	virtual void drawCMeshImmediate(const CMesh* mesh) = 0;
 
 	virtual void setViewProjTranform(const glm::mat4&) = 0;
 	virtual void setModelTransform(const glm::mat4&) = 0;

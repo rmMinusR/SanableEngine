@@ -3,7 +3,6 @@
 #include <filesystem>
 
 #include <SDL_render.h>
-#include <GL/glew.h>
 
 #include "dllapi.h"
 #include "math/Vector2.inl"

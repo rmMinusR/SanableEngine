@@ -10,6 +10,7 @@
 
 class CMesh;
 class GMesh;
+class Renderer;
 
 
 class Mesh
@@ -17,7 +18,7 @@ class Mesh
 public:
 	ENGINEGRAPHICS_API virtual ~Mesh();
 
-	virtual void renderImmediate() const = 0;
+	virtual void renderImmediate(Renderer* renderer) const = 0;
 };
 
 
@@ -39,7 +40,7 @@ public:
 	ENGINEGRAPHICS_API CMesh(const std::filesystem::path& path);
 	ENGINEGRAPHICS_API virtual ~CMesh();
 
-	ENGINEGRAPHICS_API virtual void renderImmediate() const override;
+	ENGINEGRAPHICS_API virtual void renderImmediate(Renderer* renderer) const override;
 
 	//Primitives
 	//ENGINEGRAPHICS_API static CMesh createCube(float size);

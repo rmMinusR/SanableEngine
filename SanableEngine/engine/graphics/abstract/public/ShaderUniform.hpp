@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <GL/glew.h>
 #include <glm/glm.hpp>
 
 #include "dllapi.h"

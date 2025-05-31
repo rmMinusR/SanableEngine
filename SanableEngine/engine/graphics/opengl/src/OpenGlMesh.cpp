@@ -67,7 +67,7 @@ void OpenGlMesh::updateFrom(const CMesh& src, bool vertices, bool triangles)
 	}
 }
 
-void OpenGlMesh::renderImmediate() const
+void OpenGlMesh::renderImmediate(Renderer*) const
 {
 	assert(*this);
 

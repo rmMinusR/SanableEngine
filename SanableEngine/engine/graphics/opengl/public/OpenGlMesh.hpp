@@ -19,7 +19,7 @@ public:
 	ENGINEOPENGL_API virtual void updateFrom(const CMesh& src) override;
 	ENGINEOPENGL_API virtual void updateFrom(const CMesh& src, bool vertices, bool triangles) override;
 
-	ENGINEOPENGL_API virtual void renderImmediate() const override;
+	ENGINEOPENGL_API virtual void renderImmediate(Renderer*) const override;
 
 	ENGINEOPENGL_API OpenGlMesh(OpenGlMesh&& mov);
 	ENGINEOPENGL_API virtual GMesh& operator=(GMesh&& mov) override;

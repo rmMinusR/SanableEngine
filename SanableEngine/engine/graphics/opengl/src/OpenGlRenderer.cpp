@@ -146,7 +146,7 @@ void OpenGlRenderer::drawText(const Font& font, const Material& mat, const std::
 			transformUniform->write(modelViewMatrix); // Code smell...?
 		}
 		
-		unitQuad.renderImmediate();
+		unitQuad.renderImmediate(this);
 		
 		glPopMatrix();
 		
@@ -197,7 +197,7 @@ void OpenGlRenderer::drawTextureInternal(const GTexture* _tex, const Material* m
 			transformUniform->write(modelViewMatrix); // Code smell...?
 		}
 
-		unitQuad.renderImmediate();
+		unitQuad.renderImmediate(this);
 	}
 	else
 	{
@@ -231,6 +231,29 @@ void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f
 void OpenGlRenderer::drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, Color4<uint8_t> tintColor)
 {
 	drawTextureInternal(spr->getTexture(), mat, pos, {w,h}, spr->getUVs(), tintColor);
+}
+
+void OpenGlRenderer::drawCMeshImmediate(const CMesh* mesh)
+{
+	glBegin(GL_TRIANGLES);
+	for (int i = 0; i < mesh->triangles.size(); i += 3)
+	{
+		const CMesh::Vertex& v0 = mesh->vertices[mesh->triangles[i + 0]];
+		glTexCoord2f(v0.texCoord.x, v0.texCoord.y);
+		glNormal3f(v0.normal.x, v0.normal.y, v0.normal.z);
+		glVertex3f(v0.position.x, v0.position.y, v0.position.z);
+
+		const CMesh::Vertex& v1 = mesh->vertices[mesh->triangles[i + 1]];
+		glTexCoord2f(v1.texCoord.x, v1.texCoord.y);
+		glNormal3f(v1.normal.x, v1.normal.y, v1.normal.z);
+		glVertex3f(v1.position.x, v1.position.y, v1.position.z);
+
+		const CMesh::Vertex& v2 = mesh->vertices[mesh->triangles[i + 2]];
+		glTexCoord2f(v2.texCoord.x, v2.texCoord.y);
+		glNormal3f(v2.normal.x, v2.normal.y, v2.normal.z);
+		glVertex3f(v2.position.x, v2.position.y, v2.position.z);
+	}
+	glEnd();
 }
 
 void OpenGlRenderer::setViewProjTranform(const glm::mat4& mat)

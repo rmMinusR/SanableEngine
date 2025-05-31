@@ -93,8 +93,8 @@ Camera::Camera(Camera&& mov)
 
 Camera& Camera::operator=(Camera&& mov)
 {
-	fb = mov.fb;
-	mov.fb = FramebufferData();
+	//fb = mov.fb;
+	//mov.fb = FramebufferData();
 
 	size = mov.size;
 	mode = mov.mode;

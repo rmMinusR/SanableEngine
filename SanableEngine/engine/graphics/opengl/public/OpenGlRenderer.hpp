@@ -32,6 +32,7 @@ public:
 	ENGINEOPENGL_API virtual void drawTexture(const GTexture* tex, const Material* mat, Vector3f pos, float w, float h) override;
 	ENGINEOPENGL_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h) override;
 	ENGINEOPENGL_API virtual void drawSprite(const Sprite* spr, const Material* mat, Vector3f pos, float w, float h, Color4<uint8_t> tintColor) override;
+	ENGINEOPENGL_API virtual void drawCMeshImmediate(const CMesh* mesh) override;
 	
 	ENGINEOPENGL_API virtual void setViewProjTranform(const glm::mat4&) override;
 	ENGINEOPENGL_API virtual void setModelTransform(const glm::mat4&) override;

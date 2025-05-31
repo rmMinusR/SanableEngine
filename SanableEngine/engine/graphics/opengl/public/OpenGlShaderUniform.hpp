@@ -1,5 +1,6 @@
 #pragma once
 
+#include <gl/glew.h>
 #include "ShaderUniform.hpp"
 #include "dllapi.h"
 

@@ -30,7 +30,7 @@ ShaderUniform::ObjectData MeshRenderer::getRenderedInstanceUniforms() const
 void MeshRenderer::renderImmediate(Renderer* renderer) const
 {
 	//Assumes correct material and shader have already been set up.
-	mesh->renderImmediate();
+	mesh->renderImmediate(renderer);
 	
 	/*
 	material->shader->activate();
