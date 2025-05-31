@@ -171,10 +171,6 @@ void PluginView::tryInit()
 PluginView::PluginView(HUD* hud) :
 	Widget(hud)
 {
-	// Set dummy OK
-	std::promise<bool> tmp;
-	buildTask = tmp.get_future();
-	tmp.set_value(true);
 }
 
 PluginView::~PluginView()
@@ -213,9 +209,9 @@ void PluginView::tick()
 	if (btnDevRebuild)
 	{
 		using namespace std::chrono_literals;
-		std::future_status buildStatus = buildTask.wait_for(0s);
+		bool waitingForBuild = buildTask.valid() && buildTask.wait_for(0s) == std::future_status::timeout;
 
-		if (buildStatus == std::future_status::timeout)
+		if (waitingForBuild)
 		{
 			btnDevRebuild->setState(UIState::Disabled);
 			btnToggleLoaded->setState(UIState::Disabled); // Also prevent loading until rebuild finishes
@@ -223,6 +219,16 @@ void PluginView::tick()
 		}
 		else
 		{
+			if (buildTask.valid() && btnDevRebuild->getState() == UIState::Disabled)
+			{
+				// Just finished build, notify
+				wprintf(
+					L"Rebuilding '%s' - %s\n",
+					plugin->getName().c_str(),
+					buildTask.get() ? L"SUCCESS" : L"FAILURE"
+				);
+			}
+
 			btnDevRebuild->setState(plugin->status < Plugin::Status::DllLoaded ? UIState::Normal : UIState::Disabled);
 			lblDevRebuild->setText("Build");
 		}
