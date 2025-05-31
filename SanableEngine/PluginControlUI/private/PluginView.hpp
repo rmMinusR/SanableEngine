@@ -1,5 +1,7 @@
 #pragma once
 
+#include <future>
+
 #include <ReflectionSpec.hpp>
 #include "gui/Widget.hpp"
 #include "application/Plugin.hpp"
@@ -13,7 +15,6 @@ class PluginView : public Widget
 {
 	PluginManager* mgr = nullptr;
 	Plugin* plugin = nullptr;
-	Plugin::Status lastKnownStatus;
 
 	LabelWidget* path = nullptr;
 	LabelWidget* name = nullptr;
@@ -34,6 +35,8 @@ class PluginView : public Widget
 	ButtonWidget* btnInspectTypes = nullptr;
 	ImageWidget* imgInspectTypesBg = nullptr;
 	LabelWidget* lblInspectTypes = nullptr;
+
+	std::future<bool> buildTask;
 
 	//TODO RTTI status + details button
 

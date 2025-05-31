@@ -3,6 +3,7 @@
 #include <locale>
 #include <codecvt>
 #include <sstream>
+#include <chrono>
 
 #include "gui/HUD.hpp"
 #include "gui/LabelWidget.hpp"
@@ -77,16 +78,15 @@ void PluginView::tryInit()
 		{
 			imgDevRebuildBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
 			lblDevRebuild = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
-			lblDevRebuild->setText("Build");
 			lblDevRebuild->align = Vector2f(0.5f, 0.5f);
 			btnDevRebuild = hud->addWidget<ButtonWidget>(imgDevRebuildBg, buttonSprites);
 			btnDevRebuild->getTransform()->setParent(statusLine->getTransform());
 			btnDevRebuild->getContentSocket()->put(lblDevRebuild);
 			btnDevRebuild->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->flexWeight = 3;
 			btnDevRebuild->setCallback(
-				[&]() {
-					wprintf(L"Rebuilding '%s'", plugin->getName().c_str());
-					DevEnv::build(plugin->getName());
+				[this]() {
+					wprintf(L"Rebuilding '%s'\n", plugin->getName().c_str());
+					buildTask = DevEnv::buildAsync(plugin->getName());
 				}
 			);
 		}
@@ -170,7 +170,11 @@ void PluginView::tryInit()
 
 PluginView::PluginView(HUD* hud) :
 	Widget(hud)
-{	
+{
+	// Set dummy OK
+	std::promise<bool> tmp;
+	buildTask = tmp.get_future();
+	tmp.set_value(true);
 }
 
 PluginView::~PluginView()
@@ -179,7 +183,6 @@ PluginView::~PluginView()
 
 void PluginView::setViewed(Plugin* plugin, PluginManager* mgr)
 {
-	if (this->plugin != plugin) lastKnownStatus = (Plugin::Status)-1;
 	this->plugin = plugin;
 	this->mgr = mgr;
 	tryInit();
@@ -193,26 +196,37 @@ void PluginView::tick()
 
 	name->setText(plugin->reportedData ? plugin->reportedData->name : L"<unloaded>");
 
-	if (lastKnownStatus != plugin->status)
+	switch (plugin->status)
 	{
-		lastKnownStatus = plugin->status;
-		switch (plugin->status)
-		{
-			case Plugin::Status::NotLoaded : status->setText(L"Not loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
-			case Plugin::Status::DllLoaded : status->setText(L"DLL loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
-			case Plugin::Status::Registered: status->setText(L"Registered"); lblToggleLoaded->setText(L"Unload"      ); lblToggleHooked->setText(L"Hook"      ); break;
-			case Plugin::Status::Hooked    : status->setText(L"Hooked"    ); lblToggleLoaded->setText(L"Can't unload"); lblToggleHooked->setText(L"Unhook"    ); break;
+		case Plugin::Status::NotLoaded : status->setText(L"Not loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
+		case Plugin::Status::DllLoaded : status->setText(L"DLL loaded"); lblToggleLoaded->setText(L"Load"        ); lblToggleHooked->setText(L"Can't hook"); break;
+		case Plugin::Status::Registered: status->setText(L"Registered"); lblToggleLoaded->setText(L"Unload"      ); lblToggleHooked->setText(L"Hook"      ); break;
+		case Plugin::Status::Hooked    : status->setText(L"Hooked"    ); lblToggleLoaded->setText(L"Can't unload"); lblToggleHooked->setText(L"Unhook"    ); break;
 
-			default: assert(false); break;
-		}
-
-		if(btnDevRebuild) btnDevRebuild->setState(plugin->status < Plugin::Status::DllLoaded ? UIState::Normal : UIState::Disabled);
-
-		btnToggleLoaded->setState(plugin->status != Plugin::Status::Hooked ? UIState::Normal : UIState::Disabled);
-		btnToggleHooked->setState(plugin->status >= Plugin::Status::Registered ? UIState::Normal : UIState::Disabled);
-		btnInspectTypes->setState(plugin->status != Plugin::Status::NotLoaded ? UIState::Normal : UIState::Disabled);
+		default: assert(false); break;
 	}
-	
+
+	btnToggleLoaded->setState(plugin->status != Plugin::Status::Hooked ? UIState::Normal : UIState::Disabled);
+	btnToggleHooked->setState(plugin->status >= Plugin::Status::Registered ? UIState::Normal : UIState::Disabled);
+	btnInspectTypes->setState(plugin->status != Plugin::Status::NotLoaded ? UIState::Normal : UIState::Disabled);
+
+	if (btnDevRebuild)
+	{
+		using namespace std::chrono_literals;
+		std::future_status buildStatus = buildTask.wait_for(0s);
+
+		if (buildStatus == std::future_status::timeout)
+		{
+			btnDevRebuild->setState(UIState::Disabled);
+			btnToggleLoaded->setState(UIState::Disabled); // Also prevent loading until rebuild finishes
+			lblDevRebuild->setText("Building...");
+		}
+		else
+		{
+			btnDevRebuild->setState(plugin->status < Plugin::Status::DllLoaded ? UIState::Normal : UIState::Disabled);
+			lblDevRebuild->setText("Build");
+		}
+	}
 }
 
 const Material* PluginView::getMaterial() const
