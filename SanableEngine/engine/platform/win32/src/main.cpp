@@ -12,9 +12,6 @@
 
 int platformDefaultMain(int argc, char* argv[])
 {
-    const int WIDTH = 640;
-    const int HEIGHT = 480;
-
     GLSettings glSettings;
     gpr460::System_Win32 system(glSettings);
     Application engine;
@@ -24,11 +21,7 @@ int platformDefaultMain(int argc, char* argv[])
     MemoryRoot::get()->registerExternal(&game  , ExternalObjectOptions::DefaultExternal);
 
     //Init
-    {
-        WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
-        mainWindowSettings.userLogic = new GameWindowDispatcher(&game);
-        engine.init(&game, mainWindowSettings, system);
-    }
+    engine.init(&game, system);
 
     //Loop
     SanableMain(&engine);

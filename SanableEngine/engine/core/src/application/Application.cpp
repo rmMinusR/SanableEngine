@@ -40,7 +40,7 @@ Application::~Application()
 void engine_reportTypes(ModuleTypeRegistry* registry);
 //API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& _system)
+void Application::init(Game* game, gpr460::System& _system)
 {
     assert(!isAlive);
     isAlive = true;
@@ -67,8 +67,6 @@ void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::S
 
     this->game = game;
     game->init(this);
-
-    mainWindow = buildWindow(mainWindowSettings);
 
     heap.value().ensureFresh();
     game->refreshCallBatchers();
@@ -105,7 +103,11 @@ void Application::shutdown()
 
 void Application::doMainLoop()
 {
-    game->refreshCallBatchers(true); // Ensure up to date
+    // Ensure up to date
+    pluginManager.executeCommandBuffer();
+    game->refreshCallBatchers(true);
+
+    // Run
     system->DoMainLoop();
 }
 
@@ -155,7 +157,31 @@ PluginManager* Application::getPluginManager()
 
 Window* Application::getMainWindow()
 {
-    return mainWindow;
+    for (size_t i = 0; i < system->getNumWindows(); ++i)
+    {
+        if (system->getWindow(i) == mainWindow) // Ensure both alive, and owned by this
+        {
+            return mainWindow;
+        }
+    }
+    return nullptr;
+}
+
+const Window* Application::getMainWindow() const
+{
+    for (size_t i = 0; i < system->getNumWindows(); ++i)
+    {
+        if (system->getWindow(i) == mainWindow) // Ensure both alive, and owned by this
+        {
+            return mainWindow;
+        }
+    }
+    return nullptr;
+}
+
+void Application::setMainWindow(Window* w)
+{
+    mainWindow = w;
 }
 
 Window* Application::buildWindow(WindowSettings& settings)

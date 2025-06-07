@@ -12,21 +12,13 @@
 
 int platformDefaultMain(int argc, char* argv[])
 {
-    const int WIDTH = 640;
-    const int HEIGHT = 480;
-
     gpr460::System_Emscripten system;
     Application engine;
     Game game;
 
     //Init
-    {
-        GLSettings glSettings;
-        WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
-        mainWindowSettings.userLogic = new GameWindowDispatcher(&game);
-        engine.init(&game, glSettings, mainWindowSettings, system);
-    }
-
+    engine.init(&game, system);
+    
     //Loop
     SanableMain(&engine);
     //engine.doMainLoop();

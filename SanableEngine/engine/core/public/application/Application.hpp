@@ -39,7 +39,7 @@ public:
     ENGINECORE_API Application();
     ENGINECORE_API ~Application();
 
-    ENGINECORE_API void init(Game* game, WindowSettings& mainWindowSettings, gpr460::System& system);
+    ENGINECORE_API void init(Game* game, gpr460::System& system);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API void doMainLoop();
@@ -51,6 +51,8 @@ public:
     ENGINECORE_API StackAllocator* getFrameAllocator();
     ENGINECORE_API PluginManager* getPluginManager();
     ENGINECORE_API Window* getMainWindow();
+    ENGINECORE_API const Window* getMainWindow() const;
+    ENGINECORE_API void setMainWindow(Window*); // Note: does NOT destroy old main window
 
     ENGINECORE_API Window* buildWindow(WindowSettings& settings);
 
