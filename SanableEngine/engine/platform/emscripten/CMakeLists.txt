@@ -5,9 +5,10 @@ project("engine-emscripten")
 
 # Declare target
 aux_source_directory("${CMAKE_CURRENT_LIST_DIR}/src" engine_emscripten_sources)
-add_executable("engine-emscripten" ${engine_emscripten_sources})
+add_library("engine-emscripten" STATIC ${engine_emscripten_sources})
 target_link_options("engine-emscripten" PRIVATE -sMAIN_MODULE)
 target_include_directories("engine-emscripten" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
+target_include_directories("engine-emscripten" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
 # Fix outputs
 set_target_properties(engine-emscripten PROPERTIES

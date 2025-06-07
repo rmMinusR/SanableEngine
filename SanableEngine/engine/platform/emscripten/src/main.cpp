@@ -7,9 +7,10 @@
 #include "application/Application.hpp"
 #include "game/Game.hpp"
 #include "game/GameWindowDispatcher.hpp"
+#include "EntryPoint.hpp"
 #include "System_Emscripten.hpp"
 
-int main(int argc, char* argv[])
+int platformDefaultMain(int argc, char* argv[])
 {
     const int WIDTH = 640;
     const int HEIGHT = 480;
@@ -27,7 +28,8 @@ int main(int argc, char* argv[])
     }
 
     //Loop
-    engine.doMainLoop();
+    SanableMain(&engine);
+    //engine.doMainLoop();
 
     //NOTE: Due to Emscripten shenanigans, code beyond this point will never run
     //It is here for readability when compared to the Win32 version
@@ -39,3 +41,7 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+#ifndef SANABLE_PLATFORM_NO_IMPLEMENT_MAIN
+int main(int argc, char* argv[]) { return platformDefaultMain(argc, argv); }
+#endif

@@ -6,10 +6,11 @@
 #include "application/Application.hpp"
 #include "game/Game.hpp"
 #include "game/GameWindowDispatcher.hpp"
+#include "EntryPoint.hpp"
 #include "System_Win32.hpp"
 #include "GLSettings.hpp"
 
-int main(int argc, char* argv[])
+int platformDefaultMain(int argc, char* argv[])
 {
     const int WIDTH = 640;
     const int HEIGHT = 480;
@@ -30,7 +31,8 @@ int main(int argc, char* argv[])
     }
 
     //Loop
-    engine.doMainLoop();
+    SanableMain(&engine);
+    //engine.doMainLoop();
 
     //Shutdown
     engine.shutdown();
@@ -42,3 +44,7 @@ int main(int argc, char* argv[])
     
     return 0;
 }
+
+#ifndef SANABLE_PLATFORM_NO_IMPLEMENT_MAIN
+int main(int argc, char* argv[]) { return platformDefaultMain(argc, argv); }
+#endif
