@@ -70,12 +70,6 @@ void Application::init(Game* game, WindowSettings& mainWindowSettings, gpr460::S
 
     mainWindow = buildWindow(mainWindowSettings);
 
-    pluginManager.discoverAll(system->GetBaseDir()/"plugins");
-    std::cout << "Discovered " << pluginManager.plugins.size() << " plugins" << std::endl;
-    for (Plugin const* p : pluginManager.plugins) std::cout << " - " << std::filesystem::relative( p->getPluginDir(), system->GetBaseDir() ).string() << std::endl;
-    pluginManager.loadAll();
-    pluginManager.hookAll();
-
     heap.value().ensureFresh();
     game->refreshCallBatchers();
 }
@@ -111,6 +105,7 @@ void Application::shutdown()
 
 void Application::doMainLoop()
 {
+    game->refreshCallBatchers(true); // Ensure up to date
     system->DoMainLoop();
 }
 

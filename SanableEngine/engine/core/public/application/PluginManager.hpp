@@ -30,8 +30,6 @@ private:
 	std::vector<Plugin*> plugins;
 	std::vector<BufferedCommand> commandBuffer;
 	
-	void discoverAll(const std::filesystem::path& pluginsFolder);
-
 	//These execute immediately. USE WITH CAUTION.
 	void loadAll();
 	void unloadAll();
@@ -50,10 +48,11 @@ private:
 	friend class Application;
 
 public:
+	ENGINECORE_API size_t getNumPlugins() const;
 	ENGINECORE_API void enumeratePlugins(const std::function<void(Plugin*)>& visitor);
 	ENGINECORE_API Plugin const* getPlugin(const std::wstring& name);
 	
-	ENGINECORE_API Plugin* discover(const std::filesystem::path& pluginDir);
+	ENGINECORE_API Plugin* discover(const std::filesystem::path& pluginDir); // Note: lifetime managed by PluginManager
 
 	//These go to the command buffer
 	ENGINECORE_API void load(Plugin* plugin);

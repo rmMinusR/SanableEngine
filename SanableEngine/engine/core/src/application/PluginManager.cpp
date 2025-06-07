@@ -25,14 +25,6 @@ PluginManager::~PluginManager()
 	plugins.clear();
 }
 
-void PluginManager::discoverAll(const std::filesystem::path& pluginsFolder)
-{
-	for (const std::filesystem::path& dllPath : engine->getSystem()->ListPlugins(pluginsFolder))
-	{
-		discover(dllPath);
-	}
-}
-
 Plugin* PluginManager::discover(const std::filesystem::path& pluginDir)
 {
 	// Build paths
@@ -158,6 +150,11 @@ void PluginManager::reloadAll()
     hookAll();
     
     std::cout << "Hot Reload Complete\n";
+}
+
+size_t PluginManager::getNumPlugins() const
+{
+	return plugins.size();
 }
 
 void PluginManager::enumeratePlugins(const std::function<void(Plugin*)>& visitor)
