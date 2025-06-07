@@ -10,24 +10,11 @@ target_link_options("engine-emscripten" PRIVATE -sMAIN_MODULE)
 target_include_directories("engine-emscripten" PRIVATE "${CMAKE_CURRENT_LIST_DIR}/private")
 target_include_directories("engine-emscripten" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")
 
-# Fix outputs
-set_target_properties(engine-emscripten PROPERTIES
-	OUTPUT_NAME "index"
-	SUFFIX ".html"
-)
-set_property(TARGET "engine-emscripten" APPEND PROPERTY ADDITIONAL_CLEAN_FILES "index.data" "index.wasm" "index.js")
-
-# Additional assets
-#target_link_options(engine-emscripten PRIVATE --shell-file ${CMAKE_CURRENT_LIST_DIR}/frontend.html)
-#target_link_options(engine-emscripten PRIVATE --embed-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
-target_link_options(engine-emscripten PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
-target_link_options(engine-emscripten PRIVATE -sFORCE_FILESYSTEM)
-
 # Debug options
-#target_link_options(engine-emscripten PRIVATE --cpuprofiler)
+#target_link_options(engine-emscripten PUBLIC --cpuprofiler)
 
 # Declare imports
-target_link_options(engine-emscripten PRIVATE -sUSE_SDL=2)
+target_link_options(engine-emscripten PUBLIC -sUSE_SDL=2)
 target_link_libraries("engine-emscripten" "engine-core")
 
 function(package_assets)
@@ -39,5 +26,24 @@ function(package_assets)
 	#add_dependencies("engine-emscripten" "index.data")
 endfunction()
 
-# Declare install targets
-install(FILES "$<TARGET_FILE_DIR:engine-emscripten>/index.html" "$<TARGET_FILE_DIR:engine-emscripten>/index.js" "$<TARGET_FILE_DIR:engine-emscripten>/index.wasm" "$<TARGET_FILE_DIR:engine-emscripten>/index.data" DESTINATION "./")
+function(add_sanable_executable targetName sources)
+	add_executable(${targetName} ${sources})
+	target_link_libraries(${targetName} PRIVATE engine-emscripten)
+	
+	# Declare install targets
+	install(FILES "$<TARGET_FILE_DIR:${targetName}>/index.html" "$<TARGET_FILE_DIR:${targetName}>/index.js" "$<TARGET_FILE_DIR:${targetName}>/index.wasm" "$<TARGET_FILE_DIR:${targetName}>/index.data" DESTINATION "./")
+
+	# Fix outputs
+	set_target_properties(${targetName} PROPERTIES
+		OUTPUT_NAME "index"
+		SUFFIX ".html"
+	)
+	set_property(TARGET "${targetName}" APPEND PROPERTY ADDITIONAL_CLEAN_FILES "index.data" "index.wasm" "index.js")
+
+	# Additional assets
+	#target_link_options(${targetName} PRIVATE --shell-file ${CMAKE_CURRENT_LIST_DIR}/frontend.html)
+	#target_link_options(${targetName} PRIVATE --embed-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
+	target_link_options(${targetName} PRIVATE --preload-file ${CMAKE_CURRENT_BINARY_DIR}/plugins@/plugins)
+	target_link_options(${targetName} PRIVATE -sFORCE_FILESYSTEM)
+
+endfunction()

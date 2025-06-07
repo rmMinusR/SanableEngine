@@ -9,8 +9,9 @@ include("libs/Imports.cmake") # Include libs folder
 add_compile_definitions(NOMINMAX) # Come on, MSVC. Don't conflict with standard libraries.
 
 include("engine/CMakeLists.txt") # Shared common code
+include("DevPlatform/CMakeLists.txt")
 
-# YOUR PLUGINS HERE
+# YOUR PLUGINS/GAMES HERE
 include("PluginControlUI/CMakeLists.txt")
 include("PrimitivesPlugin/CMakeLists.txt")
 include("UserPlugin/CMakeLists.txt")
