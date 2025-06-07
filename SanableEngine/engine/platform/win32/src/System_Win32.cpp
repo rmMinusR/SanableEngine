@@ -215,22 +215,25 @@ void gpr460::System_Win32::pumpEvents()
 		case SDL_WINDOWEVENT:
 		{
 			Window_Win32* window = lookupWindow(SDL_GetWindowFromID(event.window.windowID));
-			switch (event.window.event)
+			if (window) // Null if events happened before destruction but after last pump
 			{
-			case SDL_WINDOWEVENT_FOCUS_GAINED:
-				currentFocus = window;
-				break;
+				switch (event.window.event)
+				{
+				case SDL_WINDOWEVENT_FOCUS_GAINED:
+					currentFocus = window;
+					break;
 
-			case SDL_WINDOWEVENT_FOCUS_LOST:
-				if (currentFocus == window) currentFocus = nullptr;
-				break;
+				case SDL_WINDOWEVENT_FOCUS_LOST:
+					if (currentFocus == window) currentFocus = nullptr;
+					break;
 
-			case SDL_WINDOWEVENT_CLOSE:
-				window->closeRequested = true;
+				case SDL_WINDOWEVENT_CLOSE:
+					window->closeRequested = true;
+					break;
+				}
+				window->handleEvent(event);
 				break;
 			}
-			window->handleEvent(event);
-			break;
 		}
 
 		}

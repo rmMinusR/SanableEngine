@@ -16,7 +16,6 @@ class Window_Win32 : public Window
 private:
 	SDL_Window* sdlHandle;
 	OpenGlRenderer renderer;
-	void draw() const override;
 	MenuBar_Win32* menuBar = nullptr;
 
 	int sdlID;
@@ -26,6 +25,8 @@ private:
 	friend class gpr460::System_Win32;
 	friend struct thunk_utils<Window_Win32>;
 public:
+
+	virtual void draw() const override;
 
 	virtual Renderer* getRenderer() override { return &renderer; }
 	virtual void setActiveDrawTarget() const override;
