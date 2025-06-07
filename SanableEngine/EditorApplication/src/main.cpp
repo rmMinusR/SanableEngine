@@ -5,12 +5,12 @@ using namespace std::chrono_literals;
 #include "System.hpp"
 #include "application/Application.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
-#include "LoaderWindow.hpp"
+#include "SplashWindow.hpp"
 
 void SanableMain(Application* application)
 {
-    // Setup loader window
-    LoaderWindow* loaderWindow = new LoaderWindow(application, L"Sanable Editor - Loading...", { 300, 200 });
+    // Setup splash window
+    SplashWindow* loaderWindow = new SplashWindow(application, L"Sanable Editor - Loading...", { 300, 200 });
     application->setMainWindow(loaderWindow->getWindow());
     application->getSystem()->pumpEvents();
 

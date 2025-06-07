@@ -10,7 +10,7 @@ class ShaderProgram;
 class Material;
 class Font;
 
-class LoaderWindow
+class SplashWindow
 {
 	Application* application;
 	Window* window;
@@ -19,8 +19,8 @@ class LoaderWindow
 	Font* textFont;
 
 public:
-	LoaderWindow(Application* application, std::wstring title, Vector2<int> size);
-	~LoaderWindow();
+	SplashWindow(Application* application, std::wstring title, Vector2<int> size);
+	~SplashWindow();
 
 	Window* getWindow();
 

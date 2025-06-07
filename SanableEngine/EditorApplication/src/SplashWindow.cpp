@@ -1,4 +1,4 @@
-#include "LoaderWindow.hpp"
+#include "SplashWindow.hpp"
 
 #include "Window.hpp"
 #include "System.hpp"
@@ -11,16 +11,16 @@
 #include "gui/LabelWidget.hpp"
 #include "gui/ImageWidget.hpp"
 
-LoaderWindow::LoaderWindow(Application* application, std::wstring title, Vector2<int> size)
+SplashWindow::SplashWindow(Application* application, std::wstring title, Vector2<int> size)
 {
     this->application = application;
 
-    WindowSettings loaderWindowSettings("Sanable Editor - Loading...", size.x, size.y);
+    WindowSettings SplashWindowSettings("Sanable Editor - Loading...", size.x, size.y);
     GUIWindowDispatcher* dispatcher = new GUIWindowDispatcher(application, 5);
     HUD* uiRoot = &dispatcher->hud;
 
-    loaderWindowSettings.userLogic = dispatcher;
-    window = application->buildWindow(loaderWindowSettings);
+    SplashWindowSettings.userLogic = dispatcher;
+    window = application->buildWindow(SplashWindowSettings);
 
     // Setup UI resources
     textShader = window->getRenderer()->loadShaderProgram(application->getSystem()->GetBaseDir() / "resources/ui/shaders/font");
@@ -32,7 +32,7 @@ LoaderWindow::LoaderWindow(Application* application, std::wstring title, Vector2
     uiRoot->addWidget<LabelWidget>(textMat, textFont);
 }
 
-LoaderWindow::~LoaderWindow()
+SplashWindow::~SplashWindow()
 {
     delete textFont;
     delete textMat;
@@ -40,12 +40,12 @@ LoaderWindow::~LoaderWindow()
     application->getSystem()->destroyWindow(window);
 }
 
-void LoaderWindow::redraw()
+void SplashWindow::redraw()
 {
     window->draw();
 }
 
-Window* LoaderWindow::getWindow()
+Window* SplashWindow::getWindow()
 {
     return window;
 }
