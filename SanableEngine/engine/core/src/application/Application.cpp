@@ -187,7 +187,6 @@ void Application::setMainWindow(Window* w)
 Window* Application::buildWindow(WindowSettings& settings)
 {
     Window* window = system->createWindow(settings, this);
-	if (settings.position.has_value()) window->move(settings.position.value().x, settings.position.value().y);
 	window->userLogic->setup(window);
 
     settings.userLogic = nullptr;

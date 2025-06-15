@@ -17,6 +17,14 @@ struct Rect
 			&& topLeft.y <= pos.y && pos.y <= topLeft.y+size.y;
 	}
 
+	Rect<T> extend(Vector2<T> pos)
+	{
+		if (pos.x < topLeft.x) topLeft.x = pos.x;
+		if (pos.y < topLeft.y) topLeft.y = pos.y;
+		if (pos.x > bottomRight().x) size.x = pos.x - topLeft.x;
+		if (pos.y > bottomRight().y) size.y = pos.y - topLeft.y;
+	}
+
 	bool operator==(Rect<T> other) const { return topLeft == other.topLeft && size == other.size; }
 	bool operator!=(Rect<T> other) const { return !(*this == other); }
 
