@@ -88,6 +88,8 @@ public:
 
 	ENGINEGUI_API operator glm::mat4() const; //GL interop
 
+	ENGINEGUI_API void markDirty() const;
+
 private:
 	HUD* hud;
 	Widget* widget;
@@ -110,8 +112,6 @@ private:
 	PositioningStrategy* positioningStrategy;
 
 	void refresh() const;
-	void markDirty() const;
-
 
 	WidgetTransform(const WidgetTransform& cpy) = delete;
 	WidgetTransform& operator=(const WidgetTransform& cpy) = delete;

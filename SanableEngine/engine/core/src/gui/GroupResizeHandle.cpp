@@ -13,6 +13,8 @@ GroupResizeHandle::GroupResizeHandle(HUD* hud, ImageWidget* background, const UI
 	spriteNormal(spriteNormal),
 	spriteDragged(spriteDragged)
 {
+	getTransform()->setRelativeRenderDepth(1);
+	socket.setRelativeRenderDepth(-1);
 	socket.put(background);
 }
 
@@ -69,13 +71,12 @@ void GroupResizeHandle::whileDragged(Vector2f dragStartPos, Widget* dragStartWid
 	WidgetTransform* before = parent->getChild(getTransform()->getChildIndex() - 1);
 	WidgetTransform* after  = parent->getChild(getTransform()->getChildIndex() + 1);
 
-	float controlledAreaLo = std::min(axis(before->getRect().topLeft      ), axis(after->getRect().topLeft));
-	float controlledAreaHi = std::min(axis(before->getRect().bottomRight()), axis(after->getRect().bottomRight()));
-	float controlledAreaSize = controlledAreaHi - controlledAreaLo;
+	float controlledAreaLo = std::min(axis(before->getRect().topLeft), axis(after->getRect().topLeft));
+	float controlledAreaSize = axis(before->getRect().size) + axis(after->getRect().size);
 
 	float mousePosInArea = axis(currentMousePos) - controlledAreaLo;
 	float ownSize = axis(getTransform()->getRect().size);
-	float flexRatio = (mousePosInArea - ownSize/2) / (controlledAreaSize - ownSize);
+	float flexRatio = (mousePosInArea - ownSize/2) / controlledAreaSize;
 	flexRatio = std::clamp<float>(flexRatio, 0, 1);
 
 	AutoLayoutPositioning* posBefore = static_cast<AutoLayoutPositioning*>(before->getPositioningStrategy());
@@ -83,6 +84,10 @@ void GroupResizeHandle::whileDragged(Vector2f dragStartPos, Widget* dragStartWid
 	float flexWeightTotal = posBefore->flexWeight + posAfter->flexWeight;
 	posBefore->flexWeight = flexWeightTotal * flexRatio;
 	posAfter ->flexWeight = flexWeightTotal * (1-flexRatio);
+
+	before->markDirty();
+	after->markDirty();
+	this->getTransform()->markDirty();
 }
 
 void GroupResizeHandle::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
