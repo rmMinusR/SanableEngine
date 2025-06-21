@@ -114,10 +114,10 @@ void WidgetTransform::setParent(WidgetTransform* parent)
 	}
 
 	//Remove self from parent's children list
-	if (parent)
+	if (this->parent)
 	{
-		auto it = std::find(parent->children.begin(), parent->children.end(), this);
-		if (it != parent->children.end()) parent->children.erase(it);
+		auto it = std::find(this->parent->children.begin(), this->parent->children.end(), this);
+		if (it != this->parent->children.end()) this->parent->children.erase(it);
 	}
 
 	this->parent = parent;

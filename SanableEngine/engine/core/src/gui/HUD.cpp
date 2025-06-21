@@ -50,7 +50,11 @@ MemoryHeap* HUD::getMemory()
 
 void HUD::refreshLayout(Rect<float> viewport)
 {
-	root->rect = root->localRect = viewport;
+	if (viewport != root->rect)
+	{
+		root->rect = root->localRect = viewport;
+		root->markDirty();
+	}
 
 	applyConcurrencyBuffers();
 	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it) it->refresh();
@@ -112,22 +116,28 @@ void HUD::render(Renderer* renderer)
 	//Process buffer
 	auto processMaterialClass = [&](Material::Group _class)
 	{
+		renderer->errorCheck();
 		for (Widget* w : renderables[_class])
 		{
 			//Activate shader
 			renderer->setActiveShader(w->getShader());
+			renderer->errorCheck();
 
 			//Activate material
 			const Material* mat = w->getMaterial();
 
 			if (mat) mat->getShader()->writeSharedUniforms(renderer, renderer->getCurGlobalData());
+			renderer->errorCheck();
 			
 			// FIXME user uniforms
 
 			w->loadModelTransform(renderer);
+			renderer->errorCheck();
 			if (mat) mat->writeInstanceUniforms(renderer, w->getRenderedInstanceUniforms());
+			renderer->errorCheck();
 
 			w->renderImmediate(renderer);
+			renderer->errorCheck();
 		}
 	};
 	processMaterialClass(Material::Group::Opaque);
