@@ -51,6 +51,8 @@ void GroupResizeHandle::onDragStarted(Vector2f dragStartPos, Vector2f currentMou
 
 void GroupResizeHandle::whileDragged(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f currentMousePos, Widget* currentlyHoveredWidget)
 {
+	if (dragStartWidget != this) return; // Only resize when drag started on self
+
 	WidgetTransform* parent = getTransform()->getParent();
 
 	float (*axis)(Vector2<float>) = nullptr;
@@ -70,24 +72,22 @@ void GroupResizeHandle::whileDragged(Vector2f dragStartPos, Widget* dragStartWid
 
 	WidgetTransform* before = parent->getChild(getTransform()->getChildIndex() - 1);
 	WidgetTransform* after  = parent->getChild(getTransform()->getChildIndex() + 1);
+	AutoLayoutPositioning* posBefore = static_cast<AutoLayoutPositioning*>(before->getPositioningStrategy());
+	AutoLayoutPositioning* posAfter  = static_cast<AutoLayoutPositioning*>(after->getPositioningStrategy());
 
-	float controlledAreaLo = std::min(axis(before->getRect().topLeft), axis(after->getRect().topLeft));
-	float controlledAreaSize = axis(before->getRect().size) + axis(after->getRect().size);
+	float controlledAreaLo = std::min(axis(before->getRect().topLeft), axis(after->getRect().topLeft)) + posBefore->minSize;
+	float controlledAreaSize = axis(before->getRect().size) + axis(after->getRect().size) - posBefore->minSize - posAfter->minSize;
 
 	float mousePosInArea = axis(currentMousePos) - controlledAreaLo;
 	float ownSize = axis(getTransform()->getRect().size);
 	float flexRatio = (mousePosInArea - ownSize/2) / controlledAreaSize;
 	flexRatio = std::clamp<float>(flexRatio, 0, 1);
 
-	AutoLayoutPositioning* posBefore = static_cast<AutoLayoutPositioning*>(before->getPositioningStrategy());
-	AutoLayoutPositioning* posAfter  = static_cast<AutoLayoutPositioning*>(after->getPositioningStrategy());
 	float flexWeightTotal = posBefore->flexWeight + posAfter->flexWeight;
 	posBefore->flexWeight = flexWeightTotal * flexRatio;
 	posAfter ->flexWeight = flexWeightTotal * (1-flexRatio);
 
-	before->markDirty();
-	after->markDirty();
-	this->getTransform()->markDirty();
+	getTransform()->getParent()->markDirty();
 }
 
 void GroupResizeHandle::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
