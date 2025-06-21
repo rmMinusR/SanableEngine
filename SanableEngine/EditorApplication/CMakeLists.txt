@@ -11,3 +11,5 @@ export_resource(EditorApplication "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/te
 export_resource(EditorApplication "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/divider_v/dragged.png)
 export_resource(EditorApplication "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/divider_h/normal.png)
 export_resource(EditorApplication "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/divider_h/dragged.png)
+export_resource(EditorApplication "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/placeholder_1.png)
+export_resource(EditorApplication "${CMAKE_CURRENT_LIST_DIR}" "" resources/ui/textures/placeholder_2.png)

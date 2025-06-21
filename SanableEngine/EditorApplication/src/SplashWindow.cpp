@@ -15,12 +15,13 @@ SplashWindow::SplashWindow(Application* application, std::wstring title, Vector2
 {
     this->application = application;
 
-    WindowSettings SplashWindowSettings("Sanable Editor - Loading...", size.x, size.y);
+    WindowSettings windowSettings("Sanable Editor - Loading...", size.x, size.y);
     GUIWindowDispatcher* dispatcher = new GUIWindowDispatcher(application, 5);
     HUD* uiRoot = &dispatcher->hud;
 
-    SplashWindowSettings.userLogic = dispatcher;
-    window = application->buildWindow(SplashWindowSettings);
+    windowSettings.userLogic = dispatcher;
+    window = application->buildWindow(windowSettings);
+    window->getRenderer()->activate();
 
     // Setup UI resources
     textShader = window->getRenderer()->loadShaderProgram(application->getSystem()->GetBaseDir() / "resources/ui/shaders/font");

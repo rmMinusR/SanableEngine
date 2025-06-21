@@ -21,6 +21,7 @@ void SanableMain(Application* application)
     SplashWindow* loaderWindow = new SplashWindow(application, L"Sanable Editor - Loading...", { 300, 200 });
     application->setMainWindow(loaderWindow->getWindow());
     application->getSystem()->pumpEvents();
+    loaderWindow->redraw();
 
     // Dummy loading logic (placeholder for later)
     std::this_thread::sleep_for(2s);
@@ -32,7 +33,7 @@ void SanableMain(Application* application)
         mainWindowSettings.userLogic = editorWindowLogic;
 
         Window* editorWindow = application->buildWindow(mainWindowSettings);
-        application->setMainWindow(editorWindow);
+        editorWindow->getRenderer()->activate();
 
         // Load image shader
         ShaderProgram* imageShader = editorWindow->getRenderer()->loadShaderProgram( application->getSystem()->GetBaseDir() / "resources/ui/shaders/image");
@@ -70,11 +71,15 @@ void SanableMain(Application* application)
         ImageWidget* handleImage = hud->addWidget<ImageWidget>(imageMat, sprDividerNormal);
         GroupResizeHandle* handle = hud->addWidget<GroupResizeHandle>(handleImage, sprDividerNormal, sprDividerDragged); // Handle
         handle->getTransform()->setParent(hgrp->getTransform());
-        handle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
-
+        AutoLayoutPositioning* handlePositioner = handle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
+        handlePositioner->flexWeight = 0;
+        handlePositioner->minSize = handlePositioner->preferredSize = 15;
+        
         ImageWidget* placeholderRight = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder2); // Right
         placeholderRight->getTransform()->setParent(hgrp->getTransform());
         placeholderRight->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
+
+        application->setMainWindow(editorWindow);
     }
 
     // Teardown loader window and UI resources
