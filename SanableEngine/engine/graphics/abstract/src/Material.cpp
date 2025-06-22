@@ -43,6 +43,11 @@ const ShaderProgram* Material::getShader() const
 	return shader;
 }
 
+stix::SAnyRef Material::getUserUniforms()
+{
+	return stix::SAnyRef(userUniformData, *shader->getUserUniformStruct());
+}
+
 const ShaderUniform* Material::getUserUniform(const std::string& name) const
 {
 	for (const ShaderUniform* i : userConfigurable) if (i->getName() == name) return i;

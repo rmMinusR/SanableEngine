@@ -3,6 +3,8 @@
 #include <string>
 #include <glm/glm.hpp>
 
+#include <TypeName.hpp>
+
 #include "dllapi.h"
 
 class ShaderProgram;
@@ -73,6 +75,7 @@ protected:
 	friend class ShaderProgram;
 	ValueBinding binding;
 	BindingStage bindingStage;
+	TypeName glmType;
 
 	ENGINEGRAPHICS_API ShaderUniform();
 	ENGINEGRAPHICS_API ShaderUniform(ShaderProgram* owner);
@@ -85,6 +88,7 @@ public:
 	ENGINEGRAPHICS_API BindingStage getBindingStage() const;
 
 	virtual std::string_view getName() const = 0;
+	ENGINEGRAPHICS_API virtual const TypeInfo* getGlmType() const;
 
 	virtual void write(float val) const = 0;
 	virtual void write(glm::vec2 val) const = 0;

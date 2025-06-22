@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <TypeInfo.hpp>
 #include "ShaderUniform.hpp"
 
 class ShaderProgram
@@ -8,6 +9,7 @@ class ShaderProgram
 protected:
 	std::filesystem::path basePath;
 	ENGINEGRAPHICS_API void updateUniformBackrefs();
+	TypeInfo userUniformStruct; // Must be set by implementers
 
 	ENGINEGRAPHICS_API ShaderProgram(const std::filesystem::path& basePath);
 	ENGINEGRAPHICS_API ShaderProgram();
@@ -22,6 +24,7 @@ public:
 	virtual ShaderUniform* getUniform(size_t index) = 0;
 
 	ENGINEGRAPHICS_API virtual void writeSharedUniforms(Renderer* context, const ShaderUniform::GlobalData& shared) const;
+	ENGINEGRAPHICS_API virtual const TypeInfo* getUserUniformStruct() const;
 
 	ShaderProgram(ShaderProgram&& mov) = delete;
 	ENGINEGRAPHICS_API virtual ShaderProgram& operator=(ShaderProgram&& mov) = 0;

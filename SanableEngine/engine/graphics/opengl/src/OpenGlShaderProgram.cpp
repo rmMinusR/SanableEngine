@@ -1,6 +1,9 @@
 #include "OpenGlShaderProgram.hpp"
 
 #include <cassert>
+#include <sstream>
+
+#include "SyntheticTypeBuilder.hpp"
 
 #include "OpenGlShaderUniform.hpp"
 #include "OpenGlShaderStage.hpp"
@@ -74,6 +77,22 @@ bool OpenGlShaderProgram::load()
 	GLint nUniforms = 0;
 	glGetProgramiv(handle, GL_ACTIVE_UNIFORMS, &nUniforms);
 	for (int i = 0; i < nUniforms; ++i) uniforms.emplace_back(this, handle, i);
+
+	// Build user uniform struct
+	{
+		std::stringstream uniformTypeName;
+		uniformTypeName << "UserUniforms:" << basePath.string();
+
+		SyntheticTypeBuilder userUniformsBuilder(uniformTypeName.str());
+		for (const OpenGlShaderUniform& i : uniforms)
+		{
+			if (i.getBindingStage() == ShaderUniform::BindingStage::Unbound)
+			{
+				userUniformsBuilder.addField(*i.getGlmType(), i.getName(), MemberVisibility::All);
+			}
+		}
+		userUniformStruct = userUniformsBuilder.finalize();
+	}
 
 	return true;
 }

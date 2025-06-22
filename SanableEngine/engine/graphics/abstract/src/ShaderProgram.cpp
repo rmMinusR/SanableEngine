@@ -32,3 +32,8 @@ void ShaderProgram::writeSharedUniforms(Renderer* context, const ShaderUniform::
 		}
 	}
 }
+
+const TypeInfo* ShaderProgram::getUserUniformStruct() const
+{
+	return userUniformStruct.isValid() ? &userUniformStruct : nullptr;
+}

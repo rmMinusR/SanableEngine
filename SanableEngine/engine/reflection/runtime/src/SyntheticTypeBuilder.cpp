@@ -20,10 +20,15 @@ size_t SyntheticTypeBuilder::nextAtAlign(size_t align) const
 	else return roundedDown + align; //Not aligned, round up
 }
 
-void SyntheticTypeBuilder::addField_internal(const TypeName& fieldType, const std::string& name, size_t size, size_t align, MemberVisibility visibility)
+void SyntheticTypeBuilder::addField(const TypeInfo& type, std::string_view name, MemberVisibility visibility)
+{
+	addField_internal(type.name, name, type.layout.size, type.layout.align, visibility);
+}
+
+void SyntheticTypeBuilder::addField_internal(const TypeName& fieldType, std::string_view name, size_t size, size_t align, MemberVisibility visibility)
 {
 	size_t loc = nextAtAlign(align);
-	type.layout.fields.push_back(FieldInfo(size, loc, type.name, fieldType, name, visibility));
+	type.layout.fields.push_back(FieldInfo(size, loc, type.name, fieldType, std::string(name), visibility));
 	type.layout.size = cursor = loc+size;
 	type.layout.align = std::max(type.layout.align, align);
 }

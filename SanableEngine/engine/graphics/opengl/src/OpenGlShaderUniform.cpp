@@ -2,8 +2,11 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
+#include <TypeInfo.hpp>
+
 #include "OpenGlShaderProgram.hpp"
 #include "OpenGlRenderer.hpp"
+#include "OpenGlTypes.hpp"
 
 void OpenGlShaderUniform::detectBinding()
 {
@@ -31,6 +34,7 @@ OpenGlShaderUniform::OpenGlShaderUniform(ShaderProgram* owner, GLuint ownerHandl
 	glGetActiveUniform(ownerHandle, codeIndex, bufSz, &nRead, &objSize, &dataType, buf);
 	name = std::string(buf, nRead);
 	location = glGetUniformLocation(ownerHandle, buf);
+	glmType = ::getGlmType(dataType);
 	detectBinding();
 }
 

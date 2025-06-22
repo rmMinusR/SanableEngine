@@ -69,3 +69,10 @@ ShaderUniform::BindingStage ShaderUniform::getBindingStage() const
 {
 	return bindingStage;
 }
+
+const TypeInfo* ShaderUniform::getGlmType() const
+{
+	const TypeInfo* ty = glmType.resolve();
+	assert(ty);
+	return ty;
+}

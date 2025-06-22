@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <variant>
 
 #include "TypeName.hpp"
 
@@ -15,15 +16,16 @@ namespace stix
 	class SAnyRef
 	{
 		void* data;
-		TypeName type;
+		std::variant<std::monostate, TypeName, const TypeInfo*> type;
 
 		friend class ::stix::MemberFunction;
 		friend class ::stix::StaticFunction;
 
 		STIX_API void* get_internal(const TypeName& asType) const;
 		STIX_API void* get_unchecked() const;
-		STIX_API SAnyRef(void* data, const TypeName& type);
 	public:
+		STIX_API SAnyRef(void* data, const TypeName& type);
+		STIX_API SAnyRef(void* data, const TypeInfo& type);
 		STIX_API SAnyRef();
 		STIX_API ~SAnyRef();
 
@@ -34,7 +36,8 @@ namespace stix
 			return SAnyRef(obj, TypeName::create<T>()); //TODO attempt to snipe RTTI and checK, just to be sure? Casting should handle most of it though.
 		}
 
-		STIX_API TypeName getType() const;
+		STIX_API TypeName getTypeName() const;
+		STIX_API const TypeInfo* tryGetTypeInfo() const;
 		template<typename T>
 		std::remove_reference_t<T>& get() const { return *(std::remove_reference_t<T>*)get_internal(TypeName::tryCreate<T>()); }
 
@@ -51,6 +54,6 @@ namespace stix
 
 	namespace detail
 	{
-		static inline decltype(auto) _getRepresentedType(const SAnyRef& v) { return v.getType(); }
+		static inline decltype(auto) _getRepresentedType(const SAnyRef& v) { return v.getTypeName(); }
 	}
 }

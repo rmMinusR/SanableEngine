@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <SAny.hpp>
 #include "ShaderUniform.hpp"
 
 class ShaderProgram;
@@ -27,6 +28,8 @@ private:
 
 	Group group;
 
+	void* userUniformData; // Dynamic TypeInfo owned by shader
+
 public:
 	ENGINEGRAPHICS_API Material(ShaderProgram* shader);
 
@@ -35,6 +38,7 @@ public:
 
 	ENGINEGRAPHICS_API const ShaderProgram* getShader() const;
 
+	ENGINEGRAPHICS_API stix::SAnyRef getUserUniforms();
 	ENGINEGRAPHICS_API const ShaderUniform* getUserUniform(const std::string& name) const;
 	ENGINEGRAPHICS_API const ShaderUniform* getUniform(ShaderUniform::ValueBinding binding) const;
 
