@@ -113,51 +113,8 @@ void TypeBuilder::registerType(ModuleTypeRegistry* registry)
 	pendingFields.clear();
 
 	//DO NOT update byte usage: this is deferred to TypeInfo::doLateBinding
-
-	//Hash: modified djb2
-	{
-		size_t hash = 5381;
-
-		//Hash: layout part
-		hash = ((hash << 5) + hash) + std::hash<TypeName>{}(type.name);
-		for (size_t i = 0; i < type.layout.size; ++i) hash = ((hash << 5) + hash) + (uint8_t)type.layout.byteUsage[i];
-		for (size_t i = 0; i < type.layout.size; ++i) if(type.layout.byteUsage[i] == TypeInfo::Layout::ByteUsage::ImplicitConst) hash = ((hash << 5) + hash) + type.layout.implicitValues[i] ^ i;
-		for (const FieldInfo& f : type.layout.fields)
-		{
-			hash = ((hash << 5) + hash) + f.offset;
-			hash = ((hash << 5) + hash) + std::hash<TypeName>{}(f.type);
-			hash = ((hash << 5) + hash) + std::hash<std::string>{}(f.name);
-		}
-		for (const ParentInfo& p : type.layout.parents)
-		{
-			hash = ((hash << 5) + hash) + p.size;
-			hash = ((hash << 5) + hash) + p.offset;
-			hash = ((hash << 5) + hash) + std::hash<TypeName>{}(p.typeName);
-		}
-
-		//Hash: capabilities part
-		for (const auto& i : type.capabilities.constructors)
-		{
-			size_t ctorHash = 5381;
-			for (const auto& p : i.thunk.parameters) ctorHash = ((ctorHash << 5) + ctorHash) + std::hash<TypeName>{}(p);
-			hash = ((hash << 5) + hash) + ctorHash;
-		}
-		for (const auto& i : type.capabilities.memberFuncs)
-		{
-			size_t ctorHash = std::hash<std::string>{}(i.name);
-			for (const auto& p : i.fn.parameters) ctorHash = ((ctorHash << 5) + ctorHash) + std::hash<TypeName>{}(p);
-			hash = ((hash << 5) + hash) + ctorHash;
-		}
-		for (const auto& i : type.capabilities.staticFuncs)
-		{
-			size_t ctorHash = std::hash<std::string>{}(i.name);
-			for (const auto& p : i.fn.parameters) ctorHash = ((ctorHash << 5) + ctorHash) + std::hash<TypeName>{}(p);
-			hash = ((hash << 5) + hash) + ctorHash;
-		}
-		hash = ((hash << 5) + hash) + (size_t)type.capabilities.rawDtor;
-
-		type.hash = hash;
-	}
+	
+	type.hash = type.computeHash();
 
 	assert(registry->lookupType(type.name) == nullptr);
 	registry->types.push_back(type);

@@ -9,6 +9,7 @@
 #include "StaticTemplateUtils.inl"
 
 struct TypeInfo;
+class SyntheticTypeBuilder;
 class ModuleTypeRegistry;
 
 namespace stix::detail
@@ -35,7 +36,8 @@ private:
 	enum Flags : uint8_t
 	{
 		Normal     = 0,
-		Incomplete = 1<<0
+		Incomplete = 1<<0,
+		Synthetic = 1<<1
 	} flags;
 	static const char* incomplete_ref_literal;
 	STIX_API TypeName(const std::string& name, Flags flags);
@@ -52,6 +54,8 @@ public:
 	template<typename... TPack>
 	static std::vector<TypeName> createPack() { return { create<TPack>()... }; }
 
+	STIX_API static TypeName createSynthetic(const std::string& name);
+
 	template<typename T>
 	static TypeName tryCreate()
 	{
@@ -65,9 +69,11 @@ public:
 
 	STIX_API std::optional<TypeName> cvUnwrap() const;
 	STIX_API std::optional<TypeName> dereference() const;
+
 	STIX_API bool isComposite() const;
 	STIX_API bool isFundamental() const;
 	STIX_API bool isDataPtr() const;
+	STIX_API bool isSynthetic() const;
 
 	STIX_API bool isValid() const; //Whether the name has a valid value. Does NOT indicate whether there is live type data backing it.
 	STIX_API TypeInfo const* resolve(ModuleTypeRegistry* moduleHint = nullptr) const;

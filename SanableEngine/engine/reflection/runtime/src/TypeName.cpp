@@ -84,6 +84,11 @@ TypeName TypeName::incomplete_ref()
     return TypeName(incomplete_ref_literal, Flags::Incomplete);
 }
 
+TypeName TypeName::createSynthetic(const std::string& name)
+{
+    return TypeName(name, Flags::Synthetic);
+}
+
 std::optional<TypeName> TypeName::cvUnwrap() const
 {
     std::string unwrappedName = name;
@@ -146,6 +151,11 @@ bool TypeName::isFundamental() const
         if (name == fundamentalTypes_names[i]) return true;
     }
     return false;
+}
+
+bool TypeName::isSynthetic() const
+{
+    return flags & Flags::Synthetic;
 }
 
 bool TypeName::isValid() const

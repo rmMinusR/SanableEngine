@@ -13,6 +13,7 @@
 #include "Function.hpp"
 
 class TypeBuilder;
+class SyntheticTypeBuilder;
 class ModuleTypeRegistry;
 
 /// <summary>
@@ -24,6 +25,7 @@ struct TypeInfo
 private:
 	size_t hash;
 	friend class TypeBuilder;
+	friend class SyntheticTypeBuilder;
 	friend struct std::hash<TypeInfo>;
 public:
 	TypeName name;
@@ -122,6 +124,7 @@ public:
 		STIX_API bool matchesExact(void* obj) const;
 
 		friend class TypeBuilder; //Only thing allowed to touch all member data.
+		friend class SyntheticTypeBuilder;
 		friend struct TypeInfo;
 	} layout;
 
@@ -234,6 +237,8 @@ private:
 	/// INTERNAL USE ONLY. Currently used to set up byte usage mask.
 	/// </summary>
 	STIX_API void create_internalFinalize();
+
+	size_t computeHash() const;
 
 public:
 	/// <summary>

@@ -52,6 +52,8 @@ void Application::init(Game* game, gpr460::System& _system)
     system->Init(this);
 
     //Prepare RTTI
+    GlobalTypeRegistry::clear();
+    GlobalTypeRegistry::loadIntrinsics();
     {
         ModuleTypeRegistry m;
         engine_reportTypes(&m);
