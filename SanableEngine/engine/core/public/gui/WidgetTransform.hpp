@@ -82,6 +82,20 @@ public:
 	ENGINEGUI_API void setRelativeRenderDepth(depth_t depth);
 	ENGINEGUI_API depth_t getRelativeRenderDepth() const;
 
+	enum class Visibility : uint8_t
+	{
+		FLAGS_Renders = 0b001,
+		FLAGS_UsesLayoutSpace = 0b010,
+		FLAGS_Raycastable = 0b100,
+
+		Visible = FLAGS_Renders | FLAGS_UsesLayoutSpace | FLAGS_Raycastable,
+		Hidden = FLAGS_UsesLayoutSpace,
+		Collapsed = 0
+	};
+
+	ENGINEGUI_API void setVisibility(Visibility visibility);
+	ENGINEGUI_API Visibility getVisibility() const;
+
 	ENGINEGUI_API Widget* getWidget() const;
 	ENGINEGUI_API HUD* getHUD() const;
 	ENGINEGUI_API bool isDirty() const;
@@ -98,11 +112,13 @@ private:
 	std::vector<WidgetTransform*> children;
 	size_t childIndex;
 	depth_t relativeRenderDepth = 0;
+	Visibility ownVisibility = Visibility::Visible;
 
 	//Cached values
 	mutable depth_t renderDepth;
 	mutable Rect<float> localRect; //Output of positioning strategy
 	mutable Rect<float> rect; //Derived from localRect
+	mutable Visibility evaluatedVisibility;
 	mutable bool refreshing; //Acts as a canary in case PositioningStrategy does something stupid like call a dependent function mid-evaluate
 	mutable bool dirty;
 

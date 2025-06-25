@@ -119,25 +119,28 @@ void HUD::render(Renderer* renderer)
 		renderer->errorCheck();
 		for (Widget* w : renderables[_class])
 		{
-			//Activate shader
-			renderer->setActiveShader(w->getShader());
-			renderer->errorCheck();
+			if (uint8_t(w->getTransform()->getVisibility()) & uint8_t(WidgetTransform::Visibility::FLAGS_Renders))
+			{
+				//Activate shader
+				renderer->setActiveShader(w->getShader());
+				renderer->errorCheck();
 
-			//Activate material
-			const Material* mat = w->getMaterial();
+				//Activate material
+				const Material* mat = w->getMaterial();
 
-			if (mat) mat->getShader()->writeSharedUniforms(renderer, renderer->getCurGlobalData());
-			renderer->errorCheck();
-			
-			// FIXME user uniforms
+				if (mat) mat->getShader()->writeSharedUniforms(renderer, renderer->getCurGlobalData());
+				renderer->errorCheck();
 
-			w->loadModelTransform(renderer);
-			renderer->errorCheck();
-			if (mat) mat->writeInstanceUniforms(renderer, w->getRenderedInstanceUniforms());
-			renderer->errorCheck();
+				// FIXME user uniforms
 
-			w->renderImmediate(renderer);
-			renderer->errorCheck();
+				w->loadModelTransform(renderer);
+				renderer->errorCheck();
+				if (mat) mat->writeInstanceUniforms(renderer, w->getRenderedInstanceUniforms());
+				renderer->errorCheck();
+
+				w->renderImmediate(renderer);
+				renderer->errorCheck();
+			}
 		}
 	};
 	processMaterialClass(Material::Group::Opaque);
