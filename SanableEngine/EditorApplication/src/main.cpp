@@ -66,18 +66,16 @@ void SanableMain(Application* application)
 
         ImageWidget* placeholderLeft = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1); // Left
         placeholderLeft->getTransform()->setParent(hgrp->getTransform());
-        placeholderLeft->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
+        placeholderLeft->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp)->config.setMinSize(64).setMaxSize(256);
 
         ImageWidget* handleImage = hud->addWidget<ImageWidget>(imageMat, sprDividerNormal);
         GroupResizeHandle* handle = hud->addWidget<GroupResizeHandle>(handleImage, sprDividerNormal, sprDividerDragged); // Handle
         handle->getTransform()->setParent(hgrp->getTransform());
-        AutoLayoutPositioning* handlePositioner = handle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
-        handlePositioner->flexWeight = 0;
-        handlePositioner->minSize = handlePositioner->preferredSize = 15;
+        handle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp)->config.setMinSize(15).flexWeight = 0;
         
         ImageWidget* placeholderRight = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder2); // Right
         placeholderRight->getTransform()->setParent(hgrp->getTransform());
-        placeholderRight->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
+        placeholderRight->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp)->config.setMinSize(64);
 
         application->setMainWindow(editorWindow);
     }

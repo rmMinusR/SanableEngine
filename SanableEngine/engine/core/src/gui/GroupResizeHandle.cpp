@@ -75,17 +75,17 @@ void GroupResizeHandle::whileDragged(Vector2f dragStartPos, Widget* dragStartWid
 	AutoLayoutPositioning* posBefore = static_cast<AutoLayoutPositioning*>(before->getPositioningStrategy());
 	AutoLayoutPositioning* posAfter  = static_cast<AutoLayoutPositioning*>(after->getPositioningStrategy());
 
-	float controlledAreaLo = std::min(axis(before->getRect().topLeft), axis(after->getRect().topLeft)) + posBefore->minSize;
-	float controlledAreaSize = axis(before->getRect().size) + axis(after->getRect().size) - posBefore->minSize - posAfter->minSize;
+	float controlledAreaLo = std::min(axis(before->getRect().topLeft), axis(after->getRect().topLeft)) + posBefore->config.getMinSize();
+	float controlledAreaSize = axis(before->getRect().size) + axis(after->getRect().size) - posBefore->config.getMinSize() - posAfter->config.getMinSize();
 
 	float mousePosInArea = axis(currentMousePos) - controlledAreaLo;
 	float ownSize = axis(getTransform()->getRect().size);
 	float flexRatio = (mousePosInArea - ownSize/2) / controlledAreaSize;
 	flexRatio = std::clamp<float>(flexRatio, 0, 1);
 
-	float flexWeightTotal = posBefore->flexWeight + posAfter->flexWeight;
-	posBefore->flexWeight = flexWeightTotal * flexRatio;
-	posAfter ->flexWeight = flexWeightTotal * (1-flexRatio);
+	float flexWeightTotal = posBefore->config.flexWeight + posAfter->config.flexWeight;
+	posBefore->config.flexWeight = flexWeightTotal * flexRatio;
+	posAfter ->config.flexWeight = flexWeightTotal * (1-flexRatio);
 
 	getTransform()->getParent()->markDirty();
 }

@@ -3,10 +3,6 @@
 #include "gui/LayoutUtil.hpp"
 
 AutoLayoutPositioning::AutoLayoutPositioning(LinearLayoutGroupWidget* layout) :
-	minSize(0),
-	preferredSize(0),
-	maxSize(FLT_MAX),
-	flexWeight(1),
 	layout(layout)
 {
 }

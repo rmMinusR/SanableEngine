@@ -20,7 +20,7 @@ void LayoutUtil::linear(float val_min, float val_max, size_t count, const Linear
 	memset(alreadyMaxSize, 0, sizeof(alreadyMaxSize));
 	for (size_t i = 0; i < count; ++i)
 	{
-		float flexCapacity = elementViews[i].maxSize - elementViews[i].preferredSize;
+		float flexCapacity = elementViews[i].getMaxSize() - elementViews[i].getPreferredSize();
 		float flexWeightShare = elementViews[i].flexWeight / totalFlexWeight;
 		float flexSpaceForMaxSize = flexCapacity / flexWeightShare;
 		if (flexSpaceAvailable > flexSpaceForMaxSize)
@@ -38,11 +38,11 @@ void LayoutUtil::linear(float val_min, float val_max, size_t count, const Linear
 		float elementSize;
 		if (!alreadyMaxSize[i])
 		{
-			elementSize = elementViews[i].minSize
-						 + (elementViews[i].preferredSize-elementViews[i].minSize) * preferredAvailableRatio
+			elementSize = elementViews[i].getMinSize()
+						 + (elementViews[i].getPreferredSize()-elementViews[i].getMinSize()) * preferredAvailableRatio
 						 + flexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
 		}
-		else elementSize = elementViews[i].maxSize;
+		else elementSize = elementViews[i].getMaxSize();
 
 		if (locs_out) locs_out[i] = cursor;
 		if (sizes_out) sizes_out[i] = elementSize;
@@ -60,9 +60,9 @@ void LayoutUtil::linearCalcSpace(size_t count, const LinearElementView* elementV
 
 	for (size_t i = 0; i < count; ++i)
 	{
-		*minSize_out       += elementViews[i].minSize;
-		*preferredSize_out += elementViews[i].preferredSize;
-		*maxSize_out       += elementViews[i].maxSize;
+		*minSize_out       += elementViews[i].getMinSize();
+		*preferredSize_out += elementViews[i].getPreferredSize();
+		*maxSize_out       += elementViews[i].getMaxSize();
 		*flexWeight_out    += elementViews[i].flexWeight;
 	}
 }

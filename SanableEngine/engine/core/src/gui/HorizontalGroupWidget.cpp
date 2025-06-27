@@ -23,11 +23,7 @@ void HorizontalGroupWidget::refreshLayout()
 		LayoutUtil::LinearElementView elements[nChildren];
 		for (size_t i = 0; i < nChildren; ++i)
 		{
-			const AutoLayoutPositioning* src = getPositioner(getTransform()->getChild(i));
-			elements[i].minSize       = src->minSize;
-			elements[i].preferredSize = src->preferredSize;
-			elements[i].maxSize       = src->maxSize;
-			elements[i].flexWeight    = src->flexWeight;
+			elements[i] = getPositioner(getTransform()->getChild(i))->config;
 		}
 
 		//Act

@@ -33,11 +33,8 @@ public:
 	ENGINEGUI_API virtual ~AutoLayoutPositioning();
 	ENGINEGUI_API virtual void evaluate(Rect<float>* localRect_out, const WidgetTransform* transform) override;
 
-	// NOTE: When changing these at runtime, make sure to mark parent invalid
-	float minSize; //Satisfied first
-	float preferredSize; //Satisfied second, in a 1:1 ratio
-	float maxSize; //Satisfied last, in accordance with flexWeight
-	float flexWeight;
+	// NOTE: When changing this at runtime, make sure to mark parent invalid
+	LayoutUtil::LinearElementView config;
 
 	LinearLayoutGroupWidget* layout;
 };
