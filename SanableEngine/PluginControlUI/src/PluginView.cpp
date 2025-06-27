@@ -77,11 +77,8 @@ void PluginView::tryInit()
 		if (DevEnv::detect())
 		{
 			imgDevRebuildBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-			lblDevRebuild = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
-			lblDevRebuild->align = Vector2f(0.5f, 0.5f);
 			btnDevRebuild = hud->addWidget<ButtonWidget>(imgDevRebuildBg, buttonSprites);
 			btnDevRebuild->getTransform()->setParent(statusLine->getTransform());
-			btnDevRebuild->getContentSocket()->put(lblDevRebuild);
 			btnDevRebuild->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->config.flexWeight = 3;
 			btnDevRebuild->setCallback(
 				[this]() {
@@ -89,14 +86,15 @@ void PluginView::tryInit()
 					buildTask = DevEnv::buildAsync(plugin->getName());
 				}
 			);
+			lblDevRebuild = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
+			lblDevRebuild->align = Vector2f(0.5f, 0.5f);
+			lblDevRebuild->getTransform()->setParent(btnDevRebuild->getTransform());
+			lblDevRebuild->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 		}
 
 		imgToggleLoadedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-		lblToggleLoaded   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
-		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
 		btnToggleLoaded = hud->addWidget<ButtonWidget>(imgToggleLoadedBg, buttonSprites);
 		btnToggleLoaded->getTransform()->setParent(statusLine->getTransform());
-		btnToggleLoaded->getContentSocket()->put(lblToggleLoaded);
 		btnToggleLoaded->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->config.flexWeight = 3;
 		btnToggleLoaded->setCallback(
 			[&]() {
@@ -104,13 +102,14 @@ void PluginView::tryInit()
 				else                              this->mgr->load(this->plugin);
 			}
 		);
+		lblToggleLoaded = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
+		lblToggleLoaded->align = Vector2f(0.5f, 0.5f);
+		lblToggleLoaded->getTransform()->setParent(btnToggleLoaded->getTransform());
+		lblToggleLoaded->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 
 		imgToggleHookedBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-		lblToggleHooked   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
-		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
 		btnToggleHooked = hud->addWidget<ButtonWidget>(imgToggleHookedBg, buttonSprites);
 		btnToggleHooked->getTransform()->setParent(statusLine->getTransform());
-		btnToggleHooked->getContentSocket()->put(lblToggleHooked);
 		btnToggleHooked->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->config.flexWeight = 3;
 		btnToggleHooked->setCallback(
 			[&]() {
@@ -118,13 +117,13 @@ void PluginView::tryInit()
 				else                          this->mgr->hook(this->plugin);
 			}
 		);
+		lblToggleHooked = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
+		lblToggleHooked->align = Vector2f(0.5f, 0.5f);
+		lblToggleHooked->getTransform()->setParent(btnToggleHooked->getTransform());
+		lblToggleHooked->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 
 		imgInspectTypesBg = hud->addWidget<ImageWidget>(Resources::imageMat, Resources::buttonNormalSprite);
-		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
-		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
-		lblInspectTypes->setText(L"View types");
 		btnInspectTypes = hud->addWidget<ButtonWidget>(imgInspectTypesBg, buttonSprites);
-		btnInspectTypes->getContentSocket()->put(lblInspectTypes);
 		btnInspectTypes->getTransform()->setParent(statusLine->getTransform());
 		btnInspectTypes->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(statusLine)->config.flexWeight = 2;
 		btnInspectTypes->setCallback(
@@ -165,6 +164,11 @@ void PluginView::tryInit()
 				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);
+		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
+		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
+		lblInspectTypes->setText(L"View types");
+		lblInspectTypes->getTransform()->setParent(btnInspectTypes->getTransform());
+		lblInspectTypes->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 	}
 }
 

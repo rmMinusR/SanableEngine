@@ -6,7 +6,6 @@
 
 ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites) :
 	Widget(hud),
-	contentSocket(hud, this),
 	bgSprites(bgSprites)
 {
 	this->background = background;
@@ -20,17 +19,19 @@ ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprite
 		static_cast<AnchoredPositioning*>(background->getTransform()->getPositioningStrategy())->fillParent();
 	}
 
-	contentSocket.setRelativeRenderDepth(-1);
+	contentTransform = hud->getMemory()->create<WidgetTransform>(nullptr, hud);
+	contentTransform->setRelativeRenderDepth(-1);
 }
 
 ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites, Widget* content) :
 	ButtonWidget(hud, background, bgSprites)
 {
-	contentSocket.put(content);
+	content->getTransform()->setParent(contentTransform);
 }
 
 ButtonWidget::~ButtonWidget()
 {
+	hud->getMemory()->destroy(contentTransform);
 }
 
 const Material* ButtonWidget::getMaterial() const
@@ -114,12 +115,12 @@ UIState ButtonWidget::getState() const
 	return state;
 }
 
-WidgetSocket* ButtonWidget::getContentSocket()
+WidgetTransform* ButtonWidget::getContentArea()
 {
-	return &contentSocket;
+	return contentTransform;
 }
 
-const WidgetSocket* ButtonWidget::getContentSocket() const
+const WidgetTransform* ButtonWidget::getContentArea() const
 {
-	return &contentSocket;
+	return contentTransform;
 }

@@ -40,7 +40,7 @@ protected:
 	
 	std::function<void()> callback;
 
-	WidgetSocket contentSocket;
+	WidgetTransform* contentTransform;
 
 public:
 	ENGINEGUI_API ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites);
@@ -63,6 +63,6 @@ public:
 	ENGINEGUI_API void setState(UIState newState);
 	ENGINEGUI_API UIState getState() const;
 
-	ENGINEGUI_API WidgetSocket* getContentSocket();
-	ENGINEGUI_API const WidgetSocket* getContentSocket() const;
+	ENGINEGUI_API WidgetTransform* getContentArea();
+	ENGINEGUI_API const WidgetTransform* getContentArea() const;
 };
