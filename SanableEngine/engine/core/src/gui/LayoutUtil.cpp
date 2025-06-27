@@ -11,21 +11,42 @@ void LayoutUtil::linear(float val_min, float val_max, size_t count, const Linear
 	//Calc space requirements
 	float totalMinSize, totalPreferredSize, totalMaxSize, totalFlexWeight;
 	linearCalcSpace(count, elementViews, &totalMinSize, &totalPreferredSize, &totalMaxSize, &totalFlexWeight);
-	
-	float preferredAvailableRatio = std::clamp<float>(invlerp(totalSpace, totalMinSize, totalPreferredSize), 0, 1);
-	float maxFlexSpaceAvailable   = std::max(0.0f, totalSpace-totalPreferredSize); //Flat pixel size
 
-	//Write values
+	float preferredAvailableRatio = std::clamp<float>(invlerp(totalSpace, totalMinSize, totalPreferredSize), 0, 1);
+	float flexSpaceAvailable      = std::max(0.0f, totalSpace-totalPreferredSize); //Flat pixel size
+
+	// Write values - check upper size limit first
+	bool alreadyMaxSize[count];
+	memset(alreadyMaxSize, 0, sizeof(alreadyMaxSize));
+	for (size_t i = 0; i < count; ++i)
+	{
+		float flexCapacity = elementViews[i].maxSize - elementViews[i].preferredSize;
+		float flexWeightShare = elementViews[i].flexWeight / totalFlexWeight;
+		float flexSpaceForMaxSize = flexCapacity / flexWeightShare;
+		if (flexSpaceAvailable > flexSpaceForMaxSize)
+		{
+			flexSpaceAvailable -= flexCapacity;
+			totalFlexWeight -= elementViews[i].flexWeight;
+			alreadyMaxSize[i] = true;
+		}
+	}
+
+	//Write values - remaining flex elements
 	float cursor = val_min;
 	for (size_t i = 0; i < count; ++i)
 	{
-		float elementSize = elementViews[i].minSize 
-			         + (elementViews[i].preferredSize-elementViews[i].minSize) * preferredAvailableRatio
-			         + maxFlexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
+		float elementSize;
+		if (!alreadyMaxSize[i])
+		{
+			elementSize = elementViews[i].minSize
+						 + (elementViews[i].preferredSize-elementViews[i].minSize) * preferredAvailableRatio
+						 + flexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
+		}
+		else elementSize = elementViews[i].maxSize;
 
 		if (locs_out) locs_out[i] = cursor;
 		if (sizes_out) sizes_out[i] = elementSize;
-
+		
 		cursor += elementSize;
 	}
 }
