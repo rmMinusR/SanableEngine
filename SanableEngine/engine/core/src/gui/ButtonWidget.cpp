@@ -47,6 +47,11 @@ void ButtonWidget::setCallback(const std::function<void()>& callback)
 	this->callback = callback;
 }
 
+void ButtonWidget::setSprites(SpriteSet newSprites)
+{
+	bgSprites = newSprites;
+}
+
 void ButtonWidget::onMouseDown(Vector2f pos)
 {
 	if (state != UIState::Disabled)

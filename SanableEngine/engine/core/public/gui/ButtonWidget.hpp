@@ -51,6 +51,8 @@ public:
 	ENGINEGUI_API virtual void renderImmediate(Renderer* renderer) override;
 
 	ENGINEGUI_API void setCallback(const std::function<void()>& callback);
+	ENGINEGUI_API void setSprites(SpriteSet newSprites);
+
 	ENGINEGUI_API virtual void onMouseDown(Vector2f pos) override;
 	ENGINEGUI_API virtual void onMouseUp(Vector2f pos) override;
 	ENGINEGUI_API virtual void onMouseExit(Vector2f pos) override;
