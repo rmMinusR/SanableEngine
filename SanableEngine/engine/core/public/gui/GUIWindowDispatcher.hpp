@@ -35,5 +35,6 @@ public:
 	float zNear = 0;
 	float zFar = 1000;
 
-	ENGINECORE_API virtual void render(Rect<float> viewport) override;
+protected:
+	ENGINEGUI_API virtual void render(Rect<float> viewport) override;
 };

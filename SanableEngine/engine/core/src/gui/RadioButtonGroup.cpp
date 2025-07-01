@@ -14,6 +14,8 @@ RadioButtonGroup::RadioButtonGroup(HUD* hud, const Material* btnMat, SpriteSet s
 {
 	if(vertical) contentArea = hud->addWidget<VerticalGroupWidget>();
 	else contentArea = hud->addWidget<HorizontalGroupWidget>();
+	contentArea->getTransform()->setParent(this->getTransform());
+	contentArea->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 }
 
 RadioButtonGroup::~RadioButtonGroup()
@@ -38,7 +40,6 @@ ButtonWidget* RadioButtonGroup::addItem()
 	{
 		btn->setSprites({ sprites.selected, sprites.normal, sprites.normal });
 	}
-	btn->getTransform()->setParent(contentArea->getTransform());
 	btn->setCallback(
 		[btn, this]()
 		{
@@ -47,6 +48,7 @@ ButtonWidget* RadioButtonGroup::addItem()
 		}
 	);
 
+	btn->getTransform()->setParent(contentArea->getTransform());
 	AutoLayoutPositioning* positioner = btn->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(contentArea);
 	positioner->config = btnSizeSettings;
 

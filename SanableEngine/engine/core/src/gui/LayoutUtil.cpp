@@ -21,8 +21,8 @@ void LayoutUtil::linear(float val_min, float val_max, size_t count, const Linear
 	for (size_t i = 0; i < count; ++i)
 	{
 		float flexCapacity = elementViews[i].getMaxSize() - elementViews[i].getPreferredSize();
-		float flexWeightShare = elementViews[i].flexWeight / totalFlexWeight;
-		float flexSpaceForMaxSize = flexCapacity / flexWeightShare;
+		float flexWeightShare = totalFlexWeight > 0 ? elementViews[i].flexWeight / totalFlexWeight : 0;
+		float flexSpaceForMaxSize = flexWeightShare > 0 ? flexCapacity / flexWeightShare : 0;
 		if (flexSpaceAvailable > flexSpaceForMaxSize)
 		{
 			flexSpaceAvailable -= flexCapacity;
@@ -39,8 +39,8 @@ void LayoutUtil::linear(float val_min, float val_max, size_t count, const Linear
 		if (!alreadyMaxSize[i])
 		{
 			elementSize = elementViews[i].getMinSize()
-						 + (elementViews[i].getPreferredSize()-elementViews[i].getMinSize()) * preferredAvailableRatio
-						 + flexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
+						 + (elementViews[i].getPreferredSize()-elementViews[i].getMinSize()) * preferredAvailableRatio;
+			if (totalFlexWeight > 0) elementSize += flexSpaceAvailable * (elementViews[i].flexWeight/totalFlexWeight);
 		}
 		else elementSize = elementViews[i].getMaxSize();
 
