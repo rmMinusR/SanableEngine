@@ -86,7 +86,7 @@ ButtonWidget* TabView::addItem(Widget* widget)
 	// Set up tab content
 	widget->getTransform()->setParent(contentTransform);
 	widget->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
-	widget->getTransform()->setVisibility(contentTransform->getChildrenCount() > 1 ? WidgetTransform::Visibility::Collapsed : WidgetTransform::Visibility::Visible);
+	widget->getTransform()->setVisibility(contentTransform->getChildrenCount() > 1 ? WidgetVisibility::Collapsed : WidgetVisibility::Visible);
 
 	return tabBtn;
 }
@@ -98,8 +98,8 @@ void TabView::select(size_t newSelectionIndex)
 
 void TabView::tabSelectCallback(size_t from, size_t to)
 {
-	contentTransform->getChild(from)->setVisibility(WidgetTransform::Visibility::Collapsed);
-	contentTransform->getChild(to)->setVisibility(WidgetTransform::Visibility::Visible);
+	contentTransform->getChild(from)->setVisibility(WidgetVisibility::Collapsed);
+	contentTransform->getChild(to)->setVisibility(WidgetVisibility::Visible);
 }
 
 const Material* TabView::getMaterial() const

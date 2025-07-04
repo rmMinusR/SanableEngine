@@ -26,7 +26,7 @@ void WidgetTransform::refresh() const
 	renderDepth = relativeRenderDepth;
 	if (parent) renderDepth += parent->getRenderDepth();
 
-	evaluatedVisibility = parent ? Visibility(uint8_t(parent->evaluatedVisibility)&uint8_t(ownVisibility)) : ownVisibility;
+	evaluatedVisibility = parent ? parent->evaluatedVisibility & ownVisibility : ownVisibility;
 
 	//Sanity check
 	//if (parent) assert(parent->rect.contains(rect.topLeft) && parent->rect.contains(rect.bottomRight()));
@@ -181,13 +181,13 @@ WidgetTransform::depth_t WidgetTransform::getRelativeRenderDepth() const
 	return relativeRenderDepth;
 }
 
-void WidgetTransform::setVisibility(Visibility visibility)
+void WidgetTransform::setVisibility(WidgetVisibility visibility)
 {
 	ownVisibility = visibility;
 	markDirty();
 }
 
-WidgetTransform::Visibility WidgetTransform::getVisibility() const
+WidgetVisibility WidgetTransform::getVisibility() const
 {
 	if (dirty) refresh();
 	return evaluatedVisibility;

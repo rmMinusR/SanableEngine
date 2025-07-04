@@ -119,7 +119,7 @@ void HUD::render(Renderer* renderer)
 		renderer->errorCheck();
 		for (Widget* w : renderables[_class])
 		{
-			if (uint8_t(w->getTransform()->getVisibility()) & uint8_t(WidgetTransform::Visibility::FLAGS_Renders))
+			if ((w->getTransform()->getVisibility() & WidgetVisibility::FLAGS_Renders) == WidgetVisibility::FLAGS_Renders)
 			{
 				//Activate shader
 				renderer->setActiveShader(w->getShader());
