@@ -5,41 +5,26 @@
 #include "gui/LabelWidget.hpp"
 
 ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites) :
-	Widget(hud),
+	ButtonWidgetBase(hud),
 	bgSprites(bgSprites)
 {
 	this->background = background;
 
-	getTransform()->setRelativeRenderDepth(1);
-	
 	if (background)
 	{
 		background->getTransform()->setParent(this->getTransform());
 		background->getTransform()->setRelativeRenderDepth(-2);
 		static_cast<AnchoredPositioning*>(background->getTransform()->getPositioningStrategy())->fillParent();
 	}
-
-	contentTransform = hud->getMemory()->create<WidgetTransform>(nullptr, hud);
-	contentTransform->setRelativeRenderDepth(-1);
 }
 
 ButtonWidget::ButtonWidget(HUD* hud, ImageWidget* background, SpriteSet bgSprites, Widget* content) :
 	ButtonWidget(hud, background, bgSprites)
 {
-	content->getTransform()->setParent(contentTransform);
+	content->getTransform()->setParent(getContentArea());
 }
 
 ButtonWidget::~ButtonWidget()
-{
-	hud->getMemory()->destroy(contentTransform);
-}
-
-const Material* ButtonWidget::getMaterial() const
-{
-	return nullptr;
-}
-
-void ButtonWidget::renderImmediate(Renderer* renderer)
 {
 }
 
@@ -53,56 +38,11 @@ void ButtonWidget::setSprites(SpriteSet newSprites)
 	bgSprites = newSprites;
 }
 
-void ButtonWidget::onMouseDown(Vector2f pos)
-{
-	if (state != UIState::Disabled)
-	{
-		setState(UIState::Pressed);
-	}
-}
-
-void ButtonWidget::onMouseUp(Vector2f pos)
-{
-	if (state != UIState::Disabled)
-	{
-		setState(UIState::Normal);
-	}
-}
-
-void ButtonWidget::onMouseExit(Vector2f pos)
-{
-	if (state != UIState::Disabled)
-	{
-		setState(UIState::Normal);
-	}
-}
-
-void ButtonWidget::onMouseEnter(Vector2f pos)
-{
-	if (state != UIState::Disabled)
-	{
-		setState(UIState::Normal); //TODO set to Pressed instead if a mouse button is down
-	}
-}
-
-void ButtonWidget::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
-{
-	if (dragStartWidget == this && dragEndWidget == this)
-	{
-		if (callback) callback();
-	}
-}
-
-void ButtonWidget::onClicked(Vector2f pos)
-{
-	if (state != UIState::Disabled && callback) callback();
-}
-
 void ButtonWidget::setState(UIState newState)
 {
-	state = newState;
+	ButtonWidgetBase::setState(newState);
 
-	switch (state)
+	switch (getState())
 	{
 	#define _X(val) case UIState::val: background->setSprite(bgSprites.val); break;
 	FOREACH_UISTATE()
@@ -110,17 +50,7 @@ void ButtonWidget::setState(UIState newState)
 	}
 }
 
-UIState ButtonWidget::getState() const
+void ButtonWidget::activate() const
 {
-	return state;
-}
-
-WidgetTransform* ButtonWidget::getContentArea()
-{
-	return contentTransform;
-}
-
-const WidgetTransform* ButtonWidget::getContentArea() const
-{
-	return contentTransform;
+	if (callback) callback();
 }
