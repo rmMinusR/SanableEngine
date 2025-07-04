@@ -26,7 +26,7 @@ public:
 	ENGINEGUI_API virtual void renderImmediate(Renderer* renderer) override;
 
 	ENGINEGUI_API void select(size_t newSelectionIndex);
-	ENGINEGUI_API ButtonWidget* addItem(std::string_view tabContent, Widget* widget);
+	ENGINEGUI_API ButtonWidget* addItem(Widget* widget);
 	//ENGINEGUI_API void removeItem(size_t which);
 	//ENGINEGUI_API size_t getItemCount() const;
 	//ENGINEGUI_API Widget* getItem(size_t which);

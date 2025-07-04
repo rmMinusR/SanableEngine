@@ -78,7 +78,7 @@ TabView::~TabView()
 	hud->getMemory()->destroy(contentTransform);
 }
 
-ButtonWidget* TabView::addItem(std::string_view tabContent, Widget* widget)
+ButtonWidget* TabView::addItem(Widget* widget)
 {
 	// Set up tab button
 	ButtonWidget* tabBtn = tabArea->addItem();
