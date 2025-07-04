@@ -6,7 +6,7 @@
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/VerticalGroupWidget.hpp"
 
-TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonGroup::SpriteSet tabSprites, TabsLocation tabsLocation) :
+TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation) :
 	Widget(hud)
 {
 	// TODO WidgetTransform::setChildIndex()
@@ -78,10 +78,10 @@ TabView::~TabView()
 	hud->getMemory()->destroy(contentTransform);
 }
 
-ButtonWidget* TabView::addItem(Widget* widget)
+RadioButtonWidget* TabView::addItem(Widget* widget)
 {
 	// Set up tab button
-	ButtonWidget* tabBtn = tabArea->addItem();
+	RadioButtonWidget* tabBtn = tabArea->addItem();
 
 	// Set up tab content
 	widget->getTransform()->setParent(contentTransform);
