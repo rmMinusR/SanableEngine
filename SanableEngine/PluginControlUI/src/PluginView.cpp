@@ -164,7 +164,7 @@ void PluginView::tryInit()
 				v->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 			}
 		);
-		lblInspectTypes   = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
+		lblInspectTypes = hud->addWidget<LabelWidget>(Resources::textMat, Resources::labelFont, Color4<uint8_t>{ 0, 0, 0, 255 });
 		lblInspectTypes->align = Vector2f(0.5f, 0.5f);
 		lblInspectTypes->setText(L"View types");
 		lblInspectTypes->getTransform()->setParent(btnInspectTypes->getTransform());
@@ -206,9 +206,9 @@ void PluginView::tick()
 		default: assert(false); break;
 	}
 
-	btnToggleLoaded->setState(plugin->status != Plugin::Status::Hooked ? UIState::Normal : UIState::Disabled);
-	btnToggleHooked->setState(plugin->status >= Plugin::Status::Registered ? UIState::Normal : UIState::Disabled);
-	btnInspectTypes->setState(plugin->status != Plugin::Status::NotLoaded ? UIState::Normal : UIState::Disabled);
+	btnToggleLoaded->setState(plugin->status != Plugin::Status::Hooked ? ButtonState::Normal : ButtonState::Disabled);
+	btnToggleHooked->setState(plugin->status >= Plugin::Status::Registered ? ButtonState::Normal : ButtonState::Disabled);
+	btnInspectTypes->setState(plugin->status != Plugin::Status::NotLoaded ? ButtonState::Normal : ButtonState::Disabled);
 
 	if (btnDevRebuild)
 	{
@@ -217,13 +217,13 @@ void PluginView::tick()
 
 		if (waitingForBuild)
 		{
-			btnDevRebuild->setState(UIState::Disabled);
-			btnToggleLoaded->setState(UIState::Disabled); // Also prevent loading until rebuild finishes
+			btnDevRebuild->setState(ButtonState::Disabled);
+			btnToggleLoaded->setState(ButtonState::Disabled); // Also prevent loading until rebuild finishes
 			lblDevRebuild->setText("Building...");
 		}
 		else
 		{
-			if (buildTask.valid() && btnDevRebuild->getState() == UIState::Disabled)
+			if (buildTask.valid() && btnDevRebuild->getState() == ButtonState::Disabled)
 			{
 				// Just finished build, notify
 				wprintf(
@@ -233,7 +233,7 @@ void PluginView::tick()
 				);
 			}
 
-			btnDevRebuild->setState(plugin->status < Plugin::Status::DllLoaded ? UIState::Normal : UIState::Disabled);
+			btnDevRebuild->setState(plugin->status < Plugin::Status::DllLoaded ? ButtonState::Normal : ButtonState::Disabled);
 			lblDevRebuild->setText("Build");
 		}
 	}

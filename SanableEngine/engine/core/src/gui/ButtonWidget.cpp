@@ -38,14 +38,14 @@ void ButtonWidget::setSprites(SpriteSet newSprites)
 	bgSprites = newSprites;
 }
 
-void ButtonWidget::setState(UIState newState)
+void ButtonWidget::setState(ButtonState newState)
 {
 	ButtonWidgetBase::setState(newState);
 
 	switch (getState())
 	{
-	#define _X(val) case UIState::val: background->setSprite(bgSprites.val); break;
-	FOREACH_UISTATE()
+	#define _X(val) case ButtonState::val: background->setSprite(bgSprites.val); break;
+	FOREACH_BUTTON_STATE()
 	#undef _X
 	}
 }

@@ -16,7 +16,7 @@ public:
 	struct SpriteSet
 	{
 		#define _X(val) const UISprite* val;
-		FOREACH_UISTATE()
+		FOREACH_BUTTON_STATE()
 		#undef _X
 	};
 
@@ -34,6 +34,6 @@ public:
 	ENGINEGUI_API void setCallback(const std::function<void()>& callback);
 	ENGINEGUI_API void setSprites(SpriteSet newSprites);
 
-	ENGINEGUI_API virtual void setState(UIState newState) override;
+	ENGINEGUI_API virtual void setState(ButtonState newState) override;
 	ENGINEGUI_API virtual void activate() const override;
 };

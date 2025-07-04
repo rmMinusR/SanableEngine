@@ -27,33 +27,33 @@ void ButtonWidgetBase::renderImmediate(Renderer* renderer)
 
 void ButtonWidgetBase::onMouseDown(Vector2f pos)
 {
-	if (state != UIState::Disabled)
+	if (state != ButtonState::Disabled)
 	{
-		setState(UIState::Pressed);
+		setState(ButtonState::Pressed);
 	}
 }
 
 void ButtonWidgetBase::onMouseUp(Vector2f pos)
 {
-	if (state != UIState::Disabled)
+	if (state != ButtonState::Disabled)
 	{
-		setState(UIState::Normal);
+		setState(ButtonState::Normal);
 	}
 }
 
 void ButtonWidgetBase::onMouseExit(Vector2f pos)
 {
-	if (state != UIState::Disabled)
+	if (state != ButtonState::Disabled)
 	{
-		setState(UIState::Normal);
+		setState(ButtonState::Normal);
 	}
 }
 
 void ButtonWidgetBase::onMouseEnter(Vector2f pos)
 {
-	if (state != UIState::Disabled)
+	if (state != ButtonState::Disabled)
 	{
-		setState(UIState::Normal); //TODO set to Pressed instead if a mouse button is down
+		setState(ButtonState::Normal); //TODO set to Pressed instead if a mouse button is down
 	}
 }
 
@@ -67,15 +67,15 @@ void ButtonWidgetBase::onDragFinished(Vector2f dragStartPos, Widget* dragStartWi
 
 void ButtonWidgetBase::onClicked(Vector2f pos)
 {
-	if (state != UIState::Disabled) activate();
+	if (state != ButtonState::Disabled) activate();
 }
 
-void ButtonWidgetBase::setState(UIState newState)
+void ButtonWidgetBase::setState(ButtonState newState)
 {
 	state = newState;
 }
 
-UIState ButtonWidgetBase::getState() const
+ButtonState ButtonWidgetBase::getState() const
 {
 	return state;
 }

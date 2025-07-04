@@ -6,15 +6,15 @@
 #include "Widget.hpp"
 
 
-enum class UIState : uint8_t
+enum class ButtonState : uint8_t
 {
-#define FOREACH_UISTATE() \
+#define FOREACH_BUTTON_STATE() \
 		_X(Normal) \
 		_X(Pressed) \
 		_X(Disabled)
 
 #define _X(val) val,
-	FOREACH_UISTATE()
+	FOREACH_BUTTON_STATE()
 #undef _X
 };
 
@@ -22,7 +22,7 @@ enum class UIState : uint8_t
 class ButtonWidgetBase : public Widget
 {
 private:
-	UIState state;
+	ButtonState state;
 	WidgetTransform* contentTransform;
 
 public:
@@ -31,8 +31,8 @@ public:
 
 	virtual void activate() const = 0;
 
-	ENGINEGUI_API virtual void setState(UIState newState);
-	ENGINEGUI_API UIState getState() const;
+	ENGINEGUI_API virtual void setState(ButtonState newState);
+	ENGINEGUI_API ButtonState getState() const;
 
 	ENGINEGUI_API virtual void onMouseDown(Vector2f pos) override;
 	ENGINEGUI_API virtual void onMouseUp(Vector2f pos) override;
