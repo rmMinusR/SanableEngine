@@ -26,11 +26,11 @@ public:
 
 	ENGINEGUI_API virtual void activate() const final;
 	
-private:
+protected:
 	friend class RadioButtonGroup;
 	void updateSprite();
 
-private:
+protected:
 	RadioButtonGroup* group;
 	ImageWidget* background;
 	SpriteSet sprites;
