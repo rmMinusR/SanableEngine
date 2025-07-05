@@ -87,6 +87,7 @@ public:
 	ENGINEGUI_API WidgetTransform* getParent() const;
 	ENGINEGUI_API void setParent(WidgetTransform* parent);
 	ENGINEGUI_API size_t getChildIndex() const;
+	ENGINEGUI_API void setChildIndex(size_t index);
 	ENGINEGUI_API size_t getChildrenCount() const;
 	ENGINEGUI_API WidgetTransform* getChild(size_t which) const;
 	ENGINEGUI_API void visitChildren(const std::function<void(WidgetTransform*)>& visitor, bool recurse = false);

@@ -139,6 +139,21 @@ size_t WidgetTransform::getChildIndex() const
 	return parent ? childIndex : -1;
 }
 
+void WidgetTransform::setChildIndex(size_t index)
+{
+	assert(parent);
+
+	size_t oldIdx = childIndex;
+
+	parent->children.erase(std::find(parent->children.begin(), parent->children.end(), this));
+	parent->children.insert(parent->children.begin() + index, this);
+	for (size_t i = std::min(oldIdx, index); i <= std::max(oldIdx, index); ++i)
+	{
+		parent->children[i]->childIndex = i;
+		parent->children[i]->markDirty();
+	}
+}
+
 size_t WidgetTransform::getChildrenCount() const
 {
 	return children.size();
