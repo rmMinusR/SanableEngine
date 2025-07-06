@@ -152,6 +152,9 @@ void WidgetTransform::setChildIndex(size_t index)
 		parent->children[i]->childIndex = i;
 		parent->children[i]->markDirty();
 	}
+
+	// Sanity check: children are well-ordered
+	for (size_t i = 0; i < parent->children.size(); ++i) assert(parent->children[i]->childIndex == i);
 }
 
 size_t WidgetTransform::getChildrenCount() const

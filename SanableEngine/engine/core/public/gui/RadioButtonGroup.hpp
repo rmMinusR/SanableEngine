@@ -24,7 +24,7 @@ public:
 
 	ENGINEGUI_API RadioButtonWidget* addItem();
 	ENGINEGUI_API RadioButtonWidget* insertItem(size_t index);
-	ENGINEGUI_API void insertItem(RadioButtonWidget* btn, size_t index);
+	ENGINEGUI_API void insertItem(RadioButtonWidget* btn, size_t index); // Note: New button keeps its sprites
 	ENGINEGUI_API void detachItem(RadioButtonWidget* btn); // If btn is actively focused, tab to the right gets focus priority
 	ENGINEGUI_API void removeItem(RadioButtonWidget* btn);
 

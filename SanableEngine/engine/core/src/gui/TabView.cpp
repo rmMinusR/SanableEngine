@@ -110,3 +110,13 @@ const Material* TabView::getMaterial() const
 void TabView::renderImmediate(Renderer* renderer)
 {
 }
+
+RadioButtonGroup* TabView::getTabArea()
+{
+	return tabArea;
+}
+
+WidgetTransform* TabView::getContentTransform()
+{
+	return contentTransform;
+}

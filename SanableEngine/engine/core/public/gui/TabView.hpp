@@ -33,6 +33,9 @@ public:
 	//ENGINEGUI_API ButtonWidget* getItemTab(size_t which);
 	//ENGINEGUI_API void setItem(size_t which, Widget* newWidget); // NOTE: Does NOT destroy old widget
 
+	ENGINEGUI_API RadioButtonGroup* getTabArea();
+	ENGINEGUI_API WidgetTransform* getContentTransform();
+
 private:
 	RadioButtonGroup* tabArea;
 	WidgetTransform* contentTransform;

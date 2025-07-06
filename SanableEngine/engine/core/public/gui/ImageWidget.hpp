@@ -16,6 +16,7 @@ public:
 	ENGINEGUI_API virtual ~ImageWidget();
 
 	ENGINEGUI_API void setSprite(const UISprite* newSprite);
+	ENGINEGUI_API const UISprite* getSprite() const;
 	ENGINEGUI_API void setTintColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
 	ENGINEGUI_API virtual const Material* getMaterial() const override;

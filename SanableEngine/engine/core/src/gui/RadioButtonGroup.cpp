@@ -33,7 +33,7 @@ void RadioButtonGroup::renderImmediate(Renderer* renderer)
 
 RadioButtonWidget* RadioButtonGroup::addItem()
 {
-	return insertItem(contentArea->getTransform()->getChildrenCount());
+	return insertItem(-1);
 }
 
 RadioButtonWidget* RadioButtonGroup::insertItem(size_t index)
@@ -46,16 +46,27 @@ RadioButtonWidget* RadioButtonGroup::insertItem(size_t index)
 
 void RadioButtonGroup::insertItem(RadioButtonWidget* btn, size_t index)
 {
+	if (index == -1)
+	{
+		index = contentArea->getTransform()->getChildrenCount();
+	}
+	else assert(0 <= index && index <= getTransform()->getChildrenCount());
+
 	btn->getTransform()->setParent(contentArea->getTransform());
 	btn->getTransform()->setChildIndex(index);
 	AutoLayoutPositioning* positioner = btn->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(contentArea);
 	positioner->config = btnSizeSettings;
 
-	if (curSelection >= index) curSelection++; // Preserve focused item
+	if (curSelection >= index && contentArea->getTransform()->getChildrenCount() > 1)
+	{
+		curSelection++; // Preserve focused item
+	}
 }
 
 void RadioButtonGroup::detachItem(RadioButtonWidget* btn)
 {
+	assert(btn->getTransform()->getParent() == this->getTransform());
+
 	if (curSelection > btn->getTransform()->getChildIndex() && curSelection > 0)
 	{
 		curSelection--; // Preserve focused item
@@ -66,6 +77,8 @@ void RadioButtonGroup::detachItem(RadioButtonWidget* btn)
 
 void RadioButtonGroup::removeItem(RadioButtonWidget* btn)
 {
+	assert(btn->getTransform()->getParent() == this->getTransform());
+
 	if (curSelection > btn->getTransform()->getChildIndex() && curSelection > 0)
 	{
 		curSelection--; // Preserve focused item
