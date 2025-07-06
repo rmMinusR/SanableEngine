@@ -70,6 +70,7 @@ TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, con
 	}
 	else assert(false);
 
+	tabArea->getTransform()->setParent(this->getTransform());
 	tabArea->setCallback([this](size_t from, size_t to) { this->tabSelectCallback(from, to); });
 }
 
