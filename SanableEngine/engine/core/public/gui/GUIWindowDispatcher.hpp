@@ -7,15 +7,18 @@
 #include "WindowUserLogic.hpp"
 
 class HUD;
+class WidgetTransform;
 class Widget;
 
 class GUIWindowDispatcher : public WindowUserLogic
 {
 	std::unique_ptr<WindowUserLogic> passthrough; //Input will be passed through if no GUI element consumes it
 
-	Widget* currentlyHovered;
+	WidgetTransform* currentlyHovered;
+	Widget* currentlyHoveredWidget;
 
 	Vector2f mouseDownPos;
+	WidgetTransform* mouseDownTransform;
 	Widget* mouseDownWidget;
 	float minDragDistance;
 	bool beingDragged;

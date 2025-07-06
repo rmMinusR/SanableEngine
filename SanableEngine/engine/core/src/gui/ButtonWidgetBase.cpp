@@ -59,7 +59,7 @@ void ButtonWidgetBase::onMouseEnter(Vector2f pos)
 
 void ButtonWidgetBase::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
 {
-	if (dragStartWidget == this && dragEndWidget == this)
+	if (dragStartWidget == this && dragEndWidget == this && state == ButtonState::Pressed)
 	{
 		activate();
 	}

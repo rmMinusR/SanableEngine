@@ -10,6 +10,8 @@
 GUIWindowDispatcher::GUIWindowDispatcher(Application* application, float minDragDistance) :
 	hud(application),
 	currentlyHovered(nullptr),
+	currentlyHoveredWidget(nullptr),
+	mouseDownTransform(nullptr),
 	mouseDownWidget(nullptr),
 	mouseDownPos(),
 	minDragDistance(minDragDistance),
@@ -34,12 +36,13 @@ void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
 	//Only perform if event is in mouse family, or window focus
 	if (ev.type == SDL_EventType::SDL_MOUSEMOTION || ev.type == SDL_EventType::SDL_WINDOWEVENT)
 	{
-		Widget* _newHover = hud.raycastClosest(mousePos);
+		WidgetTransform* _newHover = hud.raycastClosest(mousePos);
 		if (currentlyHovered != _newHover)
 		{
-			if (currentlyHovered) currentlyHovered->onMouseExit(mousePos);
+			if (currentlyHoveredWidget) currentlyHoveredWidget->onMouseExit(mousePos);
 			currentlyHovered = _newHover;
-			if (currentlyHovered) currentlyHovered->onMouseEnter(mousePos);
+			currentlyHoveredWidget = currentlyHovered->getWidget();
+			if (currentlyHoveredWidget) currentlyHoveredWidget->onMouseEnter(mousePos);
 		}
 	}
 
@@ -49,17 +52,18 @@ void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
 		case SDL_EventType::SDL_MOUSEBUTTONDOWN:
 		{
 			mouseDownPos = mousePos;
-			mouseDownWidget = currentlyHovered;
-			if (currentlyHovered) currentlyHovered->onMouseDown(mousePos);
+			mouseDownTransform = currentlyHovered;
+			mouseDownWidget = currentlyHoveredWidget;
+			if (currentlyHoveredWidget) currentlyHoveredWidget->onMouseDown(mousePos);
 			break;
 		}
 
 		case SDL_EventType::SDL_MOUSEBUTTONUP:
 		{
-			if (currentlyHovered)
+			if (currentlyHoveredWidget)
 			{
-				currentlyHovered->onMouseUp(mousePos);
-				if (!beingDragged && mouseDownWidget == currentlyHovered) currentlyHovered->onClicked(mousePos);
+				currentlyHoveredWidget->onMouseUp(mousePos);
+				if (!beingDragged && mouseDownWidget == currentlyHoveredWidget) currentlyHoveredWidget->onClicked(mousePos);
 			}
 			break;
 		}
@@ -91,8 +95,8 @@ void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
 			//Send while-dragged event
 			if (beingDragged)
 			{
-				if (mouseDownWidget ) mouseDownWidget ->whileDragged(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
-				if (currentlyHovered) currentlyHovered->whileDragged(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
+				if (mouseDownWidget       ) mouseDownWidget       ->whileDragged(mouseDownPos, mouseDownWidget, mousePos, currentlyHoveredWidget);
+				if (currentlyHoveredWidget) currentlyHoveredWidget->whileDragged(mouseDownPos, mouseDownWidget, mousePos, currentlyHoveredWidget);
 			}
 			break;
 		}
@@ -101,8 +105,8 @@ void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
 		{
 			if (beingDragged)
 			{
-				if (mouseDownWidget ) mouseDownWidget ->onDragFinished(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
-				if (currentlyHovered) currentlyHovered->onDragFinished(mouseDownPos, mouseDownWidget, mousePos, currentlyHovered);
+				if (mouseDownWidget       ) mouseDownWidget       ->onDragFinished(mouseDownPos, mouseDownWidget, mousePos, currentlyHoveredWidget);
+				if (currentlyHoveredWidget) currentlyHoveredWidget->onDragFinished(mouseDownPos, mouseDownWidget, mousePos, currentlyHoveredWidget);
 				beingDragged = false;
 			}
 			break;
