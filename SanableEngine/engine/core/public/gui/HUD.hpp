@@ -35,8 +35,9 @@ public:
 	ENGINEGUI_API void tick();
 	ENGINEGUI_API void render(Renderer* renderer);
 
-	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact = true) const;
-	ENGINEGUI_API Widget* raycastClosest(Vector2f pos, bool exact = true) const;
+	ENGINEGUI_API size_t raycast(Vector2f pos, WidgetTransform** hitsOut, size_t hitsOutMaxSz, bool exact = true) const;
+	ENGINEGUI_API void raycast(Vector2f pos, const std::function<void(WidgetTransform*)>& visitor, bool exact = true) const;
+	ENGINEGUI_API WidgetTransform* raycastClosest(Vector2f pos, bool exact = true) const;
 
 	ENGINEGUI_API WidgetTransform const* getRootTransform() const;
 	ENGINEGUI_API WidgetTransform* getRootTransform();

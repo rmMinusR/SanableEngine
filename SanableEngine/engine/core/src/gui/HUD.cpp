@@ -176,39 +176,70 @@ void HUD::render(Renderer* renderer)
 	// */
 }
 
-void HUD::raycast(Vector2f pos, const std::function<void(Widget*)>& visitor, bool exact) const
+size_t HUD::raycast(Vector2f pos, WidgetTransform** hitsOut, size_t hitsOutMaxSz, bool exact) const
+{
+	size_t idx = 0;
+
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it)
+	{
+		if ((it->getVisibility() & WidgetVisibility::FLAGS_Raycastable) != WidgetVisibility::FLAGS_Raycastable)
+			continue;
+
+		Widget* w = it->getWidget();
+		if ((w && exact) ? w->raycastExact(pos) : it->getRect().contains(pos))
+		{
+			if(hitsOut && idx < hitsOutMaxSz) hitsOut[idx] = &*it;
+			idx++;
+		}
+	}
+
+	if (hitsOut)
+	{
+		std::sort(
+			hitsOut,
+			hitsOut + std::min(idx, hitsOutMaxSz),
+			[](WidgetTransform* a, WidgetTransform* b) { return a->getRenderDepth() > b->getRenderDepth(); }
+		);
+	}
+
+	return idx;
+}
+
+void HUD::raycast(Vector2f pos, const std::function<void(WidgetTransform*)>& visitor, bool exact) const
 {
 	std::vector<WidgetTransform*> hits;
 
-	auto it = transforms->cbegin();
-	//++it; //HOTFIX: Skip viewport transform
-	for (; it != transforms->cend(); ++it)
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it)
 	{
+		if ((it->getVisibility() & WidgetVisibility::FLAGS_Raycastable) != WidgetVisibility::FLAGS_Raycastable)
+			continue;
+
 		Widget* w = it->getWidget();
-		if (w && ( exact ? w->raycastExact(pos) : it->getRect().contains(pos) ))
+		if ((w && exact) ? w->raycastExact(pos) : it->getRect().contains(pos))
 		{
 			hits.push_back(&*it);
 		}
 	}
 	
 	std::sort(hits.begin(), hits.end(), [](WidgetTransform* a, WidgetTransform* b) { return a->getRenderDepth() > b->getRenderDepth(); });
-	for (WidgetTransform* t : hits) visitor(t->getWidget());
+	for (WidgetTransform* t : hits) visitor(t);
 }
 
-Widget* HUD::raycastClosest(Vector2f pos, bool exact) const
+WidgetTransform* HUD::raycastClosest(Vector2f pos, bool exact) const
 {
-	Widget* out = nullptr;
+	WidgetTransform* out = nullptr;
 	WidgetTransform::depth_t outDepth;
 	
-	auto it = transforms->cbegin();
-	//++it; //HOTFIX: Skip viewport transform
-	for (; it != transforms->cend(); ++it)
+	for (auto it = transforms->cbegin(); it != transforms->cend(); ++it)
 	{
+		if ((it->getVisibility() & WidgetVisibility::FLAGS_Raycastable) != WidgetVisibility::FLAGS_Raycastable)
+			continue;
+
 		Widget* w = it->getWidget();
-		if (w && ( exact ? w->raycastExact(pos) : it->getRect().contains(pos) ))
+		if ((w && exact) ? w->raycastExact(pos) : it->getRect().contains(pos))
 		{
 			WidgetTransform::depth_t _depth = it->getRenderDepth();
-			if (!out || _depth > outDepth) { out = w; outDepth = _depth; }
+			if (!out || _depth > outDepth) { out = &*it; outDepth = _depth; }
 		}
 	}
 
