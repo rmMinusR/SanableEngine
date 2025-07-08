@@ -10,7 +10,7 @@ class AnchoredPositioning;
 
 class DraggableTabButton : public RadioButtonWidget
 {
-	std::function<bool(TabView*, TabView*)> destinationFilter;
+	std::function<bool(TabView*)> destinationFilter;
 	Widget* content;
 	ImageWidget* dragIndicator = nullptr;
 	AnchoredPositioning* dragPositioner = nullptr;
@@ -18,7 +18,7 @@ public:
 	ENGINEGUI_API DraggableTabButton(HUD* hud, Widget* content, RadioButtonGroup* group, SpriteSet sprites, const Material* material);
 	ENGINEGUI_API ~DraggableTabButton();
 
-	ENGINEGUI_API void setDestinationFilter(std::function<bool(TabView*, TabView*)> fn); // Source, destination
+	ENGINEGUI_API void setDestinationFilter(std::function<bool(TabView*)> fn);
 	ENGINEGUI_API void moveTo(TabView* destination, size_t index); // Ignores filter
 
 	ENGINEGUI_API virtual void onDragStarted(Vector2f dragStartPos, Vector2f currentMousePos) override;

@@ -14,7 +14,7 @@ DraggableTabButton::~DraggableTabButton()
 {
 }
 
-void DraggableTabButton::setDestinationFilter(std::function<bool(TabView*, TabView*)> fn)
+void DraggableTabButton::setDestinationFilter(std::function<bool(TabView*)> fn)
 {
 	destinationFilter = fn;
 }
@@ -79,24 +79,26 @@ void DraggableTabButton::onDragFinished(Vector2f dragStartPos, Widget* dragStart
 
 TabView* DraggableTabButton::findTabView(Vector2f pos) const
 {
-	// List all at query pos
-	size_t numHits = hud->raycast(pos, nullptr, 0);
-	WidgetTransform* hits[numHits];
-	hud->raycast(pos, hits, numHits);
-
 	TabView* front = nullptr;
 	WidgetTransform::depth_t frontDepth = std::numeric_limits<WidgetTransform::depth_t>::max();
-	for (WidgetTransform* w : hits)
-	{
-		if (!front || w->getRenderDepth() < frontDepth)
+
+	hud->raycast(
+		pos,
+		[&](WidgetTransform* w)
 		{
-			if (TabView* v = dynamic_cast<TabView*>(w->getWidget()))
+			if (!front || w->getRenderDepth() < frontDepth)
 			{
-				front = v;
-				frontDepth = w->getRenderDepth();
+				if (TabView* v = dynamic_cast<TabView*>(w->getWidget()))
+				{
+					if (!destinationFilter || destinationFilter(v))
+					{
+						front = v;
+						frontDepth = w->getRenderDepth();
+					}
+				}
 			}
 		}
-	}
+	);
 
 	return front;
 }

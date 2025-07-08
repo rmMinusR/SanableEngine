@@ -102,7 +102,7 @@ void RadioButtonGroup::insertItem(RadioButtonWidget* btn, size_t index)
 
 void RadioButtonGroup::detachItem(RadioButtonWidget* btn)
 {
-	assert(btn->getTransform()->getParent() == this->getTransform());
+	assert(btn->getTransform()->getParent() == contentArea->getTransform());
 
 	if (curSelection > btn->getTransform()->getChildIndex() && curSelection > 0)
 	{
@@ -114,7 +114,7 @@ void RadioButtonGroup::detachItem(RadioButtonWidget* btn)
 
 void RadioButtonGroup::removeItem(RadioButtonWidget* btn)
 {
-	assert(btn->getTransform()->getParent() == this->getTransform());
+	assert(btn->getTransform()->getParent() == contentArea->getTransform());
 
 	if (curSelection > btn->getTransform()->getChildIndex() && curSelection > 0)
 	{
