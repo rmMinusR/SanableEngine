@@ -31,16 +31,51 @@ void RadioButtonGroup::renderImmediate(Renderer* renderer)
 {
 }
 
+const Material* RadioButtonGroup::getButtonMaterial() const
+{
+	return btnMat;
+}
+
+void RadioButtonGroup::setButtonMaterial(const Material* mat)
+{
+	btnMat = mat;
+	for (size_t i = 0; i < contentArea->getTransform()->getChildrenCount(); ++i)
+	{
+		RadioButtonWidget* w = static_cast<RadioButtonWidget*>(contentArea->getTransform()->getChild(i)->getWidget());
+		w->background->setMaterial(mat);
+	}
+}
+
+RadioButtonWidget::SpriteSet RadioButtonGroup::getSprites() const
+{
+	return sprites;
+}
+
+void RadioButtonGroup::setSprites(RadioButtonWidget::SpriteSet sprites)
+{
+	this->sprites = sprites;
+	for (size_t i = 0; i < contentArea->getTransform()->getChildrenCount(); ++i)
+	{
+		RadioButtonWidget* w = static_cast<RadioButtonWidget*>(contentArea->getTransform()->getChild(i)->getWidget());
+		w->sprites = sprites;
+		w->updateSprite();
+	}
+}
+
 RadioButtonWidget* RadioButtonGroup::addItem()
 {
 	return insertItem(-1);
+}
+
+void RadioButtonGroup::addItem(RadioButtonWidget* btn)
+{
+	insertItem(btn, -1);
 }
 
 RadioButtonWidget* RadioButtonGroup::insertItem(size_t index)
 {
 	RadioButtonWidget* btn = hud->addWidget<RadioButtonWidget>(this, sprites, btnMat);
 	insertItem(btn, index);
-	btn->updateSprite();
 	return btn;
 }
 
@@ -61,6 +96,8 @@ void RadioButtonGroup::insertItem(RadioButtonWidget* btn, size_t index)
 	{
 		curSelection++; // Preserve focused item
 	}
+
+	btn->updateSprite();
 }
 
 void RadioButtonGroup::detachItem(RadioButtonWidget* btn)

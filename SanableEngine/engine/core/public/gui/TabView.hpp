@@ -19,7 +19,7 @@ public:
 		Right  = 0b11
 	};
 
-	ENGINEGUI_API TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation);
+	ENGINEGUI_API TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation, bool reorderable=false);
 	ENGINEGUI_API ~TabView();
 
 	ENGINEGUI_API virtual const Material* getMaterial() const override;
@@ -39,6 +39,7 @@ public:
 private:
 	RadioButtonGroup* tabArea;
 	WidgetTransform* contentTransform;
+	bool reorderable;
 
 	void tabSelectCallback(size_t from, size_t to);
 };

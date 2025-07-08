@@ -5,9 +5,11 @@
 #include "gui/ButtonWidget.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/VerticalGroupWidget.hpp"
+#include "gui/DraggableTabButton.hpp"
 
-TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation) :
-	Widget(hud)
+TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation, bool reorderable) :
+	Widget(hud),
+	reorderable(reorderable)
 {
 	// TODO WidgetTransform::setChildIndex()
 	contentTransform = hud->getMemory()->create<WidgetTransform>(this, hud);
@@ -82,7 +84,14 @@ TabView::~TabView()
 RadioButtonWidget* TabView::addItem(Widget* widget)
 {
 	// Set up tab button
-	RadioButtonWidget* tabBtn = tabArea->addItem();
+	//RadioButtonWidget* tabBtn = tabArea->addItem();
+	RadioButtonWidget* tabBtn;
+	if (reorderable)
+	{
+		tabBtn = hud->addWidget<DraggableTabButton>(widget, tabArea, tabArea->getSprites(), tabArea->getButtonMaterial());
+		tabArea->addItem(tabBtn);
+	}
+	else tabBtn = tabArea->addItem(); // Non-reorderable
 
 	// Set up tab content
 	widget->getTransform()->setParent(contentTransform);

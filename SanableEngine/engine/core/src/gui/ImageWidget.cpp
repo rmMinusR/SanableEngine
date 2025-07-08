@@ -31,6 +31,11 @@ void ImageWidget::setTintColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	tintColor = { r, g, b, a };
 }
 
+void ImageWidget::setMaterial(const Material* mat)
+{
+	material = mat;
+}
+
 const Material* ImageWidget::getMaterial() const
 {
 	return material;
