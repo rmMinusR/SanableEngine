@@ -12,7 +12,7 @@ TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, con
 	reorderable(reorderable)
 {
 	// TODO WidgetTransform::setChildIndex()
-	contentTransform = hud->getMemory()->create<WidgetTransform>(this, hud);
+	contentTransform = hud->getMemory()->create<WidgetTransform>(nullptr, hud);
 	contentTransform->setParent(this->getTransform());
 	AnchoredPositioning* contentPositioner = contentTransform->setPositioningStrategy<AnchoredPositioning>();
 	contentPositioner->fillParent();

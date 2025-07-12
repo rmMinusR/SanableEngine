@@ -36,7 +36,7 @@ void DraggableTabButton::onDragStarted(Vector2f dragStartPos, Vector2f currentMo
 
 	assert(!dragIndicator);
 	assert(!dragPositioner);
-	dragIndicator = hud->addWidget<ImageWidget>(getMaterial(), sprites.normal);
+	dragIndicator = hud->addWidget<ImageWidget>(getBackground()->getMaterial(), sprites.normal);
 	dragIndicator->getTransform()->setVisibility(WidgetVisibility::Visible & ~WidgetVisibility::FLAGS_Raycastable);
 	dragIndicator->getTransform()->setRelativeRenderDepth(getTransform()->getRenderDepth() - 20); // Draw indicator on top of dragged button
 	dragPositioner = dragIndicator->getTransform()->setPositioningStrategy<AnchoredPositioning>();
@@ -58,11 +58,6 @@ void DraggableTabButton::onDragFinished(Vector2f dragStartPos, Widget* dragStart
 	TabView* dst = nullptr;
 	if (dragStartWidget == this && (dst = findTabView(dragEndPos)))
 	{
-		// Attempt to find TabView under cursor
-		size_t numHits = hud->raycast(dragEndPos, nullptr, 0);
-		WidgetTransform* hits[numHits];
-		hud->raycast(dragEndPos, hits, numHits);
-
 		assert(dragIndicator);
 		assert(dragPositioner);
 
@@ -70,6 +65,7 @@ void DraggableTabButton::onDragFinished(Vector2f dragStartPos, Widget* dragStart
 		dst->getTabArea()->insertItem(this, -1);
 		content->getTransform()->setParent(dst->getContentTransform());
 		content->getTransform()->setChildIndex(this->getTransform()->getChildIndex());
+		group = dst->getTabArea();
 
 		hud->destroyWidget(dragIndicator);
 		dragIndicator = nullptr;

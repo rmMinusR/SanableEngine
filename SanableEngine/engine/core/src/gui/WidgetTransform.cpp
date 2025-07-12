@@ -119,19 +119,27 @@ void WidgetTransform::setParent(WidgetTransform* parent)
 	if (this->parent)
 	{
 		auto it = std::find(this->parent->children.begin(), this->parent->children.end(), this);
-		if (it != this->parent->children.end()) this->parent->children.erase(it);
+		assert(it != this->parent->children.end());
+		this->parent->children.erase(it);
+
+		// Update child indices
+		for (size_t i = 0; i != this->parent->children.size(); ++i) // TODO update only [it, end)
+		{
+			this->parent->children[i]->childIndex = i;
+		}
+
+		this->parent->markDirty(); // Refresh layout groups, if any are present
+	}
+
+	//Add self to parent's children list
+	if (parent && std::find(parent->children.begin(), parent->children.end(), this) == parent->children.end()) // Explicit check is necessary in case parent is HUD root during widget initialization
+	{
+		childIndex = parent->children.size();
+		parent->children.push_back(this);
 	}
 
 	this->parent = parent;
 	markDirty();
-
-	//Add self to parent's children list
-	if (parent)
-	{
-		assert(std::find(parent->children.begin(), parent->children.end(), this) == parent->children.end());
-		childIndex = parent->children.size();
-		parent->children.push_back(this);
-	}
 }
 
 size_t WidgetTransform::getChildIndex() const
