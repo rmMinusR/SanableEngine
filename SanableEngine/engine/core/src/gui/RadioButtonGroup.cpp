@@ -143,6 +143,11 @@ size_t RadioButtonGroup::getSelectionIndex() const
 	return curSelection;
 }
 
+size_t RadioButtonGroup::getOptionsCount() const
+{
+	return contentArea->getTransform()->getChildrenCount();
+}
+
 void RadioButtonGroup::setCallback(std::function<void(size_t, size_t)> callback)
 {
 	this->callback = callback;

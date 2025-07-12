@@ -61,6 +61,20 @@ void DraggableTabButton::onDragFinished(Vector2f dragStartPos, Widget* dragStart
 		assert(dragIndicator);
 		assert(dragPositioner);
 
+		if (group->getSelectionIndex() == getTransform()->getChildIndex())
+		{
+			if (group->getSelectionIndex()+1 == group->getOptionsCount())
+			{
+				// Last option: select down
+				group->select(group->getSelectionIndex() - 1);
+			}
+			else
+			{
+				// Select up
+				group->select(group->getSelectionIndex() + 1);
+			}
+		}
+
 		group->detachItem(this);
 		dst->getTabArea()->insertItem(this, -1);
 		content->getTransform()->setParent(dst->getContentTransform());

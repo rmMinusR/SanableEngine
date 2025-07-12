@@ -26,6 +26,7 @@ public:
 
 	ENGINEGUI_API void select(size_t newSelectionIndex);
 	ENGINEGUI_API size_t getSelectionIndex() const;
+	ENGINEGUI_API size_t getOptionsCount() const;
 	ENGINEGUI_API void setCallback(std::function<void(size_t, size_t)> callback); // old, new
 
 	ENGINEGUI_API RadioButtonWidget* addItem();
