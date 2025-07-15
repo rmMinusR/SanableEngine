@@ -5,7 +5,6 @@
 #include "gui/ButtonWidget.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/VerticalGroupWidget.hpp"
-#include "gui/DraggableTabButton.hpp"
 
 TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation, bool reorderable) :
 	Widget(hud),

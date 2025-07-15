@@ -10,7 +10,7 @@ add_compile_definitions(NOMINMAX) # Come on, MSVC. Don't conflict with standard 
 
 include("engine/CMakeLists.txt") # Shared common code
 include("DevPlatform/CMakeLists.txt")
-include("EditorApplication/CMakeLists.txt")
+include("editor/CMakeLists.txt")
 
 # YOUR PLUGINS/GAMES HERE
 include("PluginControlUI/CMakeLists.txt")

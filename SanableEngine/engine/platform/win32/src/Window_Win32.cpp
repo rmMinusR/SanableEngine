@@ -67,7 +67,8 @@ bool Window_Win32::wasCloseRequested() const
 
 void Window_Win32::setActiveDrawTarget() const
 {
-    SDL_GL_MakeCurrent(sdlHandle, renderer.sdlHandle());
+    int err = SDL_GL_MakeCurrent(sdlHandle, renderer.sdlHandle());
+    assert(!err);
     assert(SDL_GL_GetCurrentWindow() == sdlHandle);
     assert(SDL_GL_GetCurrentContext() == renderer.sdlHandle());
 }

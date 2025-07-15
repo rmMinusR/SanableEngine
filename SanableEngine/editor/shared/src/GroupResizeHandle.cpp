@@ -1,4 +1,4 @@
-#include "gui/GroupResizeHandle.hpp"
+#include "GroupResizeHandle.hpp"
 
 #include <algorithm>
 

@@ -9,10 +9,13 @@ using namespace std::chrono_literals;
 #include "Material.hpp"
 #include "application/Application.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
-#include "gui/HorizontalGroupWidget.hpp"
+#include "gui/TabView.hpp"
 #include "gui/ImageWidget.hpp"
-#include "gui/GroupResizeHandle.hpp"
+#include "gui/ButtonWidget.hpp"
+#include "gui/WidgetTransform.hpp"
+#include "gui/HorizontalGroupWidget.hpp"
 #include "gui/UISprite.hpp"
+#include "GroupResizeHandle.hpp"
 #include "SplashWindow.hpp"
 
 void SanableMain(Application* application)
@@ -64,24 +67,25 @@ void SanableMain(Application* application)
         HorizontalGroupWidget* hgrp = hud->addWidget<HorizontalGroupWidget>();
         hgrp->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
 
-        ImageWidget* placeholderLeft = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1); // Left
-        placeholderLeft->getTransform()->setParent(hgrp->getTransform());
-        placeholderLeft->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp)->config.setMinSize(64).setMaxSize(256);
-
-        ImageWidget* handleImage = hud->addWidget<ImageWidget>(imageMat, sprDividerNormal);
-        GroupResizeHandle* handle = hud->addWidget<GroupResizeHandle>(handleImage, sprDividerNormal, sprDividerDragged); // Handle
-        handle->getTransform()->setParent(hgrp->getTransform());
-        handle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp)->config.setMinSize(15).flexWeight = 0;
+        for (size_t i = 0; i < 2; ++i)
+        {
+            TabView* tabView = hud->addWidget<TabView>(Vector2f{ 100, 50 }, imageMat, RadioButtonWidget::SpriteSet { sprPlaceholder1, sprPlaceholder2, sprPlaceholder2 }, TabView::TabsLocation::Top, true);
+            tabView->getTransform()->setParent(hgrp->getTransform());
+            tabView->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
         
-        ImageWidget* placeholderRight = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder2); // Right
-        placeholderRight->getTransform()->setParent(hgrp->getTransform());
-        placeholderRight->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp)->config.setMinSize(64);
+            ImageWidget* placeholderLeft = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1); // Left
+            RadioButtonWidget* btnLeft = tabView->addItem(placeholderLeft);
 
+            ImageWidget* placeholderRight = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder2); // Right
+            RadioButtonWidget* btnRight = tabView->addItem(placeholderRight);
+        }
+
+        editorWindow->draw();
         application->setMainWindow(editorWindow);
     }
 
     // Teardown loader window and UI resources
-    delete loaderWindow;
+    //delete loaderWindow;
 
     application->doMainLoop();
 }

@@ -1,4 +1,4 @@
-#include "gui/DraggableTabButton.hpp"
+#include "DraggableTabButton.hpp"
 
 #include "gui/HUD.hpp"
 #include "gui/ImageWidget.hpp"
