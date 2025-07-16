@@ -9,12 +9,12 @@ using namespace std::chrono_literals;
 #include "Material.hpp"
 #include "application/Application.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
-#include "gui/TabView.hpp"
 #include "gui/ImageWidget.hpp"
 #include "gui/ButtonWidget.hpp"
 #include "gui/WidgetTransform.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/UISprite.hpp"
+#include "DraggableTabView.hpp"
 #include "GroupResizeHandle.hpp"
 #include "SplashWindow.hpp"
 
@@ -69,7 +69,7 @@ void SanableMain(Application* application)
 
         for (size_t i = 0; i < 2; ++i)
         {
-            TabView* tabView = hud->addWidget<TabView>(Vector2f{ 100, 50 }, imageMat, RadioButtonWidget::SpriteSet { sprPlaceholder1, sprPlaceholder2, sprPlaceholder2 }, TabView::TabsLocation::Top, true);
+            DraggableTabView* tabView = hud->addWidget<DraggableTabView>(Vector2f{ 100, 50 }, imageMat, RadioButtonWidget::SpriteSet { sprPlaceholder1, sprPlaceholder2, sprPlaceholder2 }, TabView::TabsLocation::Top);
             tabView->getTransform()->setParent(hgrp->getTransform());
             tabView->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
         

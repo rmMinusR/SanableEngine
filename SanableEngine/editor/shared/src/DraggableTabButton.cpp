@@ -2,7 +2,7 @@
 
 #include "gui/HUD.hpp"
 #include "gui/ImageWidget.hpp"
-#include "gui/TabView.hpp"
+#include "DraggableTabView.hpp"
 
 DraggableTabButton::DraggableTabButton(HUD* hud, Widget* content, RadioButtonGroup* group, SpriteSet sprites, const Material* material) :
 	RadioButtonWidget(hud, group, sprites, material),
@@ -14,12 +14,12 @@ DraggableTabButton::~DraggableTabButton()
 {
 }
 
-void DraggableTabButton::setDestinationFilter(std::function<bool(TabView*)> fn)
+void DraggableTabButton::setDestinationFilter(std::function<bool(DraggableTabView*)> fn)
 {
 	destinationFilter = fn;
 }
 
-void DraggableTabButton::moveTo(TabView* destination, size_t index)
+void DraggableTabButton::moveTo(DraggableTabView* destination, size_t index)
 {
 	// Reparent tab
 	group->detachItem(this);
@@ -55,7 +55,7 @@ void DraggableTabButton::whileDragged(Vector2f dragStartPos, Widget* dragStartWi
 
 void DraggableTabButton::onDragFinished(Vector2f dragStartPos, Widget* dragStartWidget, Vector2f dragEndPos, Widget* dragEndWidget)
 {
-	TabView* dst = nullptr;
+	DraggableTabView* dst = nullptr;
 	if (dragStartWidget == this && (dst = findTabView(dragEndPos)))
 	{
 		assert(dragIndicator);
@@ -87,9 +87,9 @@ void DraggableTabButton::onDragFinished(Vector2f dragStartPos, Widget* dragStart
 	}
 }
 
-TabView* DraggableTabButton::findTabView(Vector2f pos) const
+DraggableTabView* DraggableTabButton::findTabView(Vector2f pos) const
 {
-	TabView* front = nullptr;
+	DraggableTabView* front = nullptr;
 	WidgetTransform::depth_t frontDepth = std::numeric_limits<WidgetTransform::depth_t>::max();
 
 	hud->raycast(
@@ -98,7 +98,7 @@ TabView* DraggableTabButton::findTabView(Vector2f pos) const
 		{
 			if (!front || w->getRenderDepth() < frontDepth)
 			{
-				if (TabView* v = dynamic_cast<TabView*>(w->getWidget()))
+				if (DraggableTabView* v = dynamic_cast<DraggableTabView*>(w->getWidget()))
 				{
 					if (!destinationFilter || destinationFilter(v))
 					{

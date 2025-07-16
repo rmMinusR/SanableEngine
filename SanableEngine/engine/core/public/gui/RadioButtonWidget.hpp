@@ -28,12 +28,12 @@ public:
 	
 protected:
 	friend class RadioButtonGroup;
-	void updateSprite();
+	ENGINEGUI_API void updateSprite();
 
 protected:
 	RadioButtonGroup* group;
 	ImageWidget* background;
 	SpriteSet sprites;
 
-	virtual void setState(ButtonState newState) override final;
+	ENGINEGUI_API virtual void setState(ButtonState newState) override final;
 };

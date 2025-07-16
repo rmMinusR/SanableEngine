@@ -6,9 +6,8 @@
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/VerticalGroupWidget.hpp"
 
-TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation, bool reorderable) :
-	Widget(hud),
-	reorderable(reorderable)
+TabView::TabView(HUD* hud, Vector2f tabBtnSize, const Material* tabBtnBgMat, const RadioButtonWidget::SpriteSet tabSprites, TabsLocation tabsLocation) :
+	Widget(hud)
 {
 	// TODO WidgetTransform::setChildIndex()
 	contentTransform = hud->getMemory()->create<WidgetTransform>(nullptr, hud);
@@ -83,14 +82,7 @@ TabView::~TabView()
 RadioButtonWidget* TabView::addItem(Widget* widget)
 {
 	// Set up tab button
-	//RadioButtonWidget* tabBtn = tabArea->addItem();
-	RadioButtonWidget* tabBtn;
-	if (reorderable)
-	{
-		tabBtn = hud->addWidget<DraggableTabButton>(widget, tabArea, tabArea->getSprites(), tabArea->getButtonMaterial());
-		tabArea->addItem(tabBtn);
-	}
-	else tabBtn = tabArea->addItem(); // Non-reorderable
+	RadioButtonWidget* tabBtn = createTabButton(widget);
 
 	// Set up tab content
 	widget->getTransform()->setParent(contentTransform);
@@ -98,6 +90,11 @@ RadioButtonWidget* TabView::addItem(Widget* widget)
 	widget->getTransform()->setVisibility(contentTransform->getChildrenCount() > 1 ? WidgetVisibility::Collapsed : WidgetVisibility::Visible);
 
 	return tabBtn;
+}
+
+RadioButtonWidget* TabView::createTabButton(Widget* contentWidget)
+{
+	return tabArea->addItem();
 }
 
 void TabView::select(size_t newSelectionIndex)
