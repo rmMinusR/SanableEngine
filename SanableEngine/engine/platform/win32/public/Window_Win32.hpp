@@ -16,7 +16,6 @@ class Window_Win32 : public Window
 private:
 	SDL_Window* sdlHandle;
 	OpenGlRenderer renderer;
-	void draw() const override;
 	MenuBar_Win32* menuBar = nullptr;
 
 	int sdlID;
@@ -29,6 +28,7 @@ public:
 
 	virtual Renderer* getRenderer() override { return &renderer; }
 	virtual void setActiveDrawTarget() const override;
+	void draw() const override;
 
 	virtual void move(int x, int y) override;
 	virtual int getWidth() const override;

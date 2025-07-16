@@ -49,4 +49,7 @@ public:
 	ENGINECORE_API size_t getLevelCount() const;
 	ENGINECORE_API Level* addLevel();
 	ENGINECORE_API void removeLevel(Level* level);
+
+    ENGINECORE_API void doMainLoop();
+    ENGINECORE_API void frameStep();
 };

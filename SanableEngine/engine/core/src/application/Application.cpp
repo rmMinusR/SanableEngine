@@ -10,19 +10,6 @@
 #include "Window.hpp"
 #include "WindowUserLogic.hpp"
 #include "game/Game.hpp"
-#include "MemoryRoot.hpp"
-
-void Application::processEvent(SDL_Event& event)
-{
-    //Old testing stuff, should prob be refactored
-    if (event.type == SDL_QUIT) quit = true;
-
-    if (event.type == SDL_KEYDOWN)
-    {
-        if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
-        if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
-    }
-}
 
 Application::Application() :
     isAlive(false),
@@ -44,7 +31,6 @@ void Application::init(Game* game, gpr460::System& _system)
 {
     assert(!isAlive);
     isAlive = true;
-    quit = false;
 
     frameAllocator.resize(frameAllocatorSize);
 
@@ -99,35 +85,6 @@ void Application::shutdown()
 
     heap.reset(); //Finish cleaning up memory
     system->Shutdown();
-}
-
-void Application::doMainLoop()
-{
-    // Ensure up to date
-    pluginManager.executeCommandBuffer();
-    game->refreshCallBatchers(true);
-
-    // Run
-    system->DoMainLoop();
-}
-
-void Application::frameStep(void* arg)
-{
-    Application* engine = (Application*)arg;
-
-    engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
-
-    engine->game->refreshCallBatchers(false);
-    engine->system->pumpEvents();
-    engine->game->refreshCallBatchers(false);
-    engine->game->tick();
-    engine->game->refreshCallBatchers(false);
-    for (size_t i = 0; i < engine->system->getNumWindows(); ++i) engine->system->getWindow(i)->draw();
-
-    if (engine->pluginManager.executeCommandBuffer() != 0)
-    {
-        MemoryRoot::get()->ensureFresh();
-    }
 }
 
 Game* Application::getGame() const

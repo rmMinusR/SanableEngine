@@ -15,6 +15,7 @@ namespace gpr460
 	{
 	protected:
 		bool isAlive = false;
+		bool quitRequested = false;
 		Application* engine;
 		float targetFps;
 		static constexpr float defaultTargetFps = 60;
@@ -22,7 +23,7 @@ namespace gpr460
 	public: //FIXME make protected again
 		friend class ::Application;
 		virtual void Init(Application*);
-		virtual void DoMainLoop() = 0;
+		virtual void DoMainLoop(void(*stepFn)(void*), void* stepArg) = 0;
 		virtual void Shutdown() = 0;
 		
 		friend class ::PluginManager;
@@ -39,6 +40,8 @@ namespace gpr460
 		virtual void destroyWindow(Window* window) = 0;
 		virtual size_t getNumWindows() const = 0;
 		virtual Window* getWindow(size_t which) = 0;
+
+		void requestQuit();
 
 		virtual void DebugPause() = 0;
 

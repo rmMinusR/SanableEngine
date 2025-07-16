@@ -3,6 +3,7 @@
 void gpr460::System::Init(Application* engine)
 {
 	this->engine = engine;
+	quitRequested = false;
 }
 
 gpr460::System::System()
@@ -14,4 +15,9 @@ gpr460::System::System()
 
 gpr460::System::~System()
 {
+}
+
+void gpr460::System::requestQuit()
+{
+	quitRequested = true;
 }

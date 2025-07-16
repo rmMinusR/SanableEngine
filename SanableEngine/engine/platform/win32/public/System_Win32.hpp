@@ -44,7 +44,7 @@ namespace gpr460
 #endif
 	protected:
 		void Init(Application*) override;
-		void DoMainLoop() override;
+		void DoMainLoop(void(*stepFn)(void*), void* stepArg) override;
 		void Shutdown() override;
 
 	public:

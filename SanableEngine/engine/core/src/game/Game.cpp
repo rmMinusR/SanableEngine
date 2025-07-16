@@ -2,6 +2,9 @@
 
 #include <cassert>
 
+#include "MemoryRoot.hpp"
+#include "System.hpp"
+#include "Window.hpp"
 #include "game/GameObject.hpp"
 #include "game/Component.hpp"
 #include "game/InputSystem.hpp"
@@ -109,4 +112,32 @@ Level* Game::addLevel()
 void Game::removeLevel(Level* level)
 {
     levels->release(level);
+}
+
+
+void Game::doMainLoop()
+{
+    // Ensure up to date
+    application->getPluginManager()->executeCommandBuffer();
+    refreshCallBatchers(true);
+
+    // Run
+    application->getSystem()->DoMainLoop(+[](void* arg) { static_cast<Game*>(arg)->frameStep(); }, this);
+}
+
+void Game::frameStep()
+{
+    application->getFrameAllocator()->restoreCheckpoint(StackAllocator::Checkpoint());
+
+    refreshCallBatchers(false);
+    application->getSystem()->pumpEvents();
+    refreshCallBatchers(false);
+    tick();
+    refreshCallBatchers(false);
+    for (size_t i = 0; i < application->getSystem()->getNumWindows(); ++i) application->getSystem()->getWindow(i)->draw();
+
+    if (application->getPluginManager()->executeCommandBuffer() != 0)
+    {
+        MemoryRoot::get()->ensureFresh();
+    }
 }

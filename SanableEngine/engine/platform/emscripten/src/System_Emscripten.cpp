@@ -7,8 +7,6 @@
 #include <iostream>
 #include <cassert>
 
-#include "Application.hpp"
-
 gpr460::System_Emscripten::System_Emscripten()
 {
 }
@@ -35,9 +33,9 @@ void gpr460::System_Emscripten::Init(Application* engine)
 	isAlive = true;
 }
 
-void gpr460::System_Emscripten::DoMainLoop()
+void gpr460::System_Emscripten::DoMainLoop(void(*stepFn)(void*), void* stepArg)
 {
-	emscripten_set_main_loop_arg(Application::frameStep, engine, 0, true);
+	emscripten_set_main_loop_arg(stepFn, stepArg, 0, true);
 }
 
 void gpr460::System_Emscripten::Shutdown()

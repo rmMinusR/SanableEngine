@@ -34,16 +34,11 @@ private:
     Window* mainWindow = nullptr;
 
 public:
-    bool quit = false;
-
     ENGINECORE_API Application();
     ENGINECORE_API ~Application();
 
     ENGINECORE_API void init(Game* game, gpr460::System& system);
     ENGINECORE_API void shutdown();
-
-    ENGINECORE_API void doMainLoop();
-    ENGINECORE_API static void frameStep(void* arg);
 
     ENGINECORE_API Game* getGame() const;
     ENGINECORE_API gpr460::System* getSystem();
@@ -55,7 +50,4 @@ public:
     ENGINECORE_API void setMainWindow(Window*); // Note: does NOT destroy old main window
 
     ENGINECORE_API Window* buildWindow(WindowSettings& settings);
-
-    // INTERNAL USE ONLY
-    ENGINECORE_API void processEvent(SDL_Event& event);
 };

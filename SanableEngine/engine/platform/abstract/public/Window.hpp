@@ -23,7 +23,6 @@ protected:
 
 	gpr460::System* system;
 	void* context; // Application
-	virtual void draw() const = 0;
 
 	virtual void handleEvent(SDL_Event& ev);
 	friend class Application;
@@ -39,6 +38,7 @@ public:
 	bool isFocused() const;
 	virtual Renderer* getRenderer() = 0;
 	virtual void setActiveDrawTarget() const = 0;
+	virtual void draw() const = 0;
 
 	virtual void move(int x, int y) = 0;
 	virtual int getWidth() const = 0;

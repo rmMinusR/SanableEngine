@@ -44,5 +44,5 @@ void SanableMain(Application* application)
 
     // Run
     application->getHeap()->ensureFresh();
-	application->doMainLoop();
+	application->getGame()->doMainLoop();
 }
