@@ -38,18 +38,16 @@ namespace gpr460
 		Window_Win32* currentFocus = nullptr;
 		std::vector<Window_Win32*> windows;
 
-		friend class ::Application;
 #ifdef _DEBUG
 		_CrtMemState checkpoint;
 #endif
-	protected:
-		void Init(Application*) override;
-		void DoMainLoop(void(*stepFn)(void*), void* stepArg) override;
-		void Shutdown() override;
-
 	public:
 		System_Win32(GLSettings);
 		~System_Win32();
+
+		void Init() override;
+		void DoMainLoop(void(*stepFn)(void*), void* stepArg) override;
+		void Shutdown() override;
 
 		virtual void pumpEvents() override;
 

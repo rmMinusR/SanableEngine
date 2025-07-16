@@ -11,9 +11,9 @@
 #include "WindowUserLogic.hpp"
 #include "game/Game.hpp"
 
-Application::Application() :
+Application::Application(gpr460::System& system) :
     isAlive(false),
-    system(nullptr),
+    system(&system),
     pluginManager(this),
     mainWindow(nullptr)
 {
@@ -27,15 +27,12 @@ Application::~Application()
 void engine_reportTypes(ModuleTypeRegistry* registry);
 //API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init(Game* game, gpr460::System& _system)
+void Application::init(Game* game)
 {
     assert(!isAlive);
     isAlive = true;
 
     frameAllocator.resize(frameAllocatorSize);
-
-    this->system = &_system;
-    system->Init(this);
 
     //Prepare RTTI
     {
@@ -84,7 +81,6 @@ void Application::shutdown()
     pluginManager.forgetAll();
 
     heap.reset(); //Finish cleaning up memory
-    system->Shutdown();
 }
 
 Game* Application::getGame() const

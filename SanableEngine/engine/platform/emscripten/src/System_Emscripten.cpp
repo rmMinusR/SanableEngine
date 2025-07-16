@@ -25,9 +25,9 @@ void gpr460::System_Emscripten::DebugPause()
 #endif
 }
 
-void gpr460::System_Emscripten::Init(Application* engine)
+void gpr460::System_Emscripten::Init()
 {
-	System::Init(engine);
+	System::Init();
 
 	assert(!isAlive);
 	isAlive = true;

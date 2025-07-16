@@ -34,10 +34,10 @@ private:
     Window* mainWindow = nullptr;
 
 public:
-    ENGINECORE_API Application();
+    ENGINECORE_API Application(gpr460::System& system);
     ENGINECORE_API ~Application();
 
-    ENGINECORE_API void init(Game* game, gpr460::System& system);
+    ENGINECORE_API void init(Game* game);
     ENGINECORE_API void shutdown();
 
     ENGINECORE_API Game* getGame() const;

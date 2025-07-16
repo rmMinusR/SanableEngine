@@ -33,9 +33,9 @@ gpr460::System_Win32::~System_Win32()
 	assert(windows.empty());
 }
 
-void gpr460::System_Win32::Init(Application* engine)
+void gpr460::System_Win32::Init()
 {
-	System::Init(engine);
+	System::Init();
 
 	assert(!isAlive);
 	isAlive = true;

@@ -16,22 +16,20 @@ namespace gpr460
 	protected:
 		bool isAlive = false;
 		bool quitRequested = false;
-		Application* engine;
 		float targetFps;
 		static constexpr float defaultTargetFps = 60;
 
 	public: //FIXME make protected again
-		friend class ::Application;
-		virtual void Init(Application*);
-		virtual void DoMainLoop(void(*stepFn)(void*), void* stepArg) = 0;
-		virtual void Shutdown() = 0;
-		
 		friend class ::PluginManager;
 		virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const = 0;
 
 	public:
 		System();
 		virtual ~System();
+
+		virtual void Init();
+		virtual void DoMainLoop(void(*stepFn)(void*), void* stepArg) = 0;
+		virtual void Shutdown() = 0;
 
 		virtual void pumpEvents() = 0;
 

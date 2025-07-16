@@ -1,15 +1,13 @@
 #include "System.hpp"
 
-void gpr460::System::Init(Application* engine)
+void gpr460::System::Init()
 {
-	this->engine = engine;
 	quitRequested = false;
 }
 
 gpr460::System::System()
 {
 	isAlive = false;
-	engine = nullptr;
 	targetFps = defaultTargetFps;
 }
 
