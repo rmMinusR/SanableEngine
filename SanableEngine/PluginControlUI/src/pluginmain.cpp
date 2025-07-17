@@ -24,13 +24,13 @@ Window* ctlWindow;
 HUD* ctlGuiRoot;
 Plugin const* plugin;
 
-PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* engine)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application* engine)
 {
     printf("PluginControlUI: plugin_preInit() called\n");
 
     report->name = L"PluginControlUI";
     
-    ::game = engine->getGame();
+    ::game = (Game*)engine;
     ::plugin = context;
     
     return true;
@@ -44,9 +44,9 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
     {
         {
             WindowSettings windowSettings("Plugin Control", 800, 600);
-            GUIWindowDispatcher* windowLogic = new GUIWindowDispatcher(game->getApplication(), 5);
+            GUIWindowDispatcher* windowLogic = new GUIWindowDispatcher(game, 5);
             windowSettings.userLogic = windowLogic;
-            ctlWindow = game->getApplication()->buildWindow(windowSettings);
+            ctlWindow = game->buildWindow(windowSettings);
             ctlGuiRoot = &windowLogic->hud;
         }
 
@@ -81,12 +81,12 @@ PLUGIN_C_API(bool) __cdecl plugin_init(bool firstRun)
         Resources::labelFont = new Font(plugin->getPluginDir() / "resources/ui/fonts/arial.ttf", 24);
 
         //Init UI elements
-        ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getApplication()->getPluginManager(), nullptr);
+        ui = ctlGuiRoot->addWidget<PluginManagerView>(game->getPluginManager(), nullptr);
         ui->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
         
         //Restore main window context so rest of stuff can init properly
         //TODO do this (automatically?) at start of every plugin
-        game->getApplication()->getMainWindow()->setActiveDrawTarget();
+        game->getMainWindow()->setActiveDrawTarget();
     }
 
     return true;
@@ -118,7 +118,7 @@ PLUGIN_C_API(void) __cdecl plugin_cleanup(bool shutdown)
         delete Resources::rttiParentSprite;
         delete Resources::rttiParentTexture;
 
-        game->getApplication()->getSystem()->destroyWindow(ctlWindow);
+        game->getSystem()->destroyWindow(ctlWindow);
         ctlWindow = nullptr;
     }
 }

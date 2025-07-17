@@ -4,20 +4,22 @@
 #include <optional>
 #include <functional>
 #include "../dllapi.h"
-#include "Level.hpp"
 #include "TypedMemoryPool.hpp"
+#include "StackAllocator.hpp"
+#include "System.hpp"
+#include "application/Application.hpp"
+#include "Level.hpp"
 
-class Application;
 class PluginManager;
 class GameObject;
 class InputSystem;
 class GameWindowRenderPipeline;
 
-class Game
+class Game : public Application
 {
-    Application* application;
     InputSystem* inputSystem;
 
+    StackAllocator frameAllocator; //Temp memory that will be reset every frame
     TypedMemoryPool<Level>* levels;
     void applyConcurrencyBuffers(); //Passthrough for now
     friend class GameWindowRenderPipeline;
@@ -29,20 +31,17 @@ class Game
     //PoolCallBatcher<IUpdatable> updateList;
     //PoolCallBatcher<I3DRenderable> _3dRenderList;
 
-    friend class Application;
-    void init(Application* application);
-    void cleanup();
-    void tick();
-
-    bool isAlive;
 public:
-    ENGINECORE_API Game();
-    ENGINECORE_API ~Game();
+    ENGINECORE_API Game(gpr460::System& system);
+    ENGINECORE_API virtual ~Game();
 
+    ENGINECORE_API virtual void init() override;
+    ENGINECORE_API virtual void cleanup() override;
+    ENGINECORE_API void tick();
     int frame = 0;
 
 	ENGINECORE_API InputSystem* getInput();
-    ENGINECORE_API Application* getApplication() const;
+    ENGINECORE_API StackAllocator* getFrameAllocator();
 
 	ENGINECORE_API void visitLevels(const std::function<void(Level*)>& visitor);
 	ENGINECORE_API Level* getLevel(size_t which);

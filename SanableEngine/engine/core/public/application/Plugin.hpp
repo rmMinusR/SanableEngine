@@ -78,7 +78,7 @@ private:
 
 	EntryPoints entryPoints;
 
-	bool load(Application const* context);
+	bool load(Application* context);
 	bool init();
 	bool cleanup(bool shutdown);
 	void unload(Application* context);

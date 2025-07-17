@@ -10,41 +10,42 @@
 #include "game/InputSystem.hpp"
 #include "game/Level.hpp"
 
-Game::Game() :
-    application(nullptr),
-    inputSystem(nullptr),
-    isAlive(false)
+Game::Game(gpr460::System& system) :
+    Application(system),
+    inputSystem(nullptr)
 {
 }
 
 Game::~Game()
 {
-    assert(!isAlive);
 }
 
-void Game::init(Application* application)
+void Game::init()
 {
-    assert(!isAlive);
-    isAlive = true;
+    Application::init();
 
-    this->application = application;
+    frameAllocator.resize(frameAllocatorSize);
+    levels = heap.emplace().getSpecificPool<Level>(true);
+
     frame = 0;
 
     this->inputSystem = new InputSystem();
 
-    levels = application->getHeap()->getSpecificPool<Level>(true);
+    refreshCallBatchers();
+    heap.value().ensureFresh();
 }
 
 void Game::cleanup()
 {
-    assert(isAlive);
-    isAlive = false;
-
     //application->getHeap()->destroyPool<Level>(); //Don't do this, it throws incorrect warnings
-    for (auto it = levels->cbegin(); it != levels->cend(); ++it) application->getHeap()->destroy(&*it);
+    for (auto it = levels->cbegin(); it != levels->cend(); ++it) heap.value().destroy(&*it);
     levels = nullptr;
 
     delete inputSystem;
+
+    applyConcurrencyBuffers();
+
+    Application::cleanup();
 }
 
 void Game::applyConcurrencyBuffers()
@@ -81,9 +82,9 @@ InputSystem* Game::getInput()
     return inputSystem;
 }
 
-Application* Game::getApplication() const
+StackAllocator* Game::getFrameAllocator()
 {
-    return application;
+    return &frameAllocator;
 }
 
 void Game::visitLevels(const std::function<void(Level*)>& visitor)
@@ -114,29 +115,28 @@ void Game::removeLevel(Level* level)
     levels->release(level);
 }
 
-
 void Game::doMainLoop()
 {
     // Ensure up to date
-    application->getPluginManager()->executeCommandBuffer();
+    pluginManager.executeCommandBuffer();
     refreshCallBatchers(true);
 
     // Run
-    application->getSystem()->DoMainLoop(+[](void* arg) { static_cast<Game*>(arg)->frameStep(); }, this);
+    system->DoMainLoop(+[](void* arg) { static_cast<Game*>(arg)->frameStep(); }, this);
 }
 
 void Game::frameStep()
 {
-    application->getFrameAllocator()->restoreCheckpoint(StackAllocator::Checkpoint());
+    frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
 
     refreshCallBatchers(false);
-    application->getSystem()->pumpEvents();
+    system->pumpEvents();
     refreshCallBatchers(false);
     tick();
     refreshCallBatchers(false);
-    for (size_t i = 0; i < application->getSystem()->getNumWindows(); ++i) application->getSystem()->getWindow(i)->draw();
+    for (size_t i = 0; i < system->getNumWindows(); ++i) system->getWindow(i)->draw();
 
-    if (application->getPluginManager()->executeCommandBuffer() != 0)
+    if (pluginManager.executeCommandBuffer() != 0)
     {
         MemoryRoot::get()->ensureFresh();
     }

@@ -28,7 +28,7 @@ public:
 
 	virtual Renderer* getRenderer() override { return &renderer; }
 	virtual void setActiveDrawTarget() const override;
-	void draw() const override;
+	virtual void draw() const override;
 
 	virtual void move(int x, int y) override;
 	virtual int getWidth() const override;

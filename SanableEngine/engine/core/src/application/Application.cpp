@@ -27,12 +27,10 @@ Application::~Application()
 void engine_reportTypes(ModuleTypeRegistry* registry);
 //API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init(Game* game)
+void Application::init()
 {
     assert(!isAlive);
     isAlive = true;
-
-    frameAllocator.resize(frameAllocatorSize);
 
     //Prepare RTTI
     {
@@ -45,25 +43,14 @@ void Application::init(Game* game)
     //    graphics_abstract_reportTypes(&m);
     //    GlobalTypeRegistry::loadModule("GraphicsAbstract", m);
     //}
-
-    heap.emplace().getSpecificPool<Level>(true);
-
-    this->game = game;
-    game->init(this);
-
-    heap.value().ensureFresh();
-    game->refreshCallBatchers();
 }
 
-void Application::shutdown()
+void Application::cleanup()
 {
     assert(isAlive);
     isAlive = false;
 
-    game->applyConcurrencyBuffers();
     pluginManager.unhookAll(true); //FIXME: Pools destroyed automatically here, but Component and GameObject need to interface with Game
-    game->applyConcurrencyBuffers();
-    game->cleanup();
 
     //If any plugins didn't clean up their window, do it for them
     while (system->getNumWindows() != 0)
@@ -83,11 +70,6 @@ void Application::shutdown()
     heap.reset(); //Finish cleaning up memory
 }
 
-Game* Application::getGame() const
-{
-    return game;
-}
-
 gpr460::System* Application::getSystem()
 {
     return system;
@@ -96,11 +78,6 @@ gpr460::System* Application::getSystem()
 MemoryHeap* Application::getHeap()
 {
     return &heap.value();
-}
-
-StackAllocator* Application::getFrameAllocator()
-{
-    return &frameAllocator;
 }
 
 PluginManager* Application::getPluginManager()

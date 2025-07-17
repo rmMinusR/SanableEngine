@@ -2,7 +2,6 @@
 #include <string>
 
 #include "System.hpp"
-#include "application/Application.hpp"
 #include "game/Game.hpp"
 #include "game/GameWindowDispatcher.hpp"
 
@@ -13,7 +12,7 @@ void SanableMain(Application* application)
         constexpr int WIDTH = 640;
         constexpr int HEIGHT = 480;
         WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
-        mainWindowSettings.userLogic = new GameWindowDispatcher(application->getGame());
+        mainWindowSettings.userLogic = new GameWindowDispatcher((Game*)application);
 
         Window* gameWindow = application->buildWindow(mainWindowSettings);
         application->setMainWindow(gameWindow);
@@ -44,5 +43,5 @@ void SanableMain(Application* application)
 
     // Run
     application->getHeap()->ensureFresh();
-	application->getGame()->doMainLoop();
+    static_cast<Game*>(application)->doMainLoop(); // FIXME: very bad practice, use template injection on platformDefaultMain instead?
 }

@@ -24,14 +24,14 @@ Application* application;
 Level* level;
 Plugin const* plugin;
 
-PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application* application)
 {
     std::cout << "UserPlugin: plugin_report() called" << std::endl;
 
     report->name = L"UserPlugin";
 
-    ::application = (Application*)application; //FIXME bad practice
-    ::level = application->getGame()->addLevel(); //FIXME this should be in platform main, probably
+    ::application = application;
+    ::level = static_cast<Game*>(application)->addLevel(); //FIXME this should be in platform main, probably
     ::plugin = context;
 
     return true;
@@ -51,7 +51,7 @@ PLUGIN_C_API(bool) plugin_init(bool firstRun)
     std::cout << "UserPlugin: plugin_init() called" << std::endl;
 
     if (firstRun) {
-        Renderer* renderer = application->getMainWindow()->getRenderer();
+        Renderer* renderer = static_cast<Game*>(application)->getMainWindow()->getRenderer();
 
         camera = level->addGameObject();
         CameraComponent* cc = camera->CreateComponent<CameraComponent>();

@@ -13,7 +13,7 @@
 
 GameWindowDispatcher::GameWindowDispatcher(Game* game) :
 	game(game),
-	hud(game->getApplication())
+	hud(game)
 {
 }
 

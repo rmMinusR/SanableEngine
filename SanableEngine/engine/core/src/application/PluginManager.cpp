@@ -126,32 +126,6 @@ size_t PluginManager::executeCommandBuffer()
 	return numCommands;
 }
 
-void PluginManager::reloadAll()
-{
-	std::cout << "Hot Reload Started\n";
-
-    std::cout << "Removing plugin hooks...\n";
-    unhookAll(false);
-    engine->getGame()->applyConcurrencyBuffers();
-
-    std::cout << "Unloading plugin code...\n";
-	unloadAll();
-
-    std::cout << "Loading plugin code...\n";
-	loadAll();
-
-    std::cout << "Refreshing object layouts and vtables...\n";
-	MemoryRoot::get()->ensureFresh();
-
-    std::cout << "Refreshing pointers... (call batchers)\n";
-	engine->getGame()->refreshCallBatchers(true);
-
-    std::cout << "Applying plugin hooks...\n";
-    hookAll();
-    
-    std::cout << "Hot Reload Complete\n";
-}
-
 size_t PluginManager::getNumPlugins() const
 {
 	return plugins.size();

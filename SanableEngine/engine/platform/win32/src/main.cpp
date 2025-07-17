@@ -15,21 +15,19 @@ int platformDefaultMain(int argc, char* argv[])
     GLSettings glSettings;
     gpr460::System_Win32 system(glSettings);
     system.Init();
-    Application engine(system);
-    Game game;
+    Game game(system);
     MemoryRoot::get()->registerExternal(&system, ExternalObjectOptions::DefaultExternal);
-    MemoryRoot::get()->registerExternal(&engine, ExternalObjectOptions::DefaultExternal);
     MemoryRoot::get()->registerExternal(&game  , ExternalObjectOptions::DefaultExternal);
 
     //Init
-    engine.init(&game);
+    game.init();
 
     //Loop
-    SanableMain(&engine);
+    SanableMain(&game);
     //engine.doMainLoop();
 
     //Shutdown
-    engine.shutdown();
+    game.cleanup();
     system.Shutdown();
     SDL_Quit();
     MemoryRoot::cleanup();

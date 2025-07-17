@@ -8,7 +8,7 @@
 
 Application* application;
 
-PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application const* application)
+PLUGIN_C_API(bool) plugin_report(Plugin const* context, PluginReportedData* report, Application* application)
 {
     printf("PrimitivesPlugin: plugin_report() called\n");
 
