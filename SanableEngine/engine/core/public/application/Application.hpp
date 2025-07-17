@@ -7,7 +7,6 @@
 
 #include <ReflectionSpec.hpp>
 #include "MemoryHeap.hpp"
-#include "StackAllocator.hpp"
 
 #include "../dllapi.h"
 
@@ -20,13 +19,10 @@ class Window;
 
 class Application
 {
-private:
-    Game* game;
-
+protected:
     bool isAlive;
     gpr460::System* system;
     std::optional<MemoryHeap> heap; //Optional so we can do late initialization/early destruction
-    StackAllocator frameAllocator; //Temp memory that will be reset every frame
     constexpr static size_t frameAllocatorSize = 4096;
     PluginManager pluginManager;
     friend class PluginManager;
@@ -34,28 +30,18 @@ private:
     Window* mainWindow = nullptr;
 
 public:
-    bool quit = false;
+    ENGINECORE_API Application(gpr460::System& system);
+    ENGINECORE_API virtual ~Application();
 
-    ENGINECORE_API Application();
-    ENGINECORE_API ~Application();
+    ENGINECORE_API virtual void init() = 0;
+    ENGINECORE_API virtual void cleanup() = 0;
 
-    ENGINECORE_API void init(Game* game, gpr460::System& system);
-    ENGINECORE_API void shutdown();
-
-    ENGINECORE_API void doMainLoop();
-    ENGINECORE_API static void frameStep(void* arg);
-
-    ENGINECORE_API Game* getGame() const;
     ENGINECORE_API gpr460::System* getSystem();
     ENGINECORE_API MemoryHeap* getHeap();
-    ENGINECORE_API StackAllocator* getFrameAllocator();
     ENGINECORE_API PluginManager* getPluginManager();
     ENGINECORE_API Window* getMainWindow();
     ENGINECORE_API const Window* getMainWindow() const;
     ENGINECORE_API void setMainWindow(Window*); // Note: does NOT destroy old main window
 
     ENGINECORE_API Window* buildWindow(WindowSettings& settings);
-
-    // INTERNAL USE ONLY
-    ENGINECORE_API void processEvent(SDL_Event& event);
 };

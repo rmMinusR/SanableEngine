@@ -34,7 +34,7 @@ bool DevEnv::build(const std::wstring& targetName)
 
 	std::wstring cmakePath = static_cast<const SerialString*>( static_cast<const SerialObject*>(env.getRootNode())->get(L"cmakePath") )->value();
 	std::wstring cmakeArgs = (std::wostringstream() << " --build . --target " << targetName).str(); // Why does this require a leading space??
-	std::wstring workDir = game->getApplication()->getSystem()->GetBaseDir().wstring();
+	std::wstring workDir = game->getSystem()->GetBaseDir().wstring();
 
 	STARTUPINFOW startup = { 0 };
 	startup.cb = sizeof(startup);

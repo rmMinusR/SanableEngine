@@ -15,7 +15,6 @@
 #include "GLContext.hpp"
 
 #include "WindowSettings.hpp"
-#include "application/Application.hpp"
 #include "Window_Win32.hpp"
 
 gpr460::System_Win32::System_Win32(GLSettings glSettings) :
@@ -34,9 +33,9 @@ gpr460::System_Win32::~System_Win32()
 	assert(windows.empty());
 }
 
-void gpr460::System_Win32::Init(Application* engine)
+void gpr460::System_Win32::Init()
 {
-	System::Init(engine);
+	System::Init();
 
 	assert(!isAlive);
 	isAlive = true;
@@ -54,14 +53,14 @@ void gpr460::System_Win32::Init(Application* engine)
 	if (!consolePsuedofile) ShowError(L"Failed to redirect console output");
 }
 
-void gpr460::System_Win32::DoMainLoop()
+void gpr460::System_Win32::DoMainLoop(void(*stepFn)(void*), void* stepArg)
 {
 	while (true)
 	{
 		std::chrono::time_point frameStart = std::chrono::steady_clock::now();
 		
-		engine->frameStep(engine);
-		if (engine->quit) break;
+		stepFn(stepArg);
+		if (quitRequested) break;
 
 		std::chrono::time_point frameEnd = std::chrono::steady_clock::now();
 
@@ -193,9 +192,6 @@ void gpr460::System_Win32::pumpEvents()
 
 	while (SDL_PollEvent(&event))
 	{
-		//Forward to application and system-wide listeners
-		engine->processEvent(event);
-
 		//Forward events to appropriate windows
 		switch (event.type)
 		{

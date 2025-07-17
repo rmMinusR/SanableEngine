@@ -13,11 +13,12 @@
 int platformDefaultMain(int argc, char* argv[])
 {
     gpr460::System_Emscripten system;
-    Application engine;
+    system.Init();
+    Application engine(system);
     Game game;
 
     //Init
-    engine.init(&game, system);
+    engine.init(&game);
     
     //Loop
     SanableMain(&engine);
@@ -28,6 +29,7 @@ int platformDefaultMain(int argc, char* argv[])
 
     //Shutdown
     engine.shutdown();
+    system.Shutdown();
     SDL_Quit();
     MemoryRoot::cleanup();
 

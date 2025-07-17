@@ -10,23 +10,10 @@
 #include "Window.hpp"
 #include "WindowUserLogic.hpp"
 #include "game/Game.hpp"
-#include "MemoryRoot.hpp"
 
-void Application::processEvent(SDL_Event& event)
-{
-    //Old testing stuff, should prob be refactored
-    if (event.type == SDL_QUIT) quit = true;
-
-    if (event.type == SDL_KEYDOWN)
-    {
-        if (event.key.keysym.sym == SDLK_ESCAPE) quit = true;
-        if (event.key.keysym.sym == SDLK_F5) pluginManager.reloadAll();
-    }
-}
-
-Application::Application() :
+Application::Application(gpr460::System& system) :
     isAlive(false),
-    system(nullptr),
+    system(&system),
     pluginManager(this),
     mainWindow(nullptr)
 {
@@ -40,16 +27,10 @@ Application::~Application()
 void engine_reportTypes(ModuleTypeRegistry* registry);
 //API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init(Game* game, gpr460::System& _system)
+void Application::init()
 {
     assert(!isAlive);
     isAlive = true;
-    quit = false;
-
-    frameAllocator.resize(frameAllocatorSize);
-
-    this->system = &_system;
-    system->Init(this);
 
     //Prepare RTTI
     {
@@ -62,25 +43,14 @@ void Application::init(Game* game, gpr460::System& _system)
     //    graphics_abstract_reportTypes(&m);
     //    GlobalTypeRegistry::loadModule("GraphicsAbstract", m);
     //}
-
-    heap.emplace().getSpecificPool<Level>(true);
-
-    this->game = game;
-    game->init(this);
-
-    heap.value().ensureFresh();
-    game->refreshCallBatchers();
 }
 
-void Application::shutdown()
+void Application::cleanup()
 {
     assert(isAlive);
     isAlive = false;
 
-    game->applyConcurrencyBuffers();
     pluginManager.unhookAll(true); //FIXME: Pools destroyed automatically here, but Component and GameObject need to interface with Game
-    game->applyConcurrencyBuffers();
-    game->cleanup();
 
     //If any plugins didn't clean up their window, do it for them
     while (system->getNumWindows() != 0)
@@ -98,41 +68,6 @@ void Application::shutdown()
     pluginManager.forgetAll();
 
     heap.reset(); //Finish cleaning up memory
-    system->Shutdown();
-}
-
-void Application::doMainLoop()
-{
-    // Ensure up to date
-    pluginManager.executeCommandBuffer();
-    game->refreshCallBatchers(true);
-
-    // Run
-    system->DoMainLoop();
-}
-
-void Application::frameStep(void* arg)
-{
-    Application* engine = (Application*)arg;
-
-    engine->frameAllocator.restoreCheckpoint(StackAllocator::Checkpoint());
-
-    engine->game->refreshCallBatchers(false);
-    engine->system->pumpEvents();
-    engine->game->refreshCallBatchers(false);
-    engine->game->tick();
-    engine->game->refreshCallBatchers(false);
-    for (size_t i = 0; i < engine->system->getNumWindows(); ++i) engine->system->getWindow(i)->draw();
-
-    if (engine->pluginManager.executeCommandBuffer() != 0)
-    {
-        MemoryRoot::get()->ensureFresh();
-    }
-}
-
-Game* Application::getGame() const
-{
-    return game;
 }
 
 gpr460::System* Application::getSystem()
@@ -143,11 +78,6 @@ gpr460::System* Application::getSystem()
 MemoryHeap* Application::getHeap()
 {
     return &heap.value();
-}
-
-StackAllocator* Application::getFrameAllocator()
-{
-    return &frameAllocator;
 }
 
 PluginManager* Application::getPluginManager()

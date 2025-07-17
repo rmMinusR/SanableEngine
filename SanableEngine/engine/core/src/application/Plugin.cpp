@@ -84,7 +84,7 @@ const ModuleTypeRegistry* Plugin::getRTTI() const
 	return GlobalTypeRegistry::getModule(reportedData->name);
 }
 
-bool Plugin::load(Application const* context)
+bool Plugin::load(Application* context)
 {
 	if (status != Status::NotLoaded) return status > Status::NotLoaded;
 	assert(!isCodeLoaded());

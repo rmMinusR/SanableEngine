@@ -38,10 +38,6 @@ private:
 
 	void forgetAll();
 
-	size_t executeCommandBuffer();
-
-	void reloadAll(); //TODO refactor into Application
-
 	PluginManager(Application* engine);
 	~PluginManager();
 
@@ -59,4 +55,6 @@ public:
 	ENGINECORE_API void unload(Plugin* plugin);
 	ENGINECORE_API void hook(Plugin* plugin);
 	ENGINECORE_API void unhook(Plugin* plugin);
+
+	ENGINECORE_API size_t executeCommandBuffer(); // Not allowed almost anywhere for concurrency reasons
 };

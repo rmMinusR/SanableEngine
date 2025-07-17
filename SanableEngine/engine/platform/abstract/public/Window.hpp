@@ -35,11 +35,10 @@ public:
 	void* getContext() { return context; }
 	gpr460::System* getSystem() { return system; }
 
-	virtual void draw() const = 0;
-
 	bool isFocused() const;
 	virtual Renderer* getRenderer() = 0;
 	virtual void setActiveDrawTarget() const = 0;
+	virtual void draw() const = 0;
 
 	virtual void move(int x, int y) = 0;
 	virtual int getWidth() const = 0;

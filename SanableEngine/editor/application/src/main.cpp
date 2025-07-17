@@ -7,7 +7,7 @@ using namespace std::chrono_literals;
 #include "Renderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
-#include "application/Application.hpp"
+#include "game/Game.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
 #include "gui/ImageWidget.hpp"
 #include "gui/ButtonWidget.hpp"
@@ -87,5 +87,5 @@ void SanableMain(Application* application)
     // Teardown loader window and UI resources
     //delete loaderWindow;
 
-    application->doMainLoop();
+    static_cast<Game*>(application)->doMainLoop(); // FIXME: very bad practice, use template injection on platformDefaultMain instead?
 }
