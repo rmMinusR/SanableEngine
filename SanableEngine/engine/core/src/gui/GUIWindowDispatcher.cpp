@@ -41,7 +41,7 @@ void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
 		{
 			if (currentlyHoveredWidget) currentlyHoveredWidget->onMouseExit(mousePos);
 			currentlyHovered = _newHover;
-			currentlyHoveredWidget = currentlyHovered->getWidget();
+			currentlyHoveredWidget = currentlyHovered ? currentlyHovered->getWidget() : nullptr;
 			if (currentlyHoveredWidget) currentlyHoveredWidget->onMouseEnter(mousePos);
 		}
 	}
