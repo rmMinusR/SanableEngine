@@ -4,9 +4,6 @@
 #include <SDL.h>
 
 #include "MemoryRoot.hpp"
-#include "application/Application.hpp"
-#include "game/Game.hpp"
-#include "game/GameWindowDispatcher.hpp"
 #include "EntryPoint.hpp"
 #include "System_Emscripten.hpp"
 
@@ -14,21 +11,14 @@ int platformDefaultMain(int argc, char* argv[])
 {
     gpr460::System_Emscripten system;
     system.Init();
-    Application engine(system);
-    Game game;
 
-    //Init
-    engine.init(&game);
-    
     //Loop
-    SanableMain(&engine);
-    //engine.doMainLoop();
+    SanableMain(&system);
 
     //NOTE: Due to Emscripten shenanigans, code beyond this point will never run
     //It is here for readability when compared to the Win32 version
 
     //Shutdown
-    engine.shutdown();
     system.Shutdown();
     SDL_Quit();
     MemoryRoot::cleanup();

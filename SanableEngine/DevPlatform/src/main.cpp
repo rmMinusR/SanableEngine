@@ -1,30 +1,35 @@
 #include <iostream>
 #include <string>
 
+#include "MemoryRoot.hpp"
 #include "System.hpp"
 #include "game/Game.hpp"
 #include "game/GameWindowDispatcher.hpp"
 
-void SanableMain(Application* application)
+void SanableMain(gpr460::System* system)
 {
+    // Init
+    Game game(*system);
+    MemoryRoot::get()->registerExternal(&game, ExternalObjectOptions::DefaultExternal);
+    game.init();
+
     // Setup game window
     {
         constexpr int WIDTH = 640;
         constexpr int HEIGHT = 480;
         WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
-        mainWindowSettings.userLogic = new GameWindowDispatcher((Game*)application);
+        mainWindowSettings.userLogic = new GameWindowDispatcher(&game);
 
-        Window* gameWindow = application->buildWindow(mainWindowSettings);
-        application->setMainWindow(gameWindow);
+        Window* gameWindow = game.buildWindow(mainWindowSettings);
+        game.setMainWindow(gameWindow);
     }
 
     // Setup plugins
     {
-        gpr460::System* system = application->getSystem();
-        PluginManager& pluginManager = *application->getPluginManager();
+        PluginManager& pluginManager = *game.getPluginManager();
 
         // Discover all plugins
-        for (const std::filesystem::path& dllPath : application->getSystem()->ListPlugins(system->GetBaseDir() / "plugins"))
+        for (const std::filesystem::path& dllPath : system->ListPlugins(system->GetBaseDir() / "plugins"))
         {
             pluginManager.discover(dllPath);
         }
@@ -42,6 +47,9 @@ void SanableMain(Application* application)
     }
 
     // Run
-    application->getHeap()->ensureFresh();
-    static_cast<Game*>(application)->doMainLoop(); // FIXME: very bad practice, use template injection on platformDefaultMain instead?
+    game.getHeap()->ensureFresh();
+    game.doMainLoop();
+
+    // Shutdown
+    game.cleanup();
 }

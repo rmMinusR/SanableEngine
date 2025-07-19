@@ -3,7 +3,6 @@
 #include <SDL.h>
 
 #include "MemoryRoot.hpp"
-#include "application/Application.hpp"
 #include "game/Game.hpp"
 #include "game/GameWindowDispatcher.hpp"
 #include "EntryPoint.hpp"
@@ -15,19 +14,12 @@ int platformDefaultMain(int argc, char* argv[])
     GLSettings glSettings;
     gpr460::System_Win32 system(glSettings);
     system.Init();
-    Game game(system);
     MemoryRoot::get()->registerExternal(&system, ExternalObjectOptions::DefaultExternal);
-    MemoryRoot::get()->registerExternal(&game  , ExternalObjectOptions::DefaultExternal);
-
-    //Init
-    game.init();
 
     //Loop
-    SanableMain(&game);
-    //engine.doMainLoop();
+    SanableMain(&system);
 
     //Shutdown
-    game.cleanup();
     system.Shutdown();
     SDL_Quit();
     MemoryRoot::cleanup();

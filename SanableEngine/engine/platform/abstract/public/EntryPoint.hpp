@@ -1,6 +1,6 @@
 #pragma once
 
-class Application;
+namespace gpr460 { class System; }
 
 //
 //  Dynamic linkage       Static linkage              Executable
@@ -8,4 +8,4 @@ class Application;
 //                     SanableMain used here         Defined here
 //
 
-extern void SanableMain(Application*);
+extern void SanableMain(gpr460::System*);
