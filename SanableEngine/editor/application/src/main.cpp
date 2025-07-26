@@ -8,13 +8,13 @@ using namespace std::chrono_literals;
 #include "Renderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
-#include "game/Game.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
 #include "gui/ImageWidget.hpp"
 #include "gui/ButtonWidget.hpp"
 #include "gui/WidgetTransform.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
 #include "gui/UISprite.hpp"
+#include "EditorApplication.hpp"
 #include "DraggableTabView.hpp"
 #include "GroupResizeHandle.hpp"
 #include "SplashWindow.hpp"
@@ -22,13 +22,13 @@ using namespace std::chrono_literals;
 void SanableMain(gpr460::System* system)
 {
     // Init
-    Game game(*system); // FIXME create EditorApplication class
-    MemoryRoot::get()->registerExternal(&game, ExternalObjectOptions::DefaultExternal);
-    game.init();
+    EditorApplication editor(*system);
+    MemoryRoot::get()->registerExternal(&editor, ExternalObjectOptions::DefaultExternal);
+    editor.init();
 
     // Setup splash window
-    SplashWindow* loaderWindow = new SplashWindow(&game, L"Sanable Editor - Loading...", { 300, 200 });
-    game.setMainWindow(loaderWindow->getWindow());
+    SplashWindow* loaderWindow = new SplashWindow(&editor, L"Sanable Editor - Loading...", { 300, 200 });
+    editor.setMainWindow(loaderWindow->getWindow());
     system->pumpEvents();
     loaderWindow->redraw();
 
@@ -38,10 +38,10 @@ void SanableMain(gpr460::System* system)
     // Setup editor window
     {
         WindowSettings mainWindowSettings("Sanable Editor", 800, 600);
-        GUIWindowDispatcher* editorWindowLogic = new GUIWindowDispatcher(&game, 5);
+        GUIWindowDispatcher* editorWindowLogic = new GUIWindowDispatcher(&editor, 5);
         mainWindowSettings.userLogic = editorWindowLogic;
 
-        Window* editorWindow = game.buildWindow(mainWindowSettings);
+        Window* editorWindow = editor.buildWindow(mainWindowSettings);
         editorWindow->getRenderer()->activate();
 
         // Load image shader
@@ -87,14 +87,14 @@ void SanableMain(gpr460::System* system)
         }
 
         editorWindow->draw();
-        game.setMainWindow(editorWindow);
+        editor.setMainWindow(editorWindow);
     }
 
     // Teardown loader window and UI resources
     //delete loaderWindow;
 
-    game.doMainLoop();
+    editor.doMainLoop();
 
     // Shutdown
-    game.cleanup();
+    editor.cleanup();
 }
