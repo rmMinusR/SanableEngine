@@ -93,7 +93,7 @@ void EditorApplication::doMainLoop()
 
 void EditorApplication::frameStep()
 {
-    if (!currentGame) system->pumpEvents();
+    if (!currentGame || currentGamePaused) system->pumpEvents();
     else currentGame->frameStep(); // Calls pumpEvents on the System facade, which just passes through to root System
 
     // Other than play-in-editor, the editor is an entirely
@@ -104,4 +104,25 @@ void EditorApplication::frameStep()
     {
         MemoryRoot::get()->ensureFresh();
     }
+}
+
+void EditorApplication::startPlayInEditor(Game* game)
+{
+    assert(!gameSystem);
+    gameSystem = new System_PlayInEditor(Application::system);
+    gameSystem->Init();
+
+    assert(!currentGame);
+    currentGame = game;
+    currentGame->init(gameSystem);
+    currentGamePaused = false;
+}
+
+void EditorApplication::stopPlayInEditor()
+{
+    currentGame->cleanup();
+
+    assert(gameSystem);
+    gameSystem->Shutdown();
+    delete gameSystem;
 }

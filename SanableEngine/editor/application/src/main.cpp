@@ -33,8 +33,6 @@ void SanableMain(gpr460::System* system)
 
         Window* editorWindow = editor.buildWindow(mainWindowSettings);
         editor.setupDefaultLayout(editorWindow, &editorWindowLogic->hud);
-
-        editorWindow->draw();
         editor.setMainWindow(editorWindow);
     }
 
