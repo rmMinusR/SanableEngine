@@ -17,6 +17,6 @@ public:
 	HUD hud;
 
 protected:
-	ENGINECORE_API virtual void handleEvent(SDL_Event& ev) override;
+	ENGINECORE_API virtual void handleEvent(const SDL_Event& ev) override;
 	ENGINECORE_API virtual void render(Rect<float> viewport) override;
 };

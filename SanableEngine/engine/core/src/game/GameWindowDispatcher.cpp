@@ -21,7 +21,7 @@ GameWindowDispatcher::~GameWindowDispatcher()
 {
 }
 
-void GameWindowDispatcher::handleEvent(SDL_Event& ev)
+void GameWindowDispatcher::handleEvent(const SDL_Event& ev)
 {
 	if (ev.type == SDL_WINDOWEVENT)
 	{

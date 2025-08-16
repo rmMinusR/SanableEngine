@@ -38,4 +38,6 @@ private:
 
 	std::vector<Window*> windows;
 	std::vector<SDL_Event> bufferedEvents;
+
+	Window* currentFocus = nullptr;
 };

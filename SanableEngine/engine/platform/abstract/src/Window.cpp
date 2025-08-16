@@ -4,7 +4,7 @@
 #include "WindowSettings.hpp"
 #include "WindowUserLogic.hpp"
 
-void Window::handleEvent(SDL_Event& ev)
+void Window::handleEvent(const SDL_Event& ev)
 {
 	if (userLogic) userLogic->handleEvent(ev);
 }

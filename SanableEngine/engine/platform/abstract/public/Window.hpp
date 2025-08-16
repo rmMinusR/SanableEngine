@@ -24,9 +24,6 @@ protected:
 	gpr460::System* system;
 	void* context; // Application
 
-	virtual void handleEvent(SDL_Event& ev);
-	friend class Application;
-	
 	Window(const WindowSettings& settings, gpr460::System* system, void* context);
 	virtual ~Window(); // Only System may call this
 	friend struct thunk_utils<Window>;
@@ -52,4 +49,5 @@ public:
 	virtual const MenuBar* getMenuBar() const = 0;
 
 	virtual void setUserLogic(WindowUserLogic* v); //Note: Destroys old handler, if it exists
+	virtual void handleEvent(const SDL_Event& ev);
 };

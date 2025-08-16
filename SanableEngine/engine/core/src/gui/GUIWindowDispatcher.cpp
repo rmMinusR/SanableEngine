@@ -23,7 +23,7 @@ GUIWindowDispatcher::~GUIWindowDispatcher()
 {
 }
 
-void GUIWindowDispatcher::handleEvent(SDL_Event& ev)
+void GUIWindowDispatcher::handleEvent(const SDL_Event& ev)
 {
 	if (ev.type == SDL_EventType::SDL_MOUSEMOTION)
 	{

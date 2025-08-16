@@ -18,7 +18,7 @@ protected:
 	virtual void setup(Window* window);
 	friend class Application;
 
-	virtual void handleEvent(SDL_Event& ev) = 0;
+	virtual void handleEvent(const SDL_Event& ev) = 0;
 	virtual void render(Rect<float> viewport) = 0;
 	friend class Window;
 };
