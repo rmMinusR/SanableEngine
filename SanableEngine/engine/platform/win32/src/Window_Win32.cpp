@@ -102,6 +102,11 @@ const MenuBar* Window_Win32::getMenuBar() const
     return menuBar;
 }
 
+SDL_Window* Window_Win32::getSdlHandle() const
+{
+    return sdlHandle;
+}
+
 HWND Window_Win32::getNativeHandle()
 {
     SDL_SysWMinfo wmInfo;

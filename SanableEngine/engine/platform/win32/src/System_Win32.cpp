@@ -180,7 +180,7 @@ void gpr460::System_Win32::pumpEvents()
 	//Utility functions
 	auto lookupWindow = [&](SDL_Window* windowHandle)
 	{
-		auto it = std::find_if(windows.begin(), windows.end(), [=](Window_Win32* w) { return w->sdlHandle == windowHandle; });
+		auto it = std::find_if(windows.begin(), windows.end(), [=](Window_Win32* w) { return w->getSdlHandle() == windowHandle; });
 		if (it != windows.end()) return *it;
 		else return (Window_Win32*)nullptr;
 	};
@@ -224,7 +224,7 @@ void gpr460::System_Win32::pumpEvents()
 					break;
 
 				case SDL_WINDOWEVENT_CLOSE:
-					window->closeRequested = true;
+					window->requestClose();
 					break;
 				}
 				window->handleEvent(event);

@@ -81,13 +81,13 @@ void System_PlayInEditor::pumpEvents()
 	auto lookupWindow = [&](SDL_Window* windowHandle)
 	{
 		// Translate editor main window -> sandboxed main window
-		if (baseSystem->getWindow(0)->sdlHandle() == windowHandle)
+		if (baseSystem->getWindow(0)->getSdlHandle() == windowHandle)
 		{
 			return windows[0];
 		}
 
 		// Lookup for non-main windows
-		auto it = std::find_if(windows.begin(), windows.end(), [=](Window* w) { return w->sdlHandle == windowHandle; });
+		auto it = std::find_if(windows.begin(), windows.end(), [=](Window* w) { return w->getSdlHandle() == windowHandle; });
 		if (it != windows.end()) return *it;
 		else return (Window*)nullptr;
 	};

@@ -51,5 +51,7 @@ public:
 	virtual const MenuBar* getMenuBar() const = 0;
 
 	virtual void setUserLogic(WindowUserLogic* v); //Note: Destroys old handler, if it exists
+
 	virtual void handleEvent(const SDL_Event& ev);
+	virtual SDL_Window* getSdlHandle() const = 0;
 };

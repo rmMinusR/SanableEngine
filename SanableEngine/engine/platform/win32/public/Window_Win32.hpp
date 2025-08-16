@@ -39,6 +39,8 @@ public:
 	virtual MenuBar* getMenuBar(bool create = false) override;
 	virtual const MenuBar* getMenuBar() const override;
 
+	virtual SDL_Window* getSdlHandle() const override;
+
 	// PLATFORM SPECIFIC
 
 	HWND getNativeHandle();
