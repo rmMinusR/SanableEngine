@@ -1,5 +1,7 @@
 #include "System.hpp"
 
+#include "SDL_events.h"
+
 void gpr460::System::Init()
 {
 	quitRequested = false;

@@ -15,9 +15,10 @@
 #include "gui/UISprite.hpp"
 #include "DraggableTabView.hpp"
 #include "GroupResizeHandle.hpp"
+#include "System_PlayInEditor.hpp"
 
-EditorApplication::EditorApplication(gpr460::System& system) :
-	Application(system)
+EditorApplication::EditorApplication() :
+	Application()
 {
 }
 
@@ -25,9 +26,9 @@ EditorApplication::~EditorApplication()
 {
 }
 
-void EditorApplication::init()
+void EditorApplication::init(gpr460::System& system)
 {
-    Application::init();
+    Application::init(system);
 }
 
 void EditorApplication::setupDefaultLayout(Window* editorWindow, HUD* hud)
@@ -114,7 +115,7 @@ void EditorApplication::startPlayInEditor(Game* game)
 
     assert(!currentGame);
     currentGame = game;
-    currentGame->init(gameSystem);
+    currentGame->init(*gameSystem);
     currentGamePaused = false;
 }
 

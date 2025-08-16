@@ -11,10 +11,10 @@ class System_PlayInEditor;
 class EditorApplication : public Application
 {
 public:
-    EDITORSHARED_API EditorApplication(gpr460::System& system);
+    EDITORSHARED_API EditorApplication();
     EDITORSHARED_API virtual ~EditorApplication();
 
-    EDITORSHARED_API virtual void init() override;
+    EDITORSHARED_API virtual void init(gpr460::System& system) override;
     EDITORSHARED_API virtual void cleanup() override;
     EDITORSHARED_API void setupDefaultLayout(Window* editorWindow, HUD* hud);
 

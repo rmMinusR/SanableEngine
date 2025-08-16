@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <SDL_events.h>
 
 #include "System.hpp"
 #include "dllapi.h"
@@ -30,9 +31,11 @@ public:
 	EDITORSHARED_API virtual void LogToErrorFile(const std::wstring& message) override;
 
 	EDITORSHARED_API virtual std::filesystem::path GetBaseDir() const override;
+	EDITORSHARED_API virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
 
 private:
 	gpr460::System* baseSystem;
 
 	std::vector<Window*> windows;
+	std::vector<SDL_Event> bufferedEvents;
 };

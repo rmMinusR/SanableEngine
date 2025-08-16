@@ -11,9 +11,8 @@
 #include "WindowUserLogic.hpp"
 #include "game/Game.hpp"
 
-Application::Application(gpr460::System& system) :
+Application::Application() :
     isAlive(false),
-    system(&system),
     pluginManager(this),
     mainWindow(nullptr)
 {
@@ -27,10 +26,12 @@ Application::~Application()
 void engine_reportTypes(ModuleTypeRegistry* registry);
 //API_IMPORT void graphics_abstract_reportTypes(ModuleTypeRegistry* registry); // TODO
 
-void Application::init()
+void Application::init(gpr460::System& system)
 {
     assert(!isAlive);
     isAlive = true;
+
+    this->system = &system;
 
     //Prepare RTTI
     {

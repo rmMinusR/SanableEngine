@@ -9,9 +9,9 @@
 void SanableMain(gpr460::System* system)
 {
     // Init
-    Game game(*system);
+    Game game;
     MemoryRoot::get()->registerExternal(&game, ExternalObjectOptions::DefaultExternal);
-    game.init();
+    game.init(*system);
 
     // Setup game window
     {

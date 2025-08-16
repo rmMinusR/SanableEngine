@@ -44,3 +44,8 @@ void Window::draw() const
 		userLogic->render({ Vector2f(0,0), (Vector2f)getSize() });
 	}
 }
+
+void Window::requestClose()
+{
+	closeRequested = true;
+}

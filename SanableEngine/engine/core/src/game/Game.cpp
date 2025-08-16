@@ -10,8 +10,8 @@
 #include "game/InputSystem.hpp"
 #include "game/Level.hpp"
 
-Game::Game(gpr460::System& system) :
-    Application(system),
+Game::Game() :
+    Application(),
     inputSystem(nullptr)
 {
 }
@@ -20,9 +20,9 @@ Game::~Game()
 {
 }
 
-void Game::init()
+void Game::init(gpr460::System& system)
 {
-    Application::init();
+    Application::init(system);
 
     frameAllocator.resize(frameAllocatorSize);
     levels = heap.emplace().getSpecificPool<Level>(true);

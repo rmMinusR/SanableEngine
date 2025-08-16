@@ -19,7 +19,7 @@ class Window
 protected:
 	WindowUserLogic* userLogic;
 
-	bool closeRequested;
+	bool closeRequested = false;
 
 	gpr460::System* system;
 	void* context; // Application
@@ -44,7 +44,9 @@ public:
 	virtual int getWidth() const = 0;
 	virtual int getHeight() const = 0;
 	virtual Vector2<int> getSize() const = 0;
+
 	virtual bool wasCloseRequested() const = 0;
+	virtual void requestClose();
 
 	virtual MenuBar* getMenuBar(bool create = false) = 0;
 	virtual const MenuBar* getMenuBar() const = 0;

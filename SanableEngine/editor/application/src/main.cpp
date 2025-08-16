@@ -12,9 +12,9 @@ using namespace std::chrono_literals;
 void SanableMain(gpr460::System* system)
 {
     // Init
-    EditorApplication editor(*system);
+    EditorApplication editor;
     MemoryRoot::get()->registerExternal(&editor, ExternalObjectOptions::DefaultExternal);
-    editor.init();
+    editor.init(*system);
 
     // Setup splash window
     SplashWindow* loaderWindow = new SplashWindow(&editor, L"Sanable Editor - Loading...", { 300, 200 });

@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "Window.hpp"
+
 System_PlayInEditor::System_PlayInEditor(gpr460::System* baseSystem) :
 	baseSystem(baseSystem)
 {
@@ -11,9 +13,19 @@ System_PlayInEditor::~System_PlayInEditor()
 {
 }
 
+void System_PlayInEditor::Init()
+{
+	bufferedEvents.clear();
+}
+
 void System_PlayInEditor::DoMainLoop(void(*stepFn)(void*), void* stepArg)
 {
 	assert(false); // Yeah, don't do this
+}
+
+void System_PlayInEditor::Shutdown()
+{
+	bufferedEvents.clear();
 }
 
 void System_PlayInEditor::DebugPause()
@@ -23,7 +35,7 @@ void System_PlayInEditor::DebugPause()
 
 void System_PlayInEditor::ShowError(const std::wstring& message)
 {
-	baseSystem->ShowError(message;
+	baseSystem->ShowError(message);
 }
 
 void System_PlayInEditor::LogToErrorFile(const std::wstring& message)
@@ -39,7 +51,7 @@ bool System_PlayInEditor::isFocused(const Window* window)
 Window* System_PlayInEditor::createWindow(const WindowSettings& settings, Application* engine)
 {
 	// TODO inline widget editor
-	Window* window = baseSystem->createWindow(settings);
+	Window* window = baseSystem->createWindow(settings, engine);
 	windows.push_back(window);
 	return window;
 }
@@ -48,7 +60,7 @@ void System_PlayInEditor::destroyWindow(Window* window)
 {
 	baseSystem->destroyWindow(window);
 
-	auto it = windows.find(window);
+	auto it = std::find(windows.begin(), windows.end(), window);
 	assert(it != windows.end());
 	windows.erase(it);
 }
@@ -61,4 +73,74 @@ size_t System_PlayInEditor::getNumWindows() const
 Window* System_PlayInEditor::getWindow(size_t which)
 {
 	return windows[which];
+}
+
+void System_PlayInEditor::pumpEvents()
+{
+	//Utility functions
+	auto lookupWindow = [&](SDL_Window* windowHandle)
+	{
+		// Translate editor main window -> sandboxed main window
+		if (baseSystem->getWindow(0)->sdlHandle() == windowHandle)
+		{
+			return windows[0];
+		}
+
+		// Lookup for non-main windows
+		auto it = std::find_if(windows.begin(), windows.end(), [=](Window* w) { return w->sdlHandle == windowHandle; });
+		if (it != windows.end()) return *it;
+		else return (Window*)nullptr;
+	};
+	auto forwardToWindow = [&](SDL_Window* windowHandle, const SDL_Event& event)
+	{
+		Window* w = lookupWindow(windowHandle);
+		if (w) (w)->handleEvent(event);
+	};
+
+	for(const SDL_Event& ev : bufferedEvents)
+	{
+		//Forward events to appropriate windows
+		switch (ev.type)
+		{
+			// Passthrough input
+		case SDL_KEYDOWN:
+		case SDL_KEYUP:
+			forwardToWindow(SDL_GetKeyboardFocus(), ev);
+			break;
+
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP:
+		case SDL_MOUSEMOTION:
+			forwardToWindow(SDL_GetMouseFocus(), ev);
+			break;
+
+			//Window focus management
+		case SDL_WINDOWEVENT:
+		{
+			Window* window = lookupWindow(SDL_GetWindowFromID(ev.window.windowID));
+			if (window) // Null if events happened before destruction but after last pump
+			{
+				switch (ev.window.event)
+				{
+				case SDL_WINDOWEVENT_FOCUS_GAINED:
+					currentFocus = window;
+					break;
+
+				case SDL_WINDOWEVENT_FOCUS_LOST:
+					if (currentFocus == window) currentFocus = nullptr;
+					break;
+
+				case SDL_WINDOWEVENT_CLOSE:
+					window->requestClose();
+					break;
+				}
+				window->handleEvent(ev);
+				break;
+			}
+		}
+
+		}
+	}
+
+	bufferedEvents.clear();
 }

@@ -4,6 +4,7 @@
 #include <vector>
 #include <filesystem>
 
+union SDL_Event;
 class Application;
 class PluginManager;
 class Window;

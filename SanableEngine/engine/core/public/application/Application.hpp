@@ -20,8 +20,8 @@ class Window;
 class Application
 {
 protected:
-    bool isAlive;
-    gpr460::System* system;
+    bool isAlive = false;
+    gpr460::System* system = nullptr;
     std::optional<MemoryHeap> heap; //Optional so we can do late initialization/early destruction
     constexpr static size_t frameAllocatorSize = 4096;
     PluginManager pluginManager;
@@ -30,10 +30,10 @@ protected:
     Window* mainWindow = nullptr;
 
 public:
-    ENGINECORE_API Application(gpr460::System& system);
+    ENGINECORE_API Application();
     ENGINECORE_API virtual ~Application();
 
-    ENGINECORE_API virtual void init() = 0;
+    ENGINECORE_API virtual void init(gpr460::System& system) = 0;
     ENGINECORE_API virtual void cleanup() = 0;
 
     ENGINECORE_API gpr460::System* getSystem();

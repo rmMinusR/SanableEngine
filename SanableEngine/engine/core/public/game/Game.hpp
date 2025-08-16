@@ -32,10 +32,10 @@ class Game : public Application
     //PoolCallBatcher<I3DRenderable> _3dRenderList;
 
 public:
-    ENGINECORE_API Game(gpr460::System& system);
+    ENGINECORE_API Game();
     ENGINECORE_API virtual ~Game();
 
-    ENGINECORE_API virtual void init() override;
+    ENGINECORE_API virtual void init(gpr460::System& system) override;
     ENGINECORE_API virtual void cleanup() override;
     ENGINECORE_API void tick();
     int frame = 0;
