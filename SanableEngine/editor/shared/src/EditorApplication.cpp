@@ -17,8 +17,9 @@
 #include "GroupResizeHandle.hpp"
 #include "System_PlayInEditor.hpp"
 
-EditorApplication::EditorApplication() :
-	Application()
+EditorApplication::EditorApplication(std::filesystem::path projectDir) :
+	Application(),
+    projectDir(projectDir)
 {
 }
 
@@ -110,7 +111,7 @@ void EditorApplication::frameStep()
 void EditorApplication::startPlayInEditor(Game* game)
 {
     assert(!gameSystem);
-    gameSystem = new System_PlayInEditor(Application::system);
+    gameSystem = new System_PlayInEditor(Application::system, this);
     gameSystem->Init();
 
     assert(!currentGame);
@@ -126,4 +127,14 @@ void EditorApplication::stopPlayInEditor()
     assert(gameSystem);
     gameSystem->Shutdown();
     delete gameSystem;
+}
+
+std::filesystem::path EditorApplication::getProjectDir()
+{
+    return projectDir;
+}
+
+Game* EditorApplication::getCurrentGame()
+{
+    return currentGame;
 }

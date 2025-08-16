@@ -3,9 +3,11 @@
 #include <cassert>
 
 #include "Window.hpp"
+#include "EditorApplication.hpp"
 
-System_PlayInEditor::System_PlayInEditor(gpr460::System* baseSystem) :
-	baseSystem(baseSystem)
+System_PlayInEditor::System_PlayInEditor(gpr460::System* baseSystem, EditorApplication* editor) :
+	baseSystem(baseSystem),
+	editor(editor)
 {
 }
 
@@ -143,4 +145,16 @@ void System_PlayInEditor::pumpEvents()
 	}
 
 	bufferedEvents.clear();
+}
+
+std::vector<std::filesystem::path> System_PlayInEditor::ListPlugins(std::filesystem::path path) const
+{
+	std::vector<std::filesystem::path> plugins = baseSystem->ListPlugins(path);
+	// TODO filter out editor-only plugins
+	return plugins;
+}
+
+std::filesystem::path System_PlayInEditor::GetBaseDir() const
+{
+	return editor->getProjectDir();
 }

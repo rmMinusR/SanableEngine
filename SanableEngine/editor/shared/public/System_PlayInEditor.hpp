@@ -6,10 +6,12 @@
 #include "System.hpp"
 #include "dllapi.h"
 
+class EditorApplication;
+
 class System_PlayInEditor : public gpr460::System
 {
 public:
-	EDITORSHARED_API System_PlayInEditor(gpr460::System* baseSystem);
+	EDITORSHARED_API System_PlayInEditor(gpr460::System* baseSystem, EditorApplication* editor);
 	EDITORSHARED_API virtual ~System_PlayInEditor();
 
 	EDITORSHARED_API virtual void Init() override;
@@ -30,10 +32,11 @@ public:
 	EDITORSHARED_API virtual void ShowError(const std::wstring& message) override;
 	EDITORSHARED_API virtual void LogToErrorFile(const std::wstring& message) override;
 
-	EDITORSHARED_API virtual std::filesystem::path GetBaseDir() const override;
 	EDITORSHARED_API virtual std::vector<std::filesystem::path> ListPlugins(std::filesystem::path path) const override;
+	EDITORSHARED_API virtual std::filesystem::path GetBaseDir() const override;
 
 private:
+	EditorApplication* editor;
 	gpr460::System* baseSystem;
 
 	std::vector<Window*> windows;

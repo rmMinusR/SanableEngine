@@ -12,7 +12,7 @@ using namespace std::chrono_literals;
 void SanableMain(gpr460::System* system)
 {
     // Init
-    EditorApplication editor;
+    EditorApplication editor(system->GetBaseDir()/"testProject"); // TEMP TESTING HACK
     MemoryRoot::get()->registerExternal(&editor, ExternalObjectOptions::DefaultExternal);
     editor.init(*system);
 
