@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include "Window.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
 #include "Renderer.hpp"
@@ -43,9 +44,26 @@ HUD::~HUD()
 	memory.destroy(root);
 }
 
+void HUD::init(Window* window)
+{
+	assert(!this->window);
+	assert(window->getContext() == application);
+	this->window = window;
+}
+
 MemoryHeap* HUD::getMemory()
 {
 	return &memory;
+}
+
+Window* HUD::getWindow() const
+{
+	return window;
+}
+
+Application* HUD::getApplication() const
+{
+	return window->getContext();
 }
 
 void HUD::refreshLayout(Rect<float> viewport)
@@ -254,9 +272,4 @@ WidgetTransform const* HUD::getRootTransform() const
 WidgetTransform* HUD::getRootTransform()
 {
 	return root;
-}
-
-Application* HUD::getApplication() const
-{
-	return application;
 }

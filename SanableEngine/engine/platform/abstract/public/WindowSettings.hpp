@@ -21,4 +21,10 @@ struct WindowSettings
 	
 	WindowSettings(const std::string& name, int width, int height);
 	~WindowSettings();
+
+	WindowSettings(WindowSettings&& mov);
+	WindowSettings& operator=(WindowSettings&& mov);
+
+	WindowSettings(const WindowSettings& cpy) = delete;
+	WindowSettings& operator=(const WindowSettings& cpy) = delete;
 };

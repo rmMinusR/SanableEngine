@@ -21,6 +21,12 @@ GameWindowDispatcher::~GameWindowDispatcher()
 {
 }
 
+void GameWindowDispatcher::setup(Window* window)
+{
+	WindowUserLogic::setup(window);
+	hud.init(window);
+}
+
 void GameWindowDispatcher::handleEvent(const SDL_Event& ev)
 {
 	if (ev.type == SDL_WINDOWEVENT)

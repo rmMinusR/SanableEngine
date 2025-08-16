@@ -29,6 +29,7 @@ public:
 	ENGINEGUI_API GUIWindowDispatcher(Application* application, float minDragDistance);
 	ENGINEGUI_API virtual ~GUIWindowDispatcher();
 
+	ENGINEGUI_API virtual void setup(Window* window) override;
 	ENGINEGUI_API virtual void handleEvent(const SDL_Event& ev) override;
 
 	ENGINEGUI_API void setEventPassthrough(std::unique_ptr<WindowUserLogic>&& newPassthrough);

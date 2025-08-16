@@ -14,6 +14,8 @@ public:
 	ENGINECORE_API GameWindowDispatcher(Game* game);
 	ENGINECORE_API virtual ~GameWindowDispatcher();
 
+	ENGINECORE_API virtual void setup(Window* window) override;
+
 	HUD hud;
 
 protected:

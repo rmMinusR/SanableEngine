@@ -7,6 +7,7 @@
 #include "MemoryHeap.hpp"
 #include "PoolCallBatcher.hpp"
 
+class Window;
 class Application;
 
 class HUD
@@ -17,6 +18,7 @@ class HUD
 	WidgetTransform* root;
 	
 	Application* application;
+	Window* window = nullptr;
 
 	//Concurrency buffers
 	std::vector<Widget*> addQueue;
@@ -29,7 +31,11 @@ public:
 	ENGINEGUI_API HUD(Application* application);
 	ENGINEGUI_API ~HUD();
 
+	ENGINEGUI_API void init(Window* window);
+
 	ENGINEGUI_API MemoryHeap* getMemory();
+	ENGINEGUI_API Window* getWindow() const;
+	ENGINEGUI_API Application* getApplication() const;
 	
 	ENGINEGUI_API void refreshLayout(Rect<float> viewport);
 	ENGINEGUI_API void tick();
@@ -58,6 +64,4 @@ public:
 		destroyWidget_internal(w);
 		memory.destroy(w);
 	}
-
-	ENGINEGUI_API Application* getApplication() const;
 };

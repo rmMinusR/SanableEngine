@@ -23,6 +23,12 @@ GUIWindowDispatcher::~GUIWindowDispatcher()
 {
 }
 
+void GUIWindowDispatcher::setup(Window* window)
+{
+	WindowUserLogic::setup(window);
+	hud.init(window);
+}
+
 void GUIWindowDispatcher::handleEvent(const SDL_Event& ev)
 {
 	if (ev.type == SDL_EventType::SDL_MOUSEMOTION)
