@@ -7,6 +7,7 @@
 union SDL_Event;
 struct SDL_Window;
 
+class Application;
 class Renderer;
 class WindowUserLogic;
 struct WindowSettings;
@@ -18,18 +19,19 @@ class Window
 {
 protected:
 	WindowUserLogic* userLogic;
+	friend class Application;
 
 	bool closeRequested = false;
 
 	gpr460::System* system;
-	void* context; // Application
+	Application* context;
 
-	Window(const WindowSettings& settings, gpr460::System* system, void* context);
+	Window(const WindowSettings& settings, gpr460::System* system, Application* context);
 	virtual ~Window(); // Only System may call this
 	friend struct thunk_utils<Window>;
 public:
 	virtual WindowUserLogic* getUserLogic();
-	void* getContext() { return context; }
+	Application* getContext() { return context; }
 	gpr460::System* getSystem() { return system; }
 
 	bool isFocused() const;

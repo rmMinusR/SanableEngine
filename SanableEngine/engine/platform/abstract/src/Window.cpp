@@ -9,7 +9,7 @@ void Window::handleEvent(const SDL_Event& ev)
 	if (userLogic) userLogic->handleEvent(ev);
 }
 
-Window::Window(const WindowSettings& settings, gpr460::System* system, void* context) :
+Window::Window(const WindowSettings& settings, gpr460::System* system, Application* context) :
 	system(system),
 	context(context),
 	userLogic(settings.userLogic),
