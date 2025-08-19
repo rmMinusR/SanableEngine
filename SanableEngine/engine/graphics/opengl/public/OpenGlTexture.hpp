@@ -27,5 +27,5 @@ public:
 	ENGINEOPENGL_API OpenGlTexture& operator=(OpenGlTexture&& mov);
 	
 	ENGINEOPENGL_API virtual operator bool() const override;
-	ENGINEOPENGL_API virtual void resize(Vector2<int> size);
+	ENGINEOPENGL_API virtual void resize(Vector2<int> size) override;
 };

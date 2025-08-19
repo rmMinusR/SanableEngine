@@ -23,4 +23,7 @@ public:
 
 	ENGINEOPENGL_API virtual void resize(Vector2<int> size) override;
 	ENGINEOPENGL_API virtual operator bool() const override;
+
+	ENGINEOPENGL_API virtual const GTexture* getTexture() const override;
+	ENGINEOPENGL_API virtual GTexture* getTexture() override;
 };

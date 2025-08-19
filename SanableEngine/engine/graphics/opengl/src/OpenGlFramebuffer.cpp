@@ -58,3 +58,13 @@ OpenGlFramebuffer::operator bool() const
 {
 	return renderTexture && *renderTexture && frameBuffer;
 }
+
+const GTexture* OpenGlFramebuffer::getTexture() const
+{
+	return renderTexture;
+}
+
+GTexture* OpenGlFramebuffer::getTexture()
+{
+	return renderTexture;
+}

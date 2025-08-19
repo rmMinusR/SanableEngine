@@ -7,6 +7,7 @@
 #include "dllapi.h"
 
 class EditorApplication;
+class WidgetAsWindow;
 
 class System_PlayInEditor : public gpr460::System
 {
@@ -43,4 +44,5 @@ private:
 	std::vector<SDL_Event> bufferedEvents;
 
 	Window* currentFocus = nullptr;
+	WidgetAsWindow* playInEditorView = nullptr;
 };

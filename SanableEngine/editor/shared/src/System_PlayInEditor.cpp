@@ -4,6 +4,7 @@
 
 #include "Window.hpp"
 #include "EditorApplication.hpp"
+#include "WidgetAsWindow.hpp"
 
 System_PlayInEditor::System_PlayInEditor(gpr460::System* baseSystem, EditorApplication* editor) :
 	baseSystem(baseSystem),
@@ -52,15 +53,33 @@ bool System_PlayInEditor::isFocused(const Window* window)
 
 Window* System_PlayInEditor::createWindow(const WindowSettings& settings, Application* engine)
 {
-	// TODO inline widget editor
-	Window* window = baseSystem->createWindow(settings, engine);
+	Window* window = nullptr;
+
+	if (windows.size() == 0)
+	{
+		// First window is assumed to be main, embed in layout
+		window = playInEditorView;
+		playInEditorView->setLive(true);
+	}
+	else
+	{
+		window = baseSystem->createWindow(settings, engine);
+	}
+
 	windows.push_back(window);
 	return window;
 }
 
 void System_PlayInEditor::destroyWindow(Window* window)
 {
-	baseSystem->destroyWindow(window);
+	if (WidgetAsWindow* widgetWindow = dynamic_cast<WidgetAsWindow*>(window))
+	{
+		widgetWindow->setLive(false);
+	}
+	else
+	{
+		baseSystem->destroyWindow(window);
+	}
 
 	auto it = std::find(windows.begin(), windows.end(), window);
 	assert(it != windows.end());
