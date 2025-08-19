@@ -45,6 +45,8 @@ GLuint OpenGlTexture::createTextureHandle(OpenGlRenderer* ctx, int width, int he
 	glTexImage2D(GL_TEXTURE_2D, 0, glChannelsDesc, width, height, 0, glChannelsDesc, GL_UNSIGNED_BYTE, data);
 
 	ctx->errorCheck();
+
+	return id;
 }
 
 OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data) :
