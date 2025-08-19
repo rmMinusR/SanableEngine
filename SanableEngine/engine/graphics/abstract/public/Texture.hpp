@@ -49,7 +49,7 @@ public:
 	ENGINEGRAPHICS_API CTexture& operator=(const CTexture& cpy);
 
 	ENGINEGRAPHICS_API virtual operator bool() const override;
-	ENGINEGRAPHICS_API virtual void resize(Vector2<int> size);
+	ENGINEGRAPHICS_API virtual void resize(Vector2<int> size) override;
 
 	ENGINEGRAPHICS_API void* pixel(int x, int y);
 	ENGINEGRAPHICS_API const void* pixel(int x, int y) const;

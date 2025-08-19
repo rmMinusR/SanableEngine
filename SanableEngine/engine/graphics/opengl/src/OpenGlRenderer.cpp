@@ -14,6 +14,7 @@
 #include "OpenGlTexture.hpp"
 #include "OpenGlShaderProgram.hpp"
 #include "OpenGlMesh.hpp"
+#include "OpenGlFramebuffer.hpp"
 #include "GLContext.hpp"
 
 OpenGlRenderer::OpenGlRenderer(Window* owner, SDL_GLContext context) :
@@ -309,10 +310,22 @@ void OpenGlRenderer::setMaterialFlags(const Material& material)
 	}
 }
 
-void OpenGlRenderer::beginFrame(const Camera& cam, Rect<float> viewport, Vector3<float> pos, glm::quat rot)
+void OpenGlRenderer::beginFrame(const Camera& cam, Rect<float> viewport, Vector3<float> pos, glm::quat rot, const Framebuffer* framebuffer)
 {
+	if (framebuffer)
+	{
+		assert(dynamic_cast<const OpenGlFramebuffer*>(framebuffer) != nullptr);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, static_cast<const OpenGlFramebuffer*>(framebuffer)->frameBuffer);
+	}
+	else
+	{
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	}
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
+	
+	errorCheck();
 
 	curCamPos = pos;
 	curCamRot = rot;
@@ -361,6 +374,11 @@ GMesh* OpenGlRenderer::newMesh(const CMesh& source)
 ShaderProgram* OpenGlRenderer::loadShaderProgram(const std::filesystem::path& path)
 {
 	return new OpenGlShaderProgram(path);
+}
+
+Framebuffer* OpenGlRenderer::newFramebuffer(Vector2<int> initialSize, const Framebuffer::Settings& settings)
+{
+	return new OpenGlFramebuffer(this, initialSize, settings);
 }
 
 void OpenGlRenderer::errorCheck() const

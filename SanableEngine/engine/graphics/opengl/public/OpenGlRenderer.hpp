@@ -43,7 +43,7 @@ public:
 	ENGINEOPENGL_API virtual void setActiveShader(const ShaderProgram*) override;
 	ENGINEOPENGL_API virtual void setMaterialFlags(const Material& material) override;
 
-	ENGINEOPENGL_API virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) override;
+	ENGINEOPENGL_API virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation, const Framebuffer* framebuffer=nullptr) override;
 	ENGINEOPENGL_API virtual void endFrame() override;
 
 	ENGINEOPENGL_API virtual void clear(Color4<float> color) override;
@@ -52,6 +52,7 @@ public:
 	[[nodiscard]] ENGINEOPENGL_API virtual GTexture* newTexture(int width, int height, int nChannels, void* data) override;
 	[[nodiscard]] ENGINEOPENGL_API virtual GMesh* newMesh(const CMesh& source) override;
 	[[nodiscard]] ENGINEOPENGL_API virtual ShaderProgram* loadShaderProgram(const std::filesystem::path& path) override;
+	[[nodiscard]] ENGINEOPENGL_API virtual Framebuffer* newFramebuffer(Vector2<int> initialSize, const Framebuffer::Settings& settings) override;
 
 	ENGINEOPENGL_API virtual void errorCheck() const override;
 

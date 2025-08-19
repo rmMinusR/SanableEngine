@@ -13,6 +13,7 @@
 #include "Mesh.hpp"
 #include "Texture.hpp"
 #include "ShaderUniform.hpp"
+#include "Framebuffer.hpp"
 
 class Application;
 class Window;
@@ -55,7 +56,7 @@ public:
 	virtual void setActiveShader(const ShaderProgram* source) = 0;
 	virtual void setMaterialFlags(const Material& material) = 0;
 
-	virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation) = 0;
+	virtual void beginFrame(const Camera& camSettings, Rect<float> viewport, Vector3<float> position, glm::quat rotation, const Framebuffer* framebuffer=nullptr) = 0;
 	virtual void endFrame() = 0;
 
 	virtual void clear(Color4<float> color) = 0;
@@ -64,6 +65,7 @@ public:
 	[[nodiscard]] virtual GTexture* newTexture(int width, int height, int nChannels, void* data) = 0;
 	[[nodiscard]] virtual GMesh* newMesh(const CMesh& source) = 0;
 	[[nodiscard]] virtual ShaderProgram* loadShaderProgram(const std::filesystem::path& path) = 0;
+	[[nodiscard]] virtual Framebuffer* newFramebuffer(Vector2<int> initialSize, const Framebuffer::Settings& settings) = 0;
 
 	virtual void errorCheck() const = 0;
 };

@@ -4,9 +4,13 @@
 #include "Texture.hpp"
 #include "dllapi.h"
 
+class OpenGlRenderer;
+class OpenGlFramebuffer;
+
 class OpenGlTexture : public GTexture
 {
 	friend class OpenGlRenderer;
+	friend class OpenGlFramebuffer;
 	OpenGlRenderer* renderer = nullptr;
 	GLuint id;
 
