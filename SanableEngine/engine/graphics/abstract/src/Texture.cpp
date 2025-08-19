@@ -40,6 +40,11 @@ int Texture::getNChannels() const
 	return nChannels;
 }
 
+size_t Texture::getDataUnitWidth() const
+{
+	return sizeof(uint8_t) * nChannels;
+}
+
 CTexture::CTexture(int width, int height, int nChannels, void* data) :
 	Texture(width, height, nChannels),
 	data(data)
@@ -96,8 +101,8 @@ CTexture& CTexture::operator=(const CTexture& cpy)
 	nChannels = cpy.nChannels;
 
 	if (data) free(data);
-	data = (uint8_t*)malloc(width*height*nChannels);
-	memcpy(data, cpy.data, width*height*nChannels);
+	data = (uint8_t*)malloc(width*height*getDataUnitWidth());
+	memcpy(data, cpy.data, width*height*getDataUnitWidth());
 	
 	return *this;
 }
@@ -105,6 +110,42 @@ CTexture& CTexture::operator=(const CTexture& cpy)
 CTexture::operator bool() const
 {
 	return data;
+}
+
+void CTexture::resize(Vector2<int> size)
+{
+	size_t oldRowDataWidth = getWidth() * getDataUnitWidth();
+	size_t newRowDataWidth = size.x * getDataUnitWidth();
+
+	void* newData = malloc(width*height*getDataUnitWidth());
+
+	if (newRowDataWidth < oldRowDataWidth)
+	{
+		for (int row = 0; row < getHeight(); ++row)
+		{
+			uint8_t* oldRowStart = static_cast<uint8_t*>(   data) + oldRowDataWidth*row;
+			uint8_t* newRowStart = static_cast<uint8_t*>(newData) + newRowDataWidth*row;
+			memcpy_s(newRowStart, newRowDataWidth, oldRowStart, oldRowDataWidth);
+		}
+	}
+	else if (newRowDataWidth > oldRowDataWidth)
+	{
+		for (int row = getHeight() - 1; row << getHeight() >= 0; --row)
+		{
+			uint8_t* oldRowStart = static_cast<uint8_t*>(   data) + oldRowDataWidth*row;
+			uint8_t* newRowStart = static_cast<uint8_t*>(newData) + newRowDataWidth*row;
+			uint8_t* nextRowStart = static_cast<uint8_t*>(newData) + newRowDataWidth*(row+1);
+			memcpy_s(newRowStart, newRowDataWidth, oldRowStart, oldRowDataWidth);
+
+			size_t blankBytes = newRowDataWidth-oldRowDataWidth;
+			memset(nextRowStart-blankBytes, 0, blankBytes);
+		}
+	}
+
+	free(data);
+	data = newData;
+	width = size.x;
+	height = size.y;
 }
 
 void* CTexture::pixel(int x, int y)

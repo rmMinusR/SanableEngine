@@ -15,12 +15,11 @@ OpenGlTexture::OpenGlTexture() :
 {
 }
 
-OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data) :
-	GTexture(width, height, nChannels, data),
-	id(0)
+GLuint OpenGlTexture::createTextureHandle(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data)
 {
 	ctx->activate();
 
+	GLuint id;
 	glGenTextures(1, &id);
 	assert(id);
 
@@ -37,15 +36,22 @@ OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nCh
 	int glChannelsDesc;
 	switch (nChannels)
 	{
-		case 1: glChannelsDesc = GL_RED; break;
-		case 2: glChannelsDesc = GL_RG; break;
-		case 3: glChannelsDesc = GL_RGB; break;
-		case 4: glChannelsDesc = GL_RGBA; break;
-		default: assert(false); break;
+	case 1: glChannelsDesc = GL_RED; break;
+	case 2: glChannelsDesc = GL_RG; break;
+	case 3: glChannelsDesc = GL_RGB; break;
+	case 4: glChannelsDesc = GL_RGBA; break;
+	default: assert(false); break;
 	}
 	glTexImage2D(GL_TEXTURE_2D, 0, glChannelsDesc, width, height, 0, glChannelsDesc, GL_UNSIGNED_BYTE, data);
 
 	ctx->errorCheck();
+}
+
+OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data) :
+	GTexture(width, height, nChannels, data)
+{
+	renderer = ctx;
+	id = createTextureHandle(ctx, width, height, nChannels, data);
 }
 
 OpenGlTexture::OpenGlTexture(OpenGlRenderer* ctx, const CTexture& tex) :
@@ -87,4 +93,22 @@ OpenGlTexture& OpenGlTexture::operator=(OpenGlTexture&& mov)
 OpenGlTexture::operator bool() const
 {
 	return id != 0;
+}
+
+void OpenGlTexture::resize(Vector2<int> size)
+{
+	assert(renderer);
+
+	GLuint newTex = createTextureHandle(renderer, size.x, size.y, nChannels, nullptr);
+	glCopyImageSubData(
+		id, GL_TEXTURE_2D, 0, 0, 0, 0,
+		newTex, GL_TEXTURE_2D, 0, 0, 0, 0,
+		std::min(width, size.x), std::min(height, size.y), 1
+	);
+	renderer->errorCheck();
+
+	glDeleteTextures(1, &id);
+	id = newTex;
+	width = size.x;
+	height = size.y;
 }

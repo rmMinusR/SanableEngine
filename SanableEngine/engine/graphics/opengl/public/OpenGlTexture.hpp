@@ -7,7 +7,10 @@
 class OpenGlTexture : public GTexture
 {
 	friend class OpenGlRenderer;
+	OpenGlRenderer* renderer = nullptr;
 	GLuint id;
+
+	[[nodiscard]] static GLuint createTextureHandle(OpenGlRenderer* ctx, int width, int height, int nChannels, const void* data);
 
 public:
 	ENGINEOPENGL_API OpenGlTexture();
@@ -20,4 +23,5 @@ public:
 	ENGINEOPENGL_API OpenGlTexture& operator=(OpenGlTexture&& mov);
 	
 	ENGINEOPENGL_API virtual operator bool() const override;
+	ENGINEOPENGL_API virtual void resize(Vector2<int> size);
 };

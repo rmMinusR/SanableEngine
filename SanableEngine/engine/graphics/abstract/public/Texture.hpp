@@ -25,7 +25,10 @@ public:
 	ENGINEGRAPHICS_API Vector2<int> getSize() const;
 	ENGINEGRAPHICS_API int getNChannels() const;
 
+	ENGINEGRAPHICS_API size_t getDataUnitWidth() const;
+
 	ENGINEGRAPHICS_API virtual operator bool() const = 0;
+	ENGINEGRAPHICS_API virtual void resize(Vector2<int> size) = 0;
 };
 
 
@@ -46,6 +49,7 @@ public:
 	ENGINEGRAPHICS_API CTexture& operator=(const CTexture& cpy);
 
 	ENGINEGRAPHICS_API virtual operator bool() const override;
+	ENGINEGRAPHICS_API virtual void resize(Vector2<int> size);
 
 	ENGINEGRAPHICS_API void* pixel(int x, int y);
 	ENGINEGRAPHICS_API const void* pixel(int x, int y) const;
