@@ -8,7 +8,8 @@ ButtonWidgetBase::ButtonWidgetBase(HUD* hud) :
 	getTransform()->setRelativeRenderDepth(1);
 
 	contentTransform = hud->getMemory()->create<WidgetTransform>(nullptr, hud);
-	contentTransform->setRelativeRenderDepth(-1);
+	contentTransform->setParent(getTransform());
+	contentTransform->setRelativeRenderDepth(1);
 }
 
 ButtonWidgetBase::~ButtonWidgetBase()
