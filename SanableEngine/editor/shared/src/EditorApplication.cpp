@@ -7,11 +7,14 @@
 #include "Renderer.hpp"
 #include "ShaderProgram.hpp"
 #include "Material.hpp"
+#include "Font.hpp"
 #include "gui/HUD.hpp"
 #include "gui/ImageWidget.hpp"
+#include "gui/LabelWidget.hpp"
 #include "gui/ButtonWidget.hpp"
 #include "gui/WidgetTransform.hpp"
 #include "gui/HorizontalGroupWidget.hpp"
+#include "gui/VerticalGroupWidget.hpp"
 #include "gui/UISprite.hpp"
 #include "DraggableTabView.hpp"
 #include "GroupResizeHandle.hpp"
@@ -41,6 +44,15 @@ void EditorApplication::setupDefaultLayout(Window* editorWindow, HUD* hud)
     if (!imageShader->load()) assert(false);
     Material* imageMat = new Material(imageShader);
 
+    // Load text shader
+    ShaderProgram* textShader = editorWindow->getRenderer()->loadShaderProgram(system->GetBaseDir() / "resources/ui/shaders/font");
+    if (!textShader->load()) assert(false);
+    Material* textMat = new Material(textShader);
+    textMat->setGroup(Material::Group::Transparent);
+
+    // Load text font
+    Font* fontTabHeading = new Font(system->GetBaseDir() / "resources/ui/fonts/arial.ttf", 24);
+
     // Load placeholder sprites
     GTexture* texPlaceholder1 = editorWindow->getRenderer()->loadTexture(system->GetBaseDir() / "resources/ui/textures/placeholder_1.png");
     GTexture* texPlaceholder2 = editorWindow->getRenderer()->loadTexture(system->GetBaseDir() / "resources/ui/textures/placeholder_2.png");
@@ -61,21 +73,98 @@ void EditorApplication::setupDefaultLayout(Window* editorWindow, HUD* hud)
     sprDividerDragged->setPixel({ 1,1 }, { 3,5 });
     sprDividerDragged->setPixel({ 2,2 }, { 4,8 });
 
-    HorizontalGroupWidget* hgrp = hud->addWidget<HorizontalGroupWidget>();
-    hgrp->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+    // Add widgets
 
-    for (size_t i = 0; i < 2; ++i)
+    //  |-------------------------|
+    //  |       |                 |
+    //  | Hier. |   Scene/game    |
+    //  |       |                 |
+    //  |-------------------------|
+    //  |         Files           |
+    //  |-------------------------|
+
+    VerticalGroupWidget* rootGroup = hud->addWidget<VerticalGroupWidget>();
+    rootGroup->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent();
+
+    // Top part: hierarchy, scene, and game views
+    HorizontalGroupWidget* curLevelGroup = hud->addWidget<HorizontalGroupWidget>();
+    curLevelGroup->getTransform()->setParent(rootGroup->getTransform());
+    curLevelGroup->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(rootGroup);
+
+    RadioButtonWidget::SpriteSet tabSprites = { sprPlaceholder1, sprPlaceholder2, sprPlaceholder2 };
+
+    // Top-left: Hierarchy views (NYI)
+    DraggableTabView* hierarchyTabArea = hud->addWidget<DraggableTabView>(Vector2f{ 120, 35 }, imageMat, tabSprites, TabView::TabsLocation::Top);
+    hierarchyTabArea->getTransform()->setParent(curLevelGroup->getTransform());
+    hierarchyTabArea->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(curLevelGroup);
+
+    ImageWidget* objectHierarchyView = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
     {
-        DraggableTabView* tabView = hud->addWidget<DraggableTabView>(Vector2f{ 100, 50 }, imageMat, RadioButtonWidget::SpriteSet{ sprPlaceholder1, sprPlaceholder2, sprPlaceholder2 }, TabView::TabsLocation::Top);
-        tabView->getTransform()->setParent(hgrp->getTransform());
-        tabView->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(hgrp);
-
-        ImageWidget* placeholderLeft = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1); // Left
-        RadioButtonWidget* btnLeft = tabView->addItem(placeholderLeft);
-
-        ImageWidget* placeholderRight = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder2); // Right
-        RadioButtonWidget* btnRight = tabView->addItem(placeholderRight);
+        RadioButtonWidget* objectHierarchyButton = hierarchyTabArea->addItem(objectHierarchyView);
+        LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, fontTabHeading, Color4<uint8_t>{ 0, 0, 0, 255 });
+        lbl->getTransform()->setParent(objectHierarchyButton->getContentArea());
+        lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent(5);
+        lbl->align = UIAnchor::centered();
+        lbl->setText(L"Hierarchy");
     }
+
+    ImageWidget* componentHierarchyView = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
+    {
+        RadioButtonWidget* componentHierarchyButton = hierarchyTabArea->addItem(componentHierarchyView);
+        LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, fontTabHeading, Color4<uint8_t>{ 0, 0, 0, 255 });
+        lbl->getTransform()->setParent(componentHierarchyButton->getContentArea());
+        lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent(5);
+        lbl->align = UIAnchor::centered();
+        lbl->setText(L"Details");
+    }
+
+    // Top left/right divider
+    {
+        ImageWidget* handleBackground = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
+        GroupResizeHandle* worldGroupHandle = hud->addWidget<GroupResizeHandle>(handleBackground, sprPlaceholder1, sprPlaceholder2);
+        worldGroupHandle->getTransform()->setParent(curLevelGroup->getTransform());
+        worldGroupHandle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(curLevelGroup)->config.setFixedSize(5);
+    }
+
+    // Top-right: Scene and game views (NYI)
+    DraggableTabView* worldTabArea = hud->addWidget<DraggableTabView>(Vector2f{ 120, 35 }, imageMat, tabSprites, TabView::TabsLocation::Top);
+    worldTabArea->getTransform()->setParent(curLevelGroup->getTransform());
+    worldTabArea->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(curLevelGroup);
+
+    // Scene view
+    ImageWidget* sceneView = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
+    {
+        RadioButtonWidget* sceneViewButton = worldTabArea->addItem(sceneView);
+        LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, fontTabHeading, Color4<uint8_t>{ 0, 0, 0, 255 });
+        lbl->getTransform()->setParent(sceneViewButton->getContentArea());
+        lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent(5);
+        lbl->align = UIAnchor::centered();
+        lbl->setText(L"Scene");
+    }
+
+    // Game view - TODO do Unreal-style detach instead?
+    ImageWidget* gameView = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
+    {
+        RadioButtonWidget* gameViewButton = worldTabArea->addItem(gameView);
+        LabelWidget* lbl = hud->addWidget<LabelWidget>(textMat, fontTabHeading, Color4<uint8_t>{ 0, 0, 0, 255 });
+        lbl->getTransform()->setParent(gameViewButton->getContentArea());
+        lbl->getTransform()->setPositioningStrategy<AnchoredPositioning>()->fillParent(5);
+        lbl->align = UIAnchor::centered();
+        lbl->setText(L"Game");
+    }
+
+    // Top/bottom divider
+    {
+        ImageWidget* handleBackground = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
+        GroupResizeHandle* rootGroupHandle = hud->addWidget<GroupResizeHandle>(handleBackground, sprPlaceholder1, sprPlaceholder2);
+        rootGroupHandle->getTransform()->setParent(rootGroup->getTransform());
+        rootGroupHandle->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(rootGroup)->config.setFixedSize(5);
+    }
+
+    // Bottom part: file view (NYI)
+    ImageWidget* fileView = hud->addWidget<ImageWidget>(imageMat, sprPlaceholder1);
+    fileView->getTransform()->setParent(rootGroup->getTransform());
+    fileView->getTransform()->setPositioningStrategy<AutoLayoutPositioning>(rootGroup);
 }
 
 void EditorApplication::cleanup()
