@@ -18,6 +18,7 @@ struct WindowSettings
 
 	//Optional
 	std::optional<Vector2<int>> position;
+	bool resizable = false;
 	
 	WindowSettings(const std::string& name, int width, int height);
 	~WindowSettings();

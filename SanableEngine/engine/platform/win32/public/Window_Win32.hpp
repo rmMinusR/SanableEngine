@@ -34,11 +34,16 @@ public:
 	virtual int getWidth() const override;
 	virtual int getHeight() const override;
 	virtual Vector2<int> getSize() const override;
+
+	virtual void setSize(int w, int h) override;
+	virtual void setUserResizable(bool val) override;
+
 	virtual bool wasCloseRequested() const override;
 
 	virtual MenuBar* getMenuBar(bool create = false) override;
 	virtual const MenuBar* getMenuBar() const override;
 
+	virtual void handleEvent(const SDL_Event& ev) override;
 	virtual SDL_Window* getSdlHandle() const override;
 
 	// PLATFORM SPECIFIC
@@ -46,4 +51,5 @@ public:
 	HWND getNativeHandle();
 private:
 	void handleNativeEvent(UINT uMsg, WPARAM wParam, LPARAM lParam);
+	void onResized();
 };

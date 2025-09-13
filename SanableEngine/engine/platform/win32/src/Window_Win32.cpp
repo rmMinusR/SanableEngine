@@ -5,6 +5,7 @@
 #include "application/Application.hpp"
 #include "GLSettings.hpp"
 #include "GLContext.hpp"
+#include "WindowUserLogic.hpp"
 #include "menu/MenuBar_Win32.hpp"
 #include "menu/MenuButton.hpp"
 
@@ -58,6 +59,27 @@ Vector2<int> Window_Win32::getSize() const
     Vector2<int> size;
     SDL_GetWindowSize(sdlHandle, &size.x, &size.y);
     return size;
+}
+
+void Window_Win32::setSize(int w, int h)
+{
+    assert(w > 0 && h > 0);
+    SDL_SetWindowSize(sdlHandle, w, h);
+    onResized();
+}
+
+void Window_Win32::handleEvent(const SDL_Event& ev)
+{
+    if(ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_RESIZED)
+    {
+        Vector2<int> newSize(ev.window.data1, ev.window.data2);
+    }
+    Window::handleEvent(ev);
+}
+
+void Window_Win32::setUserResizable(bool val)
+{
+    SDL_SetWindowResizable(sdlHandle, val ? SDL_TRUE : SDL_FALSE);
 }
 
 bool Window_Win32::wasCloseRequested() const

@@ -260,7 +260,7 @@ Window* gpr460::System_Win32::createWindow(const WindowSettings& settings, Appli
 		settings.position.has_value() ? settings.position->y : SDL_WINDOWPOS_UNDEFINED,
 		settings.size.x,
 		settings.size.y,
-		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL
+		SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | (settings.resizable ? SDL_WINDOW_RESIZABLE : 0)
 	);
 
 	Window_Win32* w = new Window_Win32(settings, engine, handle);

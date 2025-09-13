@@ -44,6 +44,9 @@ public:
 	virtual int getHeight() const = 0;
 	virtual Vector2<int> getSize() const = 0;
 
+	virtual void setSize(int w, int h) = 0;
+	virtual void setUserResizable(bool val) = 0;
+
 	virtual bool wasCloseRequested() const = 0;
 	virtual void requestClose();
 
