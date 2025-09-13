@@ -54,7 +54,7 @@ void GameWindowDispatcher::render(Rect<float> viewport)
 	if (cam)
 	{
 		const Transform* camTransform = cam->getGameObject()->getTransform();
-		renderInterface->beginFrame(*cam->getConfig(), viewport, camTransform->getPosition(), camTransform->getRotation());
+		renderInterface->beginFrame(*cam->getConfig(), viewport, camTransform->getPosition(), camTransform->getRotation(), window->getFramebuffer());
 	}
 	else printf("WARNING: No main camera!");
 

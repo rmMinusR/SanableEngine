@@ -14,6 +14,7 @@ WidgetAsWindow::WidgetAsWindow(HUD* hud, const Material* widgetMaterial, const U
 {
 	Framebuffer::Settings framebufferSettings;
 	renderTexture = hud->getWindow()->getRenderer()->newFramebuffer(settings.size, framebufferSettings);
+
 	activeSprite = new UISprite3x3(renderTexture->getTexture());
 	activeSprite->set({ 1, 1 }, { 0,0 }); // Full stretch
 	activeSprite->set({ 2, 2 }, { 1,1 });
@@ -21,8 +22,8 @@ WidgetAsWindow::WidgetAsWindow(HUD* hud, const Material* widgetMaterial, const U
 
 WidgetAsWindow::~WidgetAsWindow()
 {
-	delete renderTexture;
 	delete activeSprite;
+	delete renderTexture;
 }
 
 void WidgetAsWindow::setLive(bool live)
@@ -60,6 +61,24 @@ void WidgetAsWindow::move(int x, int y)
 Vector2<int> WidgetAsWindow::getSize() const
 {
 	return getTransform()->getRect().size.convert<int>();
+}
+
+const Framebuffer* WidgetAsWindow::getFramebuffer() const
+{
+	return renderTexture;
+}
+
+void WidgetAsWindow::setFramebuffer(Framebuffer* fb)
+{
+	if (renderTexture == fb) return; // No-op
+
+	delete renderTexture;
+	renderTexture = fb;
+
+	activeSprite->~UISprite3x3();
+	new(activeSprite) UISprite3x3(renderTexture->getTexture());
+	activeSprite->set({ 1, 1 }, { 0,0 }); // Full stretch
+	activeSprite->set({ 2, 2 }, { 1,1 });
 }
 
 bool WidgetAsWindow::wasCloseRequested() const

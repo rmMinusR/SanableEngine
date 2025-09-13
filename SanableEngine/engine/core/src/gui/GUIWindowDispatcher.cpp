@@ -131,7 +131,7 @@ void GUIWindowDispatcher::render(Rect<float> viewport)
 
 	Camera cam;
 	cam.setGUIProj();
-	renderer->beginFrame(cam, viewport, { 0,0,0 }, glm::identity<glm::quat>());
+	renderer->beginFrame(cam, viewport, { 0,0,0 }, glm::identity<glm::quat>(), window->getFramebuffer());
 
 	renderer->clear({ 0, 0, 0, 1 });
 

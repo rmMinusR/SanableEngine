@@ -21,6 +21,12 @@ Window_Win32::Window_Win32(const WindowSettings& settings, Application* engine, 
 
 Window_Win32::~Window_Win32()
 {
+    if (framebuffer)
+    {
+        delete framebuffer;
+        framebuffer = nullptr;
+    }
+
     if (menuBar)
     {
         delete menuBar;
@@ -72,7 +78,7 @@ void Window_Win32::handleEvent(const SDL_Event& ev)
 {
     if(ev.type == SDL_WINDOWEVENT && ev.window.event == SDL_WINDOWEVENT_RESIZED)
     {
-        Vector2<int> newSize(ev.window.data1, ev.window.data2);
+        onResized();
     }
     Window::handleEvent(ev);
 }
@@ -80,6 +86,17 @@ void Window_Win32::handleEvent(const SDL_Event& ev)
 void Window_Win32::setUserResizable(bool val)
 {
     SDL_SetWindowResizable(sdlHandle, val ? SDL_TRUE : SDL_FALSE);
+}
+
+const Framebuffer* Window_Win32::getFramebuffer() const
+{
+    return framebuffer;
+}
+
+void Window_Win32::setFramebuffer(Framebuffer* fb)
+{
+    if (framebuffer) delete framebuffer;
+    framebuffer = fb;
 }
 
 bool Window_Win32::wasCloseRequested() const
@@ -154,5 +171,13 @@ void Window_Win32::handleNativeEvent(UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             btn->onClick();
         }
+    }
+}
+
+void Window_Win32::onResized()
+{
+    if (framebuffer)
+    {
+        framebuffer->resize(getSize());
     }
 }

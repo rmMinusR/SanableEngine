@@ -17,6 +17,7 @@ private:
 	SDL_Window* sdlHandle;
 	OpenGlRenderer renderer;
 	MenuBar_Win32* menuBar = nullptr;
+	Framebuffer* framebuffer = nullptr; // Owns, may be null
 
 	int sdlID;
 
@@ -37,6 +38,9 @@ public:
 
 	virtual void setSize(int w, int h) override;
 	virtual void setUserResizable(bool val) override;
+
+	virtual const Framebuffer* getFramebuffer() const override; // May be null
+	virtual void setFramebuffer(Framebuffer*) override; // Takes ownership
 
 	virtual bool wasCloseRequested() const override;
 

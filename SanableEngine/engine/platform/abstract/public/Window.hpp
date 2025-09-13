@@ -9,6 +9,7 @@ struct SDL_Window;
 
 class Application;
 class Renderer;
+class Framebuffer;
 class WindowUserLogic;
 struct WindowSettings;
 template<typename T> struct thunk_utils;
@@ -46,6 +47,9 @@ public:
 
 	virtual void setSize(int w, int h) = 0;
 	virtual void setUserResizable(bool val) = 0;
+
+	virtual const Framebuffer* getFramebuffer() const = 0; // May be null
+	virtual void setFramebuffer(Framebuffer*) = 0; // Takes ownership
 
 	virtual bool wasCloseRequested() const = 0;
 	virtual void requestClose();

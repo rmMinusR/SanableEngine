@@ -32,6 +32,9 @@ public:
 	EDITORSHARED_API virtual int getHeight() const override;
 	EDITORSHARED_API virtual Vector2<int> getSize() const override;
 
+	EDITORSHARED_API virtual const Framebuffer* getFramebuffer() const override; // May be null
+	EDITORSHARED_API virtual void setFramebuffer(Framebuffer*) override; // Takes ownership
+
 	EDITORSHARED_API virtual bool wasCloseRequested() const override;
 
 	EDITORSHARED_API virtual MenuBar* getMenuBar(bool create = false) override;
