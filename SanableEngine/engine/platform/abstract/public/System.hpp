@@ -30,7 +30,7 @@ namespace gpr460
 		virtual ~System();
 
 		virtual void Init();
-		virtual void DoMainLoop(void(*stepFn)(void*), void* stepArg) = 0;
+		virtual void DoMainLoop(void(*stepFn)(Application*), Application* app) = 0;
 		virtual void Shutdown() = 0;
 
 		virtual void pumpEvents() = 0;

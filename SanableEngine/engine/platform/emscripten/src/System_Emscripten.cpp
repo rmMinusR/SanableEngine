@@ -33,9 +33,9 @@ void gpr460::System_Emscripten::Init()
 	isAlive = true;
 }
 
-void gpr460::System_Emscripten::DoMainLoop(void(*stepFn)(void*), void* stepArg)
+void gpr460::System_Emscripten::DoMainLoop(void(*stepFn)(Application*), Application* app)
 {
-	emscripten_set_main_loop_arg(stepFn, stepArg, 0, true);
+	emscripten_set_main_loop_arg(static_cast<void(*)(void*)>(stepFn), (void*)app, 0, true);
 }
 
 void gpr460::System_Emscripten::Shutdown()

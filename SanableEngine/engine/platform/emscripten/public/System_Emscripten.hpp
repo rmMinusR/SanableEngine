@@ -11,7 +11,7 @@ namespace gpr460
 		~System_Emscripten();
 
 		void Init() override;
-		void DoMainLoop(void(*stepFn)(void*), void* stepArg) override;
+		void DoMainLoop(void(*stepFn)(Application*), Application* app) override;
 		void Shutdown() override;
 
 		void DebugPause() override;

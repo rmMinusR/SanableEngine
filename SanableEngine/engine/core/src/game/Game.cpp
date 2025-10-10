@@ -122,7 +122,7 @@ void Game::doMainLoop()
     refreshCallBatchers(true);
 
     // Run
-    system->DoMainLoop(+[](void* arg) { static_cast<Game*>(arg)->frameStep(); }, this);
+    system->DoMainLoop(+[](Application* arg) { static_cast<Game*>(arg)->frameStep(); }, (Application*)this);
 }
 
 void Game::frameStep()

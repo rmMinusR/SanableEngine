@@ -53,13 +53,13 @@ void gpr460::System_Win32::Init()
 	if (!consolePsuedofile) ShowError(L"Failed to redirect console output");
 }
 
-void gpr460::System_Win32::DoMainLoop(void(*stepFn)(void*), void* stepArg)
+void gpr460::System_Win32::DoMainLoop(void(*stepFn)(Application*), Application* app)
 {
 	while (true)
 	{
 		std::chrono::time_point frameStart = std::chrono::steady_clock::now();
 		
-		stepFn(stepArg);
+		stepFn(app);
 		if (quitRequested) break;
 
 		std::chrono::time_point frameEnd = std::chrono::steady_clock::now();
