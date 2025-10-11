@@ -2,19 +2,6 @@
 
 #include "../dllapi.h"
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-typedef HMODULE LibHandle;
-#define InvalidLibHandle ((HMODULE)INVALID_HANDLE_VALUE)
-#endif
-
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-typedef void* LibHandle;
-#define InvalidLibHandle (nullptr)
-#endif
-
 #include <functional>
 #include <filesystem>
 #include <vector>
@@ -22,6 +9,7 @@ typedef void* LibHandle;
 
 #include "dllapi.h"
 #include "PluginCore.hpp"
+#include "DynamicModule.hpp"
 
 class ModuleTypeRegistry;
 class Application;
@@ -72,7 +60,7 @@ private:
 
 	std::filesystem::path pluginDir;
 	std::wstring dllSubpath;
-	LibHandle dll;
+	DynamicModule* handle = nullptr;
 	bool wasEverLoaded = false;
 	bool wasEverHooked = false;
 

@@ -2,6 +2,7 @@
 
 #include "application/Application.hpp"
 #include "application/PluginCore.hpp"
+#include "System.hpp"
 #include "GlobalTypeRegistry.hpp"
 #include "MemoryHeap.hpp"
 #include "MemoryRoot.hpp"
@@ -19,7 +20,6 @@ Plugin::Plugin(const std::filesystem::path& pluginDir, const std::wstring& dllSu
 	pluginDir(pluginDir),
 	dllSubpath(dllSubpath)
 {
-	dll = InvalidLibHandle;
 }
 
 Plugin::~Plugin()
@@ -32,24 +32,19 @@ Plugin::Plugin(Plugin&& mov) noexcept
 {
 	pluginDir = mov.pluginDir;
 	dllSubpath = mov.dllSubpath;
-	dll    = mov.dll;
+	handle = mov.handle;
 	status = mov.status;
 
 	mov.pluginDir.clear();
 	mov.dllSubpath.clear();
-	mov.dll = InvalidLibHandle;
+	mov.handle = nullptr;
 	mov.status = Status::NotLoaded;
 }
 
 void* Plugin::getSymbol(const char* name) const
 {
 	assert(isCodeLoaded());
-#ifdef _WIN32
-	return reinterpret_cast<void*>(GetProcAddress(dll, name));
-#endif
-#ifdef __EMSCRIPTEN__
-	return dlsym(dll, name);
-#endif
+	return handle->getSymbol(name);
 }
 
 std::filesystem::path Plugin::getPluginDir() const
@@ -71,7 +66,7 @@ std::wstring Plugin::getName() const
 
 bool Plugin::isCodeLoaded() const
 {
-	return dll != InvalidLibHandle;
+	return handle != nullptr;
 }
 
 bool Plugin::isHooked() const
@@ -90,25 +85,9 @@ bool Plugin::load(Application* context)
 	assert(!isCodeLoaded());
 
 	//Load code
-#ifdef _WIN32
-	dll = LoadLibraryW(getDllPath().c_str());
-#endif
-#ifdef __EMSCRIPTEN__
-	dll = dlopen(getDllPath().c_str(), RTLD_LAZY);
-#endif
+	handle = context->getSystem()->loadDynamicModule(getDllPath());
 
-	//If load failed, abort
-	if (!isCodeLoaded())
-	{
-#ifdef _WIN32
-		DWORD err = GetLastError();
-		printf_s("Error: Code %u\n", err);
-#endif
-#ifdef __EMSCRIPTEN__
-		printf("Error: %s\n", dlerror());
-#endif
-		return false;
-	}
+	// TODO allow soft error again (handle init currently asserts and HCFs)
 
 	status = Status::DllLoaded;
 
@@ -209,15 +188,8 @@ void Plugin::unload(Application* context)
 	});
 	GlobalTypeRegistry::unloadModule(reportedData->name);
 
-#ifdef _WIN32
-	BOOL success = FreeLibrary(dll);
-	assert(success);
-#endif
-#ifdef __EMSCRIPTEN__
-	int failure = dlclose(dll);
-	assert(!failure);
-#endif
+	delete handle;
+	handle = nullptr;
 
-	dll = InvalidLibHandle;
 	status = Status::NotLoaded;
 }
