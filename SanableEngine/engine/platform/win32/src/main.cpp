@@ -8,6 +8,7 @@
 #include "EntryPoint.hpp"
 #include "System_Win32.hpp"
 #include "GLSettings.hpp"
+#include "application/Application.hpp"
 
 int platformDefaultMain(int argc, char* argv[])
 {
@@ -16,10 +17,17 @@ int platformDefaultMain(int argc, char* argv[])
     system.Init();
     MemoryRoot::get()->registerExternal(&system, ExternalObjectOptions::DefaultExternal);
 
-    //Loop
-    SanableMain(&system);
+    //Init user app
+    Application* app = SanableMain(&system);
 
-    //Shutdown
+    //Loop
+    app->doMainLoop();
+
+    //Shutdown app
+    app->cleanup();
+    delete app;
+
+    //Shutdown system
     system.Shutdown();
     SDL_Quit();
     MemoryRoot::cleanup();

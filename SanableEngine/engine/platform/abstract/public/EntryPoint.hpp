@@ -8,4 +8,5 @@ namespace gpr460 { class System; }
 //                     SanableMain used here         Defined here
 //
 
-extern void SanableMain(gpr460::System*);
+class Application;
+extern Application* SanableMain(gpr460::System*); // Really only a bootstrapping mechanism. TODO should prob rename

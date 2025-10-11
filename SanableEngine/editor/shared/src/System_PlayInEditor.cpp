@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include "Window.hpp"
+#include "game/Game.hpp"
 #include "EditorApplication.hpp"
 #include "WidgetAsWindow.hpp"
 
@@ -21,14 +22,19 @@ void System_PlayInEditor::Init()
 	bufferedEvents.clear();
 }
 
-void System_PlayInEditor::DoMainLoop(void(*stepFn)(void*), void* stepArg)
+void System_PlayInEditor::DoMainLoop(void(*stepFn)(Application*), Application* app)
 {
-	assert(false); // Yeah, don't do this
+	editor->currentGame = static_cast<Game*>(app);
+	editor->currentGameStepFn = stepFn;
+	editor->currentGamePaused = false;
 }
 
 void System_PlayInEditor::Shutdown()
 {
 	bufferedEvents.clear();
+
+	editor->currentGame = nullptr;
+	editor->currentGameStepFn = nullptr;
 }
 
 void System_PlayInEditor::DebugPause()

@@ -9,16 +9,16 @@ using namespace std::chrono_literals;
 #include "SplashWindow.hpp"
 #include "gui/GUIWindowDispatcher.hpp"
 
-void SanableMain(gpr460::System* system)
+Application* SanableMain(gpr460::System* system)
 {
     // Init
-    EditorApplication editor(system->GetBaseDir()/"testProject"); // TEMP TESTING HACK
+    EditorApplication* editor = new EditorApplication(system->GetBaseDir()/"testProject"); // TEMP TESTING HACK
     MemoryRoot::get()->registerExternal(&editor, ExternalObjectOptions::DefaultExternal);
-    editor.init(*system);
+    editor->init(*system);
 
     // Setup splash window
-    SplashWindow* loaderWindow = new SplashWindow(&editor, L"Sanable Editor - Loading...", { 300, 200 });
-    editor.setMainWindow(loaderWindow->getWindow());
+    SplashWindow* loaderWindow = new SplashWindow(editor, L"Sanable Editor - Loading...", { 300, 200 });
+    editor->setMainWindow(loaderWindow->getWindow());
     system->pumpEvents();
     loaderWindow->redraw();
 
@@ -28,19 +28,17 @@ void SanableMain(gpr460::System* system)
     // Setup editor window
     {
         WindowSettings mainWindowSettings("Sanable Editor", 800, 600);
-        GUIWindowDispatcher* editorWindowLogic = new GUIWindowDispatcher(&editor, 5);
+        GUIWindowDispatcher* editorWindowLogic = new GUIWindowDispatcher(editor, 5);
         mainWindowSettings.userLogic = editorWindowLogic;
+        mainWindowSettings.resizable = true;
 
-        Window* editorWindow = editor.buildWindow(mainWindowSettings);
-        editor.setupDefaultLayout(editorWindow, &editorWindowLogic->hud);
-        editor.setMainWindow(editorWindow);
+        Window* editorWindow = editor->buildWindow(mainWindowSettings);
+        editor->setupDefaultLayout(editorWindow, &editorWindowLogic->hud);
+        editor->setMainWindow(editorWindow);
     }
 
     // Teardown loader window and UI resources
     //delete loaderWindow;
 
-    editor.doMainLoop();
-
-    // Shutdown
-    editor.cleanup();
+    return editor; // System will call game->doMainLoop and game->cleanup
 }

@@ -179,13 +179,13 @@ void EditorApplication::doMainLoop()
     //refreshCallBatchers(true); // TODO: load bearing 
 
     // Run
-    system->DoMainLoop(+[](void* arg) { static_cast<EditorApplication*>(arg)->frameStep(); }, this);
+    system->DoMainLoop(+[](Application* arg) { static_cast<EditorApplication*>(arg)->frameStep(); }, (Application*)this);
 }
 
 void EditorApplication::frameStep()
 {
     if (!currentGame || currentGamePaused) system->pumpEvents();
-    else currentGame->frameStep(); // Calls pumpEvents on the System facade, which just passes through to root System
+    else currentGameStepFn(currentGame); // Calls pumpEvents on the System facade, which just passes through to root System
 
     // Other than play-in-editor, the editor is an entirely
     // GUI application, so this doubles as tick for all UI
@@ -197,20 +197,21 @@ void EditorApplication::frameStep()
     }
 }
 
-void EditorApplication::startPlayInEditor(Game* game)
+void EditorApplication::startPlayInEditor()
 {
     assert(!gameSystem);
     gameSystem = new System_PlayInEditor(Application::system, this);
     gameSystem->Init();
 
     assert(!currentGame);
-    currentGame = game;
-    currentGame->init(*gameSystem);
+    currentGame = gameCode->SanableMain(system);
     currentGamePaused = false;
 }
 
-void EditorApplication::stopPlayInEditor()
+void EditorApplication::stopPlayInEditor(bool force)
 {
+    gameSystem->requestQuit();
+
     currentGame->cleanup();
 
     assert(gameSystem);
@@ -226,4 +227,20 @@ std::filesystem::path EditorApplication::getProjectDir()
 Game* EditorApplication::getCurrentGame()
 {
     return currentGame;
+}
+
+void EditorApplication::tickCurrentGame()
+{
+    assert(currentGame);
+    currentGame->frameStep();
+}
+
+void EditorApplication::setCurrentGamePaused(bool paused)
+{
+    currentGamePaused = paused;
+}
+
+bool EditorApplication::isCurrentGamePaused() const
+{
+    return currentGamePaused;
 }

@@ -6,27 +6,27 @@
 #include "game/Game.hpp"
 #include "game/GameWindowDispatcher.hpp"
 
-void SanableMain(gpr460::System* system)
+Application* SanableMain(gpr460::System* system)
 {
     // Init
-    Game game;
+    Game* game = new Game();
     MemoryRoot::get()->registerExternal(&game, ExternalObjectOptions::DefaultExternal);
-    game.init(*system);
+    game->init(*system);
 
     // Setup game window
     {
         constexpr int WIDTH = 640;
         constexpr int HEIGHT = 480;
         WindowSettings mainWindowSettings("Sanable Engine", WIDTH, HEIGHT);
-        mainWindowSettings.userLogic = new GameWindowDispatcher(&game);
+        mainWindowSettings.userLogic = new GameWindowDispatcher(game);
 
-        Window* gameWindow = game.buildWindow(mainWindowSettings);
-        game.setMainWindow(gameWindow);
+        Window* gameWindow = game->buildWindow(mainWindowSettings);
+        game->setMainWindow(gameWindow);
     }
 
     // Setup plugins
     {
-        PluginManager& pluginManager = *game.getPluginManager();
+        PluginManager& pluginManager = *game->getPluginManager();
 
         // Discover all plugins
         for (const std::filesystem::path& dllPath : system->ListPlugins(system->GetBaseDir() / "plugins"))
@@ -46,10 +46,8 @@ void SanableMain(gpr460::System* system)
         pluginManager.enumeratePlugins([&pluginManager](Plugin* p) { pluginManager.hook(p); });
     }
 
-    // Run
-    game.getHeap()->ensureFresh();
-    game.doMainLoop();
+    // Finalize plugin load effects
+    game->getHeap()->ensureFresh();
 
-    // Shutdown
-    game.cleanup();
+    return game; // System will call game->doMainLoop and game->cleanup
 }

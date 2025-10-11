@@ -34,6 +34,8 @@ public:
     ENGINECORE_API virtual ~Application();
 
     ENGINECORE_API virtual void init(gpr460::System& system) = 0;
+    ENGINECORE_API virtual void doMainLoop() = 0;
+    ENGINECORE_API virtual void frameStep() = 0;
     ENGINECORE_API virtual void cleanup() = 0;
 
     ENGINECORE_API gpr460::System* getSystem();

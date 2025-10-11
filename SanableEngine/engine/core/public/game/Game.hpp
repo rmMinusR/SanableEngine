@@ -36,8 +36,11 @@ public:
     ENGINECORE_API virtual ~Game();
 
     ENGINECORE_API virtual void init(gpr460::System& system) override;
+    ENGINECORE_API virtual void doMainLoop() override;
+    ENGINECORE_API virtual void frameStep() override;
     ENGINECORE_API virtual void cleanup() override;
-    ENGINECORE_API void tick();
+
+    ENGINECORE_API void tick(); //Nonrender game logic
     int frame = 0;
 
 	ENGINECORE_API InputSystem* getInput();
@@ -49,6 +52,4 @@ public:
 	ENGINECORE_API Level* addLevel();
 	ENGINECORE_API void removeLevel(Level* level);
 
-    ENGINECORE_API void doMainLoop();
-    ENGINECORE_API void frameStep();
 };

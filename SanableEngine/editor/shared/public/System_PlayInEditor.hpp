@@ -16,7 +16,7 @@ public:
 	EDITORSHARED_API virtual ~System_PlayInEditor();
 
 	EDITORSHARED_API virtual void Init() override;
-	EDITORSHARED_API virtual void DoMainLoop(void(*stepFn)(void*), void* stepArg) override;
+	EDITORSHARED_API virtual void DoMainLoop(void(*stepFn)(Application*), Application* app) override;
 	EDITORSHARED_API virtual void Shutdown() override;
 
 	EDITORSHARED_API virtual void pumpEvents() override;
