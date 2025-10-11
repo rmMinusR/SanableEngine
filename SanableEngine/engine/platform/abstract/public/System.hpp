@@ -6,6 +6,7 @@
 
 union SDL_Event;
 class Application;
+class DynamicModule;
 class PluginManager;
 class Window;
 struct WindowSettings;
@@ -32,19 +33,23 @@ namespace gpr460
 		virtual void Init();
 		virtual void DoMainLoop(void(*stepFn)(Application*), Application* app) = 0;
 		virtual void Shutdown() = 0;
+		void requestQuit();
 
 		virtual void pumpEvents() = 0;
 
+		// Window interface
 		virtual bool isFocused(const Window*) = 0;
 		virtual Window* createWindow(const WindowSettings& settings, Application* engine) = 0;
 		virtual void destroyWindow(Window* window) = 0;
 		virtual size_t getNumWindows() const = 0;
 		virtual Window* getWindow(size_t which) = 0;
 
-		void requestQuit();
+		virtual DynamicModule* loadDynamicModule(std::filesystem::path) = 0;
+
 
 		virtual void DebugPause() = 0;
 
+		// Logging interface
 		//TODO these should be combined
 		virtual void ShowError(const std::wstring& message) = 0;
 		virtual void LogToErrorFile(const std::wstring& message) = 0;

@@ -57,6 +57,8 @@ namespace gpr460
 		size_t getNumWindows() const override;
 		Window* getWindow(size_t which) override;
 
+		DynamicModule* loadDynamicModule(std::filesystem::path) override;
+
 		void DebugPause() override;
 
 		void ShowError(const std::wstring& message) override;

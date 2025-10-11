@@ -16,6 +16,7 @@
 
 #include "WindowSettings.hpp"
 #include "Window_Win32.hpp"
+#include "DynamicModule_Win32.hpp"
 
 gpr460::System_Win32::System_Win32(GLSettings glSettings) :
 	glSettings(glSettings)
@@ -287,6 +288,11 @@ size_t gpr460::System_Win32::getNumWindows() const
 Window* gpr460::System_Win32::getWindow(size_t which)
 {
 	return windows[which];
+}
+
+DynamicModule* gpr460::System_Win32::loadDynamicModule(std::filesystem::path path)
+{
+	return new DynamicModule_Win32(path);
 }
 
 void gpr460::System_Win32::handleNativeEvent(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
