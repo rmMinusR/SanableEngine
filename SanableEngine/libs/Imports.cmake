@@ -8,6 +8,9 @@ elseif(EMSCRIPTEN)
     message(" > Configuring SDL2 for Emscripten")
     add_compile_options("-sUSE_SDL=2")
     add_link_options("-sUSE_SDL=2")
+elseif(UNIX AND NOT APPLE) # Linux
+    message(" > Configuring SDL2 for Linux")
+    # Nothing to do
 else()
     message(ERROR "-> Could not configure SDL2: Unknown platform")
 endif()
@@ -30,6 +33,9 @@ elseif(EMSCRIPTEN)
     message(" > Configuring SDL2_image for Emscripten")
     add_compile_options("-sUSE_SDL_IMAGE=2 --use-preload-plugins")
     add_link_options("-sUSE_SDL_IMAGE=2 --use-preload-plugins")
+elseif(UNIX AND NOT APPLE) # Linux
+    message(" > Configuring SDL2_image for Linux")
+    # Nothing to do
 else()
     message(ERROR "-> Could not configure SDL2_image: Unknown platform")
 endif()
@@ -99,7 +105,7 @@ target_include_directories(OpenFBX PUBLIC "${OpenFBX_BASE_DIR}/src/")
 install(FILES "${OpenFBX_BASE_DIR}/LICENSE" DESTINATION "./licenses" RENAME "OpenFBX.txt")
 
 # Configure GLEW
-if(WIN32)
+if(WIN32 OR (UNIX AND NOT APPLE))
     message(" > Configuring GLEW for Win32")
     set(GLEW_DIR "${CMAKE_CURRENT_LIST_DIR}/glew")
 
@@ -145,7 +151,7 @@ if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
     endforeach()
 
     # Detect our architecture
-    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64")
+    if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "AMD64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64" OR ${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86")
         set (TARGET_ARCH_GROUP X86)
     else()
         set (TARGET_ARCH_GROUP ${CMAKE_SYSTEM_PROCESSOR})
@@ -157,7 +163,7 @@ if (SANABLE_DISASSEMBLER STREQUAL "Capstone")
         add_definitions(-DCS_ARCH_OURS=CS_ARCH_${TARGET_ARCH_GROUP})
         message(" >> Detected family ${TARGET_ARCH_GROUP}")
     else()
-        message(FATAL_ERROR "-> Could not configure Capstone: Unknown processor")
+        message(FATAL_ERROR "-> Could not configure Capstone: Unknown processor ${TARGET_ARCH_GROUP}")
     endif()
     
     add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/capstone/")

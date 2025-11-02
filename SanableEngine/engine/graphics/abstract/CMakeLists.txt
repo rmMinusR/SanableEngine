@@ -11,7 +11,7 @@ target_compile_definitions("engine-graphics-abstract" PRIVATE engine_graphics_ab
 
 # Declare imports
 target_include_directories("engine-graphics-abstract" PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries("engine-graphics-abstract" PUBLIC engine-memory engine-common ${SDL2_LIBRARIES} OpenFBX stb_image freetype SDL2_image::SDL2_image)
+target_link_libraries("engine-graphics-abstract" PUBLIC engine-memory engine-common ${SDL2_LIBRARIES} OpenFBX stb_image freetype)
 
 # Declare exports
 target_include_directories("engine-graphics-abstract" PUBLIC "${CMAKE_CURRENT_LIST_DIR}/public")

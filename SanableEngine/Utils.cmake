@@ -12,6 +12,8 @@ if (WIN32)
     set(PLATFORM_DLL_EXTENSION ".dll")
 elseif(EMSCRIPTEN)
     set(PLATFORM_DLL_EXTENSION ".wasm")
+elseif(UNIX AND NOT APPLE)
+    set(PLATFORM_DLL_EXTENSION ".so")
 else()
     message(ERROR " > Could not determine plugin extension: Unknown platform")
 endif()
@@ -36,7 +38,7 @@ endif()
 
 
 function(export_dll dll project)
-	if (WIN32)
+	if (NOT EMSCRIPTEN)
         add_custom_command(
             TARGET ${project} POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:${dll}>" "$<TARGET_FILE_DIR:${project}>"
@@ -58,12 +60,12 @@ function(set_linkage_shared project)
 endfunction()
 
 function(install_dll name dest)
-    if (WIN32)
-        install(TARGETS "${name}"
-	        RUNTIME DESTINATION "${dest}" COMPONENT Runtime
-        )
-    elseif (EMSCRIPTEN)
+    if (EMSCRIPTEN)
         install(FILES "$<TARGET_FILE_DIR:${name}>/${name}.wasm" DESTINATION "${dest}")
+    elseif (WIN32 OR (UNIX AND NOT APPLE))
+        install(TARGETS "${name}"
+            RUNTIME DESTINATION "${dest}" COMPONENT Runtime
+        )
     else()
         message(ERROR "Unknown platform, don't know how to install DLL")
     endif()
