@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+#include <cstdlib>
 #include <utility>
 
 #include "dllapi.h"
@@ -10,6 +12,30 @@ typedef void (*dtor_t)(void*); //CANNOT be a std::function or lambda because des
 
 STIX_API ptrdiff_t _captureCastOffset(const DetectedConstants& image, void*(*castThunk)(void*)); //TODO implement
 STIX_API DetectedConstants _captureVtablesInternal(size_t objSize, void(*thunk)(), size_t destructorCallCount, const std::vector<void(*)()>& allocators, const std::vector<void(*)()>& nofill);
+
+
+namespace thunk_utils_detail
+{
+	template<class T, bool has_destructor = std::is_destructible<T>::value>
+	struct dtor { dtor() = delete; };
+
+	template<class T>
+	struct dtor<T, true>
+	{
+		//C++ forbids getting the address of a dtor, but we can still wrap it
+		inline static void call_dtor(void* obj) { static_cast<const T*>(obj)->~T(); }
+
+		constexpr static dtor_t value = &call_dtor;
+	};
+
+	template<class T>
+	struct dtor<T, false>
+	{
+		//Can't call a dtor that doesn't exist
+		constexpr static dtor_t value = nullptr;
+	};
+
+}
 
 
 template<typename T>
@@ -47,29 +73,6 @@ public:
 			{ (void(*)()) &memset } //Some compilers will pre-zero, especially in debug mode. Don't catch that. &memset will be unique per-module, so we need to pass this per calling TU.
 		);
 	}
-		
-	#pragma region Destructor
 
-	template<bool has_destructor>
-	struct _dtor { _dtor() = delete; };
-
-	template<>
-	struct _dtor<true>
-	{
-		//C++ forbids getting the address of a dtor, but we can still wrap it
-		inline static void call_dtor(void* obj) { static_cast<const T*>(obj)->~T(); }
-
-		constexpr static dtor_t dtor = &call_dtor;
-	};
-
-	template<>
-	struct _dtor<false>
-	{
-		//Can't call a dtor that doesn't exist
-		constexpr static dtor_t dtor = nullptr;
-	};
-
-	constexpr static dtor_t dtor = ::thunk_utils<T>::_dtor<std::is_destructible<T>::value>::dtor;
-
-	#pragma endregion
+	constexpr static dtor_t dtor = thunk_utils_detail::dtor<T>::value;
 };

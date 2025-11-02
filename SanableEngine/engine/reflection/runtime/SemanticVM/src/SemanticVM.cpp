@@ -1,6 +1,7 @@
 #include "SemanticVM.hpp"
 
 #include <cassert>
+#include <functional>
 
 bool SemanticVM::debug = false;
 
@@ -170,7 +171,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 			[&]() { //On RET
 				EXEC.executionStatus = FunctionContext::branch_t::ExecutionStatus::Returned;
 				if (debug) printf("   ; execution terminated", toExecIndex, EXEC.cursor);
-				return expectedReturnAddress;
+				return (void*)expectedReturnAddress;
 			},
 			[&](void* jmp) { jmpTargets = { jmp }; }, //On jump
 			[&](const std::vector<void*>& forks) { //On fork

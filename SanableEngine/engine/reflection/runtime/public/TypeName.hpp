@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <typeinfo>
 #include <optional>
@@ -10,11 +11,14 @@
 
 struct TypeInfo;
 class ModuleTypeRegistry;
+class TypeName;
 
 namespace stix::detail
 {
 	template<bool _en> struct TypeName_staticEqualsDynamic_impl;
 	template<bool _useIncompleteLiteral> struct TypeName_tryCreate_impl;
+
+	static inline decltype(auto) _getRepresentedType(const TypeName& t) { return t; }
 }
 
 class TypeName
@@ -132,9 +136,6 @@ namespace stix::detail
 		template<typename T>
 		static TypeName exec() { return TypeName::incomplete_ref(); }
 	};
-
-
-	static inline decltype(auto) _getRepresentedType(const TypeName& t) { return t; }
 }
 
 

@@ -7,6 +7,14 @@ import zlib
 import glob
 import timings
 
+
+def normalize_paths(path:str):
+	if os.altsep != None:
+		return path.replace(os.altsep, os.sep)
+	else:
+		return path
+
+
 class SourceFile:
 	fileTypes = {
 		".h"   : "c++-header",
@@ -22,7 +30,7 @@ class SourceFile:
 	}
 
 	def __init__(this, filePath: str, project: "Project"):
-		this.path = filePath.replace(os.altsep, os.sep)
+		this.path = normalize_paths(filePath)
 		this.abspath = os.path.abspath(this.path)
 		assert os.path.exists(this.path)
 		name, ext = os.path.splitext(this.path)
@@ -46,7 +54,7 @@ class SourceFile:
 			this.includes_literal = [i.strip()[len("#include <"):-1] for i in this.contents.split("\n") if i.strip().startswith("#include ")]
 			if this.project != None:
 				this.includes_literal = [(_real if _real != None else _lit) for _real,_lit in [(project.resolveInclude(i, this.path),i) for i in this.includes_literal] ]
-			this.includes_literal = [i.replace(os.altsep, os.sep) for i in this.includes_literal] # Normalize path separators
+			this.includes_literal = [normalize_paths(i) for i in this.includes_literal] # Normalize path separators
 			this.includes_literal = [i for i in this.includes_literal if not i.endswith(os.sep) and i.split(os.sep)[-1] != "."] # No directories
 		
 	@cached_property

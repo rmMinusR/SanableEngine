@@ -1,6 +1,7 @@
 #include "MachineState.hpp"
 #include "SemanticVM.hpp"
 
+#include <cstring>
 #include <cassert>
 
 VMMemory& MachineState::magicMemory(SemanticMagic::id_t id)

@@ -1,6 +1,8 @@
 #include "SemanticValue.hpp"
 
 #include <cassert>
+#include <cstdio>
+#include <cstring>
 #include <functional>
 
 

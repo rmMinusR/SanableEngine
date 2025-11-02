@@ -21,7 +21,8 @@ endfunction()
 
 # Main integration
 
-set(STIX_AST_COMMAND python "${CMAKE_CURRENT_LIST_DIR}/cx_ast_clang_reader.py")
+find_package(Python3 COMPONENTS Interpreter REQUIRED)
+set(STIX_AST_COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_LIST_DIR}/cx_ast_clang_reader.py")
 function(stix_extract_ast targetName rootDir)
 	# Add rootDir to STIX_ROOT_DIRS (allows more complex directory structure)
 	get_target_property(ROOT_DIRS ${targetName} STIX_ROOT_DIRS)

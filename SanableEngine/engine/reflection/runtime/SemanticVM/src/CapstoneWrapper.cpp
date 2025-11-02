@@ -1,6 +1,7 @@
 #include "CapstoneWrapper.hpp"
 
 #include <cassert>
+#include <cstring>
 
 #include "SemanticValue.hpp"
 #include "MachineState.hpp"

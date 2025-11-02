@@ -1,6 +1,7 @@
 #include "ParentInfoBuilder.hpp"
 
 #include <cassert>
+#include <cstring>
 
 ParentInfoBuilder::ParentInfoBuilder(const TypeName& ownerType, const TypeName& parentType, size_t ownerSize, size_t parentSize, const std::function<void* (void*)>& upcastFn, MemberVisibility visibility, ParentInfo::Virtualness virtualness) :
 	data(parentSize, -1, ownerType, parentType, visibility, virtualness),

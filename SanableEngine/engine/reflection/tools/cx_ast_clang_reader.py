@@ -45,7 +45,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
             config.logger.info(f"Parsing {source}")
             for cursor in ClangParseContext._getChildren(source.parse()):
                 # Only capture what's in the current file
-                cursorFilePath = cursor.location.file.name.replace(os.altsep, os.sep)
+                cursorFilePath = normalize_paths(cursor.location.file.name)
                 try:
                     if source.path == cursorFilePath:
                         this.__ingestCursor(None, cursor)

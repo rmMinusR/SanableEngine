@@ -9,6 +9,10 @@
 #define API_EXPORT
 #define API_IMPORT
 #define API_KEEPALIVE EMSCRIPTEN_KEEPALIVE
+#elif __unix__
+#define API_EXPORT __attribute__((visibility("default")))
+#define API_IMPORT
+#define API_KEEPALIVE
 #else
 #error Unknown platform: don't know how to export shared library symbols
 #endif
