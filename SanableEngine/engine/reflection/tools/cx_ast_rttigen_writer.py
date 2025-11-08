@@ -193,7 +193,7 @@ def render_type(ty:cx_ast.StructInfo, context:RttiGenerator):
     for p in _getAllParents(ty):
         if p.explicitlyVirtual and not p.owner == ty:
             # Always render. We break it with C-style cast, which ignores visibility.
-            bodyDecls.append(f"builder.addParent<{ty.path}, {p.parentTypePath}>({p.visibility}, {cx_ast.ParentInfo.Virtualness.VirtualInherited});")
+            bodyDecls.append(f"builder.addParent<{ty.path}, {p.parentTypePath}>({p.visibility.value}, {cx_ast.ParentInfo.Virtualness.VirtualInherited.value});")
 
     # Render CDO capture
     if ty.isAbstract:
@@ -224,7 +224,7 @@ def render_type(ty:cx_ast.StructInfo, context:RttiGenerator):
 def render_parent(parent:cx_ast.ParentInfo, context:RttiGenerator):
     # Always render. We break it with C-style cast, which ignores visibility.
     virtualness = cx_ast.ParentInfo.Virtualness.VirtualExplicit if parent.explicitlyVirtual else cx_ast.ParentInfo.Virtualness.NonVirtual
-    body = f"builder.addParent<{parent.owner.path}, {parent.parentTypePath}>({parent.visibility}, {virtualness});"
+    body = f"builder.addParent<{parent.owner.path}, {parent.parentTypePath}>({parent.visibility.value}, {virtualness.value});"
     return ("", body)
 
 def makePubCastKey(obj:cx_ast.ASTNode):
@@ -264,7 +264,7 @@ def render_constructor(ctor:cx_ast.ConstructorInfo, context:RttiGenerator):
     ctorThunkInstance = thunkUtilsInstance+f"::thunk_newInPlace<{paramTypes}>"
     
     if ctor.visibility == cx_ast.Member.Visibility.Public or ctor.owner.isFriended(lambda f: thunkUtilsInstance in str(f.friendedSymbolPath)): # FIXME use path lookup instead?
-        return ("", f"builder.addConstructor(stix::StaticFunction::make(&{ctorThunkInstance}), {ctor.visibility}); // {_idLoc(ctor)}")
+        return ("", f"builder.addConstructor(stix::StaticFunction::make(&{ctorThunkInstance}), {ctor.visibility.value}); // {_idLoc(ctor)}")
     else:
         return ("", f"//Skipping inaccessible constructor {ctor.path} {_idLoc(ctor, lower=True)}")
 
@@ -292,7 +292,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo, context:RttiGenerator):
     }
     preDecl = "\n".join([
         'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
-		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_qualifiers};'.format_map(formatter) + ' };',
+		'namespace public_cast { ' + 'template<> struct _type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} ({TClass}::*)({params}){this_qualifiers};'.format_map(formatter) + ' }; }',
 		'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
     ])
     pubReference = f"DO_PUBLIC_CAST({pubCastKey})"
@@ -302,7 +302,7 @@ def render_memFunc(func:cx_ast.MemFuncInfo, context:RttiGenerator):
         
     # Render body
     paramNames = [i.path.ownName for i in func.parameters] # TODO implement name capture on C++ side
-    body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility}, {str(func.isVirtual).lower()}); // {_idLoc(func)}"
+    body = f"builder.addMemberFunction(stix::MemberFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility.value}, {str(func.isVirtual).lower()}); // {_idLoc(func)}"
 
     return (preDecl, body)
 
@@ -329,7 +329,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo, context:RttiGenerator):
     }
     preDecl = "\n".join([
         'PUBLIC_CAST_DECLARE_KEY_BARE({key});'.format_map(formatter),
-		'template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} (*)({params});'.format_map(formatter) + ' };',
+		'namespace public_cast { ' + 'template<> struct _type_lut<PUBLIC_CAST_KEY_OF({key})>'.format_map(formatter) + ' { ' + 'using ptr_t = {returnType} (*)({params});'.format_map(formatter) + ' }; }',
 		'PUBLIC_CAST_GIVE_ACCESS_BARE({key}, {TClass}, {name});'.format_map(formatter)
     ])
     pubReference = f"DO_PUBLIC_CAST({pubCastKey})"
@@ -338,7 +338,7 @@ def render_memStaticFunc(func:cx_ast.StaticFuncInfo, context:RttiGenerator):
     #    pubReference = func.path
    
     #paramNames = [i.displayName for i in func.parameters] # TODO implement name capture on C++ side
-    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility}); // {_idLoc(func)}"
+    body = f"builder.addStaticFunction(stix::StaticFunction::make({pubReference}), \"{func.path.ownName.base}\", {func.visibility.value}); // {_idLoc(func)}"
     # TODO handle template funcs
 
     return (preDecl, body)
