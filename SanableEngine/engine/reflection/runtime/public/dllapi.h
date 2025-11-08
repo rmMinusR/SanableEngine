@@ -14,7 +14,7 @@
 #define API_IMPORT
 #define API_KEEPALIVE
 #else
-#error Unknown platform: don't know how to export shared library symbols
+#error "Unknown platform: don't know how to export shared library symbols"
 #endif
 
 #if stix_EXPORTS

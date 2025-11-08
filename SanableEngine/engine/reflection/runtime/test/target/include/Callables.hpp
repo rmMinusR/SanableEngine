@@ -2,6 +2,19 @@
 
 #include "ReflectionSpec.hpp"
 
+#ifndef _WIN32
+// Define __cdecl, __stdcall, __thiscall as no-ops if not relevant
+#ifndef __cdecl
+#define __cdecl
+#endif
+#ifndef __stdcall
+#define __stdcall
+#endif
+#ifndef __thiscall
+#define __thiscall
+#endif
+#endif
+
 namespace Callables
 {
 

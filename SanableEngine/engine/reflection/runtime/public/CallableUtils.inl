@@ -68,12 +68,12 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, ReturnTypeGroup::Assignable>
 		{
 			template<typename TOwner, typename... TArgs, size_t... I>
-			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...> is)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 				
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
 				assert(good);
 
 				//Invoke
@@ -86,12 +86,12 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<void, ReturnTypeGroup::Void>
 		{
 			template<typename TOwner, typename... TArgs, size_t... I>
-			static void __impl(void(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			static void __impl(void(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...> is)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
 				assert(good);
 
 				//Invoke
@@ -104,12 +104,12 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, ReturnTypeGroup::Reference>
 		{
 			template<typename TOwner, typename... TArgs, size_t... I>
-			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			static void __impl(TReturn(TOwner::*fn)(TArgs...), const SAnyRef& returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters, std::index_sequence<I...> is)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
 				assert(good);
 
 				//Invoke
@@ -135,12 +135,13 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, ReturnTypeGroup::Assignable>
 		{
 			template<typename... TArgs, size_t... I>
-			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...> is)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				if (!good) { assert(false); return; }
 
 				//Invoke
 				returnValue.get<TReturn>() = (*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
@@ -151,12 +152,13 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, ReturnTypeGroup::Void>
 		{
 			template<typename... TArgs, size_t... I>
-			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...> is)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				if (!good) { assert(false); return; }
 
 				//Invoke
 				(*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);
@@ -167,12 +169,13 @@ namespace stix::detail::CallableUtils
 		struct TypeEraser<TReturn, ReturnTypeGroup::Reference>
 		{
 			template<typename... TArgs, size_t... I>
-			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...>)
+			static void __impl(TReturn(*fn)(TArgs...), const SAnyRef& returnValue, const std::vector<SAnyRef>& parameters, std::index_sequence<I...> is)
 			{
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end());
+				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				if (!good) { assert(false); return; }
 
 				//Invoke
 				returnValue.get<std::remove_reference_t<TReturn>*>() = &(*fn)( std::forward<TArgs>(parameters[I].get<TArgs>()) ...);

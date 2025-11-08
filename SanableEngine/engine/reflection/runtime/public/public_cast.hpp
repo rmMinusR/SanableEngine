@@ -80,7 +80,7 @@ namespace public_cast
 	#define PUBLIC_CAST_KEY_OF(key) __PUBLIC_CAST_KEY__##key
 	#define PUBLIC_CAST_DECLARE_KEY_BARE(key) struct PUBLIC_CAST_KEY_OF(key) {}
 	#define PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name) \
-		template struct ::public_cast::_access_giver<__PUBLIC_CAST_KEY__##key, static_cast<::public_cast::_type_lut<__PUBLIC_CAST_KEY__##key>::ptr_t>(&TClass::name)>
+		namespace public_cast { template struct _access_giver<__PUBLIC_CAST_KEY__##key, static_cast<_type_lut<__PUBLIC_CAST_KEY__##key>::ptr_t>(&TClass::name)>; }
 
 	#pragma endregion
 
@@ -89,30 +89,30 @@ namespace public_cast
 	//NOTE: memberTypePtr must be passed as __VA_ARGS__ since the C preprocessor will mess up templates otherwise
 	#define PUBLIC_CAST_GIVE_FIELD_ACCESS(key, TClass, name, /*declared type*/...) \
 		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
-		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using owner_t = TClass; using decl_t = __VA_ARGS__; using ptr_t = decl_t owner_t::*; }; \
+		namespace public_cast { template<> struct _type_lut<PUBLIC_CAST_KEY_OF(key)> { using owner_t = TClass; using decl_t = __VA_ARGS__; using ptr_t = decl_t owner_t::*; }; } \
 		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
 
 	#define PUBLIC_CAST_GIVE_STATIC_VAR_ACCESS(key, TClass, name, /*declared type*/...) \
 		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
-		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using decl_t = __VA_ARGS__; using ptr_t = decl_t*; }; \
+		namespace public_cast { template<> struct _type_lut<PUBLIC_CAST_KEY_OF(key)> { using decl_t = __VA_ARGS__; using ptr_t = decl_t*; }; } \
 		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
 
 	//NOTE: If return type is a template with commas, you will need to write this by hand or the C preprocessor will mangle it
 	#define PUBLIC_CAST_GIVE_BOUND_FN_ACCESS(key, TClass, name, returnType, /*args*/...) \
 		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
-		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (TClass::*)(__VA_ARGS__); }; \
+		namespace public_cast { template<> struct _type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (TClass::*)(__VA_ARGS__); }; } \
 		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
 
 	//NOTE: If return type is a template with commas, you will need to write this by hand or the C preprocessor will mangle it
 	#define PUBLIC_CAST_GIVE_BOUND_CONST_FN_ACCESS(key, TClass, name, returnType, /*args*/...) \
 		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
-		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (TClass::*)(__VA_ARGS__) const; }; \
+		namespace public_cast { template<> struct _type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (TClass::*)(__VA_ARGS__) const; }; } \
 		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
 
 	//NOTE: If return type is a template with commas, you will need to write this by hand or the C preprocessor will mangle it
 	#define PUBLIC_CAST_GIVE_STATIC_FN_ACCESS(key, TClass, name, returnType, /*args*/...) \
 		PUBLIC_CAST_DECLARE_KEY_BARE(key); \
-		template<> struct ::public_cast::_type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (*)(__VA_ARGS__); }; \
+		namespace public_cast { template<> struct _type_lut<PUBLIC_CAST_KEY_OF(key)> { using ptr_t = returnType (*)(__VA_ARGS__); }; } \
 		PUBLIC_CAST_GIVE_ACCESS_BARE(key, TClass, name);
 
 	#pragma endregion

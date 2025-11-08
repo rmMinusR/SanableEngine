@@ -98,14 +98,14 @@ public:
 		return stix::detail::TypeName_staticEqualsDynamic_impl<_do>::template eval<T>(ty);
 	}
 
-	template<typename It, bool ignoreIncomplete, typename THead, typename... Ts>
-	static bool staticEqualsDynamic_many(It it, const It& end)
+	template<typename It, bool ignoreIncomplete, typename... Ts, size_t... I>
+	static bool staticEqualsDynamic_many(It it, const It& end, std::index_sequence<I...>)
 	{
-		return it != end
-			&& staticEqualsDynamic<THead, ignoreIncomplete>(stix::detail::_getRepresentedType(*it))
-			&& staticEqualsDynamic_many<It, ignoreIncomplete, Ts...>(it+1, end);
+		if (end-it != sizeof...(Ts)) return false;
+		else return (
+			staticEqualsDynamic<Ts, ignoreIncomplete>(stix::detail::_getRepresentedType(*(it+I))) && ...
+		);
 	}
-	template<typename It, bool ignoreIncomplete> static bool staticEqualsDynamic_many(It it, const It& end) { return it == end; } //Tail case
 	
 	#pragma endregion
 };
