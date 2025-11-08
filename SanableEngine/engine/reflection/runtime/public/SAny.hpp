@@ -34,7 +34,7 @@ namespace stix
 			return SAnyRef(obj, TypeName::create<T>()); //TODO attempt to snipe RTTI and checK, just to be sure? Casting should handle most of it though.
 		}
 
-		STIX_API TypeName getType() const;
+		STIX_API const TypeName& getType() const;
 		template<typename T>
 		std::remove_reference_t<T>& get() const { return *(std::remove_reference_t<T>*)get_internal(TypeName::tryCreate<T>()); }
 
@@ -47,10 +47,4 @@ namespace stix
 		SAnyRef(SAnyRef&& mov) = default;
 		SAnyRef& operator=(SAnyRef&& mov) = default;
 	};
-
-
-	namespace detail
-	{
-		static inline decltype(auto) _getRepresentedType(const SAnyRef& v) { return v.getType(); }
-	}
 }

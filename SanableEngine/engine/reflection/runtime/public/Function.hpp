@@ -29,18 +29,21 @@ namespace stix
 		STIX_API virtual ~MemberFunction();
 		STIX_API void invoke(SAnyRef returnValue, const SAnyRef& thisObj, const std::vector<SAnyRef>& parameters) const;
 	
-		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...)      ) { return make_internal(fn, false); }
-		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...) const) { return make_internal( (TReturn(TOwner::*)(TArgs...)) fn, true); }
+		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...)      ) { return make_internal(fn, false, std::make_index_sequence<sizeof...(TArgs)>{}); }
+		template<typename TReturn, typename TOwner, typename... TArgs> static MemberFunction make(TReturn(TOwner::* fn)(TArgs...) const) { return make_internal( (TReturn(TOwner::*)(TArgs...)) fn, true, std::make_index_sequence<sizeof...(TArgs)>{}); }
 
 	protected:
 		STIX_API MemberFunction(const TypeName& owner, bool ownerIsConst, const TypeName& returnType, const std::vector<TypeName>& parameters,
 			                           detail::CallableUtils::Member::fully_erased_binder_t binder, detail::CallableUtils::Member::erased_fp_t fn);
 
-		template<typename TReturn, typename TOwner, typename... TArgs>
-		static MemberFunction make_internal(TReturn(TOwner::* fn)(TArgs...), bool ownerIsConst)
+		template<typename TReturn, typename TOwner, typename... TArgs, size_t... I>
+		static MemberFunction make_internal(TReturn(TOwner::* fn)(TArgs...), bool ownerIsConst, std::index_sequence<I...>)
 		{
 			std::vector<TypeName> parameters = TypeName::tryCreatePack<TArgs...>();
-			TypeName::staticEqualsDynamic_many<std::vector<TypeName>::const_iterator, true, TArgs...>(parameters.cbegin(), parameters.cend(), std::make_index_sequence<sizeof...(TArgs)>());
+			bool good = parameters.size() == sizeof...(TArgs) && (
+				TypeName::staticEqualsDynamic<TArgs, true>(parameters[I]) && ...
+			);
+			assert(good);
 			detail::CallableUtils::Member::fully_erased_binder_t eraser = &detail::CallableUtils::Member::typeErasedInvoke<TReturn, TOwner, TArgs...>;
 
 			static_assert(sizeof(detail::CallableUtils::Member::erased_fp_t) >= sizeof(fn));

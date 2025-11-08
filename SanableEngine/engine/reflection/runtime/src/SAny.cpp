@@ -28,7 +28,7 @@ stix::SAnyRef::~SAnyRef()
 {
 }
 
-TypeName stix::SAnyRef::getType() const
+const TypeName& stix::SAnyRef::getType() const
 {
 	return type;
 }

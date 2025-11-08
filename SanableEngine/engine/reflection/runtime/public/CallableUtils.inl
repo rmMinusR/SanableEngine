@@ -73,7 +73,9 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 				
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				bool good = parameters.size() == sizeof...(TArgs) && (
+					TypeName::staticEqualsDynamic<TArgs, true>(parameters[I].getType()) && ...
+				);
 				assert(good);
 
 				//Invoke
@@ -91,7 +93,9 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				bool good = parameters.size() == sizeof...(TArgs) && (
+					TypeName::staticEqualsDynamic<TArgs, true>(parameters[I].getType()) && ...
+				);
 				assert(good);
 
 				//Invoke
@@ -109,7 +113,9 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				bool good = parameters.size() == sizeof...(TArgs) && (
+					TypeName::staticEqualsDynamic<TArgs, true>(parameters[I].getType()) && ...
+				);
 				assert(good);
 
 				//Invoke
@@ -140,7 +146,9 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				bool good = parameters.size() == sizeof...(TArgs) && (
+					TypeName::staticEqualsDynamic<TArgs, true>(parameters[I].getType()) && ...
+				);
 				if (!good) { assert(false); return; }
 
 				//Invoke
@@ -157,7 +165,9 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				bool good = parameters.size() == sizeof...(TArgs) && (
+					TypeName::staticEqualsDynamic<TArgs, true>(parameters[I].getType()) && ...
+				);
 				if (!good) { assert(false); return; }
 
 				//Invoke
@@ -174,7 +184,9 @@ namespace stix::detail::CallableUtils
 				//No need to check return type or owner type matching; this is handled in SAny::get
 			
 				//Check parameters match exactly
-				bool good = TypeName::staticEqualsDynamic_many<std::vector<SAnyRef>::const_iterator, true, TArgs...>(parameters.begin(), parameters.end(), is);
+				bool good = parameters.size() == sizeof...(TArgs) && (
+					TypeName::staticEqualsDynamic<TArgs, true>(parameters[I].getType()) && ...
+				);
 				if (!good) { assert(false); return; }
 
 				//Invoke

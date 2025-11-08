@@ -17,8 +17,6 @@ namespace stix::detail
 {
 	template<bool _en> struct TypeName_staticEqualsDynamic_impl;
 	template<bool _useIncompleteLiteral> struct TypeName_tryCreate_impl;
-
-	static inline decltype(auto) _getRepresentedType(const TypeName& t) { return t; }
 }
 
 class TypeName
@@ -98,15 +96,6 @@ public:
 		return stix::detail::TypeName_staticEqualsDynamic_impl<_do>::template eval<T>(ty);
 	}
 
-	template<typename It, bool ignoreIncomplete, typename... Ts, size_t... I>
-	static bool staticEqualsDynamic_many(It it, const It& end, std::index_sequence<I...>)
-	{
-		if (end-it != sizeof...(Ts)) return false;
-		else return (
-			staticEqualsDynamic<Ts, ignoreIncomplete>(stix::detail::_getRepresentedType(*(it+I))) && ...
-		);
-	}
-	
 	#pragma endregion
 };
 
