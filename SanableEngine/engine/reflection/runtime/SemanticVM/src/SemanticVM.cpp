@@ -3,7 +3,7 @@
 #include <cassert>
 #include <functional>
 
-bool SemanticVM::debug = false;
+bool SemanticVM::debug = true;
 
 void SemanticVM::step(MachineState& state, const cs_insn* insn, const std::function<void(const std::string&)>& reportError, const std::function<void(void*)>& pushCallStack, const std::function<void*()>& popCallStack, const std::function<void(void*)>& jump, const std::function<void(const std::vector<void*>&)>& fork)
 {
@@ -109,7 +109,8 @@ bool FunctionContext::callSpecial(int srcBranchID, void(*targetFn)(), bool debug
 		//std::vector<x86_reg> covariants = ???;
 		//assert(covariants.size() == 1);
 		src.state.setRegister(x86_reg::X86_REG_EAX, requestAllocation());
-		src.state.popStackFrame(); //Undo pushing stack frame
+		//src.state.popStackValue(src.state.getRegister(x86_reg::X86_REG_RSP).getSize()); //Undo pushing stack frame
+		src.state.setRegister(X86_REG_RIP, src.state.popStackValue(src.state.getRegister(x86_reg::X86_REG_RIP).getSize())); //Undo pushing return address
 		if (debug) printf("Allocated heap object #%i. Allocator function will not be simulated.\n", 0);
 		return true;
 	}
@@ -121,7 +122,12 @@ bool FunctionContext::callSpecial(int srcBranchID, void(*targetFn)(), bool debug
 			SemanticVM::execFunc_internal(sandbox, targetFn, (void(*)())src.cursor, currentIndentLevel + 1, opt);
 			MachineState::copyCriticals(src.state, sandbox);
 		}
-		else src.state.popStackFrame();
+		else
+		{
+			// Pretend that call never happened
+			//src.state.popStackValue(src.state.getRegister(x86_reg::X86_REG_RSP).getSize()); //Undo pushing stack frame. TODO this might cause problems depending on call convention
+			src.state.setRegister(X86_REG_RIP, src.state.popStackValue(src.state.getRegister(x86_reg::X86_REG_RIP).getSize())); //Undo pushing return address
+		}
 		if (debug) printf("Function is sandboxed. Only propagating stack and instruction pointer changes.\n");
 		return true;
 	}
@@ -212,7 +218,7 @@ void SemanticVM::execFunc_internal(MachineState& state, void(*fn)(), void(*expec
 				bool special = context.callSpecial(toExecIndex, callTarget, debug, indentLevel);
 				if (!special) execFunc_internal(EXEC.state, callTarget, (void(*)())EXEC.cursor, indentLevel+1, opt);
 			}
-			else EXEC.state.popStackFrame(); //Undo CALL
+			else EXEC.state.popStackValue(EXEC.state.getRegister(x86_reg::X86_REG_RSP).getSize()); //Undo CALL
 		}
 
 		#undef EXEC

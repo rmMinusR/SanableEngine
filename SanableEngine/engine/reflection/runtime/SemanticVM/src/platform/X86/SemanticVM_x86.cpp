@@ -87,14 +87,20 @@ bool SemanticVM::step_dataflow(MachineState& state, const cs_insn* insn, const s
 	}
 	else if (insn->id == x86_insn::X86_INS_PUSH)
 	{
-		state.stackPush(state.getOperand(insn, 0));
+		state.pushStackValue(state.getOperand(insn, 0));
 		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_POP)
 	{
-		auto val = state.stackPop(insn->detail->x86.operands[0].size);
+		auto val = state.popStackValue(insn->detail->x86.operands[0].size);
 		state.setOperand(insn, 0, val);
 		if (debug) { printf("   ; ") + debugPrintOperand(state, insn, 0) + printf(":= ") + val.debugPrintValue(false); }
+		return true;
+	}
+	else if (insn->id == x86_insn::X86_INS_LEAVE)
+	{
+		state.setRegister(X86_REG_RSP, state.getRegister(X86_REG_RBP)); // RSP := RBP
+		state.setRegister(X86_REG_RBP, state.popStackValue(state.getRegister(x86_reg::X86_REG_RSP).getSize())); // RBP := pop RSP
 		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_XCHG)
@@ -512,21 +518,23 @@ bool SemanticVM::step_execflow(MachineState& state, const cs_insn* insn, const s
 {
 	if (insn_in_group(*insn, cs_group_type::CS_GRP_CALL))
 	{
-		SemanticKnownConst fp  = *state.getOperand(insn, 0).tryGetKnownConst();
-		state.pushStackFrame(fp);
+		SemanticKnownConst fp = *state.getOperand(insn, 0).tryGetKnownConst();
+		state.pushStackValue(state.getRegister(x86_reg::X86_REG_RIP));
+		state.setRegister(X86_REG_RIP, fp);
 		pushCallStack((uint8_t*)fp.value); //Sanity check. Also no ROP nonsense
 		return true;
 	}
 	else if (insn_in_group(*insn, cs_group_type::CS_GRP_RET))
 	{
-		SemanticValue returnAddr = state.popStackFrame();
+		SemanticValue returnAddr = state.popStackValue(state.getRegister(x86_reg::X86_REG_RIP).getSize());
 
 		//If given an operand, pop that many bytes from the stack
-		if (insn->detail->x86.op_count == 1) state.stackPop(state.getOperand(insn, 0).tryGetKnownConst()->value);
+		if (insn->detail->x86.op_count == 1) state.popStackValue(state.getOperand(insn, 0).tryGetKnownConst()->value);
 
 		void* poppedReturnAddr = popCallStack();
 		if (poppedReturnAddr && poppedReturnAddr != (void*)returnAddr.tryGetKnownConst()->value) reportError("Attempted to return, but return address did not match");
 
+		state.setRegister(X86_REG_RIP, returnAddr);
 		return true;
 	}
 	else if (insn->id == x86_insn::X86_INS_NOP)
@@ -592,7 +600,7 @@ void SemanticVM::execFunc(MachineState& state, void(*fn)(), const ExecutionOptio
 	//Setup: set flags
 	state.setRegister(X86_REG_RIP, SemanticUnknown(sizeof(void*)) ); //TODO: 32-bit-on-64 support?
 	state.setRegister(X86_REG_RBP, SemanticUnknown(sizeof(void*)) ); //Caller is indeterminate. TODO: 32-bit-on-64 support?
-	state.setRegister(X86_REG_RSP, SemanticKnownConst(-2 * sizeof(void*), sizeof(void*), false)); //TODO: This is a magic value, the size of one stack frame. Should be treated similarly to ThisPtr instead.
+	state.setRegister(X86_REG_RSP, SemanticKnownConst(-sizeof(void*), sizeof(void*), false)); //TODO: This is a magic value, the size of a return address. Should be treated similarly to ThisPtr instead.
 	{
 		SemanticFlags flags;
 		flags.bits = 0;

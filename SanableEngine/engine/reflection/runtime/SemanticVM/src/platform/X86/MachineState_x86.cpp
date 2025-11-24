@@ -158,7 +158,7 @@ void MachineState::setInsnPtr(uint_addr_t val)
 	setRegister(X86_REG_RIP, SemanticKnownConst(val, sizeof(uint_addr_t), true)); //Ensure RIP is up to date
 }
 
-void MachineState::stackPush(SemanticValue value)
+void MachineState::pushStackValue(SemanticValue value)
 {
 	assert(value.getSize() > 0);
 	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
@@ -167,7 +167,7 @@ void MachineState::stackPush(SemanticValue value)
 	setRegister(X86_REG_RSP, rsp);
 }
 
-SemanticValue MachineState::stackPop(size_t nBytes)
+SemanticValue MachineState::popStackValue(size_t nBytes)
 {
 	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
 	SemanticValue out = getMemory(rsp, nBytes); //Read from stack
@@ -177,56 +177,13 @@ SemanticValue MachineState::stackPop(size_t nBytes)
 	return out;
 }
 
-void MachineState::pushStackFrame(SemanticKnownConst fp)
+void MachineState::invalidate()
 {
-	//Requires target address to be a known const. Will crash otherwise
-	SemanticKnownConst rsp = *getRegister(X86_REG_RSP).tryGetKnownConst();
-	SemanticValue      rbp =  getRegister(X86_REG_RBP);
-	SemanticKnownConst rip = *getRegister(X86_REG_RIP).tryGetKnownConst();
-		
-	stackPush(rip); //Push return address to stack
-	stackPush(rbp); //Push previous RBP to stack
-
-	//Mark new stack frame location
-	rbp = rsp;
-
-	//Jump to new function
-	rip = fp;
-
-	//Write back to registers
-	setRegister(X86_REG_RBP, rbp);
-	setRegister(X86_REG_RIP, rip);
-}
-
-SemanticValue MachineState::popStackFrame()
-{
-	//Cannot pop to an indeterminate address
-	if (getRegister(X86_REG_RBP).tryGetKnownConst())
-	{
-		//Pop previous stack frame (return address and RBP) from stack
-		SemanticKnownConst rbp = *getRegister(X86_REG_RBP).tryGetKnownConst();
-		SemanticKnownConst rip = *getRegister(X86_REG_RIP).tryGetKnownConst();
-		SemanticValue oldRbp     = stackPop(rbp.size);
-		SemanticValue returnAddr = stackPop(rip.size);
-
-		setRegister(X86_REG_RBP, oldRbp); //Restore previous stack frame
-		setRegister(X86_REG_RIP, returnAddr); //Jump to return address
-
-		return returnAddr;
-	}
-	else
-	{
-		//Invalidate state
-		size_t ripSize = getRegister(X86_REG_RIP).getSize();
-		size_t rbpSize = getRegister(X86_REG_RBP).getSize();
-		setRegister(X86_REG_RIP, SemanticUnknown(ripSize) );
-		setRegister(X86_REG_RBP, SemanticUnknown(rbpSize) );
-
-		//Pop from stack
-		stackPop(ripSize + rbpSize);
-		
-		return SemanticUnknown(ripSize);
-	}
+	size_t funcPtrSize = getRegister(X86_REG_RIP).getSize();
+	size_t dataPtrSize = getRegister(X86_REG_RBP).getSize();
+	setRegister(X86_REG_RIP, SemanticUnknown(funcPtrSize) );
+	setRegister(X86_REG_RBP, SemanticUnknown(dataPtrSize) );
+	setRegister(X86_REG_RSP, SemanticKnownConst(0, dataPtrSize, false) );
 }
 
 std::optional<bool> MachineState::isConditionMet(unsigned int insnId) const

@@ -63,10 +63,9 @@ public:
 	uint_addr_t getInsnPtr() const;
 	void setInsnPtr(uint_addr_t val);
 
-	void stackPush(SemanticValue value);
-	SemanticValue stackPop(size_t nBytes);
-	void pushStackFrame(SemanticKnownConst fp);
-	SemanticValue popStackFrame();
+	void pushStackValue(SemanticValue value);
+	SemanticValue popStackValue(size_t nBytes);
+	void invalidate();
 
 	std::optional<bool> isConditionMet(unsigned int insnId) const; //Check if the condition described by a branch instruction is met, or nullopt if it is indeterminate
 
