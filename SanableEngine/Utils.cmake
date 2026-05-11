@@ -19,7 +19,7 @@ else()
 endif()
 add_compile_definitions(PLATFORM_DLL_EXTENSION="${PLATFORM_DLL_EXTENSION}")
 
-if (EMSCRIPTEN)
+if (EMSCRIPTEN OR (UNIX AND NOT APPLE))
     add_compile_options("-fPIC") # Emscripten side modules require PIC. Might as well turn it on globally.
 endif()
 
