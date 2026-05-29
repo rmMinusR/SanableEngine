@@ -126,7 +126,6 @@ ty_MyClass_const_ref = ty_ref(ty_MyClass_const)
 
 class TestParser:
     __metaclass__ = abc.ABCMeta
-
     @abc.abstractmethod
     def invoke_parser(target:str, includes:list[str]) -> cx_ast.Module:
         assert False, "Implement this!"
@@ -344,12 +343,13 @@ class TestParser:
     def test_single_linkage(this):
         for group in this.module.contents.values():
             for sym in (group if isinstance(group, list) else [group]):
-                if len(sym.children) == 0: continue
+                if sym.childCount == 0: continue
 
                 # Ensure all children are unique
-                for i,c in enumerate(sym.children[1:]):
+                children = list(sym.children)
+                for i,c in enumerate(children[1:]):
                     duplicate = next((
-                        j for j in sym.children[:i]
+                        j for j in children[:i]
                         if isinstance(j, cx_ast.ASTNode) and j.path == c.path
                     ), None)
                     this.assertIsNone(duplicate, f"0x{id(duplicate):X} / 0x{id(c):X}")

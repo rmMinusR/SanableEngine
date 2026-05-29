@@ -111,7 +111,7 @@ class ClangParseContext(cx_ast_tooling.ASTParser):
                     child = this.__ingestCursor(result, clang_child)
                     if child != None:
                         child.owner = result
-                        result.children.append(child)
+                        result.addChild(child)
                         
                 # TEMPFIX paths of callables so they include parameters
                 if isinstance(result, cx_ast.Callable):

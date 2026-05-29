@@ -155,7 +155,7 @@ class ASTNode:
         else: this.declarationLocations.append(location)
         
         this.owner:ASTNode|None = None
-        this.children = []
+        this._children:list[ASTNode] = []
 
     def __str__(this):
         typeStr = str(type(this))
@@ -164,7 +164,24 @@ class ASTNode:
     
     def __repr__(this):
         return str(this)
-    
+
+    @property
+    def children(this): return (i for i in this._children)
+
+    @property
+    def childCount(this): return len(this._children)
+
+    def addChild(this, node:"ASTNode"):
+        if node in this._children: return
+
+        #assert node not in this.__children, f"{node} is already a child linked to {this}"
+        assert not any(i.path == node.path for i in this._children), f"{node} is already a child linked to {this}, but as a separate instance"
+
+        this._children.append(node)
+
+    def _clearChildren(this): # Bad hack to help with linking
+        this._children = []
+
     def merge(this, new:"ASTNode"): # Called on existing instance
         # Merge locational data
         if new.definitionLocation != None:
@@ -174,7 +191,7 @@ class ASTNode:
         this.declarationLocations.extend(new.declarationLocations)
         
         # Move over children
-        this.children.extend(new.children)
+        for i in new.children: this.addChild(i)
         for i in new.children: i.owner = this
 
     @staticmethod
@@ -293,14 +310,14 @@ class Module:
             else: op(obj)
         
         # Nasty hack to prevent symbol duplication or parent un-linking on unpickle
-        for v in this.contents.values(): _reducing_invoke(v, lambda o: setattr(o, "children", []))
+        for v in this.contents.values(): _reducing_invoke(v, lambda o: o._clearChildren())
         def _rebuild_links(o:ASTNode):
             if o.owner == None and o.path.parent != None:
                 rebuiltOwner = this.find(o.path.parent)
                 if isinstance(rebuiltOwner, ASTNode):
                     o.owner = rebuiltOwner
             if o.owner != None and o not in o.owner.children:
-                o.owner.children.append(o)
+                o.owner.addChild(o)
         for v in this.contents.values(): _reducing_invoke(v, _rebuild_links)
         
         # Link explicit symbols
@@ -318,7 +335,7 @@ class Module:
             # Handle parent/children connection
             parent = this.find(node.path.parent)
             if parent != None:
-                parent.children.append(node)
+                parent.addChild(node)
                 node.owner = parent
                 
             # Link
@@ -342,7 +359,7 @@ class Module:
             # Handle parent/children connection
             parent = this.find(node.path.parent)
             if parent != None:
-                parent.children.append(node)
+                parent.addChild(node)
                 node.owner = parent
                 
             # Link and late-link
@@ -430,7 +447,7 @@ class StructInfo(ASTNode):
                 implicitDefaultCtor = ConstructorInfo(this.path+ctorPathPart, this.definitionLocation, True, False, True, Member.Visibility.Public)
                 implicitDefaultCtor.transient = True
                 module.register(implicitDefaultCtor)
-                this.children.append(implicitDefaultCtor)
+                this.addChild(implicitDefaultCtor)
 
             # Implicit default ctor
             if not any((isinstance(i, DestructorInfo) for i in this.children)):
@@ -438,7 +455,7 @@ class StructInfo(ASTNode):
                 implicitDefaultDtor = DestructorInfo(this.path+dtorPathPart, this.definitionLocation, True, Member.Visibility.Public, False, False, False, False, True)
                 implicitDefaultDtor.transient = True
                 module.register(implicitDefaultDtor)
-                this.children.append(implicitDefaultDtor)
+                this.addChild(implicitDefaultDtor)
         
         super().link(module)
 
@@ -594,7 +611,7 @@ class Callable(ASTNode):
         for i in range(len(this.parameters)): this.parameters[i].merge(new.parameters[i])
 
         # Prevent param duplication and proceed with standard merge
-        new.children = [i for i in new.children if not isinstance(i, Callable.Parameter)]
+        new._children = [i for i in new._children if not isinstance(i, Callable.Parameter)]
         super().merge(new)
 
     @property
