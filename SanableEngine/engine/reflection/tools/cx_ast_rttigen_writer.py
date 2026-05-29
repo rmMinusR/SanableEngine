@@ -190,10 +190,12 @@ def render_type(ty:cx_ast.StructInfo, context:RttiGenerator):
                 bodyDecls.append(memGenerated[1])
 
     # Render implicit virtual parents
+    virtualParentsHandled = [p.parentTypePath for p in ty.immediateParents if p.explicitlyVirtual]
     for p in _getAllParents(ty):
-        if p.explicitlyVirtual and not p.owner == ty:
+        if p.explicitlyVirtual and not p.owner == ty and p.parentTypePath not in virtualParentsHandled:
             # Always render. We break it with C-style cast, which ignores visibility.
             bodyDecls.append(f"builder.addParent<{ty.path}, {p.parentTypePath}>({p.visibility.value}, {cx_ast.ParentInfo.Virtualness.VirtualInherited.value});")
+            virtualParentsHandled.append(p.parentTypePath)
 
     # Render CDO capture
     if ty.isAbstract:
