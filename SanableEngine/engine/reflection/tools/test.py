@@ -341,6 +341,20 @@ class TestParser:
         sym:cx_ast.DestructorInfo = this.assertExpectSymbol([ "Overriding", "ExplicitDtorImplicitlyVirt", CallParams("~ExplicitDtorImplicitlyVirt", []) ], cx_ast.DestructorInfo)
         this.assertTrue(sym.isVirtual)
 
+    def test_single_linkage(this):
+        for group in this.module.contents.values():
+            for sym in (group if isinstance(group, list) else [group]):
+                if len(sym.children) == 0: continue
+
+                # Ensure all children are unique
+                for i,c in enumerate(sym.children[1:]):
+                    duplicate = next((
+                        j for j in sym.children[:i]
+                        if isinstance(j, cx_ast.ASTNode) and j.path == c.path
+                    ), None)
+                    this.assertIsNone(duplicate, f"0x{id(duplicate):X} / 0x{id(c):X}")
+
+
 from cx_ast_clang_reader import ClangParseContext
 class TestClangParser(TestParser, unittest.TestCase):
     def invoke_parser(target:str, includes:list[str]):
